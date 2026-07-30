@@ -1,0 +1,1559 @@
+{
+  "experiment_id": "DIAG-0001",
+  "date": "2026-07-30 22:15",
+  "commit": "3839ee3",
+  "versions": {
+    "protocol": "v1.5",
+    "judge": "v1.0"
+  },
+  "format_results": {
+    "A": {
+      "MFT-First": {
+        "overall_utility": 1.0,
+        "rvs": 1.0,
+        "fqs": 1.0,
+        "files_recovered": 15,
+        "files_correct_checksum": 15
+      },
+      "Carving": {
+        "overall_utility": 0.0,
+        "rvs": 0.0,
+        "fqs": 0.0,
+        "files_recovered": 3,
+        "files_correct_checksum": 0,
+        "signatures_found": {
+          "JPEG": 15,
+          "BMP": 1
+        },
+        "files_carved": 3,
+        "false_positives": 3,
+        "per_file_details": [
+          {
+            "recovered_name": "carved_0001.jpg",
+            "recovered_sha256": "712df33c2d89f268ca352ea614a7e9c3e17cb4a10a7aea0be459739d3a47b8f7",
+            "recovered_size": 63101,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -865081,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 865081 byte(s) at end: 21 = b'!'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0002.jpg",
+            "recovered_sha256": "82bda8b0decb065d964daf8e8a0a70026a015e56a47c56010abb034389a7f194",
+            "recovered_size": 206994,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -923229,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 923229 byte(s) at end: c8 = b'\\xc8'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0001.bmp",
+            "recovered_sha256": "ef535df23e3409e25a174be31eae2277a8767bddc7eaa76103f92620e197dba1",
+            "recovered_size": 50842112,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": "SHA-256 not in ground truth. Data differs from original."
+          }
+        ]
+      }
+    },
+    "B": {
+      "MFT-First": {
+        "overall_utility": 1.0,
+        "rvs": 1.0,
+        "fqs": 1.0,
+        "files_recovered": 15,
+        "files_correct_checksum": 15
+      },
+      "Carving": {
+        "overall_utility": 0.8709,
+        "rvs": 0.9331,
+        "fqs": 0.9333333333333333,
+        "files_recovered": 15,
+        "files_correct_checksum": 14,
+        "signatures_found": {
+          "PNG": 15,
+          "BMP": 1
+        },
+        "files_carved": 15,
+        "false_positives": 1,
+        "per_file_details": [
+          {
+            "recovered_name": "carved_0001.png",
+            "recovered_sha256": "6dcbb3f846ed986f05cbb07feb9c7af687179bc1d470a4132b15ab1c3f16e13e",
+            "recovered_size": 928182,
+            "gt_match": "png_0001.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0002.png",
+            "recovered_sha256": "b80e823618b0527ca7b8f6e228d7507c86cf9189edd2c1075f6c3a9273315f97",
+            "recovered_size": 1130223,
+            "gt_match": "png_0002.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0003.png",
+            "recovered_sha256": "5b49d779598b15e48cb8af42014c5b6e2ad077877386ec3a25e1da2cf83cbeeb",
+            "recovered_size": 2615725,
+            "gt_match": "png_0003.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0004.png",
+            "recovered_sha256": "b64227c441b0d191a7e8fe49045d4c6f1d2d68bfa3846a622f7d28269e4f510a",
+            "recovered_size": 2492678,
+            "gt_match": "png_0004.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0005.png",
+            "recovered_sha256": "0012f8e851e3f6b1f436c71eae506bd9b30d93f69d91a8a155236656412fa687",
+            "recovered_size": 1958849,
+            "gt_match": "png_0005.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0006.png",
+            "recovered_sha256": "92a01aa3b4ffc571b61e83abe240b7279f9a51eb317de964417bf8a6a155cc06",
+            "recovered_size": 1521668,
+            "gt_match": "png_0006.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0007.png",
+            "recovered_sha256": "6020d657436ab3eb0525fae8304c301aa899fd08b4e7227278a6e1d33fa700e4",
+            "recovered_size": 1231152,
+            "gt_match": "png_0007.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0008.png",
+            "recovered_sha256": "fc01e9a1229a7e5b2d939d2f4fa93404899b40c24b2d1799cc999fb87c91f10c",
+            "recovered_size": 1555586,
+            "gt_match": "png_0008.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0009.png",
+            "recovered_sha256": "fe2a7123b3dc24be19087f19bb1051bc1c3e27321d6e2289c9e4e2a60fb80447",
+            "recovered_size": 1186515,
+            "gt_match": "png_0009.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0010.png",
+            "recovered_sha256": "d2d1a6500d626ca9a2052895d69eddfc839649598687e13db3541aba97ac709e",
+            "recovered_size": 78858,
+            "gt_match": "png_0010.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0011.png",
+            "recovered_sha256": "c3367063332460bee0354f0b7234a1a97c9157daf418a0b29251456947c0b7bb",
+            "recovered_size": 1261992,
+            "gt_match": "png_0011.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0012.png",
+            "recovered_sha256": "dbf6deb316ea5381fda1216b744384e7e265a5acc80f8f4f2904904b3d7c5b92",
+            "recovered_size": 2100790,
+            "gt_match": "png_0012.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0013.png",
+            "recovered_sha256": "2aef457b1b394ca376295e3a1e528a038406368fd87832edf893928d16744319",
+            "recovered_size": 816699,
+            "gt_match": "png_0013.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0014.png",
+            "recovered_sha256": "bf350ec828b055f310ff1ebf5d8b23801a798cfb0e1ffdd0123a7d9f0deede60",
+            "recovered_size": 2341891,
+            "gt_match": "png_0014.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0001.bmp",
+            "recovered_sha256": "e7780e05911e5848c01642ccb9528264acaeeda500894610d83e2854df5643f2",
+            "recovered_size": 31589376,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": "SHA-256 not in ground truth. Data differs from original."
+          }
+        ]
+      }
+    },
+    "C": {
+      "MFT-First": {
+        "overall_utility": 1.0,
+        "rvs": 1.0,
+        "fqs": 1.0,
+        "files_recovered": 15,
+        "files_correct_checksum": 15
+      },
+      "Carving": {
+        "overall_utility": 0.0,
+        "rvs": 0.0,
+        "fqs": 0.0,
+        "files_recovered": 15,
+        "files_correct_checksum": 0,
+        "signatures_found": {
+          "PDF": 15
+        },
+        "files_carved": 15,
+        "false_positives": 15,
+        "per_file_details": [
+          {
+            "recovered_name": "carved_0001.pdf",
+            "recovered_sha256": "59832efa03040260b3c7d1d9369dbe9b4d3b250186bf6b64f3982e269ac8f9e6",
+            "recovered_size": 480667,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0002.pdf",
+            "recovered_sha256": "5799d36ab7dbde05720bf9152ddada73becd0c84a9170b0b0ce3984cb6ebe372",
+            "recovered_size": 458351,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0003.pdf",
+            "recovered_sha256": "82ebeb1305e3bcd79a13253ea53feba0544d829fbe8650aed4a5e5e1862ac21d",
+            "recovered_size": 321714,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0004.pdf",
+            "recovered_sha256": "3a4896fa5ec754523d9d79d0f8b7caf838b65aebc5d1da8c4e76b8104154c0c7",
+            "recovered_size": 306333,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0005.pdf",
+            "recovered_sha256": "0301504ea5d18e06396bb98a70dc7c4ab6b02dbe93dfcf9a464337a4d392167c",
+            "recovered_size": 415175,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0006.pdf",
+            "recovered_sha256": "f7fe4c20ce38bbc39cbc8071e1e490d9c4e488ce247bd2d61072677b0ae54fad",
+            "recovered_size": 184957,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0007.pdf",
+            "recovered_sha256": "15946228d4ce91e1d7ef84b238ca4aa5b3b3da8a53867720aa39c5197152063c",
+            "recovered_size": 373574,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0008.pdf",
+            "recovered_sha256": "92c68d96056723a84393e3a1abb2e8c623f65ad72364098470a664c8607a1e3f",
+            "recovered_size": 410961,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0009.pdf",
+            "recovered_sha256": "a0d01bd6b7cfb2fe11360b3c00ec197bc3eb1ce54a04fba76248f88978d30abf",
+            "recovered_size": 143063,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0010.pdf",
+            "recovered_sha256": "567adf26319dd031bd53d75453ddead12b71412b35df062cdfe46b8edee3bc55",
+            "recovered_size": 475343,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0011.pdf",
+            "recovered_sha256": "217a79076cb96205264a2eadf21ad5d79e1245d8d65663de90ead176ca40333f",
+            "recovered_size": 152498,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0012.pdf",
+            "recovered_sha256": "bcb8d6ac2008c407bcd47890bc6ef01b3a8ddd30fc3f69edd93432c0f403e4c6",
+            "recovered_size": 383545,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0013.pdf",
+            "recovered_sha256": "ce6cc96cd895148393a9196afdf922a145639fde6b1a6fe508105b93c6edf257",
+            "recovered_size": 96836,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0014.pdf",
+            "recovered_sha256": "b86b06a344e466e394fa982c53dd630f008bdd64ea9fe72d08379b8a635caa26",
+            "recovered_size": 435962,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0015.pdf",
+            "recovered_sha256": "10f1db3449924d94eb665e0f3b7aeb2a6b7c2f5e6860161c7f9d771be5d6c392",
+            "recovered_size": 312950,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          }
+        ]
+      }
+    },
+    "D": {
+      "MFT-First": {
+        "overall_utility": 1.0,
+        "rvs": 1.0,
+        "fqs": 1.0,
+        "files_recovered": 15,
+        "files_correct_checksum": 15
+      },
+      "Carving": {
+        "overall_utility": 1.0,
+        "rvs": 1.0,
+        "fqs": 1.0,
+        "files_recovered": 15,
+        "files_correct_checksum": 15,
+        "signatures_found": {
+          "ZIP": 15,
+          "DOCX": 15,
+          "XLSX": 15
+        },
+        "files_carved": 15,
+        "false_positives": 0,
+        "per_file_details": [
+          {
+            "recovered_name": "carved_0001.zip",
+            "recovered_sha256": "337f764468fcdcff64db431b670c69b32eee24d7ab090b710b0a7cf716485293",
+            "recovered_size": 480668,
+            "gt_match": "zip_0001.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0002.zip",
+            "recovered_sha256": "5292661fd55859764107fa2490b72976376a46f002604e81c292218e72fc5b13",
+            "recovered_size": 458352,
+            "gt_match": "zip_0002.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0003.zip",
+            "recovered_sha256": "a924de277f8b203213ae0f334af7b7fa6a017634c177fa1dc827e1362989611a",
+            "recovered_size": 321715,
+            "gt_match": "zip_0003.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0004.zip",
+            "recovered_sha256": "c24f55603a6101c1c767bebea41df70ef1df2a130b0ce5adb4fa73e32f1e5efa",
+            "recovered_size": 306334,
+            "gt_match": "zip_0004.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0005.zip",
+            "recovered_sha256": "47dd6b1f04459a929f241427a1359a2f3700c6d279ae618395af289e0021e20c",
+            "recovered_size": 415176,
+            "gt_match": "zip_0005.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0006.zip",
+            "recovered_sha256": "a80bc9a295859a7397494aefa5121e6b240a57845ccc72936e8d45e833ef1134",
+            "recovered_size": 184958,
+            "gt_match": "zip_0006.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0007.zip",
+            "recovered_sha256": "ccde7e37c88e23f14f6718ba15f55053a449b8cce7193594411489fb50b6c7a4",
+            "recovered_size": 373575,
+            "gt_match": "zip_0007.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0008.zip",
+            "recovered_sha256": "f583c19945eb17462666bf698bebb7d88c1f6f343fda64a98f9b4604708a30d6",
+            "recovered_size": 410962,
+            "gt_match": "zip_0008.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0009.zip",
+            "recovered_sha256": "82d905af5513049f662b5f6b27a4610416e774c771ef1720d92cd96ca7430c47",
+            "recovered_size": 143064,
+            "gt_match": "zip_0009.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0010.zip",
+            "recovered_sha256": "0ce442fd0929bbb495da799cda1d720d4a0ffbaf8815bc0f0a420f67adeebb4e",
+            "recovered_size": 475344,
+            "gt_match": "zip_0010.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0011.zip",
+            "recovered_sha256": "2d1b32527dc1d147c3e1e002ddae8d618ff019582a1f2de558ebfa0223793437",
+            "recovered_size": 152499,
+            "gt_match": "zip_0011.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0012.zip",
+            "recovered_sha256": "5604ec9af227023853bb5a65e74b7c7bc714556ef364ee5a7a134461b8c49e04",
+            "recovered_size": 383546,
+            "gt_match": "zip_0012.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0013.zip",
+            "recovered_sha256": "e53e90c7087fb50db95c84fc6db17ea31c2b0ae1ef5a5510a0d0174e7f5c315b",
+            "recovered_size": 96837,
+            "gt_match": "zip_0013.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0014.zip",
+            "recovered_sha256": "03183b71d110f42a4cda1e278a71eba779bf5d13ebf41477d64e937d0a1272a1",
+            "recovered_size": 435963,
+            "gt_match": "zip_0014.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0015.zip",
+            "recovered_sha256": "d20772aa61af1c454bf3a57ba1fcf3182d6fc6731e0f933e802554406955c4e5",
+            "recovered_size": 312951,
+            "gt_match": "zip_0015.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          }
+        ]
+      }
+    },
+    "E": {
+      "MFT-First": {
+        "overall_utility": 1.0,
+        "rvs": 1.0,
+        "fqs": 1.0,
+        "files_recovered": 15,
+        "files_correct_checksum": 15
+      },
+      "Carving": {
+        "overall_utility": 1.0,
+        "rvs": 1.0,
+        "fqs": 1.0,
+        "files_recovered": 15,
+        "files_correct_checksum": 15,
+        "signatures_found": {
+          "ZIP": 15,
+          "DOCX": 15,
+          "XLSX": 15
+        },
+        "files_carved": 15,
+        "false_positives": 0,
+        "per_file_details": [
+          {
+            "recovered_name": "carved_0001.zip",
+            "recovered_sha256": "ae508d8683ab9c213aa36df5f1d4a49683eb109a3dfaf2e48bff797f29cabf56",
+            "recovered_size": 480668,
+            "gt_match": "docx_0001.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0002.zip",
+            "recovered_sha256": "1138c735109e8df0f420077cb75718135c4e8244b18de845bfc40cfc2c98f058",
+            "recovered_size": 458352,
+            "gt_match": "docx_0002.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0003.zip",
+            "recovered_sha256": "d16da2271778e8a56ab4ab6d384c2d11a696e403840a1a0f44ce0125d154ccb8",
+            "recovered_size": 321715,
+            "gt_match": "docx_0003.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0004.zip",
+            "recovered_sha256": "459650f3e38b9746c9b13c8bb6c653d3fc3325b9423707d419116d387d0b340f",
+            "recovered_size": 306334,
+            "gt_match": "docx_0004.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0005.zip",
+            "recovered_sha256": "52bd87863ae611802c80e5eeebf6b6281bddad83eff5d0cbfddd3d189ae8faae",
+            "recovered_size": 415176,
+            "gt_match": "docx_0005.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0006.zip",
+            "recovered_sha256": "cb96924dc824521167c0f7592dddee3b5a911da92e2e35741e6b1fcacaf680b5",
+            "recovered_size": 184958,
+            "gt_match": "docx_0006.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0007.zip",
+            "recovered_sha256": "934da98df0ed9ed2f0be9ec7b7b15e042e3e31b5f0cdd95440ae6b12babc502c",
+            "recovered_size": 373575,
+            "gt_match": "docx_0007.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0008.zip",
+            "recovered_sha256": "fb83ec5451b263c6261ee573d92fad6c1a0142db35744af9d93875e4ade5fc81",
+            "recovered_size": 410962,
+            "gt_match": "docx_0008.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0009.zip",
+            "recovered_sha256": "17da2f8ab3db117c91d393f562d9c369e03241cc2a853f612a604b02b2dc7f65",
+            "recovered_size": 143064,
+            "gt_match": "docx_0009.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0010.zip",
+            "recovered_sha256": "ebba6cbdb1c3970d30f8133e2e161f5536e8c6166cac53699a91dc92616b8ebd",
+            "recovered_size": 475344,
+            "gt_match": "docx_0010.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0011.zip",
+            "recovered_sha256": "49cc7457f1ab6242fe6d811c54f3a11579079756f1724f7929b86c07678a2b85",
+            "recovered_size": 152499,
+            "gt_match": "docx_0011.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0012.zip",
+            "recovered_sha256": "61522670b168d98fdcb8a1fc5e03db017ca44eb7d685f0f86d7124f7f26ef9ac",
+            "recovered_size": 383546,
+            "gt_match": "docx_0012.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0013.zip",
+            "recovered_sha256": "557a943d16c328d3f07e587ab2d3b199b7a9b2450ea57076d51197cd4b39c5e1",
+            "recovered_size": 96837,
+            "gt_match": "docx_0013.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0014.zip",
+            "recovered_sha256": "0a0bb9f2b14dc5b1a39f777ceb6ac5d406cc40925895d3c3fb9322cce5fe70ae",
+            "recovered_size": 435963,
+            "gt_match": "docx_0014.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0015.zip",
+            "recovered_sha256": "ccf3c9babea8a2878192f62c725f327983b457cb587653f65e1a70b0b3bb3a06",
+            "recovered_size": 312951,
+            "gt_match": "docx_0015.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          }
+        ]
+      }
+    }
+  },
+  "diagnosis": {
+    "question": "¿El cero proviene del algoritmo o del banco de pruebas?",
+    "format_analysis": {
+      "A": {
+        "carving_ou": 0.0,
+        "mft_ou": 1.0,
+        "signatures_found": {
+          "JPEG": 15,
+          "BMP": 1
+        },
+        "files_carved": 3,
+        "files_recovered_by_judge": 3,
+        "files_correct_checksum": 0,
+        "false_positives": 3,
+        "matched_to_gt": 0,
+        "unmatched_to_gt": 3,
+        "truncation_fixable": 2,
+        "per_file_details": [
+          {
+            "recovered_name": "carved_0001.jpg",
+            "recovered_sha256": "712df33c2d89f268ca352ea614a7e9c3e17cb4a10a7aea0be459739d3a47b8f7",
+            "recovered_size": 63101,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -865081,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 865081 byte(s) at end: 21 = b'!'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0002.jpg",
+            "recovered_sha256": "82bda8b0decb065d964daf8e8a0a70026a015e56a47c56010abb034389a7f194",
+            "recovered_size": 206994,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -923229,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 923229 byte(s) at end: c8 = b'\\xc8'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0001.bmp",
+            "recovered_sha256": "ef535df23e3409e25a174be31eae2277a8767bddc7eaa76103f92620e197dba1",
+            "recovered_size": 50842112,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": "SHA-256 not in ground truth. Data differs from original."
+          }
+        ]
+      },
+      "B": {
+        "carving_ou": 0.8709,
+        "mft_ou": 1.0,
+        "signatures_found": {
+          "PNG": 15,
+          "BMP": 1
+        },
+        "files_carved": 15,
+        "files_recovered_by_judge": 15,
+        "files_correct_checksum": 14,
+        "false_positives": 1,
+        "matched_to_gt": 14,
+        "unmatched_to_gt": 1,
+        "truncation_fixable": 0,
+        "per_file_details": [
+          {
+            "recovered_name": "carved_0001.png",
+            "recovered_sha256": "6dcbb3f846ed986f05cbb07feb9c7af687179bc1d470a4132b15ab1c3f16e13e",
+            "recovered_size": 928182,
+            "gt_match": "png_0001.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0002.png",
+            "recovered_sha256": "b80e823618b0527ca7b8f6e228d7507c86cf9189edd2c1075f6c3a9273315f97",
+            "recovered_size": 1130223,
+            "gt_match": "png_0002.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0003.png",
+            "recovered_sha256": "5b49d779598b15e48cb8af42014c5b6e2ad077877386ec3a25e1da2cf83cbeeb",
+            "recovered_size": 2615725,
+            "gt_match": "png_0003.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0004.png",
+            "recovered_sha256": "b64227c441b0d191a7e8fe49045d4c6f1d2d68bfa3846a622f7d28269e4f510a",
+            "recovered_size": 2492678,
+            "gt_match": "png_0004.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0005.png",
+            "recovered_sha256": "0012f8e851e3f6b1f436c71eae506bd9b30d93f69d91a8a155236656412fa687",
+            "recovered_size": 1958849,
+            "gt_match": "png_0005.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0006.png",
+            "recovered_sha256": "92a01aa3b4ffc571b61e83abe240b7279f9a51eb317de964417bf8a6a155cc06",
+            "recovered_size": 1521668,
+            "gt_match": "png_0006.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0007.png",
+            "recovered_sha256": "6020d657436ab3eb0525fae8304c301aa899fd08b4e7227278a6e1d33fa700e4",
+            "recovered_size": 1231152,
+            "gt_match": "png_0007.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0008.png",
+            "recovered_sha256": "fc01e9a1229a7e5b2d939d2f4fa93404899b40c24b2d1799cc999fb87c91f10c",
+            "recovered_size": 1555586,
+            "gt_match": "png_0008.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0009.png",
+            "recovered_sha256": "fe2a7123b3dc24be19087f19bb1051bc1c3e27321d6e2289c9e4e2a60fb80447",
+            "recovered_size": 1186515,
+            "gt_match": "png_0009.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0010.png",
+            "recovered_sha256": "d2d1a6500d626ca9a2052895d69eddfc839649598687e13db3541aba97ac709e",
+            "recovered_size": 78858,
+            "gt_match": "png_0010.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0011.png",
+            "recovered_sha256": "c3367063332460bee0354f0b7234a1a97c9157daf418a0b29251456947c0b7bb",
+            "recovered_size": 1261992,
+            "gt_match": "png_0011.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0012.png",
+            "recovered_sha256": "dbf6deb316ea5381fda1216b744384e7e265a5acc80f8f4f2904904b3d7c5b92",
+            "recovered_size": 2100790,
+            "gt_match": "png_0012.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0013.png",
+            "recovered_sha256": "2aef457b1b394ca376295e3a1e528a038406368fd87832edf893928d16744319",
+            "recovered_size": 816699,
+            "gt_match": "png_0013.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0014.png",
+            "recovered_sha256": "bf350ec828b055f310ff1ebf5d8b23801a798cfb0e1ffdd0123a7d9f0deede60",
+            "recovered_size": 2341891,
+            "gt_match": "png_0014.png",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0001.bmp",
+            "recovered_sha256": "e7780e05911e5848c01642ccb9528264acaeeda500894610d83e2854df5643f2",
+            "recovered_size": 31589376,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": "SHA-256 not in ground truth. Data differs from original."
+          }
+        ]
+      },
+      "C": {
+        "carving_ou": 0.0,
+        "mft_ou": 1.0,
+        "signatures_found": {
+          "PDF": 15
+        },
+        "files_carved": 15,
+        "files_recovered_by_judge": 15,
+        "files_correct_checksum": 0,
+        "false_positives": 15,
+        "matched_to_gt": 0,
+        "unmatched_to_gt": 15,
+        "truncation_fixable": 15,
+        "per_file_details": [
+          {
+            "recovered_name": "carved_0001.pdf",
+            "recovered_sha256": "59832efa03040260b3c7d1d9369dbe9b4d3b250186bf6b64f3982e269ac8f9e6",
+            "recovered_size": 480667,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0002.pdf",
+            "recovered_sha256": "5799d36ab7dbde05720bf9152ddada73becd0c84a9170b0b0ce3984cb6ebe372",
+            "recovered_size": 458351,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0003.pdf",
+            "recovered_sha256": "82ebeb1305e3bcd79a13253ea53feba0544d829fbe8650aed4a5e5e1862ac21d",
+            "recovered_size": 321714,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0004.pdf",
+            "recovered_sha256": "3a4896fa5ec754523d9d79d0f8b7caf838b65aebc5d1da8c4e76b8104154c0c7",
+            "recovered_size": 306333,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0005.pdf",
+            "recovered_sha256": "0301504ea5d18e06396bb98a70dc7c4ab6b02dbe93dfcf9a464337a4d392167c",
+            "recovered_size": 415175,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0006.pdf",
+            "recovered_sha256": "f7fe4c20ce38bbc39cbc8071e1e490d9c4e488ce247bd2d61072677b0ae54fad",
+            "recovered_size": 184957,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0007.pdf",
+            "recovered_sha256": "15946228d4ce91e1d7ef84b238ca4aa5b3b3da8a53867720aa39c5197152063c",
+            "recovered_size": 373574,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0008.pdf",
+            "recovered_sha256": "92c68d96056723a84393e3a1abb2e8c623f65ad72364098470a664c8607a1e3f",
+            "recovered_size": 410961,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0009.pdf",
+            "recovered_sha256": "a0d01bd6b7cfb2fe11360b3c00ec197bc3eb1ce54a04fba76248f88978d30abf",
+            "recovered_size": 143063,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0010.pdf",
+            "recovered_sha256": "567adf26319dd031bd53d75453ddead12b71412b35df062cdfe46b8edee3bc55",
+            "recovered_size": 475343,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0011.pdf",
+            "recovered_sha256": "217a79076cb96205264a2eadf21ad5d79e1245d8d65663de90ead176ca40333f",
+            "recovered_size": 152498,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0012.pdf",
+            "recovered_sha256": "bcb8d6ac2008c407bcd47890bc6ef01b3a8ddd30fc3f69edd93432c0f403e4c6",
+            "recovered_size": 383545,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0013.pdf",
+            "recovered_sha256": "ce6cc96cd895148393a9196afdf922a145639fde6b1a6fe508105b93c6edf257",
+            "recovered_size": 96836,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0014.pdf",
+            "recovered_sha256": "b86b06a344e466e394fa982c53dd630f008bdd64ea9fe72d08379b8a635caa26",
+            "recovered_size": 435962,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          },
+          {
+            "recovered_name": "carved_0015.pdf",
+            "recovered_sha256": "10f1db3449924d94eb665e0f3b7aeb2a6b7c2f5e6860161c7f9d771be5d6c392",
+            "recovered_size": 312950,
+            "gt_match": "NONE",
+            "match_method": "none",
+            "size_diff": -1,
+            "truncation_fixes_sha256": true,
+            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+          }
+        ]
+      },
+      "D": {
+        "carving_ou": 1.0,
+        "mft_ou": 1.0,
+        "signatures_found": {
+          "ZIP": 15,
+          "DOCX": 15,
+          "XLSX": 15
+        },
+        "files_carved": 15,
+        "files_recovered_by_judge": 15,
+        "files_correct_checksum": 15,
+        "false_positives": 0,
+        "matched_to_gt": 15,
+        "unmatched_to_gt": 0,
+        "truncation_fixable": 0,
+        "per_file_details": [
+          {
+            "recovered_name": "carved_0001.zip",
+            "recovered_sha256": "337f764468fcdcff64db431b670c69b32eee24d7ab090b710b0a7cf716485293",
+            "recovered_size": 480668,
+            "gt_match": "zip_0001.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0002.zip",
+            "recovered_sha256": "5292661fd55859764107fa2490b72976376a46f002604e81c292218e72fc5b13",
+            "recovered_size": 458352,
+            "gt_match": "zip_0002.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0003.zip",
+            "recovered_sha256": "a924de277f8b203213ae0f334af7b7fa6a017634c177fa1dc827e1362989611a",
+            "recovered_size": 321715,
+            "gt_match": "zip_0003.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0004.zip",
+            "recovered_sha256": "c24f55603a6101c1c767bebea41df70ef1df2a130b0ce5adb4fa73e32f1e5efa",
+            "recovered_size": 306334,
+            "gt_match": "zip_0004.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0005.zip",
+            "recovered_sha256": "47dd6b1f04459a929f241427a1359a2f3700c6d279ae618395af289e0021e20c",
+            "recovered_size": 415176,
+            "gt_match": "zip_0005.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0006.zip",
+            "recovered_sha256": "a80bc9a295859a7397494aefa5121e6b240a57845ccc72936e8d45e833ef1134",
+            "recovered_size": 184958,
+            "gt_match": "zip_0006.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0007.zip",
+            "recovered_sha256": "ccde7e37c88e23f14f6718ba15f55053a449b8cce7193594411489fb50b6c7a4",
+            "recovered_size": 373575,
+            "gt_match": "zip_0007.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0008.zip",
+            "recovered_sha256": "f583c19945eb17462666bf698bebb7d88c1f6f343fda64a98f9b4604708a30d6",
+            "recovered_size": 410962,
+            "gt_match": "zip_0008.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0009.zip",
+            "recovered_sha256": "82d905af5513049f662b5f6b27a4610416e774c771ef1720d92cd96ca7430c47",
+            "recovered_size": 143064,
+            "gt_match": "zip_0009.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0010.zip",
+            "recovered_sha256": "0ce442fd0929bbb495da799cda1d720d4a0ffbaf8815bc0f0a420f67adeebb4e",
+            "recovered_size": 475344,
+            "gt_match": "zip_0010.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0011.zip",
+            "recovered_sha256": "2d1b32527dc1d147c3e1e002ddae8d618ff019582a1f2de558ebfa0223793437",
+            "recovered_size": 152499,
+            "gt_match": "zip_0011.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0012.zip",
+            "recovered_sha256": "5604ec9af227023853bb5a65e74b7c7bc714556ef364ee5a7a134461b8c49e04",
+            "recovered_size": 383546,
+            "gt_match": "zip_0012.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0013.zip",
+            "recovered_sha256": "e53e90c7087fb50db95c84fc6db17ea31c2b0ae1ef5a5510a0d0174e7f5c315b",
+            "recovered_size": 96837,
+            "gt_match": "zip_0013.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0014.zip",
+            "recovered_sha256": "03183b71d110f42a4cda1e278a71eba779bf5d13ebf41477d64e937d0a1272a1",
+            "recovered_size": 435963,
+            "gt_match": "zip_0014.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0015.zip",
+            "recovered_sha256": "d20772aa61af1c454bf3a57ba1fcf3182d6fc6731e0f933e802554406955c4e5",
+            "recovered_size": 312951,
+            "gt_match": "zip_0015.zip",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          }
+        ]
+      },
+      "E": {
+        "carving_ou": 1.0,
+        "mft_ou": 1.0,
+        "signatures_found": {
+          "ZIP": 15,
+          "DOCX": 15,
+          "XLSX": 15
+        },
+        "files_carved": 15,
+        "files_recovered_by_judge": 15,
+        "files_correct_checksum": 15,
+        "false_positives": 0,
+        "matched_to_gt": 15,
+        "unmatched_to_gt": 0,
+        "truncation_fixable": 0,
+        "per_file_details": [
+          {
+            "recovered_name": "carved_0001.zip",
+            "recovered_sha256": "ae508d8683ab9c213aa36df5f1d4a49683eb109a3dfaf2e48bff797f29cabf56",
+            "recovered_size": 480668,
+            "gt_match": "docx_0001.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0002.zip",
+            "recovered_sha256": "1138c735109e8df0f420077cb75718135c4e8244b18de845bfc40cfc2c98f058",
+            "recovered_size": 458352,
+            "gt_match": "docx_0002.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0003.zip",
+            "recovered_sha256": "d16da2271778e8a56ab4ab6d384c2d11a696e403840a1a0f44ce0125d154ccb8",
+            "recovered_size": 321715,
+            "gt_match": "docx_0003.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0004.zip",
+            "recovered_sha256": "459650f3e38b9746c9b13c8bb6c653d3fc3325b9423707d419116d387d0b340f",
+            "recovered_size": 306334,
+            "gt_match": "docx_0004.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0005.zip",
+            "recovered_sha256": "52bd87863ae611802c80e5eeebf6b6281bddad83eff5d0cbfddd3d189ae8faae",
+            "recovered_size": 415176,
+            "gt_match": "docx_0005.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0006.zip",
+            "recovered_sha256": "cb96924dc824521167c0f7592dddee3b5a911da92e2e35741e6b1fcacaf680b5",
+            "recovered_size": 184958,
+            "gt_match": "docx_0006.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0007.zip",
+            "recovered_sha256": "934da98df0ed9ed2f0be9ec7b7b15e042e3e31b5f0cdd95440ae6b12babc502c",
+            "recovered_size": 373575,
+            "gt_match": "docx_0007.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0008.zip",
+            "recovered_sha256": "fb83ec5451b263c6261ee573d92fad6c1a0142db35744af9d93875e4ade5fc81",
+            "recovered_size": 410962,
+            "gt_match": "docx_0008.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0009.zip",
+            "recovered_sha256": "17da2f8ab3db117c91d393f562d9c369e03241cc2a853f612a604b02b2dc7f65",
+            "recovered_size": 143064,
+            "gt_match": "docx_0009.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0010.zip",
+            "recovered_sha256": "ebba6cbdb1c3970d30f8133e2e161f5536e8c6166cac53699a91dc92616b8ebd",
+            "recovered_size": 475344,
+            "gt_match": "docx_0010.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0011.zip",
+            "recovered_sha256": "49cc7457f1ab6242fe6d811c54f3a11579079756f1724f7929b86c07678a2b85",
+            "recovered_size": 152499,
+            "gt_match": "docx_0011.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0012.zip",
+            "recovered_sha256": "61522670b168d98fdcb8a1fc5e03db017ca44eb7d685f0f86d7124f7f26ef9ac",
+            "recovered_size": 383546,
+            "gt_match": "docx_0012.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0013.zip",
+            "recovered_sha256": "557a943d16c328d3f07e587ab2d3b199b7a9b2450ea57076d51197cd4b39c5e1",
+            "recovered_size": 96837,
+            "gt_match": "docx_0013.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0014.zip",
+            "recovered_sha256": "0a0bb9f2b14dc5b1a39f777ceb6ac5d406cc40925895d3c3fb9322cce5fe70ae",
+            "recovered_size": 435963,
+            "gt_match": "docx_0014.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          },
+          {
+            "recovered_name": "carved_0015.zip",
+            "recovered_sha256": "ccf3c9babea8a2878192f62c725f327983b457cb587653f65e1a70b0b3bb3a06",
+            "recovered_size": 312951,
+            "gt_match": "docx_0015.docx",
+            "match_method": "sha256",
+            "size_diff": 0,
+            "truncation_fixes_sha256": false,
+            "failure_reason": ""
+          }
+        ]
+      }
+    },
+    "zero_origin": "FORMAT_SPECIFIC_PARSER_ISSUES",
+    "zero_origin_explanation": "El carving funciona para ['B', 'D', 'E'] pero falla para ['A', 'C']. Las causas raíz son específicas por formato: PDF tiene un bug de footer (1 byte), JPEG tiene un problema de deduplicación. El motor de carving en sí funciona — el scanner encuentra firmas correctamente. El problema está en la extracción (footer detection + deduplication), no en la detección (signature scanning).",
+    "hypothesis_ranking": [
+      {
+        "id": "H-CARVING-001",
+        "statement": "El parser de carving tiene un bug",
+        "probability": "HIGH",
+        "evidence": "PDF footer bug: %%EOF vs %%EOF\\n. JPEG deduplication bug: 12/15 files removed.",
+        "refined": "No es un bug general del parser, sino bugs específicos: footer de PDF y deduplicación de JPEG."
+      },
+      {
+        "id": "H-CARVING-005",
+        "statement": "Los footers siguen siendo insuficientes",
+        "probability": "HIGH",
+        "evidence": "PDF: footer %%EOF no incluye \\n. JPEG: footer FF D9 funciona pero deduplicación elimina archivos.",
+        "refined": "El footer de PDF es incorrecto (falta \\n). El footer de JPEG funciona pero la deduplicación interfiere."
+      },
+      {
+        "id": "H-CARVING-007",
+        "statement": "La implementación del carving todavía está incompleta",
+        "probability": "MEDIUM",
+        "evidence": "El scanner funciona (encuentra firmas), pero la extracción tiene bugs (PDF footer, JPEG dedup).",
+        "refined": "El carving está parcialmente implementado: la detección funciona, la extracción tiene bugs."
+      },
+      {
+        "id": "H-CARVING-003",
+        "statement": "El generador produce archivos poco realistas",
+        "probability": "LOW",
+        "evidence": "ZIP/DOCX/PNG carving funciona perfectamente. Los archivos generados son carveables.",
+        "refined": "El generador produce archivos válidos. El problema está en el carving, no en el generador."
+      },
+      {
+        "id": "H-CARVING-002",
+        "statement": "El dataset no contiene suficientes formatos carveables",
+        "probability": "LOW",
+        "evidence": "Todos los formatos probados son carveables. El problema es la extracción, no la detección."
+      },
+      {
+        "id": "H-CARVING-004",
+        "statement": "El Judge penaliza excesivamente el carving",
+        "probability": "LOW",
+        "evidence": "Cuando el carving extrae datos correctos (ZIP/DOCX/PNG), el Judge los puntúa correctamente."
+      },
+      {
+        "id": "H-CARVING-006",
+        "statement": "El RVS/FQS favorecen tipos de archivo que carving no puede recuperar",
+        "probability": "LOW",
+        "evidence": "Cuando carving funciona (ZIP/DOCX/PNG), RVS/FQS son correctos. No hay sesgo en el scoring."
+      }
+    ],
+    "root_causes": [
+      {
+        "id": "RC-001",
+        "format": "PDF",
+        "cause": "Footer mismatch: carving motor uses %%EOF (5 bytes) but file generator produces %%EOF\\n (6 bytes)",
+        "impact": "ALL carved PDF files are 1 byte short. SHA-256 doesn't match.",
+        "fix": "Change PDF signature footer from %%EOF to %%EOF\\n in motor_carving.py",
+        "severity": "HIGH — causes 100% PDF carving failure"
+      },
+      {
+        "id": "RC-002",
+        "format": "JPEG",
+        "cause": "Deduplication/overlap removal: carving motor finds 15 JPEG signatures but only carves 3 files",
+        "impact": "Most JPEG files are not carved. The 3 carved files are too short (missing millions of bytes).",
+        "fix": "Investigate why _deduplicate_carves removes 12/15 JPEG carves. Likely: large files overlap with other signatures.",
+        "severity": "HIGH — causes near-total JPEG carving failure"
+      },
+      {
+        "id": "RC-003",
+        "format": "PNG",
+        "cause": "1 false positive: BMP signature detected within PNG data",
+        "impact": "Minor — 14/15 PNG files recovered correctly",
+        "fix": "Improve BMP signature detection to avoid false positives within PNG data",
+        "severity": "LOW — minor impact on PNG carving"
+      }
+    ]
+  }
+}

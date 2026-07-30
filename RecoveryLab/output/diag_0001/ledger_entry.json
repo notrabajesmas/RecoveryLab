@@ -1,0 +1,63 @@
+{
+  "evidence_id": "DIAG-0001",
+  "experiment_name": "Diagnóstico del Origen del Cero en Carving",
+  "date": "2026-07-30",
+  "type": "DIAGNOSTIC",
+  "question": "¿El cero proviene del algoritmo o del banco de pruebas?",
+  "conclusion": "FORMAT_SPECIFIC_PARSER_ISSUES",
+  "conclusion_explanation": "El carving funciona para ['B', 'D', 'E'] pero falla para ['A', 'C']. Las causas raíz son específicas por formato: PDF tiene un bug de footer (1 byte), JPEG tiene un problema de deduplicación. El motor de carving en sí funciona — el scanner encuentra firmas correctamente. El problema está en la extracción (footer detection + deduplication), no en la detección (signature scanning).",
+  "carving_ou_by_format": {
+    "A": 0.0,
+    "B": 0.8709,
+    "C": 0.0,
+    "D": 1.0,
+    "E": 1.0
+  },
+  "root_causes": [
+    "RC-001",
+    "RC-002",
+    "RC-003"
+  ],
+  "commit": "3839ee3",
+  "versions": {
+    "protocol": "v1.5",
+    "judge": "v1.0"
+  },
+  "claims_affected": [],
+  "hypotheses_ranked": [
+    {
+      "id": "H-CARVING-001",
+      "probability": "HIGH"
+    },
+    {
+      "id": "H-CARVING-005",
+      "probability": "HIGH"
+    },
+    {
+      "id": "H-CARVING-007",
+      "probability": "MEDIUM"
+    },
+    {
+      "id": "H-CARVING-003",
+      "probability": "LOW"
+    },
+    {
+      "id": "H-CARVING-002",
+      "probability": "LOW"
+    },
+    {
+      "id": "H-CARVING-004",
+      "probability": "LOW"
+    },
+    {
+      "id": "H-CARVING-006",
+      "probability": "LOW"
+    }
+  ],
+  "evidence_debt_addressed": [],
+  "new_evidence_debt": [
+    "ED-DIAG-001: PDF footer bug — carving motor uses %%EOF but generator produces %%EOF\\n",
+    "ED-DIAG-002: JPEG deduplication bug — 12/15 files removed by overlap detection"
+  ],
+  "note": "DIAG-0001 es un diagnóstico, no un experimento comparativo. Identifica causas raíz específicas (RC-001, RC-002) que explican el OU=0.0 observado en EXP-0001/0002/0005. La corrección requiere un RP-XXX Proposal porque afecta el carving motor (artefacto congelado)."
+}

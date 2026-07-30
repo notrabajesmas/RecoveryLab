@@ -1,0 +1,46 @@
+dataset,format,recovered_name,recovered_sha256,recovered_size,gt_match,match_method,functional_level,functional_score,failure_reason,header_check
+C,PDF,carved_0001.pdf,59832efa03040260b3c7d1d9369dbe9b4d3b250186bf6b64f3982e269ac8f9e6,480667,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0002.pdf,5799d36ab7dbde05720bf9152ddada73becd0c84a9170b0b0ce3984cb6ebe372,458351,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0003.pdf,82ebeb1305e3bcd79a13253ea53feba0544d829fbe8650aed4a5e5e1862ac21d,321714,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0004.pdf,3a4896fa5ec754523d9d79d0f8b7caf838b65aebc5d1da8c4e76b8104154c0c7,306333,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0005.pdf,0301504ea5d18e06396bb98a70dc7c4ab6b02dbe93dfcf9a464337a4d392167c,415175,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0006.pdf,f7fe4c20ce38bbc39cbc8071e1e490d9c4e488ce247bd2d61072677b0ae54fad,184957,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0007.pdf,15946228d4ce91e1d7ef84b238ca4aa5b3b3da8a53867720aa39c5197152063c,373574,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0008.pdf,92c68d96056723a84393e3a1abb2e8c623f65ad72364098470a664c8607a1e3f,410961,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0009.pdf,a0d01bd6b7cfb2fe11360b3c00ec197bc3eb1ce54a04fba76248f88978d30abf,143063,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0010.pdf,567adf26319dd031bd53d75453ddead12b71412b35df062cdfe46b8edee3bc55,475343,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0011.pdf,217a79076cb96205264a2eadf21ad5d79e1245d8d65663de90ead176ca40333f,152498,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0012.pdf,bcb8d6ac2008c407bcd47890bc6ef01b3a8ddd30fc3f69edd93432c0f403e4c6,383545,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0013.pdf,ce6cc96cd895148393a9196afdf922a145639fde6b1a6fe508105b93c6edf257,96836,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0014.pdf,b86b06a344e466e394fa982c53dd630f008bdd64ea9fe72d08379b8a635caa26,435962,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+C,PDF,carved_0015.pdf,10f1db3449924d94eb665e0f3b7aeb2a6b7c2f5e6860161c7f9d771be5d6c392,312950,NONE,none,partial,0.4,SHA-256 NOT in ground truth — carved data differs from original,PDF header OK
+D,ZIP,carved_0001.zip,337f764468fcdcff64db431b670c69b32eee24d7ab090b710b0a7cf716485293,480668,zip_0001.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0002.zip,5292661fd55859764107fa2490b72976376a46f002604e81c292218e72fc5b13,458352,zip_0002.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0003.zip,a924de277f8b203213ae0f334af7b7fa6a017634c177fa1dc827e1362989611a,321715,zip_0003.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0004.zip,c24f55603a6101c1c767bebea41df70ef1df2a130b0ce5adb4fa73e32f1e5efa,306334,zip_0004.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0005.zip,47dd6b1f04459a929f241427a1359a2f3700c6d279ae618395af289e0021e20c,415176,zip_0005.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0006.zip,a80bc9a295859a7397494aefa5121e6b240a57845ccc72936e8d45e833ef1134,184958,zip_0006.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0007.zip,ccde7e37c88e23f14f6718ba15f55053a449b8cce7193594411489fb50b6c7a4,373575,zip_0007.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0008.zip,f583c19945eb17462666bf698bebb7d88c1f6f343fda64a98f9b4604708a30d6,410962,zip_0008.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0009.zip,82d905af5513049f662b5f6b27a4610416e774c771ef1720d92cd96ca7430c47,143064,zip_0009.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0010.zip,0ce442fd0929bbb495da799cda1d720d4a0ffbaf8815bc0f0a420f67adeebb4e,475344,zip_0010.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0011.zip,2d1b32527dc1d147c3e1e002ddae8d618ff019582a1f2de558ebfa0223793437,152499,zip_0011.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0012.zip,5604ec9af227023853bb5a65e74b7c7bc714556ef364ee5a7a134461b8c49e04,383546,zip_0012.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0013.zip,e53e90c7087fb50db95c84fc6db17ea31c2b0ae1ef5a5510a0d0174e7f5c315b,96837,zip_0013.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0014.zip,03183b71d110f42a4cda1e278a71eba779bf5d13ebf41477d64e937d0a1272a1,435963,zip_0014.zip,sha256,partial,0.5,,ZIP header OK
+D,ZIP,carved_0015.zip,d20772aa61af1c454bf3a57ba1fcf3182d6fc6731e0f933e802554406955c4e5,312951,zip_0015.zip,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0001.zip,ae508d8683ab9c213aa36df5f1d4a49683eb109a3dfaf2e48bff797f29cabf56,480668,docx_0001.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0002.zip,1138c735109e8df0f420077cb75718135c4e8244b18de845bfc40cfc2c98f058,458352,docx_0002.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0003.zip,d16da2271778e8a56ab4ab6d384c2d11a696e403840a1a0f44ce0125d154ccb8,321715,docx_0003.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0004.zip,459650f3e38b9746c9b13c8bb6c653d3fc3325b9423707d419116d387d0b340f,306334,docx_0004.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0005.zip,52bd87863ae611802c80e5eeebf6b6281bddad83eff5d0cbfddd3d189ae8faae,415176,docx_0005.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0006.zip,cb96924dc824521167c0f7592dddee3b5a911da92e2e35741e6b1fcacaf680b5,184958,docx_0006.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0007.zip,934da98df0ed9ed2f0be9ec7b7b15e042e3e31b5f0cdd95440ae6b12babc502c,373575,docx_0007.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0008.zip,fb83ec5451b263c6261ee573d92fad6c1a0142db35744af9d93875e4ade5fc81,410962,docx_0008.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0009.zip,17da2f8ab3db117c91d393f562d9c369e03241cc2a853f612a604b02b2dc7f65,143064,docx_0009.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0010.zip,ebba6cbdb1c3970d30f8133e2e161f5536e8c6166cac53699a91dc92616b8ebd,475344,docx_0010.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0011.zip,49cc7457f1ab6242fe6d811c54f3a11579079756f1724f7929b86c07678a2b85,152499,docx_0011.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0012.zip,61522670b168d98fdcb8a1fc5e03db017ca44eb7d685f0f86d7124f7f26ef9ac,383546,docx_0012.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0013.zip,557a943d16c328d3f07e587ab2d3b199b7a9b2450ea57076d51197cd4b39c5e1,96837,docx_0013.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0014.zip,0a0bb9f2b14dc5b1a39f777ceb6ac5d406cc40925895d3c3fb9322cce5fe70ae,435963,docx_0014.docx,sha256,partial,0.5,,ZIP header OK
+E,DOCX,carved_0015.zip,ccf3c9babea8a2878192f62c725f327983b457cb587653f65e1a70b0b3bb3a06,312951,docx_0015.docx,sha256,partial,0.5,,ZIP header OK

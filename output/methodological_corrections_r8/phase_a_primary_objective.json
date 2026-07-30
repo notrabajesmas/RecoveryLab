@@ -1,0 +1,33 @@
+{
+  "id": "PHASE-A-PRIMARY-OBJECTIVE",
+  "statement": "El objetivo principal de la Fase A es demostrar que RecoveryLab es una plataforma experimental confiable, no demostrar que un motor es mejor que otro.",
+  "rationale": "Si el laboratorio produce resultados reproducibles (no solo repetidos), entonces cualquier resultado futuro — comparación de motores, evaluación de estrategias, calibración de RVS — tiene un fundamento sólido. Sin reproducibilidad del entorno, ningún resultado comparativo es confiable.",
+  "success_criteria": {
+    "CLAIM-DETERMINISM reaches REPRODUCIBLE": {
+      "current": "REPEATED (2/5)",
+      "required": "REPRODUCIBLE (3/5)",
+      "action": "EXP-0003 en otra máquina o por otro investigador",
+      "status": "PENDIENTE"
+    },
+    "CLAIM-DETERMINISM survives across seeds": {
+      "current": "VERIFICADO (EXP-0002, 4 semillas)",
+      "status": "CUMPLIDO"
+    },
+    "CLAIM-DETERMINISM survives across machines": {
+      "current": "NO VERIFICADO",
+      "action": "EXP-0003 real en otra máquina",
+      "status": "PENDIENTE"
+    },
+    "CLAIM-DETERMINISM survives across OS": {
+      "current": "NO VERIFICADO",
+      "action": "Futuro experimento",
+      "status": "PENDIENTE"
+    }
+  },
+  "implication": "Si CLAIM-DETERMINISM alcanza REPRODUCIBLE, RecoveryLab pasa de ser un proyecto de recuperación de datos a ser una plataforma experimental confiable. Ese es el verdadero valor de la Fase A.",
+  "secondary_objectives": [
+    "DIAG-0001: localizar origen del cero en carving",
+    "EXP-0004: validar que resultados escalan a datasets más grandes",
+    "EXP-0005: posicionar RecoveryLab en el espacio de herramientas"
+  ]
+}

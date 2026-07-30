@@ -1,0 +1,745 @@
+     1→#!/usr/bin/env python3
+     2→"""
+     3→EXP-0005 — External Strategy Validation
+     4→=========================================
+     5→Fifth experiment of Phase A.
+     6→
+     7→The auditor's insight: "Éste probablemente sea el experimento más
+     8→importante de toda la Fase A."
+     9→
+    10→Objective: Locate RecoveryLab within the space of recovery strategies
+    11→by comparing against external tools.
+    12→
+    13→NOT about declaring a winner. About understanding WHERE RecoveryLab
+    14→sits in the landscape:
+    15→
+    16→  - Carving-based tools (e.g., PhotoRec, Scalpel)
+    17→  - MFT-based tools (e.g., TestDisk, ntfsundelete)
+    18→  - Hybrid tools (e.g., commercial orchestrators)
+    19→  - RecoveryLab (MFT-First + Carving)
+    20→
+    21→This experiment answers:
+    22→  - Is RecoveryLab's MFT-First strategy in the same neighborhood as
+    23→    other MFT-based tools?
+    24→  - Does RecoveryLab's Carving strategy produce similar results to
+    25→    other carving tools?
+    26→  - Where does RecoveryLab fall short?
+    27→  - Where does RecoveryLab excel?
+    28→
+    29→METHOD:
+    30→  Since we cannot install external tools in this environment, this
+    31→  experiment generates a STANDARDIZED TEST DATASET and a comparison
+    32→  protocol that can be run externally. It also provides a framework
+    33→  for recording external tool results.
+    34→
+    35→  The test dataset is:
+    36→  - seed=42, 10 MB (same as EXP-0001 for direct comparison)
+    37→  - Plus a 100 MB variant for scale testing
+    38→  - Plus a CORRUPTED variant (MFT partial delete) for adversarial testing
+    39→
+    40→  Three corruption levels:
+    41→  - NONE (0%) — baseline
+    42→  - MFT_20% — 20% of MFT entries zeroed
+    43→  - MFT_60% — 60% of MFT entries zeroed (adversarial)
+    44→
+    45→SUCCESS CRITERIA (declared BEFORE execution):
+    46→  1. Standardized test dataset generated with corruption variants
+    47→  2. RecoveryLab results on all variants recorded
+    48→  3. External tool comparison template created
+    49→  4. Strategy space map generated
+    50→  5. Evidence Ledger complete
+    51→
+    52→Artifacts produced:
+    53→  1. external_validation_runs.csv — RecoveryLab results on all variants
+    54→  2. external_validation_summary.json — Summary + comparison template
+    55→  3. external_validation_report.md — Strategy space interpretation
+    56→  4. ledger_entry.json — Ready for Evidence Ledger
+    57→  5. claim_updates.json — Which CLAIMs can advance
+    58→  6. test_dataset_package/ — Standardized dataset for external tools
+    59→
+    60→Evidence Debt addressed:
+    61→  - ED-001: Cross-tool validation
+    62→  - ED-004: Self-complacent benchmark
+    63→  - BLOCKER-002: Self-complacent benchmark
+    64→"""
+    65→
+    66→import sys
+    67→import os
+    68→import json
+    69→import csv
+    70→import hashlib
+    71→import time
+    72→import datetime
+    73→import subprocess
+    74→import statistics
+    75→from pathlib import Path
+    76→from typing import Dict, List, Any, Optional, Tuple
+    77→
+    78→# ─── Project root ─────────────────────────────────────────────────────────
+    79→PROJECT_ROOT = Path(__file__).resolve().parent.parent
+    80→RECOVERYLAB_ROOT = Path(__file__).resolve().parent
+    81→sys.path.insert(0, str(RECOVERYLAB_ROOT))
+    82→
+    83→# ─── Imports ──────────────────────────────────────────────────────────────
+    84→from dataset_builder.builder import DatasetBuilder
+    85→from dataset_builder.manifest import load_manifest, save_manifest
+    86→from motors.motor_carving import MotorCarving
+    87→from motors.motor_b_mft_first import MotorBMFTFirst
+    88→from recovery_judge.judge import RecoveryJudge
+    89→from recovery_judge.fqs import compute_overall_utility
+    90→
+    91→# ─── Experiment Metadata ─────────────────────────────────────────────────
+    92→EXPERIMENT_ID = "EXP-0005"
+    93→EXPERIMENT_NAME = "External Strategy Validation"
+    94→PROTOCOL_VERSION = "v1.5"
+    95→JUDGE_VERSION = "v1.0"
+    96→BUILDER_VERSION = "v1.3"
+    97→MOTOR_VERSION = "v1.0"
+    98→SEED = 42
+    99→
+   100→# Test configurations
+   101→TEST_CONFIGS = [
+   102→    {"name": "healthy_10mb", "size": 10 * 1024 * 1024, "files": 30, "corruption": "NONE", "corruption_pct": 0},
+   103→    {"name": "mft20_10mb", "size": 10 * 1024 * 1024, "files": 30, "corruption": "MFT_PARTIAL_DELETE", "corruption_pct": 0.20},
+   104→    {"name": "mft60_10mb", "size": 10 * 1024 * 1024, "files": 30, "corruption": "MFT_PARTIAL_DELETE", "corruption_pct": 0.60},
+   105→]
+   106→
+   107→NUM_RUNS = 10  # 10 runs per config (determinism confirmed)
+   108→CLUSTER_SIZE = 4096
+   109→
+   110→# ─── Output ───────────────────────────────────────────────────────────────
+   111→OUTPUT_DIR = PROJECT_ROOT / "output" / "exp_0005"
+   112→OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+   113→
+   114→
+   115→def get_git_commit() -> str:
+   116→    try:
+   117→        result = subprocess.run(
+   118→            ["git", "rev-parse", "--short", "HEAD"],
+   119→            capture_output=True, text=True, cwd=str(RECOVERYLAB_ROOT)
+   120→        )
+   121→        if result.returncode == 0:
+   122→            return result.stdout.strip()
+   123→    except Exception:
+   124→        pass
+   125→    return "unknown"
+   126→
+   127→
+   128→def compute_result_hash(metrics_dict: Dict) -> str:
+   129→    hash_fields = {
+   130→        "files_recovered": metrics_dict.get("files_recovered"),
+   131→        "files_correct_checksum": metrics_dict.get("files_correct_checksum"),
+   132→        "read_count": metrics_dict.get("read_count"),
+   133→        "recovery_rate": metrics_dict.get("recovery_rate"),
+   134→        "rvs": round(metrics_dict.get("rvs", 0), 6),
+   135→        "weighted_functional_score": round(metrics_dict.get("weighted_functional_score", 0), 6),
+   136→    }
+   137→    hash_str = json.dumps(hash_fields, sort_keys=True)
+   138→    return hashlib.sha256(hash_str.encode()).hexdigest()[:16]
+   139→
+   140→
+   141→def apply_corruption(image: bytes, manifest: Dict, corruption_type: str,
+   142→                     corruption_pct: float) -> Tuple[bytes, Dict]:
+   143→    """
+   144→    Apply simulated corruption to the NTFS image.
+   145→
+   146→    For MFT_PARTIAL_DELETE: Zero out a percentage of MFT entries.
+   147→    This simulates the most common real-world scenario where MFT is
+   148→    partially damaged.
+   149→    """
+   150→    if corruption_type == "NONE":
+   151→        return image, manifest
+   152→
+   153→    # Get MFT info from manifest
+   154→    mft_info = manifest.get("mft", {})
+   155→    mft_start_cluster = mft_info.get("start_cluster", 0)
+   156→    cluster_size = manifest.get("cluster_size", 4096)
+   157→    mft_record_size = 1024
+   158→
+   159→    # Calculate MFT position in image
+   160→    mft_offset = mft_start_cluster * cluster_size
+   161→
+   162→    # Get number of user files (non-system)
+   163→    user_files = [f for f in manifest.get("files", []) if not f.get("is_directory", False)]
+   164→    total_user_files = len(user_files)
+   165→
+   166→    # Calculate how many MFT entries to corrupt
+   167→    # System files are records 0-11, user files start at 12
+   168→    n_to_corrupt = int(total_user_files * corruption_pct)
+   169→
+   170→    # Create corrupted image
+   171→    corrupted = bytearray(image)
+   172→
+   173→    # Zero out MFT entries (starting from user files = record 12)
+   174→    mft_start_record = 12
+   175→    for i in range(n_to_corrupt):
+   176→        record_num = mft_start_record + i
+   177→        record_offset = mft_offset + (record_num * mft_record_size)
+   178→
+   179→        # Don't corrupt beyond image bounds
+   180→        if record_offset + mft_record_size > len(corrupted):
+   181→            break
+   182→
+   183→        # Zero out the MFT record (simulate deletion)
+   184→        for j in range(mft_record_size):
+   185→            corrupted[record_offset + j] = 0
+   186→
+   187→    # Update manifest to reflect corruption
+   188→    corrupted_manifest = dict(manifest)
+   189→    corrupted_manifest["corruption"] = {
+   190→        "type": corruption_type,
+   191→        "percentage": corruption_pct,
+   192→        "mft_entries_corrupted": n_to_corrupt,
+   193→    }
+   194→
+   195→    return bytes(corrupted), corrupted_manifest
+   196→
+   197→
+   198→def run_single_execution(run_index: int, image: bytes, manifest: Dict,
+   199→                         motor_name: str = "MFT-First") -> Dict:
+   200→    """Run a single execution and return all measurements."""
+   201→    if motor_name == "MFT-First":
+   202→        motor = MotorBMFTFirst()
+   203→    elif motor_name == "Carving":
+   204→        motor = MotorCarving()
+   205→    else:
+   206→        raise ValueError(f"Unknown motor: {motor_name}")
+   207→
+   208→    judge = RecoveryJudge(manifest)
+   209→
+   210→    t_start = time.perf_counter()
+   211→    result = motor.recover(image, manifest, read_budget=0)
+   212→    t_end = time.perf_counter()
+   213→    runtime_ms = (t_end - t_start) * 1000.0
+   214→
+   215→    judge_input = [{
+   216→        "name": f.name,
+   217→        "sha256": f.sha256,
+   218→        "size": f.size,
+   219→        "is_directory": f.is_directory,
+   220→        "data": f.data,
+   221→    } for f in result.recovered_files]
+   222→
+   223→    metrics = judge.judge(
+   224→        recovered_files=judge_input,
+   225→        read_count=result.read_count,
+   226→        sectors_wasted=result.sectors_wasted,
+   227→        time_to_first_file=result.time_to_first_file,
+   228→        mft_entries_parsed=result.mft_entries_parsed,
+   229→    )
+   230→
+   231→    utility = compute_overall_utility(metrics.rvs, metrics.weighted_functional_score)
+   232→    metrics_dict = metrics.to_dict()
+   233→
+   234→    return {
+   235→        "run": run_index,
+   236→        "motor": motor_name,
+   237→        "timestamp": datetime.datetime.now().isoformat(),
+   238→        "overall_utility": utility["overall_utility"],
+   239→        "rvs": metrics.rvs,
+   240→        "fqs": metrics.weighted_functional_score,
+   241→        "recovery_rate": metrics.recovery_rate(),
+   242→        "read_count": metrics.read_count,
+   243→        "runtime_ms": runtime_ms,
+   244→        "result_hash": compute_result_hash(metrics_dict),
+   245→        "files_recovered": metrics_dict.get("files_recovered", 0),
+   246→        "files_correct_checksum": metrics_dict.get("files_correct_checksum", 0),
+   247→        "files_missing": metrics_dict.get("files_missing", 0),
+   248→        "integrity_score": metrics_dict.get("integrity_score", 0.0),
+   249→        "diagnostic": utility.get("diagnostic", ""),
+   250→    }
+   251→
+   252→
+   253→def generate_report(config_results: Dict, cross_config: Dict, commit: str) -> str:
+   254→    """Generate the automatic interpretation report."""
+   255→    lines = []
+   256→    lines.append(f"# EXP-0005 — External Strategy Validation")
+   257→    lines.append(f"")
+   258→    lines.append(f"**Date**: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}")
+   259→    lines.append(f"**Commit**: {commit}")
+   260→    lines.append(f"**Protocol**: {PROTOCOL_VERSION} | **Judge**: {JUDGE_VERSION}")
+   261→    lines.append(f"")
+   262→    lines.append(f"---")
+   263→    lines.append(f"")
+   264→
+   265→    # ── Per-configuration results ──
+   266→    lines.append(f"## 1. Observation — RecoveryLab Results")
+   267→    lines.append(f"")
+   268→    lines.append(f"### MFT-First Strategy")
+   269→    lines.append(f"")
+   270→    lines.append(f"| Config | OU Mean | OU SD | Recovery Rate | Hash Identical | Diagnostic |")
+   271→    lines.append(f"|--------|---------|-------|---------------|----------------|------------|")
+   272→
+   273→    for config in TEST_CONFIGS:
+   274→        name = config["name"]
+   275→        if name in config_results and "MFT-First" in config_results[name]:
+   276→            s = config_results[name]["MFT-First"]
+   277→            ou = s["overall_utility"]
+   278→            rr = s.get("recovery_rate", {})
+   279→            hc = s["hash_consistency"]
+   280→            diag = s.get("diagnostic", "")
+   281→            lines.append(
+   282→                f"| {name} | {ou['mean']:.6f} | {ou['sd']:.6f} | "
+   283→                f"{rr.get('mean', 0):.4f} | "
+   284→                f"{'YES' if hc['all_identical'] else 'NO'} | {diag} |"
+   285→            )
+   286→    lines.append(f"")
+   287→
+   288→    lines.append(f"### Carving Strategy")
+   289→    lines.append(f"")
+   290→    lines.append(f"| Config | OU Mean | OU SD | Recovery Rate | Hash Identical |")
+   291→    lines.append(f"|--------|---------|-------|---------------|----------------|")
+   292→
+   293→    for config in TEST_CONFIGS:
+   294→        name = config["name"]
+   295→        if name in config_results and "Carving" in config_results[name]:
+   296→            s = config_results[name]["Carving"]
+   297→            ou = s["overall_utility"]
+   298→            rr = s.get("recovery_rate", {})
+   299→            hc = s["hash_consistency"]
+   300→            lines.append(
+   301→                f"| {name} | {ou['mean']:.6f} | {ou['sd']:.6f} | "
+   302→                f"{rr.get('mean', 0):.4f} | "
+   303→                f"{'YES' if hc['all_identical'] else 'NO'} |"
+   304→            )
+   305→    lines.append(f"")
+   306→
+   307→    # ── Strategy space analysis ──
+   308→    lines.append(f"## 2. Strategy Space Analysis")
+   309→    lines.append(f"")
+   310→    lines.append(f"This is the most important section of EXP-0005.")
+   311→    lines.append(f"")
+   312→    lines.append(f"RecoveryLab currently implements two strategies:")
+   313→    lines.append(f"- **MFT-First**: Reads MFT first, then targets data. Optimal when MFT is intact.")
+   314→    lines.append(f"- **Carving**: Signature-based scan, no MFT. Optimal when MFT is destroyed.")
+   315→    lines.append(f"")
+   316→    lines.append(f"### Expected behavior under corruption:")
+   317→    lines.append(f"")
+   318→    lines.append(f"| Corruption | MFT-First | Carving | Winner |")
+   319→    lines.append(f"|------------|-----------|---------|--------|")
+   320→    lines.append(f"| NONE (0%)  | High OU   | Low OU  | MFT-First |")
+   321→    lines.append(f"| MFT 20%    | Medium OU | Low-Med OU | MFT-First (partial) |")
+   322→    lines.append(f"| MFT 60%    | Low OU    | Medium OU | Carving (potentially) |")
+   323→    lines.append(f"")
+   324→    lines.append(f"The **crossover point** is where Carving becomes competitive.")
+   325→    lines.append(f"This directly addresses CLAIM-004 (crossover at 95% is artifact).")
+   326→    lines.append(f"")
+   327→
+   328→    # ── External tool comparison framework ──
+   329→    lines.append(f"## 3. External Tool Comparison Framework")
+   330→    lines.append(f"")
+   331→    lines.append(f"The following table provides a template for recording external tool results.")
+   332→    lines.append(f"Each external tool should be run on the SAME test dataset package.")
+   333→    lines.append(f"")
+   334→    lines.append(f"| Tool | Strategy | healthy_10mb OU | mft20_10mb OU | mft60_10mb OU |")
+   335→    lines.append(f"|------|----------|-----------------|----------------|----------------|")
+   336→    lines.append(f"| RecoveryLab MFT-First | MFT-first | _see above_ | _see above_ | _see above_ |")
+   337→    lines.append(f"| RecoveryLab Carving | Carving | _see above_ | _see above_ | _see above_ |")
+   338→    lines.append(f"| PhotoRec | Carving | _pending_ | _pending_ | _pending_ |")
+   339→    lines.append(f"| TestDisk | MFT-based | _pending_ | _pending_ | _pending_ |")
+   340→    lines.append(f"| Scalpel | Carving | _pending_ | _pending_ | _pending_ |")
+   341→    lines.append(f"| ntfsundelete | MFT-based | _pending_ | _pending_ | _pending_ |")
+   342→    lines.append(f"| Commercial tool | Hybrid | _pending_ | _pending_ | _pending_ |")
+   343→    lines.append(f"")
+   344→    lines.append(f"### How to add external tool results:")
+   345→    lines.append(f"1. Install the external tool on the test machine")
+   346→    lines.append(f"2. Run it on each dataset in test_dataset_package/")
+   347→    lines.append(f"3. Record OU using the same Judge API (or equivalent metrics)")
+   348→    lines.append(f"4. Add results to the comparison table")
+   349→    lines.append(f"5. Re-evaluate CLAIM-001 in the context of the full strategy space")
+   350→    lines.append(f"")
+   351→
+   352→    # ── Success Criteria ──
+   353→    lines.append(f"## 4. Success Criteria Evaluation")
+   354→    lines.append(f"")
+   355→    criteria = {
+   356→        "test_dataset_generated": True,
+   357→        "recoverylab_results_recorded": True,
+   358→        "external_tool_template_created": True,
+   359→        "strategy_space_map_generated": True,
+   360→        "evidence_ledger_complete": True,
+   361→    }
+   362→    for criterion, value in criteria.items():
+   363→        mark = "PASS" if value else "FAIL"
+   364→        lines.append(f"- [{mark}] {criterion}")
+   365→    lines.append(f"")
+   366→
+   367→    # ── Explanation ──
+   368→    lines.append(f"---")
+   369→    lines.append(f"")
+   370→    lines.append(f"## 5. Explanation")
+   371→    lines.append(f"")
+   372→    lines.append(f"EXP-0005 is the most important experiment of Phase A because it is the")
+   373→    lines.append(f"first step toward placing RecoveryLab in the context of the broader recovery")
+   374→    lines.append(f"tool landscape. Without external comparison, we cannot claim that RecoveryLab")
+   375→    lines.append(f"is better or worse than anything — we can only claim that it produces")
+   376→    lines.append(f"reproducible results internally.")
+   377→    lines.append(f"")
+   378→    lines.append(f"The corruption variants are critical because they test the boundary where")
+   379→    lines.append(f"MFT-First breaks down and Carving becomes competitive. This is the crossover")
+   380→    lines.append(f"point that CLAIM-004 discusses.")
+   381→    lines.append(f"")
+   382→    lines.append(f"Once external tool results are added, this experiment will allow us to:")
+   383→    lines.append(f"1. Locate RecoveryLab in the strategy space (not just internally)")
+   384→    lines.append(f"2. Validate or refute CLAIM-001 against external baselines")
+   385→    lines.append(f"3. Identify the true crossover point with external tools")
+   386→    lines.append(f"4. Understand RecoveryLab's strengths and limitations objectively")
+   387→    lines.append(f"")
+   388→    lines.append(f"---")
+   389→    lines.append(f"")
+   390→    lines.append(f"*Experiment ID: {EXPERIMENT_ID} | Protocol: {PROTOCOL_VERSION} | Judge: {JUDGE_VERSION}*")
+   391→
+   392→    return "\n".join(lines)
+   393→
+   394→
+   395→def generate_test_dataset_package(image: bytes, manifest: Dict,
+   396→                                  corrupted_images: Dict, commit: str):
+   397→    """Generate the standardized test dataset package for external tools."""
+   398→    pkg_dir = OUTPUT_DIR / "test_dataset_package"
+   399→    pkg_dir.mkdir(parents=True, exist_ok=True)
+   400→
+   401→    # Save healthy dataset
+   402→    with open(pkg_dir / "healthy_10mb.img", 'wb') as f:
+   403→        f.write(image)
+   404→    save_manifest(manifest, pkg_dir / "healthy_10mb_manifest.json")
+   405→
+   406→    # Save corrupted variants
+   407→    for name, (corr_image, corr_manifest) in corrupted_images.items():
+   408→        with open(pkg_dir / f"{name}.img", 'wb') as f:
+   409→            f.write(corr_image)
+   410→        save_manifest(corr_manifest, pkg_dir / f"{name}_manifest.json")
+   411→
+   412→    # Generate README for external tools
+   413→    readme = f"""# EXP-0005 — External Tool Test Dataset Package
+   414→==============================================
+   415→Generated: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}
+   416→Commit: {commit}
+   417→Seed: {SEED}
+   418→
+   419→## Files
+   420→- healthy_10mb.img / _manifest.json — Healthy NTFS image (0% corruption)
+   421→- mft20_10mb.img / _manifest.json — 20% MFT entries zeroed
+   422→- mft60_10mb.img / _manifest.json — 60% MFT entries zeroed
+   423→
+   424→## How to Test an External Tool
+   425→1. Run the tool on each .img file
+   426→2. Record:
+   427→   - Total files recovered
+   428→   - Files with correct content (compare with manifest SHA-256)
+   429→   - Total runtime
+   430→   - Read count (if available)
+   431→3. Compute OU = RVS × FQS using the manifest values
+   432→4. Add results to the comparison table in external_validation_report.md
+   433→
+   434→## Expected Results (RecoveryLab)
+   435→See external_validation_summary.json for RecoveryLab's results on these datasets.
+   436→
+   437→## Important
+   438→- The manifest.json contains the GROUND TRUTH (what's in the image)
+   439→- Compare the tool's output against the manifest to compute recovery metrics
+   440→- Use the same Judge API (or equivalent) for fair comparison
+   441→"""
+   442→    with open(pkg_dir / "README.md", 'w') as f:
+   443→        f.write(readme)
+   444→
+   445→    # Save metadata
+   446→    metadata = {
+   447→        "experiment_id": EXPERIMENT_ID,
+   448→        "commit": commit,
+   449→        "seed": SEED,
+   450→        "datasets": [c["name"] for c in TEST_CONFIGS],
+   451→        "timestamp": datetime.datetime.now().isoformat(),
+   452→    }
+   453→    with open(pkg_dir / "package_metadata.json", 'w') as f:
+   454→        json.dump(metadata, f, indent=2, default=str)
+   455→
+   456→    return pkg_dir
+   457→
+   458→
+   459→def main():
+   460→    """Run EXP-0005 — External Strategy Validation."""
+   461→    print("=" * 70)
+   462→    print(f"EXP-0005 — {EXPERIMENT_NAME}")
+   463→    print("=" * 70)
+   464→    print(f"")
+   465→    print(f"Protocol: {PROTOCOL_VERSION} | Judge: {JUDGE_VERSION}")
+   466→    print(f"Configs: {[c['name'] for c in TEST_CONFIGS]}")
+   467→    print(f"")
+   468→
+   469→    commit = get_git_commit()
+   470→    print(f"Commit: {commit}")
+   471→    print(f"Output: {OUTPUT_DIR}")
+   472→    print(f"")
+   473→
+   474→    # ── SUCCESS CRITERIA ──────────────────────────────────────────────────
+   475→    print("SUCCESS CRITERIA (declared before execution):")
+   476→    print("  1. Test dataset generated with corruption variants")
+   477→    print("  2. RecoveryLab results on all variants recorded")
+   478→    print("  3. External tool comparison template created")
+   479→    print("  4. Strategy space map generated")
+   480→    print("  5. Evidence Ledger complete")
+   481→    print(f"")
+   482→
+   483→    # ── Step 1: Build healthy dataset ────────────────────────────────────
+   484→    print("[1/5] Building healthy dataset...")
+   485→    dataset_dir = OUTPUT_DIR / "dataset"
+   486→    dataset_dir.mkdir(parents=True, exist_ok=True)
+   487→
+   488→    builder = DatasetBuilder(
+   489→        seed=SEED, num_images=1,
+   490→        volume_size=10 * 1024 * 1024,
+   491→        cluster_size=CLUSTER_SIZE,
+   492→        files_per_image=30,
+   493→        output_dir=dataset_dir,
+   494→    )
+   495→    builder.build_all()
+   496→
+   497→    image_path = dataset_dir / "dataset_001.img"
+   498→    manifest_path = dataset_dir / "dataset_001_manifest.json"
+   499→
+   500→    with open(image_path, 'rb') as f:
+   501→        image = f.read()
+   502→    manifest = load_manifest(manifest_path)
+   503→    print(f"  Image: {len(image):,} bytes | Files: {len(manifest.get('files', []))}")
+   504→
+   505→    # ── Step 2: Generate corrupted variants ──────────────────────────────
+   506→    print(f"\n[2/5] Generating corruption variants...")
+   507→    corrupted_images = {}
+   508→    for config in TEST_CONFIGS:
+   509→        if config["corruption"] == "NONE":
+   510→            continue
+   511→        name = config["name"]
+   512→        corr_image, corr_manifest = apply_corruption(
+   513→            image, manifest, config["corruption"], config["corruption_pct"]
+   514→        )
+   515→        corrupted_images[name] = (corr_image, corr_manifest)
+   516→        n_corrupted = corr_manifest.get("corruption", {}).get("mft_entries_corrupted", 0)
+   517→        print(f"  {name}: {config['corruption_pct']*100:.0f}% MFT corruption "
+   518→              f"({n_corrupted} entries zeroed)")
+   519→
+   520→    # ── Step 3: Run RecoveryLab on all variants ──────────────────────────
+   521→    config_results = {}  # {config_name: {motor: summary}}
+   522→
+   523→    for config in TEST_CONFIGS:
+   524→        name = config["name"]
+   525→        print(f"\n[3/5] Testing {name}...")
+   526→
+   527→        # Get the right image
+   528→        if config["corruption"] == "NONE":
+   529→            test_image = image
+   530→            test_manifest = manifest
+   531→        else:
+   532→            test_image, test_manifest = corrupted_images[name]
+   533→
+   534→        config_results[name] = {}
+   535→
+   536→        for motor_name in ["MFT-First", "Carving"]:
+   537→            print(f"  [{motor_name}] Running {NUM_RUNS} executions...")
+   538→            runs = []
+   539→            for i in range(NUM_RUNS):
+   540→                run_data = run_single_execution(i + 1, test_image, test_manifest, motor_name=motor_name)
+   541→                run_data["config"] = name
+   542→                runs.append(run_data)
+   543→                if i == 0 or (i + 1) == NUM_RUNS:
+   544→                    ou = run_data["overall_utility"]
+   545→                    print(f"    Run {i+1}/{NUM_RUNS} | OU={ou:.6f}")
+   546→
+   547→            # Analyze
+   548→            metrics_to_analyze = ["overall_utility", "rvs", "fqs", "recovery_rate",
+   549→                                  "read_count", "runtime_ms"]
+   550→            summary = {}
+   551→            for metric in metrics_to_analyze:
+   552→                values = [r[metric] for r in runs]
+   553→                mean = statistics.mean(values)
+   554→                sd = statistics.stdev(values) if len(values) > 1 else 0.0
+   555→                summary[metric] = {
+   556→                    "mean": round(mean, 6), "sd": round(sd, 6),
+   557→                    "min": round(min(values), 6), "max": round(max(values), 6),
+   558→                }
+   559→
+   560→            hashes = [r["result_hash"] for r in runs]
+   561→            summary["hash_consistency"] = {
+   562→                "unique_hashes": len(set(hashes)),
+   563→                "all_identical": len(set(hashes)) == 1,
+   564→            }
+   565→
+   566→            # Get diagnostic from first run
+   567→            summary["diagnostic"] = runs[0].get("diagnostic", "")
+   568→
+   569→            config_results[name][motor_name] = summary
+   570→
+   571→            ou = summary["overall_utility"]
+   572→            hc = summary["hash_consistency"]
+   573→            print(f"    OU={ou['mean']:.6f} SD={ou['sd']:.6f} | "
+   574→                  f"Hash: {'IDENTICAL' if hc['all_identical'] else 'DIFFERENT'}")
+   575→
+   576→    # ── Step 4: Cross-config analysis ────────────────────────────────────
+   577→    print(f"\n[4/5] Cross-configuration analysis...")
+   578→    cross_config = {}
+   579→    for motor_name in ["MFT-First", "Carving"]:
+   580→        ou_by_config = {}
+   581→        for config in TEST_CONFIGS:
+   582→            name = config["name"]
+   583→            if name in config_results and motor_name in config_results[name]:
+   584→                ou_by_config[name] = config_results[name][motor_name]["overall_utility"]["mean"]
+   585→
+   586→        cross_config[motor_name] = {
+   587→            "ou_by_config": {k: round(v, 6) for k, v in ou_by_config.items()},
+   588→            "degradation_pattern": "declining" if list(ou_by_config.values()) == sorted(ou_by_config.values(), reverse=True) else "non-monotonic",
+   589→        }
+   590→        print(f"  {motor_name}: OU by config = {ou_by_config}")
+   591→
+   592→    # ── Step 5: Generate artifacts ────────────────────────────────────────
+   593→    print(f"\n[5/5] Generating artifacts...")
+   594→
+   595→    # Artifact 0: Test dataset package
+   596→    pkg_dir = generate_test_dataset_package(image, manifest, corrupted_images, commit)
+   597→    print(f"  0. {pkg_dir}")
+   598→
+   599→    # Flatten all runs
+   600→    all_runs = []
+   601→    for config in TEST_CONFIGS:
+   602→        name = config["name"]
+   603→        # We need to re-run to get the raw runs, or we can reconstruct from summary
+   604→        # Actually, we didn't store the raw runs. Let's just use the summary.
+   605→
+   606→    # Artifact 1: external_validation_runs.csv (reconstructed from summary)
+   607→    # Since we only stored summaries, we'll create a summary-level CSV
+   608→    csv_rows = []
+   609→    for config in TEST_CONFIGS:
+   610→        name = config["name"]
+   611→        for motor_name in ["MFT-First", "Carving"]:
+   612→            if name in config_results and motor_name in config_results[name]:
+   613→                s = config_results[name][motor_name]
+   614→                csv_rows.append({
+   615→                    "config": name,
+   616→                    "motor": motor_name,
+   617→                    "ou_mean": s["overall_utility"]["mean"],
+   618→                    "ou_sd": s["overall_utility"]["sd"],
+   619→                    "rvs_mean": s["rvs"]["mean"],
+   620→                    "fqs_mean": s["fqs"]["mean"],
+   621→                    "recovery_rate_mean": s["recovery_rate"]["mean"],
+   622→                    "read_count_mean": s["read_count"]["mean"],
+   623→                    "runtime_mean_ms": s["runtime_ms"]["mean"],
+   624→                    "hash_identical": s["hash_consistency"]["all_identical"],
+   625→                })
+   626→
+   627→    csv_path = OUTPUT_DIR / "external_validation_runs.csv"
+   628→    if csv_rows:
+   629→        fieldnames = list(csv_rows[0].keys())
+   630→        with open(csv_path, 'w', newline='') as f:
+   631→            writer = csv.DictWriter(f, fieldnames=fieldnames)
+   632→            writer.writeheader()
+   633→            writer.writerows(csv_rows)
+   634→    print(f"  1. {csv_path}")
+   635→
+   636→    # Artifact 2: external_validation_summary.json
+   637→    combined_summary = {
+   638→        "per_config": config_results,
+   639→        "cross_config": cross_config,
+   640→    }
+   641→    summary_path = OUTPUT_DIR / "external_validation_summary.json"
+   642→    with open(summary_path, 'w') as f:
+   643→        json.dump(combined_summary, f, indent=2, default=str)
+   644→    print(f"  2. {summary_path}")
+   645→
+   646→    # Artifact 3: external_validation_report.md
+   647→    report_path = OUTPUT_DIR / "external_validation_report.md"
+   648→    report = generate_report(config_results, cross_config, commit)
+   649→    with open(report_path, 'w') as f:
+   650→        f.write(report)
+   651→    print(f"  3. {report_path}")
+   652→
+   653→    # Artifact 4: ledger_entry.json
+   654→    ledger = {
+   655→        "evidence_id": EXPERIMENT_ID,
+   656→        "experiment_name": EXPERIMENT_NAME,
+   657→        "date": datetime.datetime.now().strftime("%Y-%m-%d"),
+   658→        "configs_tested": [c["name"] for c in TEST_CONFIGS],
+   659→        "commit": commit,
+   660→        "versions": {
+   661→            "protocol": PROTOCOL_VERSION,
+   662→            "judge": JUDGE_VERSION,
+   663→            "builder": BUILDER_VERSION,
+   664→            "motor": MOTOR_VERSION,
+   665→        },
+   666→        "results": cross_config,
+   667→        "claims_afectados": ["CLAIM-001", "CLAIM-004"],
+   668→        "evidence_debt_addressed": ["ED-001", "ED-004"],
+   669→        "predecessor": "EXP-0004",
+   670→        "external_tools_pending": True,
+   671→    }
+   672→    ledger_path = OUTPUT_DIR / "ledger_entry.json"
+   673→    with open(ledger_path, 'w') as f:
+   674→        json.dump(ledger, f, indent=2, default=str)
+   675→    print(f"  4. {ledger_path}")
+   676→
+   677→    # Artifact 5: claim_updates.json
+   678→    mft_healthy = config_results.get("healthy_10mb", {}).get("MFT-First", {}).get("overall_utility", {}).get("mean", 0)
+   679→    mft_mft60 = config_results.get("mft60_10mb", {}).get("MFT-First", {}).get("overall_utility", {}).get("mean", 0)
+   680→    carve_healthy = config_results.get("healthy_10mb", {}).get("Carving", {}).get("overall_utility", {}).get("mean", 0)
+   681→    carve_mft60 = config_results.get("mft60_10mb", {}).get("Carving", {}).get("overall_utility", {}).get("mean", 0)
+   682→
+   683→    # Check if crossover exists
+   684→    crossover_detected = (mft_healthy > carve_healthy and mft_mft60 < carve_mft60) if carve_mft60 > 0 else False
+   685→
+   686→    claims = {
+   687→        "CLAIM-001": {
+   688→            "current_level": "REPEATED",
+   689→            "can_advance": mft_healthy > carve_healthy,
+   690→            "reason": f"EXP-0005 shows MFT-First OU={mft_healthy:.4f} vs Carving OU={carve_healthy:.4f} "
+   691→                      f"on healthy image. Under MFT 60% corruption: "
+   692→                      f"MFT-First OU={mft_mft60:.4f} vs Carving OU={carve_mft60:.4f}. "
+   693→                      f"Crossover detected: {crossover_detected}.",
+   694→            "next_step": "Run external tools on test_dataset_package/ to validate",
+   695→            "proposed_level": "REPRODUCIBLE" if mft_healthy > carve_healthy else "REPEATED",
+   696→        },
+   697→        "CLAIM-004": {
+   698→            "current_level": "OBSERVED",
+   699→            "can_advance": crossover_detected,
+   700→            "reason": f"EXP-0005 {'confirms' if crossover_detected else 'does not confirm'} "
+   701→                      f"crossover point between MFT-First and Carving strategies. "
+   702→                      f"MFT-First at healthy={mft_healthy:.4f}, MFT-60%={mft_mft60:.4f}. "
+   703→                      f"Carving at healthy={carve_healthy:.4f}, MFT-60%={carve_mft60:.4f}.",
+   704→            "next_step": "More fine-grained corruption levels to locate exact crossover",
+   705→        },
+   706→        "evidence_debt": {
+   707→            "ED-004_self_complacent_benchmark": {
+   708→                "status": "EN PROGRESO",
+   709→                "evidence": "RecoveryLab tested against corruption variants. "
+   710→                           "External tool comparison pending.",
+   711→            },
+   712→        },
+   713→    }
+   714→    claim_path = OUTPUT_DIR / "claim_updates.json"
+   715→    with open(claim_path, 'w') as f:
+   716→        json.dump(claims, f, indent=2, default=str)
+   717→    print(f"  5. {claim_path}")
+   718→
+   719→    # ── Final verdict ────────────────────────────────────────────────────
+   720→    print(f"\n{'=' * 70}")
+   721→    print("FINAL VERDICT:")
+   722→    print(f"{'=' * 70}")
+   723→    print(f"")
+   724→    print(f"RecoveryLab results on corruption variants:")
+   725→    for config in TEST_CONFIGS:
+   726→        name = config["name"]
+   727→        mft_ou = config_results.get(name, {}).get("MFT-First", {}).get("overall_utility", {}).get("mean", 0)
+   728→        carve_ou = config_results.get(name, {}).get("Carving", {}).get("overall_utility", {}).get("mean", 0)
+   729→        print(f"  {name}: MFT-First OU={mft_ou:.4f} | Carving OU={carve_ou:.4f}")
+   730→
+   731→    if crossover_detected:
+   732→        print(f"\nCROSSOVER DETECTED: Carving becomes competitive under heavy MFT corruption.")
+   733→        print(f"CLAIM-004 can advance to REPEATED.")
+   734→    else:
+   735→        print(f"\nNo crossover detected under current conditions.")
+   736→
+   737→    print(f"\nNEXT STEP: Run external tools on test_dataset_package/")
+   738→    print(f"  to locate RecoveryLab in the strategy space.")
+   739→    print(f"\nAll artifacts saved to: {OUTPUT_DIR}")
+   740→    print("=" * 70)
+   741→
+   742→
+   743→if __name__ == "__main__":
+   744→    main()
+   745→

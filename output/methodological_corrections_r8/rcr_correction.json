@@ -1,0 +1,48 @@
+{
+  "metric": "RCR (Reproducible Claims Ratio)",
+  "definition": "Fracción de claims que han alcanzado nivel REPRODUCIBLE (3/5) o superior",
+  "current_value": 0.0,
+  "previous_incorrect_value": 0.4,
+  "correction_reason": "El protocolo distingue entre REPEATED (2/5) y REPRODUCIBLE (3/5). RCR = Reproducible Claims Ratio. Los claims actualmente están en REPEATED porque EXP-0001 y EXP-0002 se ejecutaron en la misma máquina por el mismo investigador. Hasta que EXP-0003 se ejecute en otra máquina (o por otro investigador), esos claims siguen siendo repetidos, no reproducibles. Contarlos como reproducibles inflaría prematuramente el RCR y destruiría su valor como indicador.",
+  "claims_status": {
+    "CLAIM-001": {
+      "current_level": "REPEATED (2/5)",
+      "counts_for_rcr": false,
+      "reason": "Misma máquina, mismo investigador. Requiere reproducción externa.",
+      "needs": "EXP-0003 en otra máquina o por otro investigador"
+    },
+    "CLAIM-005": {
+      "current_level": "OBSERVED (1/5)",
+      "counts_for_rcr": false,
+      "reason": "No ha sido repetido formalmente.",
+      "needs": "Repetición + reproducción externa"
+    },
+    "CLAIM-DETERMINISM": {
+      "current_level": "REPEATED (2/5)",
+      "counts_for_rcr": false,
+      "reason": "Misma máquina. Requiere reproducción externa.",
+      "needs": "EXP-0003 en otra máquina"
+    },
+    "CLAIM-002": {
+      "current_level": "OBSERVED (1/5)",
+      "counts_for_rcr": false,
+      "reason": "No repetido."
+    },
+    "CLAIM-003": {
+      "current_level": "OBSERVED (1/5)",
+      "counts_for_rcr": false,
+      "reason": "No repetido."
+    },
+    "CLAIM-004": {
+      "current_level": "OBSERVED (1/5)",
+      "counts_for_rcr": false,
+      "reason": "No repetido."
+    }
+  },
+  "total_claims": 6,
+  "reproducible_claims": 0,
+  "rcr_percent": 0.0,
+  "phase_a_target": ">= 60%",
+  "graduation_target": ">= 80%",
+  "path_to_improvement": "El camino para aumentar el RCR es: 1) Ejecutar EXP-0003 en otra máquina → CLAIM-001 y CLAIM-DETERMINISM avanzan a REPRODUCIBLE 2) Repetir CLAIM-002/003/004 en nuevos experimentos → avanzan a REPEATED 3) Reproducir CLAIM-002/003/004 externamente → avanzan a REPRODUCIBLE"
+}

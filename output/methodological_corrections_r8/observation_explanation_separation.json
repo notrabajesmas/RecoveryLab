@@ -1,0 +1,68 @@
+{
+  "id": "OBS-EXPL-SEPARATION-001",
+  "topic": "Motor Carving Overall Utility = 0.0",
+  "observation": {
+    "statement": "En EXP-0001, EXP-0002 y EXP-0005, bajo las condiciones evaluadas (datasets sintéticos NTFS de 10 MB, sin corrupción o con corrupción de MFT, Judge API v1.0, Protocol v1.5), el Motor Carving obtuvo Overall Utility = 0.0 en todos los datasets evaluados.",
+    "belongs_in": "Evidence Ledger (nivel OBSERVACIÓN)",
+    "is_factual": true,
+    "is_refutable": true,
+    "refutation_method": "Encontrar un dataset donde carving OU > 0.0"
+  },
+  "NOT_a_claim": {
+    "statement": "El Motor Carving no aprovecha la corrupción",
+    "reason": "Esto es una EXPLICACIÓN, no una observación. Excede la evidencia. Hay al menos 7 hipótesis compatibles con la observación OU=0.0."
+  },
+  "compatible_hypotheses": [
+    {
+      "id": "H-CARVING-001",
+      "statement": "El parser de carving tiene un bug",
+      "testable": true,
+      "test_method": "DIAG-0001: probar con datasets de formato único",
+      "implication_if_true": "El cero es un artifact del código, no del enfoque"
+    },
+    {
+      "id": "H-CARVING-002",
+      "statement": "El dataset no contiene suficientes formatos carveables",
+      "testable": true,
+      "test_method": "DIAG-0001: probar con datasets de formato único",
+      "implication_if_true": "El cero es un artifact del dataset, no del motor"
+    },
+    {
+      "id": "H-CARVING-003",
+      "statement": "El generador produce archivos poco realistas",
+      "testable": true,
+      "test_method": "DIAG-0001: comparar archivos generados vs. archivos reales",
+      "implication_if_true": "El cero es un artifact del generador"
+    },
+    {
+      "id": "H-CARVING-004",
+      "statement": "El Judge penaliza excesivamente el carving",
+      "testable": true,
+      "test_method": "Analizar cómo el Judge puntúa archivos carved vs. MFT-recovered",
+      "implication_if_true": "El cero es un artifact del scoring"
+    },
+    {
+      "id": "H-CARVING-005",
+      "statement": "Los footers siguen siendo insuficientes",
+      "testable": true,
+      "test_method": "DIAG-0001: verificar si los archivos generados tienen footers detectables",
+      "implication_if_true": "El cero es un artifact de la generación de footers"
+    },
+    {
+      "id": "H-CARVING-006",
+      "statement": "El RVS/FQS favorecen tipos de archivo que carving no puede recuperar",
+      "testable": true,
+      "test_method": "DIAG-0001: descomponer RVS/FQS por formato",
+      "implication_if_true": "El cero es un artifact del scoring pero no del motor"
+    },
+    {
+      "id": "H-CARVING-007",
+      "statement": "La implementación del carving todavía está incompleta",
+      "testable": true,
+      "test_method": "DIAG-0001: verificar si los archivos generados son detectables por el scanner",
+      "implication_if_true": "El cero es un artifact de la implementación"
+    }
+  ],
+  "diagnostic_experiment": "DIAG-0001",
+  "diagnostic_question": "¿El cero proviene del algoritmo o del banco de pruebas?"
+}

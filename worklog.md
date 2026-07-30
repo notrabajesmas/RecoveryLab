@@ -1,6 +1,51 @@
 # RecoveryLab — Work Log
 
 ---
+Task ID: 14
+Agent: Main
+Task: Octava ronda de auditoría — Correcciones metodológicas + DIAG-0001
+
+Work Log:
+- Applied auditor's 4 methodological corrections:
+  1. CLAIM-001 refined: "MFT-First > Carving" → "En los datasets sintéticos evaluados durante EXP-0001 y EXP-0002, MFT-First obtuvo OU superior al Motor Carving"
+  2. RCR corrected: 0.4 → 0.0. REPEATED does not count toward RCR; only REPRODUCIBLE counts. Claims are at REPEATED, not REPRODUCIBLE.
+  3. Observation vs. Explanation separation: "Carving OU=0.0" is observation; "Carving doesn't leverage corruption" is explanation (7 compatible hypotheses documented)
+  4. CLAIM-DETERMINISM elevated as primary Phase A objective: lab reproducibility is more important than any motor comparison
+- Created methodological_corrections_r8.py script generating 4 JSON artifacts
+- Designed and implemented DIAG-0001: "¿El cero proviene del algoritmo o del banco de pruebas?"
+  - 5 datasets: JPEG-only, PNG-only, PDF-only, ZIP-only, DOCX-only
+  - Both motors (MFT-First + Carving) run on each
+  - Granular per-file diagnostics: signatures found, files carved, match method, failure reasons
+- EXECUTED DIAG-0001 with groundbreaking results:
+  - **ZIP**: Carving OU = 1.0 (15/15 files, perfect match by SHA-256)
+  - **DOCX**: Carving OU = 1.0 (15/15 files, perfect match by SHA-256)
+  - **PNG**: Carving OU = 0.8709 (14/15 match, 1 BMP false positive)
+  - **PDF**: Carving OU = 0.0 (15 signatures found, 15 carved, ALL 1 byte short)
+  - **JPEG**: Carving OU = 0.0 (15 signatures found, only 3 carved, all too short)
+- ROOT CAUSES identified:
+  - **RC-001 (PDF)**: Footer mismatch. Carving motor uses %%EOF (5 bytes) but file generator produces %%EOF\n (6 bytes). Every carved PDF is exactly 1 byte short. Adding the missing \n restores correct SHA-256.
+  - **RC-002 (JPEG)**: Deduplication bug. Motor finds 15 signatures but only carves 3 files (12 removed by overlap detection). The 3 carved files are millions of bytes short.
+  - **RC-003 (PNG)**: Minor BMP false positive within PNG data.
+- DIAGNOSIS: FORMAT_SPECIFIC_PARSER_ISSUES — the zero comes from the extraction algorithm, not the test bench
+  - The scanner works correctly (finds signatures in all formats)
+  - The extraction fails for specific formats (PDF footer, JPEG deduplication)
+  - ZIP/DOCX carving works perfectly — the motor is not fundamentally broken
+  - The problem is not the Dataset Builder, not the Judge, not the RVS/FQS
+- Artifacts generated:
+  - /home/z/my-project/output/methodological_corrections_r8/ (4 JSON files)
+  - /home/z/my-project/RecoveryLab/output/diag_0001/ (5 artifacts: CSV, summary, report, ledger)
+
+Stage Summary:
+- DIAG-0001 definitively answers: "¿El cero proviene del algoritmo o del banco de pruebas?" → ALGORITHM (extraction, not detection)
+- The carving motor's scanner works perfectly; the extraction has 2 format-specific bugs
+- PDF: 1-byte footer bug (%%EOF vs %%EOF\n) — trivial to fix but requires RP-XXX Proposal
+- JPEG: deduplication removes 12/15 files — needs investigation
+- ZIP/DOCX: carving works perfectly (OU=1.0)
+- RCR corrected to 0.0 — protecting its value as a metric
+- CLAIM-DETERMINISM is the primary Phase A objective
+- No code was modified — this is a diagnostic, not a fix
+
+---
 Task ID: 12
 Agent: Main
 Task: EXP-0001 — Baseline Stability Characterization (first experiment of Phase A)

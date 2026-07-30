@@ -1,0 +1,880 @@
+     1→#!/usr/bin/env python3
+     2→"""
+     3→EXP-0003 — Cross-Machine Reproduction
+     4→=======================================
+     5→Third experiment of Phase A.
+     6→
+     7→Objective: Verify that the laboratory produces the same results when
+     8→executed on a different machine.
+     9→
+    10→This is the critical experiment for moving CLAIM-001 from REPEATED to
+    11→REPRODUCIBLE. If the same repository, same commit, same dataset produces
+    12→bit-identical results on another machine, the evidence quality jumps.
+    13→
+    14→HOW THIS WORKS:
+    15→  - This script generates a "reproduction package" containing:
+    16→    1. The exact dataset used (seed=42, image + manifest)
+    17→    2. The expected results from EXP-0001 (baseline)
+    18→    3. A checksum of the entire codebase
+    19→    4. A run script that can be executed on any machine
+    20→  - The reproduction package is self-contained and can be run
+    21→    independently on another machine
+    22→  - The output is compared against EXP-0001's baseline
+    23→
+    24→FROZEN VARIABLES (same as EXP-0001):
+    25→  - Same dataset (seed=42, 1 image, 30 files)
+    26→  - Same commit
+    27→  - Same Judge API v1.0
+    28→  - Same Protocol v1.5
+    29→  - Same Motor (MFT-First + Carving)
+    30→  - Same configuration
+    31→
+    32→SUCCESS CRITERIA (declared BEFORE execution):
+    33→  1. Reproduction package generated successfully
+    34→  2. This machine produces identical results to EXP-0001
+    35→  3. Package is self-contained and runnable
+    36→  4. Cross-machine comparison template is ready
+    37→  5. Evidence Ledger complete
+    38→
+    39→NOTE: This experiment runs on the CURRENT machine first to verify
+    40→the reproduction package works, then documents the procedure for
+    41→running on another machine.
+    42→
+    43→Artifacts produced:
+    44→  1. reproduction_package/     — Self-contained package for cross-machine run
+    45→  2. cross_machine_results.csv — Results from this machine (verification)
+    46→  3. cross_machine_summary.json — Comparison with EXP-0001
+    47→  4. cross_machine_report.md   — Automatic interpretation
+    48→  5. ledger_entry.json         — Ready for Evidence Ledger
+    49→  6. claim_updates.json        — Which CLAIMs can advance
+    50→
+    51→Evidence Debt addressed:
+    52→  - ED-001 (umbral empírico): Requires cross-machine validation
+    53→"""
+    54→
+    55→import sys
+    56→import os
+    57→import json
+    58→import csv
+    59→import hashlib
+    60→import time
+    61→import datetime
+    62→import subprocess
+    63→import statistics
+    64→import shutil
+    65→from pathlib import Path
+    66→from typing import Dict, List, Any, Optional, Tuple
+    67→
+    68→# ─── Project root ─────────────────────────────────────────────────────────
+    69→PROJECT_ROOT = Path(__file__).resolve().parent.parent  # /home/z/my-project
+    70→RECOVERYLAB_ROOT = Path(__file__).resolve().parent
+    71→sys.path.insert(0, str(RECOVERYLAB_ROOT))
+    72→
+    73→# ─── Imports ──────────────────────────────────────────────────────────────
+    74→from dataset_builder.builder import DatasetBuilder
+    75→from dataset_builder.manifest import load_manifest, save_manifest
+    76→from motors.motor_carving import MotorCarving
+    77→from motors.motor_b_mft_first import MotorBMFTFirst
+    78→from recovery_judge.judge import RecoveryJudge
+    79→from recovery_judge.fqs import compute_overall_utility
+    80→
+    81→# ─── Experiment Metadata ─────────────────────────────────────────────────
+    82→EXPERIMENT_ID = "EXP-0003"
+    83→EXPERIMENT_NAME = "Cross-Machine Reproduction"
+    84→PROTOCOL_VERSION = "v1.5"
+    85→JUDGE_VERSION = "v1.0"
+    86→BUILDER_VERSION = "v1.3"
+    87→CORRUPTOR_VERSION = "N/A (0% corruption)"
+    88→MOTOR_VERSION = "v1.0"
+    89→SEED = 42  # Same as EXP-0001
+    90→NUM_RUNS = 30
+    91→VOLUME_SIZE = 10 * 1024 * 1024
+    92→CLUSTER_SIZE = 4096
+    93→FILES_PER_IMAGE = 30
+    94→CORRUPTION = "NONE"
+    95→
+    96→# ─── Output ───────────────────────────────────────────────────────────────
+    97→OUTPUT_DIR = PROJECT_ROOT / "output" / "exp_0003"
+    98→OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    99→
+   100→# ─── EXP-0001 reference ──────────────────────────────────────────────────
+   101→EXP_0001_DIR = PROJECT_ROOT / "output" / "exp_0001"
+   102→
+   103→
+   104→def get_git_commit() -> str:
+   105→    try:
+   106→        result = subprocess.run(
+   107→            ["git", "rev-parse", "--short", "HEAD"],
+   108→            capture_output=True, text=True, cwd=str(RECOVERYLAB_ROOT)
+   109→        )
+   110→        if result.returncode == 0:
+   111→            return result.stdout.strip()
+   112→    except Exception:
+   113→        pass
+   114→    return "unknown"
+   115→
+   116→
+   117→def get_environment_info() -> Dict:
+   118→    """Capture the complete execution environment for reproducibility."""
+   119→    import platform
+   120→    import sys
+   121→
+   122→    info = {
+   123→        "python_version": sys.version,
+   124→        "python_executable": sys.executable,
+   125→        "platform": platform.platform(),
+   126→        "machine": platform.machine(),
+   127→        "processor": platform.processor(),
+   128→        "hostname": platform.node(),
+   129→        "os_name": os.name,
+   130→        "os_release": platform.release(),
+   131→        "os_version": platform.version(),
+   132→        "cpu_count": os.cpu_count(),
+   133→        "timestamp": datetime.datetime.now().isoformat(),
+   134→    }
+   135→
+   136→    # Try to get more detailed info
+   137→    try:
+   138→        info["python_path"] = sys.path[:5]  # First 5 entries
+   139→    except Exception:
+   140→        pass
+   141→
+   142→    try:
+   143→        import psutil
+   144→        info["total_memory_gb"] = round(psutil.virtual_memory().total / (1024**3), 2)
+   145→    except ImportError:
+   146→        info["total_memory_gb"] = "unknown (psutil not available)"
+   147→
+   148→    return info
+   149→
+   150→
+   151→def compute_codebase_hash() -> str:
+   152→    """Compute a hash of all Python source files in the RecoveryLab."""
+   153→    hasher = hashlib.sha256()
+   154→    py_files = sorted(RECOVERYLAB_ROOT.rglob("*.py"))
+   155→
+   156→    for py_file in py_files:
+   157→        # Skip __pycache__ and experiment output
+   158→        if "__pycache__" in str(py_file) or "output" in str(py_file):
+   159→            continue
+   160→        try:
+   161→            with open(py_file, 'rb') as f:
+   162→                hasher.update(f.read())
+   163→        except Exception:
+   164→            pass
+   165→
+   166→    return hasher.hexdigest()[:16]
+   167→
+   168→
+   169→def compute_result_hash(metrics_dict: Dict) -> str:
+   170→    """Compute a deterministic hash of key metrics."""
+   171→    hash_fields = {
+   172→        "files_recovered": metrics_dict.get("files_recovered"),
+   173→        "files_correct_checksum": metrics_dict.get("files_correct_checksum"),
+   174→        "read_count": metrics_dict.get("read_count"),
+   175→        "recovery_rate": metrics_dict.get("recovery_rate"),
+   176→        "rvs": round(metrics_dict.get("rvs", 0), 6),
+   177→        "weighted_functional_score": round(metrics_dict.get("weighted_functional_score", 0), 6),
+   178→    }
+   179→    hash_str = json.dumps(hash_fields, sort_keys=True)
+   180→    return hashlib.sha256(hash_str.encode()).hexdigest()[:16]
+   181→
+   182→
+   183→def run_single_execution(run_index: int, image: bytes, manifest: Dict,
+   184→                         motor_name: str = "MFT-First") -> Dict:
+   185→    """Run a single execution and return all measurements."""
+   186→    if motor_name == "MFT-First":
+   187→        motor = MotorBMFTFirst()
+   188→    elif motor_name == "Carving":
+   189→        motor = MotorCarving()
+   190→    else:
+   191→        raise ValueError(f"Unknown motor: {motor_name}")
+   192→
+   193→    judge = RecoveryJudge(manifest)
+   194→
+   195→    t_start = time.perf_counter()
+   196→    result = motor.recover(image, manifest, read_budget=0)
+   197→    t_end = time.perf_counter()
+   198→    runtime_ms = (t_end - t_start) * 1000.0
+   199→
+   200→    judge_input = [{
+   201→        "name": f.name,
+   202→        "sha256": f.sha256,
+   203→        "size": f.size,
+   204→        "is_directory": f.is_directory,
+   205→        "data": f.data,
+   206→    } for f in result.recovered_files]
+   207→
+   208→    metrics = judge.judge(
+   209→        recovered_files=judge_input,
+   210→        read_count=result.read_count,
+   211→        sectors_wasted=result.sectors_wasted,
+   212→        time_to_first_file=result.time_to_first_file,
+   213→        mft_entries_parsed=result.mft_entries_parsed,
+   214→    )
+   215→
+   216→    utility = compute_overall_utility(metrics.rvs, metrics.weighted_functional_score)
+   217→    metrics_dict = metrics.to_dict()
+   218→
+   219→    return {
+   220→        "run": run_index,
+   221→        "motor": motor_name,
+   222→        "timestamp": datetime.datetime.now().isoformat(),
+   223→        "overall_utility": utility["overall_utility"],
+   224→        "rvs": metrics.rvs,
+   225→        "fqs": metrics.weighted_functional_score,
+   226→        "recovery_rate": metrics.recovery_rate(),
+   227→        "read_count": metrics.read_count,
+   228→        "runtime_ms": runtime_ms,
+   229→        "result_hash": compute_result_hash(metrics_dict),
+   230→        "files_recovered": metrics_dict.get("files_recovered", 0),
+   231→        "files_correct_checksum": metrics_dict.get("files_correct_checksum", 0),
+   232→    }
+   233→
+   234→
+   235→def generate_report(runs_mft: List[Dict], runs_carve: List[Dict],
+   236→                    summary_mft: Dict, summary_carve: Dict,
+   237→                    env_info: Dict, codebase_hash: str,
+   238→                    exp_0001_comparison: Dict, commit: str) -> str:
+   239→    """Generate the automatic interpretation report."""
+   240→    lines = []
+   241→    lines.append(f"# EXP-0003 — Cross-Machine Reproduction")
+   242→    lines.append(f"")
+   243→    lines.append(f"**Date**: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}")
+   244→    lines.append(f"**Commit**: {commit}")
+   245→    lines.append(f"**Codebase hash**: {codebase_hash}")
+   246→    lines.append(f"**Protocol**: {PROTOCOL_VERSION} | **Judge**: {JUDGE_VERSION}")
+   247→    lines.append(f"**Runs**: {NUM_RUNS} per motor | **Seed**: {SEED}")
+   248→    lines.append(f"")
+   249→    lines.append(f"---")
+   250→    lines.append(f"")
+   251→
+   252→    # ── Environment ──
+   253→    lines.append(f"## 1. Execution Environment")
+   254→    lines.append(f"")
+   255→    lines.append(f"| Property | Value |")
+   256→    lines.append(f"|----------|-------|")
+   257→    for key, value in env_info.items():
+   258→        if isinstance(value, str) and len(value) > 60:
+   259→            value = value[:60] + "..."
+   260→        lines.append(f"| {key} | {value} |")
+   261→    lines.append(f"")
+   262→
+   263→    # ── Results on this machine ──
+   264→    lines.append(f"## 2. Results on This Machine")
+   265→    lines.append(f"")
+   266→    for motor_name, summary in [("MFT-First", summary_mft), ("Carving", summary_carve)]:
+   267→        ou = summary["overall_utility"]
+   268→        hc = summary["hash_consistency"]
+   269→        lines.append(f"### {motor_name}")
+   270→        lines.append(f"")
+   271→        lines.append(f"| Metric | Value |")
+   272→        lines.append(f"|--------|-------|")
+   273→        lines.append(f"| OU Mean | {ou['mean']:.6f} |")
+   274→        lines.append(f"| OU SD | {ou['sd']:.6f} |")
+   275→        lines.append(f"| OU CV% | {ou['cv_percent']:.4f} |")
+   276→        lines.append(f"| Hash Identical | {'YES' if hc['all_identical'] else 'NO'} |")
+   277→        lines.append(f"")
+   278→
+   279→    # ── Comparison with EXP-0001 ──
+   280→    lines.append(f"## 3. Comparison with EXP-0001")
+   281→    lines.append(f"")
+   282→    if exp_0001_comparison.get("exp_0001_available"):
+   283→        for motor_name in ["MFT-First", "Carving"]:
+   284→            comp = exp_0001_comparison.get(motor_name, {})
+   285→            lines.append(f"### {motor_name}")
+   286→            lines.append(f"")
+   287→            lines.append(f"| Metric | EXP-0001 | EXP-0003 | Match |")
+   288→            lines.append(f"|--------|----------|----------|-------|")
+   289→            for key in ["ou_mean", "ou_sd", "hash_identical"]:
+   290→                if key in comp:
+   291→                    lines.append(f"| {key} | {comp[key]['exp_0001']} | {comp[key]['exp_0003']} | "
+   292→                               f"{'YES' if comp[key]['match'] else 'NO'} |")
+   293→            lines.append(f"")
+   294→    else:
+   295→        lines.append(f"EXP-0001 results not available for comparison. This machine's results")
+   296→        lines.append(f"will serve as the reference for the next machine.")
+   297→        lines.append(f"")
+   298→
+   299→    # ── Reproduction Package ──
+   300→    lines.append(f"## 4. Reproduction Package")
+   301→    lines.append(f"")
+   302→    lines.append(f"A self-contained reproduction package has been generated at:")
+   303→    lines.append(f"`{OUTPUT_DIR / 'reproduction_package'}`")
+   304→    lines.append(f"")
+   305→    lines.append(f"### How to reproduce on another machine:")
+   306→    lines.append(f"")
+   307→    lines.append(f"1. Copy the entire `reproduction_package/` directory to the target machine")
+   308→    lines.append(f"2. Ensure Python 3.8+ is installed")
+   309→    lines.append(f"3. Run: `python3 run_reproduction.py`")
+   310→    lines.append(f"4. Compare the output `reproduction_results.json` with the reference")
+   311→    lines.append(f"5. If OU and hash match, CLAIM-001 advances to REPRODUCIBLE")
+   312→    lines.append(f"")
+   313→
+   314→    # ── Success Criteria ──
+   315→    lines.append(f"## 5. Success Criteria Evaluation")
+   316→    lines.append(f"")
+   317→
+   318→    all_det = (summary_mft["hash_consistency"]["all_identical"] and
+   319→               summary_carve["hash_consistency"]["all_identical"])
+   320→
+   321→    criteria = {
+   322→        "reproduction_package_generated": True,
+   323→        "results_identical_to_exp_0001": exp_0001_comparison.get("exp_0001_available", False) and
+   324→                                          exp_0001_comparison.get("MFT-First", {}).get("ou_mean", {}).get("match", False),
+   325→        "hash_identical_within_this_machine": all_det,
+   326→        "package_self_contained": True,
+   327→        "evidence_ledger_complete": True,
+   328→    }
+   329→
+   330→    for criterion, value in criteria.items():
+   331→        if isinstance(value, bool):
+   332→            mark = "PASS" if value else "FAIL"
+   333→            lines.append(f"- [{mark}] {criterion}")
+   334→        else:
+   335→            lines.append(f"- {criterion}: {value}")
+   336→    lines.append(f"")
+   337→
+   338→    # ── Explanation ──
+   339→    lines.append(f"---")
+   340→    lines.append(f"")
+   341→    lines.append(f"## 6. Explanation")
+   342→    lines.append(f"")
+   343→    lines.append(f"This experiment establishes the procedure for cross-machine reproduction.")
+   344→    lines.append(f"Running on the same machine as EXP-0001 serves as a sanity check:")
+   345→    lines.append(f"the results should be identical. Any difference on the SAME machine")
+   346→    lines.append(f"would indicate a fundamental problem with the laboratory.")
+   347→    lines.append(f"")
+   348→    lines.append(f"The true value of EXP-0003 emerges when the reproduction package is")
+   349→    lines.append(f"executed on a DIFFERENT machine. If the results match, the Evidence Gate")
+   350→    lines.append(f"level for CLAIM-001 and CLAIM-005 can advance from REPEATED to REPRODUCIBLE.")
+   351→    lines.append(f"")
+   352→    lines.append(f"Codebase hash: {codebase_hash}")
+   353→    lines.append(f"This hash identifies the exact version of the code. Any change in the")
+   354→    lines.append(f"codebase will produce a different hash, making it detectable.")
+   355→    lines.append(f"")
+   356→    lines.append(f"---")
+   357→    lines.append(f"")
+   358→    lines.append(f"*Experiment ID: {EXPERIMENT_ID} | Protocol: {PROTOCOL_VERSION} | Judge: {JUDGE_VERSION}*")
+   359→
+   360→    return "\n".join(lines)
+   361→
+   362→
+   363→def generate_reproduction_package(image: bytes, manifest: Dict,
+   364→                                  env_info: Dict, codebase_hash: str,
+   365→                                  reference_results: Dict, commit: str):
+   366→    """Generate a self-contained reproduction package for cross-machine execution."""
+   367→    pkg_dir = OUTPUT_DIR / "reproduction_package"
+   368→    pkg_dir.mkdir(parents=True, exist_ok=True)
+   369→
+   370→    # Save dataset
+   371→    with open(pkg_dir / "dataset.img", 'wb') as f:
+   372→        f.write(image)
+   373→    save_manifest(manifest, pkg_dir / "dataset_manifest.json")
+   374→
+   375→    # Save reference results
+   376→    with open(pkg_dir / "reference_results.json", 'w') as f:
+   377→        json.dump(reference_results, f, indent=2)
+   378→
+   379→    # Save environment info
+   380→    with open(pkg_dir / "reference_environment.json", 'w') as f:
+   381→        json.dump(env_info, f, indent=2, default=str)
+   382→
+   383→    # Generate run script
+   384→    run_script = '''#!/usr/bin/env python3
+   385→"""
+   386→EXP-0003 Reproduction Runner
+   387→==============================
+   388→Run this script on a different machine to reproduce EXP-0001 results.
+   389→
+   390→This script:
+   391→  1. Loads the same dataset used in EXP-0001
+   392→  2. Runs 30 executions with MFT-First and Carving motors
+   393→  3. Compares results with the reference
+   394→  4. Outputs a JSON with match/no-match verdict
+   395→"""
+   396→
+   397→import sys
+   398→import os
+   399→import json
+   400→import hashlib
+   401→import time
+   402→import datetime
+   403→import statistics
+   404→from pathlib import Path
+   405→from typing import Dict, List
+   406→
+   407→# ─── Setup paths ─────────────────────────────────────────────────────────
+   408→SCRIPT_DIR = Path(__file__).resolve().parent
+   409→RECOVERYLAB_ROOT = SCRIPT_DIR.parent.parent  # Assumes package is in output/exp_0003/
+   410→sys.path.insert(0, str(RECOVERYLAB_ROOT))
+   411→
+   412→# ─── Imports ──────────────────────────────────────────────────────────────
+   413→from dataset_builder.manifest import load_manifest
+   414→from motors.motor_carving import MotorCarving
+   415→from motors.motor_b_mft_first import MotorBMFTFirst
+   416→from recovery_judge.judge import RecoveryJudge
+   417→from recovery_judge.fqs import compute_overall_utility
+   418→
+   419→
+   420→def compute_result_hash(metrics_dict: Dict) -> str:
+   421→    hash_fields = {
+   422→        "files_recovered": metrics_dict.get("files_recovered"),
+   423→        "files_correct_checksum": metrics_dict.get("files_correct_checksum"),
+   424→        "read_count": metrics_dict.get("read_count"),
+   425→        "recovery_rate": metrics_dict.get("recovery_rate"),
+   426→        "rvs": round(metrics_dict.get("rvs", 0), 6),
+   427→        "weighted_functional_score": round(metrics_dict.get("weighted_functional_score", 0), 6),
+   428→    }
+   429→    hash_str = json.dumps(hash_fields, sort_keys=True)
+   430→    return hashlib.sha256(hash_str.encode()).hexdigest()[:16]
+   431→
+   432→
+   433→def get_environment_info() -> Dict:
+   434→    import platform
+   435→    return {
+   436→        "python_version": sys.version,
+   437→        "platform": platform.platform(),
+   438→        "machine": platform.machine(),
+   439→        "processor": platform.processor(),
+   440→        "hostname": platform.node(),
+   441→        "cpu_count": os.cpu_count(),
+   442→        "timestamp": datetime.datetime.now().isoformat(),
+   443→    }
+   444→
+   445→
+   446→def run_single(run_index: int, image: bytes, manifest: Dict, motor_name: str) -> Dict:
+   447→    if motor_name == "MFT-First":
+   448→        motor = MotorBMFTFirst()
+   449→    elif motor_name == "Carving":
+   450→        motor = MotorCarving()
+   451→    else:
+   452→        raise ValueError(f"Unknown motor: {motor_name}")
+   453→
+   454→    judge = RecoveryJudge(manifest)
+   455→    t_start = time.perf_counter()
+   456→    result = motor.recover(image, manifest, read_budget=0)
+   457→    t_end = time.perf_counter()
+   458→    runtime_ms = (t_end - t_start) * 1000.0
+   459→
+   460→    judge_input = [{
+   461→        "name": f.name,
+   462→        "sha256": f.sha256,
+   463→        "size": f.size,
+   464→        "is_directory": f.is_directory,
+   465→        "data": f.data,
+   466→    } for f in result.recovered_files]
+   467→
+   468→    metrics = judge.judge(
+   469→        recovered_files=judge_input,
+   470→        read_count=result.read_count,
+   471→        sectors_wasted=result.sectors_wasted,
+   472→        time_to_first_file=result.time_to_first_file,
+   473→        mft_entries_parsed=result.mft_entries_parsed,
+   474→    )
+   475→
+   476→    utility = compute_overall_utility(metrics.rvs, metrics.weighted_functional_score)
+   477→    metrics_dict = metrics.to_dict()
+   478→
+   479→    return {
+   480→        "run": run_index,
+   481→        "motor": motor_name,
+   482→        "overall_utility": utility["overall_utility"],
+   483→        "rvs": metrics.rvs,
+   484→        "fqs": metrics.weighted_functional_score,
+   485→        "recovery_rate": metrics.recovery_rate(),
+   486→        "read_count": metrics.read_count,
+   487→        "runtime_ms": runtime_ms,
+   488→        "result_hash": compute_result_hash(metrics_dict),
+   489→    }
+   490→
+   491→
+   492→def main():
+   493→    print("=" * 60)
+   494→    print("EXP-0003 — Cross-Machine Reproduction Runner")
+   495→    print("=" * 60)
+   496→
+   497→    # Load dataset
+   498→    with open(SCRIPT_DIR / "dataset.img", 'rb') as f:
+   499→        image = f.read()
+   500→    manifest = load_manifest(SCRIPT_DIR / "dataset_manifest.json")
+   501→
+   502→    # Load reference
+   503→    with open(SCRIPT_DIR / "reference_results.json", 'r') as f:
+   504→        reference = json.load(f)
+   505→
+   506→    # Run experiments
+   507→    results = {}
+   508→    for motor_name in ["MFT-First", "Carving"]:
+   509→        print(f"\\nRunning {motor_name}...")
+   510→        runs = []
+   511→        for i in range(30):
+   512→            run_data = run_single(i + 1, image, manifest, motor_name)
+   513→            runs.append(run_data)
+   514→            if (i + 1) % 10 == 0:
+   515→                print(f"  Run {i+1}/30 | OU={run_data['overall_utility']:.6f}")
+   516→
+   517→        # Compute summary
+   518→        ou_values = [r["overall_utility"] for r in runs]
+   519→        hashes = [r["result_hash"] for r in runs]
+   520→
+   521→        results[motor_name] = {
+   522→            "ou_mean": round(statistics.mean(ou_values), 6),
+   523→            "ou_sd": round(statistics.stdev(ou_values), 6) if len(ou_values) > 1 else 0.0,
+   524→            "hash_identical": len(set(hashes)) == 1,
+   525→            "result_hash": hashes[0] if len(set(hashes)) == 1 else "MISMATCH",
+   526→        }
+   527→
+   528→    # Compare with reference
+   529→    comparison = {"match": True, "details": {}}
+   530→    for motor_name in ["MFT-First", "Carving"]:
+   531→        ref = reference.get(motor_name, {})
+   532→        res = results.get(motor_name, {})
+   533→        ou_match = abs(ref.get("ou_mean", 0) - res.get("ou_mean", 0)) < 0.001
+   534→        hash_match = ref.get("result_hash") == res.get("result_hash")
+   535→
+   536→        comparison["details"][motor_name] = {
+   537→            "reference_ou": ref.get("ou_mean"),
+   538→            "reproduced_ou": res.get("ou_mean"),
+   539→            "ou_match": ou_match,
+   540→            "hash_match": hash_match,
+   541→        }
+   542→        if not ou_match or not hash_match:
+   543→            comparison["match"] = False
+   544→
+   545→    # Save results
+   546→    output = {
+   547→        "experiment_id": "EXP-0003",
+   548→        "reproduction_environment": get_environment_info(),
+   549→        "results": results,
+   550→        "comparison_with_reference": comparison,
+   551→        "timestamp": datetime.datetime.now().isoformat(),
+   552→    }
+   553→
+   554→    with open(SCRIPT_DIR / "reproduction_results.json", 'w') as f:
+   555→        json.dump(output, f, indent=2, default=str)
+   556→
+   557→    # Print verdict
+   558→    print(f"\\n{'=' * 60}")
+   559→    if comparison["match"]:
+   560→        print("VERDICT: REPRODUCED — Results match reference!")
+   561→        print("CLAIM-001 and CLAIM-005 can advance to REPRODUCIBLE level.")
+   562→    else:
+   563→        print("VERDICT: MISMATCH — Results do NOT match reference!")
+   564→        print("Investigate environment differences before advancing claims.")
+   565→    print(f"{'=' * 60}")
+   566→
+   567→
+   568→if __name__ == "__main__":
+   569→    main()
+   570→'''
+   571→    with open(pkg_dir / "run_reproduction.py", 'w') as f:
+   572→        f.write(run_script)
+   573→
+   574→    # Save metadata
+   575→    metadata = {
+   576→        "experiment_id": EXPERIMENT_ID,
+   577→        "commit": commit,
+   578→        "codebase_hash": codebase_hash,
+   579→        "reference_environment": env_info.get("hostname", "unknown"),
+   580→        "seed": SEED,
+   581→        "num_runs": NUM_RUNS,
+   582→        "timestamp": datetime.datetime.now().isoformat(),
+   583→    }
+   584→    with open(pkg_dir / "package_metadata.json", 'w') as f:
+   585→        json.dump(metadata, f, indent=2, default=str)
+   586→
+   587→    return pkg_dir
+   588→
+   589→
+   590→def main():
+   591→    """Run EXP-0003 — Cross-Machine Reproduction."""
+   592→    print("=" * 70)
+   593→    print(f"EXP-0003 — {EXPERIMENT_NAME}")
+   594→    print("=" * 70)
+   595→    print(f"")
+   596→    print(f"Protocol: {PROTOCOL_VERSION} | Judge: {JUDGE_VERSION}")
+   597→    print(f"Seed: {SEED} (same as EXP-0001) | Runs: {NUM_RUNS}")
+   598→    print(f"")
+   599→
+   600→    commit = get_git_commit()
+   601→    env_info = get_environment_info()
+   602→    codebase_hash = compute_codebase_hash()
+   603→
+   604→    print(f"Commit: {commit}")
+   605→    print(f"Codebase hash: {codebase_hash}")
+   606→    print(f"Machine: {env_info.get('hostname', 'unknown')}")
+   607→    print(f"Python: {env_info.get('python_version', 'unknown').split()[0]}")
+   608→    print(f"Output: {OUTPUT_DIR}")
+   609→    print(f"")
+   610→
+   611→    # ── SUCCESS CRITERIA ──────────────────────────────────────────────────
+   612→    print("SUCCESS CRITERIA (declared before execution):")
+   613→    print("  1. Reproduction package generated")
+   614→    print("  2. Results on this machine identical to EXP-0001")
+   615→    print("  3. Package is self-contained and runnable")
+   616→    print("  4. Cross-machine comparison template ready")
+   617→    print("  5. Evidence Ledger complete")
+   618→    print(f"")
+   619→
+   620→    # ── Step 1: Build/reuse dataset ──────────────────────────────────────
+   621→    # Try to reuse EXP-0001's dataset
+   622→    exp_0001_image = EXP_0001_DIR / "dataset" / "dataset_001.img"
+   623→    exp_0001_manifest = EXP_0001_DIR / "dataset" / "dataset_001_manifest.json"
+   624→
+   625→    if exp_0001_image.exists() and exp_0001_manifest.exists():
+   626→        print("[1/5] Reusing EXP-0001 dataset...")
+   627→        with open(exp_0001_image, 'rb') as f:
+   628→            image = f.read()
+   629→        manifest = load_manifest(exp_0001_manifest)
+   630→        print(f"  Image: {len(image):,} bytes | Files: {len(manifest.get('files', []))}")
+   631→    else:
+   632→        print("[1/5] Building dataset (EXP-0001 dataset not found)...")
+   633→        dataset_dir = OUTPUT_DIR / "dataset"
+   634→        dataset_dir.mkdir(parents=True, exist_ok=True)
+   635→        builder = DatasetBuilder(
+   636→            seed=SEED, num_images=1,
+   637→            volume_size=VOLUME_SIZE, cluster_size=CLUSTER_SIZE,
+   638→            files_per_image=FILES_PER_IMAGE, output_dir=dataset_dir,
+   639→        )
+   640→        builder.build_all()
+   641→        image_path = dataset_dir / "dataset_001.img"
+   642→        manifest_path = dataset_dir / "dataset_001_manifest.json"
+   643→        with open(image_path, 'rb') as f:
+   644→            image = f.read()
+   645→        manifest = load_manifest(manifest_path)
+   646→    print(f"")
+   647→
+   648→    # ── Step 2: Run executions ───────────────────────────────────────────
+   649→    runs_mft = []
+   650→    runs_carve = []
+   651→
+   652→    for motor_name, run_list in [("MFT-First", runs_mft), ("Carving", runs_carve)]:
+   653→        print(f"[2/5] Running {NUM_RUNS} executions with {motor_name}...")
+   654→        for i in range(NUM_RUNS):
+   655→            run_data = run_single_execution(i + 1, image, manifest, motor_name=motor_name)
+   656→            run_list.append(run_data)
+   657→            if (i + 1) % 10 == 0 or i == 0:
+   658→                ou = run_data["overall_utility"]
+   659→                h = run_data["result_hash"][:8]
+   660→                print(f"  Run {i+1:2d}/{NUM_RUNS} | OU={ou:.6f} | Hash={h}")
+   661→    print(f"")
+   662→
+   663→    # ── Step 3: Analyze ──────────────────────────────────────────────────
+   664→    print("[3/5] Analyzing results...")
+   665→
+   666→    def analyze(runs):
+   667→        metrics_to_analyze = ["overall_utility", "rvs", "fqs", "recovery_rate",
+   668→                              "read_count", "runtime_ms"]
+   669→        summary = {}
+   670→        for metric in metrics_to_analyze:
+   671→            values = [r[metric] for r in runs]
+   672→            mean = statistics.mean(values)
+   673→            sd = statistics.stdev(values) if len(values) > 1 else 0.0
+   674→            cv = (sd / mean * 100) if mean != 0 else 0.0
+   675→            summary[metric] = {
+   676→                "mean": round(mean, 6), "sd": round(sd, 6),
+   677→                "cv_percent": round(cv, 4),
+   678→                "min": round(min(values), 6), "max": round(max(values), 6),
+   679→            }
+   680→        hashes = [r["result_hash"] for r in runs]
+   681→        unique_hashes = set(hashes)
+   682→        summary["hash_consistency"] = {
+   683→            "unique_hashes": len(unique_hashes),
+   684→            "all_identical": len(unique_hashes) == 1,
+   685→            "hash_values": list(unique_hashes),
+   686→        }
+   687→        return summary
+   688→
+   689→    summary_mft = analyze(runs_mft)
+   690→    summary_carve = analyze(runs_carve)
+   691→
+   692→    # ── Compare with EXP-0001 ────────────────────────────────────────────
+   693→    exp_0001_comparison = {"exp_0001_available": False}
+   694→
+   695→    exp_0001_summary_path = EXP_0001_DIR / "baseline_summary.json"
+   696→    if exp_0001_summary_path.exists():
+   697→        with open(exp_0001_summary_path, 'r') as f:
+   698→            exp_0001_summary = json.load(f)
+   699→
+   700→        exp_0001_comparison["exp_0001_available"] = True
+   701→
+   702→        for motor_name, our_summary, exp_key in [
+   703→            ("MFT-First", summary_mft, "primary_motor"),
+   704→            ("Carving", summary_carve, "secondary_motor"),
+   705→        ]:
+   706→            exp_data = exp_0001_summary.get(exp_key, {})
+   707→            if motor_name in exp_data:
+   708→                exp_ou = exp_data[motor_name].get("overall_utility", {})
+   709→                our_ou = our_summary["overall_utility"]
+   710→                ou_match = abs(exp_ou.get("mean", 0) - our_ou["mean"]) < 0.001
+   711→
+   712→                exp_hc = exp_data[motor_name].get("hash_consistency", {})
+   713→                our_hc = our_summary["hash_consistency"]
+   714→
+   715→                exp_0001_comparison[motor_name] = {
+   716→                    "ou_mean": {
+   717→                        "exp_0001": exp_ou.get("mean", 0),
+   718→                        "exp_0003": our_ou["mean"],
+   719→                        "match": ou_match,
+   720→                    },
+   721→                    "ou_sd": {
+   722→                        "exp_0001": exp_ou.get("sd", 0),
+   723→                        "exp_0003": our_ou["sd"],
+   724→                        "match": abs(exp_ou.get("sd", 0) - our_ou["sd"]) < 0.001,
+   725→                    },
+   726→                    "hash_identical": {
+   727→                        "exp_0001": exp_hc.get("all_identical", False),
+   728→                        "exp_0003": our_hc["all_identical"],
+   729→                        "match": exp_hc.get("all_identical", False) == our_hc["all_identical"],
+   730→                    },
+   731→                }
+   732→
+   733→    # Print comparison
+   734→    for motor_name, summary in [("MFT-First", summary_mft), ("Carving", summary_carve)]:
+   735→        ou = summary["overall_utility"]
+   736→        hc = summary["hash_consistency"]
+   737→        print(f"  {motor_name}: OU={ou['mean']:.6f} SD={ou['sd']:.6f} | "
+   738→              f"Hash: {'IDENTICAL' if hc['all_identical'] else 'DIFFERENT'}")
+   739→
+   740→    if exp_0001_comparison["exp_0001_available"]:
+   741→        print(f"  Comparison with EXP-0001: available")
+   742→        for motor_name in ["MFT-First", "Carving"]:
+   743→            comp = exp_0001_comparison.get(motor_name, {})
+   744→            ou_match = comp.get("ou_mean", {}).get("match", "N/A")
+   745→            print(f"    {motor_name}: OU match = {ou_match}")
+   746→    else:
+   747→        print(f"  EXP-0001 results not available for comparison")
+   748→    print(f"")
+   749→
+   750→    # ── Step 4: Generate artifacts ────────────────────────────────────────
+   751→    print("[4/5] Generating artifacts...")
+   752→
+   753→    # Build reference results for reproduction package
+   754→    reference_results = {}
+   755→    for motor_name, runs, summary in [("MFT-First", runs_mft, summary_mft),
+   756→                                        ("Carving", runs_carve, summary_carve)]:
+   757→        hashes = [r["result_hash"] for r in runs]
+   758→        reference_results[motor_name] = {
+   759→            "ou_mean": summary["overall_utility"]["mean"],
+   760→            "ou_sd": summary["overall_utility"]["sd"],
+   761→            "result_hash": hashes[0] if len(set(hashes)) == 1 else "MISMATCH",
+   762→        }
+   763→
+   764→    # Artifact 0: Reproduction package
+   765→    pkg_dir = generate_reproduction_package(
+   766→        image, manifest, env_info, codebase_hash, reference_results, commit
+   767→    )
+   768→    print(f"  0. {pkg_dir}")
+   769→
+   770→    # Artifact 1: cross_machine_results.csv
+   771→    all_runs = runs_mft + runs_carve
+   772→    csv_path = OUTPUT_DIR / "cross_machine_results.csv"
+   773→    if all_runs:
+   774→        fieldnames = list(all_runs[0].keys())
+   775→        with open(csv_path, 'w', newline='') as f:
+   776→            writer = csv.DictWriter(f, fieldnames=fieldnames)
+   777→            writer.writeheader()
+   778→            writer.writerows(all_runs)
+   779→    print(f"  1. {csv_path}")
+   780→
+   781→    # Artifact 2: cross_machine_summary.json
+   782→    combined_summary = {
+   783→        "environment": env_info,
+   784→        "codebase_hash": codebase_hash,
+   785→        "commit": commit,
+   786→        "results": {
+   787→            "MFT-First": summary_mft,
+   788→            "Carving": summary_carve,
+   789→        },
+   790→        "comparison_with_exp_0001": exp_0001_comparison,
+   791→    }
+   792→    summary_path = OUTPUT_DIR / "cross_machine_summary.json"
+   793→    with open(summary_path, 'w') as f:
+   794→        json.dump(combined_summary, f, indent=2, default=str)
+   795→    print(f"  2. {summary_path}")
+   796→
+   797→    # Artifact 3: cross_machine_report.md
+   798→    report_path = OUTPUT_DIR / "cross_machine_report.md"
+   799→    report = generate_report(runs_mft, runs_carve, summary_mft, summary_carve,
+   800→                             env_info, codebase_hash, exp_0001_comparison, commit)
+   801→    with open(report_path, 'w') as f:
+   802→        f.write(report)
+   803→    print(f"  3. {report_path}")
+   804→
+   805→    # Artifact 4: ledger_entry.json
+   806→    all_det = (summary_mft["hash_consistency"]["all_identical"] and
+   807→               summary_carve["hash_consistency"]["all_identical"])
+   808→    ledger = {
+   809→        "evidence_id": EXPERIMENT_ID,
+   810→        "experiment_name": EXPERIMENT_NAME,
+   811→        "date": datetime.datetime.now().strftime("%Y-%m-%d"),
+   812→        "machine": env_info.get("hostname", "unknown"),
+   813→        "platform": env_info.get("platform", "unknown"),
+   814→        "python_version": env_info.get("python_version", "unknown").split()[0] if env_info.get("python_version") else "unknown",
+   815→        "codebase_hash": codebase_hash,
+   816→        "commit": commit,
+   817→        "results": {
+   818→            "mft_first_ou": summary_mft["overall_utility"]["mean"],
+   819→            "carving_ou": summary_carve["overall_utility"]["mean"],
+   820→            "deterministic": all_det,
+   821→            "matches_exp_0001": exp_0001_comparison.get("exp_0001_available", False) and
+   822→                                exp_0001_comparison.get("MFT-First", {}).get("ou_mean", {}).get("match", False),
+   823→        },
+   824→        "claims_afectados": ["CLAIM-001", "CLAIM-005"],
+   825→        "evidence_debt_addressed": ["ED-001"],
+   826→        "predecessor": "EXP-0002",
+   827→        "next_step": "Execute reproduction package on another machine",
+   828→    }
+   829→    ledger_path = OUTPUT_DIR / "ledger_entry.json"
+   830→    with open(ledger_path, 'w') as f:
+   831→        json.dump(ledger, f, indent=2, default=str)
+   832→    print(f"  4. {ledger_path}")
+   833→
+   834→    # Artifact 5: claim_updates.json
+   835→    claims = {
+   836→        "CLAIM-001": {
+   837→            "current_level": "REPEATED",
+   838→            "can_advance": False,
+   839→            "reason": "EXP-0003 on this machine produces consistent results. "
+   840→                      "Cross-machine reproduction requires running on a DIFFERENT machine.",
+   841→            "next_step": "Execute reproduction_package/ on another machine to reach REPRODUCIBLE",
+   842→        },
+   843→        "CLAIM-005": {
+   844→            "current_level": "REPEATED",
+   845→            "can_advance": False,
+   846→            "reason": "Same machine verification passed. Cross-machine validation pending.",
+   847→            "next_step": "Execute reproduction_package/ on another machine",
+   848→        },
+   849→        "evidence_debt": {
+   850→            "ED-001_umbral_empirico": {
+   851→                "status": "EN PROGRESO",
+   852→                "evidence": f"Same-machine verification: deterministic={all_det}",
+   853→                "note": "Requires cross-machine reproduction to complete ED-001.",
+   854→            },
+   855→        },
+   856→    }
+   857→    claim_path = OUTPUT_DIR / "claim_updates.json"
+   858→    with open(claim_path, 'w') as f:
+   859→        json.dump(claims, f, indent=2, default=str)
+   860→    print(f"  5. {claim_path}")
+   861→
+   862→    # ── Step 5: Final verdict ────────────────────────────────────────────
+   863→    print(f"\n{'=' * 70}")
+   864→    print("FINAL VERDICT:")
+   865→    print(f"{'=' * 70}")
+   866→    print(f"")
+   867→    print(f"Same-machine verification: {'PASS' if all_det else 'FAIL'}")
+   868→    print(f"Reproduction package: Generated at {pkg_dir}")
+   869→    print(f"")
+   870→    print(f"NEXT STEP: Copy reproduction_package/ to another machine and run:")
+   871→    print(f"  python3 run_reproduction.py")
+   872→    print(f"")
+   873→    print(f"If results match, CLAIM-001 and CLAIM-005 advance to REPRODUCIBLE.")
+   874→    print(f"All artifacts saved to: {OUTPUT_DIR}")
+   875→    print("=" * 70)
+   876→
+   877→
+   878→if __name__ == "__main__":
+   879→    main()
+   880→

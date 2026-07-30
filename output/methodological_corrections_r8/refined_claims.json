@@ -1,0 +1,73 @@
+{
+  "CLAIM-001": {
+    "id": "CLAIM-001",
+    "title": "MFT-First obtuvo OU superior a Carving en datasets sintéticos evaluados",
+    "statement": "En los datasets sintéticos evaluados durante EXP-0001 y EXP-0002, con semillas 42, 1337, 2026 y 9999, imágenes NTFS de 10 MB sin corrupción, y utilizando Judge API v1.0 y Protocol v1.5, el Motor MFT-First obtuvo un Overall Utility superior al Motor Carving.",
+    "evidence_level": "REPEATED",
+    "evidence_level_number": 2,
+    "evidence_level_note": "REPEATED, no REPRODUCIBLE. EXP-0003 ejecutó en la misma máquina, no en otra máquina ni por otro investigador. Hasta que no se reproduzca externamente, el RCR no cuenta este claim.",
+    "supporting_experiments": [
+      "EXP-0001",
+      "EXP-0002"
+    ],
+    "conditions": {
+      "datasets": "sintéticos, 10 MB, sin corrupción",
+      "seeds": [
+        42,
+        1337,
+        2026,
+        9999
+      ],
+      "motors": [
+        "MFT-First v1.0",
+        "Carving v1.0"
+      ],
+      "judge": "v1.0",
+      "protocol": "v1.5"
+    },
+    "what_this_claim_does_NOT_say": [
+      "No dice que MFT-First sea 'mejor' en general",
+      "No dice que MFT-First sea superior en imágenes corruptas",
+      "No dice que MFT-First sea superior en datasets reales",
+      "No dice que MFT-First sea superior en otros tamaños de dataset",
+      "No dice que la diferencia sea estadísticamente significativa (SD=0 impide test tradicional)"
+    ],
+    "threats": [
+      "T02 (ALTO): datasets pueden favorecer MFT-First por diseño",
+      "T03 (MITIGADO): sesgo del parser controlado",
+      "T_NEW (ALTO): SD=0 impide evaluación estadística tradicional"
+    ],
+    "next_step": "EXP-0004 (dataset scaling) y DIAG-0001 (origen del cero en carving)"
+  },
+  "CLAIM-001_OLD": {
+    "id": "CLAIM-001_OLD",
+    "title": "DEPRECATED — MFT-First beats Carving in OU when metadata is reliable",
+    "statement": "MFT-First beats Carving in OU when metadata is reliable",
+    "deprecation_reason": "El lenguaje 'beats' excede la evidencia. El claim original no acotaba las condiciones ni las consecuencias. Reemplazado por CLAIM-001 refinado.",
+    "deprecated_by": "CLAIM-001",
+    "deprecated_date": "2026-07-30"
+  },
+  "CLAIM-DETERMINISM": {
+    "id": "CLAIM-DETERMINISM",
+    "title": "El laboratorio produce resultados idénticos bajo condiciones idénticas",
+    "statement": "En las condiciones evaluadas por EXP-0001, EXP-0002, EXP-SD0 y EXP-0003 (misma máquina), RecoveryLab produce resultados bit-identical (hash-identical) cuando se ejecuta con las mismas condiciones de entrada: misma semilla, mismo dataset, mismo motor, misma configuración.",
+    "evidence_level": "REPEATED",
+    "evidence_level_number": 2,
+    "evidence_level_note": "REPEATED dentro de la misma máquina. No es REPRODUCIBLE hasta que se verifique en otra máquina/investigador.",
+    "supporting_experiments": [
+      "EXP-0001",
+      "EXP-0002",
+      "EXP-SD0",
+      "EXP-0003"
+    ],
+    "importance": "PRIMARY_PHASE_A_OBJECTIVE",
+    "importance_rationale": "Este claim NO depende de ningún motor ni dataset específico. Depende del propio laboratorio. Si este claim sobrevive a: varias semillas (verificado EXP-0002), otra máquina (pendiente EXP-0003 real), otro sistema operativo (pendiente), entonces RecoveryLab deja de ser simplemente un proyecto de recuperación de datos y pasa a ser una plataforma experimental confiable. Ese debería ser el objetivo principal de la Fase A: que cualquier resultado futuro tenga un entorno experimental cuya reproducibilidad ya esté demostrada.",
+    "what_this_claim_does_NOT_say": [
+      "No dice que los resultados sean correctos (sino que son consistentes)",
+      "No dice que la reproducibilidad se mantenga en otra máquina",
+      "No dice que la reproducibilidad se mantenga con otro OS",
+      "No dice que SD=0 sea 'bueno' o 'malo' (es un dato)"
+    ],
+    "next_step": "EXP-0003 real en otra máquina / otro investigador"
+  }
+}
