@@ -1,6 +1,47 @@
 # RecoveryLab — Work Log
 
 ---
+Task ID: 5
+Agent: Main
+Task: Congelar la arquitectura y auditar la ciencia — Research Protocol v1.0
+
+Work Log:
+- Created confidence_registry.py (recovery_judge/confidence_registry.py):
+  - Star-based confidence system: 1 star (isolated observation) → 5 stars (validated with real hardware)
+  - Stars can only go UP (accumulation of evidence), never down
+  - Contradictions mark results as CONTESTED but don't lower stars
+  - Current state: 8 results at 1-star, 5 at 2-star, 2 at 3-star, 0 at 4/5-star
+  - Honest assessment: most results are preliminary
+- Created fqs.py (recovery_judge/fqs.py):
+  - Functional Quality Score (FQS): measures HOW WELL files were recovered
+  - Size-weighted: 5MB JPEG with 90% quality contributes more than 1KB TXT
+  - FQSResult: per-file scores, level distribution, SHA-256 match rate
+  - compute_overall_utility(rvs, fqs): Overall Utility = RVS × FQS
+  - Diagnostic: "VALUE-DRIVEN", "QUALITY-DRIVEN", "STRONG", "WEAK"
+- Created hypothesis_audit.py (RecoveryLab/hypothesis_audit.py):
+  - Audits each hypothesis: IV, DV, success criterion
+  - Status: TESTABLE (3), NEEDS_REFORMULATION (5), CONTESTED (1), FROZEN (2)
+  - Only H1.1, H6, H1.6 are testable in current form
+  - H5 and H8 are FROZEN until Phase C
+  - H2 is CONTESTED (crossover is artifact)
+- Created Research Protocol v1.0 (docx):
+  - 10 sections: Pregunta Central, Variables, Criterio de Exito, Registro de Confianza,
+    Decomposicion de Metricas, Auditoria de Hipotesis, Fases, Formatos Congelados,
+    Regla de Oro, Producto
+  - Generated at /home/z/my-project/download/Research_Protocol_v1.0.docx
+- Updated __init__.py to export FQS and ConfidenceRegistry
+
+Stage Summary:
+- The science audit is complete: 3/11 hypotheses are testable, 5 need reformulation, 1 contested, 2 frozen
+- WFS decomposed into RVS × FQS — now we know WHY a motor won
+- Confidence registry provides honest, transparent assessment of evidence strength
+- Research Protocol v1.0 is the living document that governs the laboratory
+- The central question is: "How to objectively measure the utility of a recovery strategy?"
+- Phase A: Freeze, consolidate, execute JPEG/PNG/PDF only
+- Phase B: Validate against real tools (PhotoRec, TestDisk)
+- Phase C: Controlled expansion with same quality bar
+
+---
 Task ID: 4
 Agent: Main
 Task: Quality over quantity — RVS enriquecido, recuperación funcional, Judge refactor, parsers impecables

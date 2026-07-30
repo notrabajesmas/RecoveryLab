@@ -1,0 +1,1181 @@
+     1→"""
+     2→RecoveryLab — Functional Recovery Validator
+     3→==============================================
+     4→The most important question in data recovery:
+     5→
+     6→    "What does 'recovered' actually mean?"
+     7→
+     8→Today, the answer is binary: SHA-256 matches or it doesn't.
+     9→
+    10→But in the real world:
+    11→  - A JPEG with 2 corrupted pixels IS recovered (99.99% of pixels valid)
+    12→  - An MP4 that plays perfectly but has a different checksum IS recovered
+    13→  - A DOCX that opens but lost one embedded image IS recovered (partially)
+    14→  - A ZIP that decompresses IS recovered (even if metadata changed)
+    15→  - A SQLite that passes PRAGMA integrity_check IS recovered
+    16→  - A PDF that renders IS recovered
+    17→
+    18→This module replaces the binary SHA-256 pass/fail with a FUNCTIONAL
+    19→recovery assessment: does the file SERVE ITS PURPOSE?
+    20→
+    21→Recovery Levels:
+    22→  FULL (1.0)    — SHA-256 matches exactly (bit-perfect recovery)
+    23→  FUNCTIONAL (0.8) — File opens/plays/works with minor corruption
+    24→  PARTIAL (0.5) — File partially works (some data loss, but usable)
+    25→  DEGRADED (0.2) — File is heavily damaged but some content accessible
+    26→  FAILED (0.0)  — File is completely unusable
+    27→
+    28→This is the paradigm shift from "count recovered" to "measure functionality."
+    29→"""
+    30→
+    31→import struct
+    32→import hashlib
+    33→from dataclasses import dataclass, field
+    34→from typing import Dict, List, Optional, Tuple
+    35→from enum import Enum
+    36→from pathlib import Path
+    37→
+    38→
+    39→# ─── Recovery Levels ─────────────────────────────────────────────────────────
+    40→
+    41→class RecoveryLevel(Enum):
+    42→    """Functional recovery level for a file."""
+    43→    FULL = "full"           # Bit-perfect (SHA-256 match)
+    44→    FUNCTIONAL = "functional"  # Works with minor issues
+    45→    PARTIAL = "partial"     # Partially usable
+    46→    DEGRADED = "degraded"   # Heavily damaged but some content
+    47→    FAILED = "failed"       # Completely unusable
+    48→
+    49→    @property
+    50→    def score(self) -> float:
+    51→        """Numerical score for this recovery level."""
+    52→        mapping = {
+    53→            RecoveryLevel.FULL: 1.0,
+    54→            RecoveryLevel.FUNCTIONAL: 0.8,
+    55→            RecoveryLevel.PARTIAL: 0.5,
+    56→            RecoveryLevel.DEGRADED: 0.2,
+    57→            RecoveryLevel.FAILED: 0.0,
+    58→        }
+    59→        return mapping[self]
+    60→
+    61→    @property
+    62→    def emoji(self) -> str:
+    63→        mapping = {
+    64→            RecoveryLevel.FULL: "✅",
+    65→            RecoveryLevel.FUNCTIONAL: "🟢",
+    66→            RecoveryLevel.PARTIAL: "🟡",
+    67→            RecoveryLevel.DEGRADED: "🟠",
+    68→            RecoveryLevel.FAILED: "🔴",
+    69→        }
+    70→        return mapping[self]
+    71→
+    72→
+    73→# ─── Format-Specific Validation Results ──────────────────────────────────────
+    74→
+    75→@dataclass
+    76→class JPEGValidationResult:
+    77→    """Functional validation result for a JPEG file."""
+    78→    level: RecoveryLevel
+    79→    functional_score: float       # 0.0-1.0 continuous score
+    80→    has_valid_header: bool = False
+    81→    has_valid_footer: bool = False
+    82→    scan_valid: bool = False      # Can scan markers?
+    83→    approximate_pixel_pct: float = 0.0  # Approximate % of image data
+    84→    notes: str = ""
+    85→
+    86→    def to_dict(self) -> Dict:
+    87→        return {
+    88→            "format": "jpeg",
+    89→            "level": self.level.value,
+    90→            "functional_score": round(self.functional_score, 4),
+    91→            "has_valid_header": self.has_valid_header,
+    92→            "has_valid_footer": self.has_valid_footer,
+    93→            "scan_valid": self.scan_valid,
+    94→            "approximate_pixel_pct": round(self.approximate_pixel_pct, 4),
+    95→            "notes": self.notes,
+    96→        }
+    97→
+    98→
+    99→@dataclass
+   100→class MP4ValidationResult:
+   101→    """Functional validation result for an MP4 file."""
+   102→    level: RecoveryLevel
+   103→    functional_score: float
+   104→    has_ftyp_box: bool = False
+   105→    has_moov_box: bool = False    # Critical: metadata box
+   106→    has_mdat_box: bool = False    # Critical: media data box
+   107→    duration_preserved: bool = False
+   108→    approximate_duration_pct: float = 0.0
+   109→    notes: str = ""
+   110→
+   111→    def to_dict(self) -> Dict:
+   112→        return {
+   113→            "format": "mp4",
+   114→            "level": self.level.value,
+   115→            "functional_score": round(self.functional_score, 4),
+   116→            "has_ftyp_box": self.has_ftyp_box,
+   117→            "has_moov_box": self.has_moov_box,
+   118→            "has_mdat_box": self.has_mdat_box,
+   119→            "duration_preserved": self.duration_preserved,
+   120→            "approximate_duration_pct": round(self.approximate_duration_pct, 4),
+   121→            "notes": self.notes,
+   122→        }
+   123→
+   124→
+   125→@dataclass
+   126→class DOCXValidationResult:
+   127→    """Functional validation result for a DOCX file."""
+   128→    level: RecoveryLevel
+   129→    functional_score: float
+   130→    is_valid_zip: bool = False
+   131→    has_content_types: bool = False
+   132→    has_main_document: bool = False
+   133→    xml_valid: bool = False
+   134→    text_accessible: bool = False
+   135→    notes: str = ""
+   136→
+   137→    def to_dict(self) -> Dict:
+   138→        return {
+   139→            "format": "docx",
+   140→            "level": self.level.value,
+   141→            "functional_score": round(self.functional_score, 4),
+   142→            "is_valid_zip": self.is_valid_zip,
+   143→            "has_content_types": self.has_content_types,
+   144→            "has_main_document": self.has_main_document,
+   145→            "xml_valid": self.xml_valid,
+   146→            "text_accessible": self.text_accessible,
+   147→            "notes": self.notes,
+   148→        }
+   149→
+   150→
+   151→@dataclass
+   152→class SQLiteValidationResult:
+   153→    """Functional validation result for a SQLite database."""
+   154→    level: RecoveryLevel
+   155→    functional_score: float
+   156→    has_valid_header: bool = False
+   157→    integrity_check_passed: bool = False
+   158→    tables_readable: bool = False
+   159→    data_accessible: bool = False
+   160→    notes: str = ""
+   161→
+   162→    def to_dict(self) -> Dict:
+   163→        return {
+   164→            "format": "sqlite",
+   165→            "level": self.level.value,
+   166→            "functional_score": round(self.functional_score, 4),
+   167→            "has_valid_header": self.has_valid_header,
+   168→            "integrity_check_passed": self.integrity_check_passed,
+   169→            "tables_readable": self.tables_readable,
+   170→            "data_accessible": self.data_accessible,
+   171→            "notes": self.notes,
+   172→        }
+   173→
+   174→
+   175→@dataclass
+   176→class ZIPValidationResult:
+   177→    """Functional validation result for a ZIP archive."""
+   178→    level: RecoveryLevel
+   179→    functional_score: float
+   180→    has_valid_header: bool = False
+   181→    has_eocd: bool = False         # End of Central Directory
+   182→    can_decompress: bool = False
+   183→    files_accessible: int = 0
+   184→    total_files: int = 0
+   185→    notes: str = ""
+   186→
+   187→    def to_dict(self) -> Dict:
+   188→        return {
+   189→            "format": "zip",
+   190→            "level": self.level.value,
+   191→            "functional_score": round(self.functional_score, 4),
+   192→            "has_valid_header": self.has_valid_header,
+   193→            "has_eocd": self.has_eocd,
+   194→            "can_decompress": self.can_decompress,
+   195→            "files_accessible": self.files_accessible,
+   196→            "total_files": self.total_files,
+   197→            "notes": self.notes,
+   198→        }
+   199→
+   200→
+   201→@dataclass
+   202→class PDFValidationResult:
+   203→    """Functional validation result for a PDF file."""
+   204→    level: RecoveryLevel
+   205→    functional_score: float
+   206→    has_valid_header: bool = False
+   207→    has_eof_marker: bool = False
+   208→    has_xref: bool = False         # Cross-reference table
+   209→    has_pages: bool = False
+   210→    can_render: bool = False
+   211→    notes: str = ""
+   212→
+   213→    def to_dict(self) -> Dict:
+   214→        return {
+   215→            "format": "pdf",
+   216→            "level": self.level.value,
+   217→            "functional_score": round(self.functional_score, 4),
+   218→            "has_valid_header": self.has_valid_header,
+   219→            "has_eof_marker": self.has_eof_marker,
+   220→            "has_xref": self.has_xref,
+   221→            "has_pages": self.has_pages,
+   222→            "can_render": self.can_render,
+   223→            "notes": self.notes,
+   224→        }
+   225→
+   226→
+   227→@dataclass
+   228→class PNGValidationResult:
+   229→    """Functional validation result for a PNG file."""
+   230→    level: RecoveryLevel
+   231→    functional_score: float
+   232→    has_valid_header: bool = False
+   233→    has_iend: bool = False
+   234→    has_ihdr: bool = False         # Image header chunk
+   235→    has_idat: bool = False         # Image data chunks
+   236→    approximate_pixel_pct: float = 0.0
+   237→    notes: str = ""
+   238→
+   239→    def to_dict(self) -> Dict:
+   240→        return {
+   241→            "format": "png",
+   242→            "level": self.level.value,
+   243→            "functional_score": round(self.functional_score, 4),
+   244→            "has_valid_header": self.has_valid_header,
+   245→            "has_iend": self.has_iend,
+   246→            "has_ihdr": self.has_ihdr,
+   247→            "has_idat": self.has_idat,
+   248→            "approximate_pixel_pct": round(self.approximate_pixel_pct, 4),
+   249→            "notes": self.notes,
+   250→        }
+   251→
+   252→
+   253→@dataclass
+   254→class GenericValidationResult:
+   255→    """Generic validation result for formats without specific validators."""
+   256→    level: RecoveryLevel
+   257→    functional_score: float
+   258→    format_name: str = "unknown"
+   259→    has_valid_header: bool = False
+   260→    size_preserved: bool = False
+   261→    notes: str = ""
+   262→
+   263→    def to_dict(self) -> Dict:
+   264→        return {
+   265→            "format": self.format_name,
+   266→            "level": self.level.value,
+   267→            "functional_score": round(self.functional_score, 4),
+   268→            "has_valid_header": self.has_valid_header,
+   269→            "size_preserved": self.size_preserved,
+   270→            "notes": self.notes,
+   271→        }
+   272→
+   273→
+   274→# ─── Format Validators ───────────────────────────────────────────────────────
+   275→
+   276→class JPEGValidator:
+   277→    """
+   278→    Validate a JPEG file for functional recovery.
+   279→
+   280→    JPEG structure:
+   281→      - SOI marker: FF D8
+   282→      - APP0/APP1 markers: FF E0 / FF E1
+   283→      - DQT, DHT, SOF, SOS markers
+   284→      - Compressed image data
+   285→      - EOI marker: FF D9
+   286→
+   287→    A JPEG can be "functionally recovered" if:
+   288→      - It has a valid SOI marker (can identify as JPEG)
+   289→      - It has at least some scan data (SOS marker found)
+   290→      - It has enough data to render a partial image
+   291→    """
+   292→
+   293→    def validate(self, data: bytes, original_data: Optional[bytes] = None) -> JPEGValidationResult:
+   294→        """Validate a JPEG file for functional recovery."""
+   295→        if len(data) < 4:
+   296→            return JPEGValidationResult(
+   297→                level=RecoveryLevel.FAILED,
+   298→                functional_score=0.0,
+   299→                notes="File too small to be a valid JPEG",
+   300→            )
+   301→
+   302→        has_header = data[:2] == b'\xFF\xD8'
+   303→        has_footer = data[-2:] == b'\xFF\xD9'
+   304→
+   305→        # Check for SHA-256 match first (full recovery)
+   306→        if original_data and data == original_data:
+   307→            return JPEGValidationResult(
+   308→                level=RecoveryLevel.FULL,
+   309→                functional_score=1.0,
+   310→                has_valid_header=True,
+   311→                has_valid_footer=True,
+   312→                scan_valid=True,
+   313→                approximate_pixel_pct=1.0,
+   314→                notes="Bit-perfect recovery",
+   315→            )
+   316→
+   317→        # Scan for JPEG markers
+   318→        scan_valid = False
+   319→        has_sos = False
+   320→        has_sof = False
+   321→        marker_count = 0
+   322→        last_sos_offset = 0
+   323→
+   324→        i = 2  # Skip SOI
+   325→        while i < len(data) - 1:
+   326→            if data[i] == 0xFF:
+   327→                marker = data[i + 1]
+   328→                if marker == 0xDA:  # SOS (Start of Scan)
+   329→                    has_sos = True
+   330→                    last_sos_offset = i
+   331→                    marker_count += 1
+   332→                elif marker in (0xC0, 0xC1, 0xC2):  # SOF0, SOF1, SOF2
+   333→                    has_sof = True
+   334→                    marker_count += 1
+   335→                elif marker in (0xE0, 0xE1, 0xDB, 0xC4, 0xDD):
+   336→                    marker_count += 1
+   337→
+   338→                # Skip marker payload (except for RST and standalone markers)
+   339→                if marker not in (0x00, 0xD0, 0xD1, 0xD2, 0xD3,
+   340→                                  0xD4, 0xD5, 0xD6, 0xD7, 0xD8, 0xFF):
+   341→                    if i + 3 < len(data):
+   342→                        length = struct.unpack('>H', data[i+2:i+4])[0]
+   343→                        i += max(length, 2)
+   344→                i += 2
+   345→            else:
+   346→                i += 1
+   347→
+   348→        scan_valid = has_sos and has_sof and marker_count >= 3
+   349→
+   350→        # Estimate pixel percentage: ratio of data after first SOS to total
+   351→        if has_sos:
+   352→            pixel_pct = min(1.0, (len(data) - last_sos_offset) / max(len(data), 1))
+   353→        else:
+   354→            pixel_pct = 0.0
+   355→
+   356→        # Determine recovery level
+   357→        if has_header and has_footer and scan_valid:
+   358→            # Check if it's just a few bytes different
+   359→            if original_data and len(data) == len(original_data):
+   360→                # Count differing bytes
+   361→                diff_bytes = sum(1 for a, b in zip(data, original_data) if a != b)
+   362→                diff_pct = diff_bytes / len(data)
+   363→                if diff_pct < 0.001:
+   364→                    level = RecoveryLevel.FUNCTIONAL
+   365→                    score = 0.95
+   366→                    notes = f"Nearly perfect: {diff_pct:.4%} bytes differ"
+   367→                elif diff_pct < 0.01:
+   368→                    level = RecoveryLevel.FUNCTIONAL
+   369→                    score = 0.85
+   370→                    notes = f"Minor corruption: {diff_pct:.2%} bytes differ"
+   371→                elif diff_pct < 0.05:
+   372→                    level = RecoveryLevel.PARTIAL
+   373→                    score = 0.65
+   374→                    notes = f"Moderate corruption: {diff_pct:.2%} bytes differ"
+   375→                else:
+   376→                    level = RecoveryLevel.PARTIAL
+   377→                    score = max(0.5, 0.8 - diff_pct * 5)
+   378→                    notes = f"Significant corruption: {diff_pct:.2%} bytes differ"
+   379→            else:
+   380→                level = RecoveryLevel.FUNCTIONAL
+   381→                score = 0.8
+   382→                notes = "Valid JPEG structure, size may differ"
+   383→        elif has_header and has_sos:
+   384→            level = RecoveryLevel.PARTIAL
+   385→            score = 0.5
+   386→            notes = "Header valid, scan data present, but missing EOI or structure issues"
+   387→        elif has_header:
+   388→            level = RecoveryLevel.DEGRADED
+   389→            score = 0.2
+   390→            notes = "Header valid but no scan data found"
+   391→        else:
+   392→            level = RecoveryLevel.FAILED
+   393→            score = 0.0
+   394→            notes = "No valid JPEG header found"
+   395→
+   396→        return JPEGValidationResult(
+   397→            level=level,
+   398→            functional_score=score,
+   399→            has_valid_header=has_header,
+   400→            has_valid_footer=has_footer,
+   401→            scan_valid=scan_valid,
+   402→            approximate_pixel_pct=pixel_pct,
+   403→            notes=notes,
+   404→        )
+   405→
+   406→
+   407→class MP4Validator:
+   408→    """
+   409→    Validate an MP4 file for functional recovery.
+   410→
+   411→    MP4 structure (ISO Base Media File Format):
+   412→      - ftyp box: file type
+   413→      - moov box: metadata (critical — contains index/duration)
+   414→      - mdat box: media data
+   415→
+   416→    Key insight: If moov is present, the video can be played even if
+   417→    some mdat is corrupted. Without moov, the video is unseekable
+   418→    but may still play sequentially.
+   419→    """
+   420→
+   421→    def validate(self, data: bytes, original_data: Optional[bytes] = None) -> MP4ValidationResult:
+   422→        """Validate an MP4 file for functional recovery."""
+   423→        if len(data) < 8:
+   424→            return MP4ValidationResult(
+   425→                level=RecoveryLevel.FAILED,
+   426→                functional_score=0.0,
+   427→                notes="File too small to be a valid MP4",
+   428→            )
+   429→
+   430→        # Check for SHA-256 match
+   431→        if original_data and data == original_data:
+   432→            return MP4ValidationResult(
+   433→                level=RecoveryLevel.FULL,
+   434→                functional_score=1.0,
+   435→                has_ftyp_box=True,
+   436→                has_moov_box=True,
+   437→                has_mdat_box=True,
+   438→                duration_preserved=True,
+   439→                approximate_duration_pct=1.0,
+   440→                notes="Bit-perfect recovery",
+   441→            )
+   442→
+   443→        # Scan for MP4 boxes
+   444→        has_ftyp = False
+   445→        has_moov = False
+   446→        has_mdat = False
+   447→        moov_size = 0
+   448→        mdat_size = 0
+   449→        total_boxes = 0
+   450→
+   451→        i = 0
+   452→        while i < len(data) - 8:
+   453→            if i + 8 > len(data):
+   454→                break
+   455→
+   456→            # Read box header (size + type)
+   457→            box_size = struct.unpack('>I', data[i:i+4])[0]
+   458→            box_type = data[i+4:i+8]
+   459→
+   460→            if box_size < 8:
+   461→                # Invalid box size, try to skip
+   462→                i += 1
+   463→                continue
+   464→
+   465→            total_boxes += 1
+   466→
+   467→            if box_type == b'ftyp':
+   468→                has_ftyp = True
+   469→            elif box_type == b'moov':
+   470→                has_moov = True
+   471→                moov_size = box_size
+   472→            elif box_type == b'mdat':
+   473→                has_mdat = True
+   474→                mdat_size = box_size
+   475→
+   476→            # Move to next box
+   477→            if box_size > 0 and i + box_size <= len(data):
+   478→                i += box_size
+   479→            else:
+   480→                # Box extends beyond data — stop scanning
+   481→                break
+   482→
+   483→        # Check for ftyp at the start
+   484→        if data[:4] == b'\x00\x00\x00\x1c' or data[4:8] == b'ftyp':
+   485→            has_ftyp = True
+   486→
+   487→        # Determine recovery level
+   488→        if has_ftyp and has_moov and has_mdat:
+   489→            level = RecoveryLevel.FUNCTIONAL
+   490→            score = 0.8
+   491→            notes = "All critical boxes present — video should play"
+   492→        elif has_ftyp and has_moov:
+   493→            level = RecoveryLevel.PARTIAL
+   494→            score = 0.5
+   495→            notes = "Metadata present but media data may be incomplete"
+   496→        elif has_ftyp and has_mdat:
+   497→            level = RecoveryLevel.DEGRADED
+   498→            score = 0.3
+   499→            notes = "Media data present but no metadata — unseekable"
+   500→        elif has_ftyp:
+   501→            level = RecoveryLevel.DEGRADED
+   502→            score = 0.2
+   503→            notes = "Only ftyp box found — minimal video info"
+   504→        else:
+   505→            level = RecoveryLevel.FAILED
+   506→            score = 0.0
+   507→            notes = "No valid MP4 structure found"
+   508→
+   509→        return MP4ValidationResult(
+   510→            level=level,
+   511→            functional_score=score,
+   512→            has_ftyp_box=has_ftyp,
+   513→            has_moov_box=has_moov,
+   514→            has_mdat_box=has_mdat,
+   515→            duration_preserved=has_moov,
+   516→            approximate_duration_pct=0.8 if has_moov else 0.3,
+   517→            notes=notes,
+   518→        )
+   519→
+   520→
+   521→class DOCXValidator:
+   522→    """
+   523→    Validate a DOCX file for functional recovery.
+   524→
+   525→    DOCX is a ZIP file containing:
+   526→      - [Content_Types].xml
+   527→      - _rels/.rels
+   528→      - word/document.xml (the actual document content)
+   529→      - word/_rels/document.xml.rels
+   530→      - Other XML files
+   531→
+   532→    A DOCX can be "functionally recovered" if:
+   533→      - It's a valid ZIP archive
+   534→      - It contains word/document.xml
+   535→      - The XML is parseable
+   536→      - The text content is accessible
+   537→    """
+   538→
+   539→    def validate(self, data: bytes, original_data: Optional[bytes] = None) -> DOCXValidationResult:
+   540→        """Validate a DOCX file for functional recovery."""
+   541→        if len(data) < 4:
+   542→            return DOCXValidationResult(
+   543→                level=RecoveryLevel.FAILED,
+   544→                functional_score=0.0,
+   545→                notes="File too small to be a valid DOCX",
+   546→            )
+   547→
+   548→        # Check for SHA-256 match
+   549→        if original_data and data == original_data:
+   550→            return DOCXValidationResult(
+   551→                level=RecoveryLevel.FULL,
+   552→                functional_score=1.0,
+   553→                is_valid_zip=True,
+   554→                has_content_types=True,
+   555→                has_main_document=True,
+   556→                xml_valid=True,
+   557→                text_accessible=True,
+   558→                notes="Bit-perfect recovery",
+   559→            )
+   560→
+   561→        # Check if it starts with ZIP signature
+   562→        is_zip = data[:4] == b'PK\x03\x04'
+   563→
+   564→        # Check for Content_Types
+   565→        has_content_types = b'[Content_Types]' in data or b'Content_Types' in data
+   566→
+   567→        # Check for word/document.xml
+   568→        has_main_doc = b'word/document.xml' in data
+   569→
+   570→        # Check for XML validity (basic — look for proper XML tags)
+   571→        has_xml = b'<?xml' in data or b'<w:document' in data
+   572→
+   573→        # Check for text content (basic — look for <w:t> tags)
+   574→        text_accessible = b'<w:t' in data or b'<w:t ' in data
+   575→
+   576→        # Check for EOCD (End of Central Directory)
+   577→        has_eocd = b'PK\x05\x06' in data
+   578→
+   579→        # Determine recovery level
+   580→        if is_zip and has_content_types and has_main_doc and text_accessible:
+   581→            level = RecoveryLevel.FUNCTIONAL
+   582→            score = 0.8
+   583→            notes = "Valid DOCX structure, text content accessible"
+   584→        elif is_zip and has_main_doc and text_accessible:
+   585→            level = RecoveryLevel.PARTIAL
+   586→            score = 0.5
+   587→            notes = "Main document present and text accessible, structure may be incomplete"
+   588→        elif is_zip and has_main_doc:
+   589→            level = RecoveryLevel.PARTIAL
+   590→            score = 0.4
+   591→            notes = "ZIP structure with document.xml, but text may not be accessible"
+   592→        elif is_zip and has_xml:
+   593→            level = RecoveryLevel.DEGRADED
+   594→            score = 0.2
+   595→            notes = "ZIP structure with some XML, but main document may be missing"
+   596→        elif is_zip:
+   597→            level = RecoveryLevel.DEGRADED
+   598→            score = 0.15
+   599→            notes = "Valid ZIP but no recognizable DOCX structure"
+   600→        else:
+   601→            level = RecoveryLevel.FAILED
+   602→            score = 0.0
+   603→            notes = "Not a valid ZIP/DOCX file"
+   604→
+   605→        return DOCXValidationResult(
+   606→            level=level,
+   607→            functional_score=score,
+   608→            is_valid_zip=is_zip,
+   609→            has_content_types=has_content_types,
+   610→            has_main_document=has_main_doc,
+   611→            xml_valid=has_xml,
+   612→            text_accessible=text_accessible,
+   613→            notes=notes,
+   614→        )
+   615→
+   616→
+   617→class SQLiteValidator:
+   618→    """
+   619→    Validate a SQLite database for functional recovery.
+   620→
+   621→    SQLite structure:
+   622→      - Header: "SQLite format 3\000"
+   623→      - Page-based structure
+   624→      - B-tree for tables and indices
+   625→
+   626→    Key insight: PRAGMA integrity_check is the gold standard.
+   627→    If it passes, the database is functionally recovered.
+   628→    """
+   629→
+   630→    def validate(self, data: bytes, original_data: Optional[bytes] = None) -> SQLiteValidationResult:
+   631→        """Validate a SQLite database for functional recovery."""
+   632→        if len(data) < 16:
+   633→            return SQLiteValidationResult(
+   634→                level=RecoveryLevel.FAILED,
+   635→                functional_score=0.0,
+   636→                notes="File too small to be a valid SQLite database",
+   637→            )
+   638→
+   639→        # Check for SHA-256 match
+   640→        if original_data and data == original_data:
+   641→            return SQLiteValidationResult(
+   642→                level=RecoveryLevel.FULL,
+   643→                functional_score=1.0,
+   644→                has_valid_header=True,
+   645→                integrity_check_passed=True,
+   646→                tables_readable=True,
+   647→                data_accessible=True,
+   648→                notes="Bit-perfect recovery",
+   649→            )
+   650→
+   651→        # Check header
+   652→        sqlite_header = b'SQLite format 3\x00'
+   653→        has_header = data[:16] == sqlite_header
+   654→
+   655→        # Parse page size from header (bytes 16-17)
+   656→        page_size = 4096  # Default
+   657→        if len(data) >= 18:
+   658→            raw_page_size = struct.unpack('>H', data[16:18])[0]
+   659→            if raw_page_size == 1:
+   660→                page_size = 65536
+   661→            elif raw_page_size > 0:
+   662→                page_size = raw_page_size
+   663→
+   664→        # Estimate number of pages
+   665→        n_pages = len(data) // page_size if page_size > 0 else 0
+   666→
+   667→        # Check for B-tree page signatures (first page should be a table B-tree)
+   668→        # Page 1 is the sqlite_master table
+   669→        tables_readable = False
+   670→        if n_pages >= 1:
+   671→            # The first byte of each page indicates its type:
+   672→            # 0x02: Interior index B-tree
+   673→            # 0x05: Interior table B-tree
+   674→            # 0x0a: Leaf index B-tree
+   675→            # 0x0d: Leaf table B-tree
+   676→            page1_offset = 100  # Skip the 100-byte header on page 1
+   677→            if page1_offset < len(data):
+   678→                page_type = data[page1_offset]
+   679→                if page_type in (0x02, 0x05, 0x0a, 0x0d):
+   680→                    tables_readable = True
+   681→
+   682→        # Check for data pages (page type 0x0d = leaf table)
+   683→        data_accessible = False
+   684→        for page_num in range(min(n_pages, 10)):
+   685→            offset = page_num * page_size
+   686→            if page_num == 0:
+   687→                offset += 100  # Skip header on page 1
+   688→            if offset < len(data):
+   689→                page_type = data[offset]
+   690→                if page_type == 0x0d:  # Leaf table B-tree
+   691→                    data_accessible = True
+   692→                    break
+   693→
+   694→        # Determine recovery level
+   695→        if has_header and tables_readable and data_accessible:
+   696→            level = RecoveryLevel.FUNCTIONAL
+   697→            score = 0.8
+   698→            notes = f"Valid SQLite structure, {n_pages} pages, data accessible"
+   699→        elif has_header and tables_readable:
+   700→            level = RecoveryLevel.PARTIAL
+   701→            score = 0.5
+   702→            notes = f"Valid header and table structure, but data may be incomplete"
+   703→        elif has_header:
+   704→            level = RecoveryLevel.DEGRADED
+   705→            score = 0.2
+   706→            notes = f"Valid header but table structure may be corrupted"
+   707→        else:
+   708→            level = RecoveryLevel.FAILED
+   709→            score = 0.0
+   710→            notes = "No valid SQLite header found"
+   711→
+   712→        return SQLiteValidationResult(
+   713→            level=level,
+   714→            functional_score=score,
+   715→            has_valid_header=has_header,
+   716→            integrity_check_passed=has_header and tables_readable and data_accessible,
+   717→            tables_readable=tables_readable,
+   718→            data_accessible=data_accessible,
+   719→            notes=notes,
+   720→        )
+   721→
+   722→
+   723→class ZIPValidator:
+   724→    """
+   725→    Validate a ZIP archive for functional recovery.
+   726→
+   727→    ZIP structure:
+   728→      - Local file headers: PK\x03\x04
+   729→      - Central directory: PK\x01\x02
+   730→      - End of Central Directory: PK\x05\x06
+   731→
+   732→    A ZIP is "functionally recovered" if it can be decompressed.
+   733→    """
+   734→
+   735→    def validate(self, data: bytes, original_data: Optional[bytes] = None) -> ZIPValidationResult:
+   736→        """Validate a ZIP archive for functional recovery."""
+   737→        if len(data) < 4:
+   738→            return ZIPValidationResult(
+   739→                level=RecoveryLevel.FAILED,
+   740→                functional_score=0.0,
+   741→                notes="File too small to be a valid ZIP",
+   742→            )
+   743→
+   744→        # Check for SHA-256 match
+   745→        if original_data and data == original_data:
+   746→            return ZIPValidationResult(
+   747→                level=RecoveryLevel.FULL,
+   748→                functional_score=1.0,
+   749→                has_valid_header=True,
+   750→                has_eocd=True,
+   751→                can_decompress=True,
+   752→                files_accessible=1,
+   753→                total_files=1,
+   754→                notes="Bit-perfect recovery",
+   755→            )
+   756→
+   757→        # Check for ZIP signature
+   758→        has_header = data[:4] == b'PK\x03\x04'
+   759→
+   760→        # Count local file headers
+   761→        local_headers = data.count(b'PK\x03\x04')
+   762→
+   763→        # Check for EOCD
+   764→        has_eocd = b'PK\x05\x06' in data
+   765→
+   766→        # Check for central directory
+   767→        has_central = b'PK\x01\x02' in data
+   768→
+   769→        # Determine recovery level
+   770→        if has_header and has_eocd and has_central and local_headers > 0:
+   771→            level = RecoveryLevel.FUNCTIONAL
+   772→            score = 0.8
+   773→            notes = f"Valid ZIP structure, {local_headers} files found"
+   774→        elif has_header and has_eocd and local_headers > 0:
+   775→            level = RecoveryLevel.PARTIAL
+   776→            score = 0.5
+   777→            notes = f"ZIP with {local_headers} files, but central directory may be incomplete"
+   778→        elif has_header and local_headers > 0:
+   779→            level = RecoveryLevel.PARTIAL
+   780→            score = 0.4
+   781→            notes = f"ZIP with {local_headers} files, but no EOCD found"
+   782→        elif has_header:
+   783→            level = RecoveryLevel.DEGRADED
+   784→            score = 0.15
+   785→            notes = "ZIP header found but no file entries"
+   786→        else:
+   787→            level = RecoveryLevel.FAILED
+   788→            score = 0.0
+   789→            notes = "Not a valid ZIP file"
+   790→
+   791→        return ZIPValidationResult(
+   792→            level=level,
+   793→            functional_score=score,
+   794→            has_valid_header=has_header,
+   795→            has_eocd=has_eocd,
+   796→            can_decompress=has_header and has_eocd and local_headers > 0,
+   797→            files_accessible=local_headers if has_header else 0,
+   798→            total_files=local_headers if has_header else 0,
+   799→            notes=notes,
+   800→        )
+   801→
+   802→
+   803→class PDFValidator:
+   804→    """
+   805→    Validate a PDF file for functional recovery.
+   806→
+   807→    PDF structure:
+   808→      - Header: %PDF-x.y
+   809→      - Body: objects
+   810→      - Cross-reference table (xref)
+   811→      - Trailer with %%EOF
+   812→
+   813→    A PDF is "functionally recovered" if it can be rendered.
+   814→    """
+   815→
+   816→    def validate(self, data: bytes, original_data: Optional[bytes] = None) -> PDFValidationResult:
+   817→        """Validate a PDF file for functional recovery."""
+   818→        if len(data) < 5:
+   819→            return PDFValidationResult(
+   820→                level=RecoveryLevel.FAILED,
+   821→                functional_score=0.0,
+   822→                notes="File too small to be a valid PDF",
+   823→            )
+   824→
+   825→        # Check for SHA-256 match
+   826→        if original_data and data == original_data:
+   827→            return PDFValidationResult(
+   828→                level=RecoveryLevel.FULL,
+   829→                functional_score=1.0,
+   830→                has_valid_header=True,
+   831→                has_eof_marker=True,
+   832→                has_xref=True,
+   833→                has_pages=True,
+   834→                can_render=True,
+   835→                notes="Bit-perfect recovery",
+   836→            )
+   837→
+   838→        # Check header
+   839→        has_header = data[:5] == b'%PDF-'
+   840→
+   841→        # Check for %%EOF
+   842→        has_eof = b'%%EOF' in data
+   843→
+   844→        # Check for xref
+   845→        has_xref = b'xref' in data or b'/XRef' in data
+   846→
+   847→        # Check for pages
+   848→        has_pages = b'/Page' in data and (b'/Pages' in data or b'/Type /Page' in data)
+   849→
+   850→        # Determine recovery level
+   851→        if has_header and has_eof and has_xref and has_pages:
+   852→            level = RecoveryLevel.FUNCTIONAL
+   853→            score = 0.8
+   854→            notes = "Complete PDF structure — should render"
+   855→        elif has_header and has_pages:
+   856→            level = RecoveryLevel.PARTIAL
+   857→            score = 0.5
+   858→            notes = "Header and pages present, but cross-reference may be incomplete"
+   859→        elif has_header and has_eof:
+   860→            level = RecoveryLevel.PARTIAL
+   861→            score = 0.4
+   862→            notes = "Header and EOF present, but structure may be incomplete"
+   863→        elif has_header:
+   864→            level = RecoveryLevel.DEGRADED
+   865→            score = 0.2
+   866→            notes = "PDF header found but structure is incomplete"
+   867→        else:
+   868→            level = RecoveryLevel.FAILED
+   869→            score = 0.0
+   870→            notes = "Not a valid PDF file"
+   871→
+   872→        return PDFValidationResult(
+   873→            level=level,
+   874→            functional_score=score,
+   875→            has_valid_header=has_header,
+   876→            has_eof_marker=has_eof,
+   877→            has_xref=has_xref,
+   878→            has_pages=has_pages,
+   879→            can_render=has_header and has_pages,
+   880→            notes=notes,
+   881→        )
+   882→
+   883→
+   884→class PNGValidator:
+   885→    """
+   886→    Validate a PNG file for functional recovery.
+   887→
+   888→    PNG structure:
+   889→      - Signature: 89 50 4E 47 0D 0A 1A 0A
+   890→      - IHDR chunk (image header)
+   891→      - IDAT chunks (image data)
+   892→      - IEND chunk (image end)
+   893→
+   894→    A PNG is "functionally recovered" if it has valid header,
+   895→    IHDR, and at least some IDAT data.
+   896→    """
+   897→
+   898→    def validate(self, data: bytes, original_data: Optional[bytes] = None) -> PNGValidationResult:
+   899→        """Validate a PNG file for functional recovery."""
+   900→        PNG_SIG = b'\x89PNG\r\n\x1a\n'
+   901→
+   902→        if len(data) < 8:
+   903→            return PNGValidationResult(
+   904→                level=RecoveryLevel.FAILED,
+   905→                functional_score=0.0,
+   906→                notes="File too small to be a valid PNG",
+   907→            )
+   908→
+   909→        # Check for SHA-256 match
+   910→        if original_data and data == original_data:
+   911→            return PNGValidationResult(
+   912→                level=RecoveryLevel.FULL,
+   913→                functional_score=1.0,
+   914→                has_valid_header=True,
+   915→                has_iend=True,
+   916→                has_ihdr=True,
+   917→                has_idat=True,
+   918→                approximate_pixel_pct=1.0,
+   919→                notes="Bit-perfect recovery",
+   920→            )
+   921→
+   922→        has_header = data[:8] == PNG_SIG
+   923→        has_iend = b'IEND' in data
+   924→        has_ihdr = b'IHDR' in data
+   925→        has_idat = b'IDAT' in data
+   926→
+   927→        # Estimate pixel percentage based on IDAT data
+   928→        idat_pct = 0.0
+   929→        if has_idat and has_ihdr:
+   930→            # Find IHDR to get image dimensions
+   931→            ihdr_pos = data.find(b'IHDR')
+   932→            if ihdr_pos > 0 and ihdr_pos + 16 <= len(data):
+   933→                width = struct.unpack('>I', data[ihdr_pos+4:ihdr_pos+8])[0]
+   934→                height = struct.unpack('>I', data[ihdr_pos+8:ihdr_pos+12])[0]
+   935→                # Very rough estimate: IDAT data size vs expected size
+   936→                expected_size = width * height * 4  # RGBA
+   937→                idat_count = data.count(b'IDAT')
+   938→                idat_pct = min(1.0, idat_count / max(1, expected_size / 8192))
+   939→
+   940→        # Determine recovery level
+   941→        if has_header and has_iend and has_ihdr and has_idat:
+   942→            level = RecoveryLevel.FUNCTIONAL
+   943→            score = 0.8
+   944→            notes = "Complete PNG structure — should render"
+   945→        elif has_header and has_ihdr and has_idat:
+   946→            level = RecoveryLevel.PARTIAL
+   947→            score = 0.5
+   948→            notes = "Header and image data present, but missing IEND"
+   949→        elif has_header and has_ihdr:
+   950→            level = RecoveryLevel.DEGRADED
+   951→            score = 0.2
+   952→            notes = "Header present but no image data"
+   953→        elif has_header:
+   954→            level = RecoveryLevel.DEGRADED
+   955→            score = 0.15
+   956→            notes = "PNG signature found but no valid chunks"
+   957→        else:
+   958→            level = RecoveryLevel.FAILED
+   959→            score = 0.0
+   960→            notes = "Not a valid PNG file"
+   961→
+   962→        return PNGValidationResult(
+   963→            level=level,
+   964→            functional_score=score,
+   965→            has_valid_header=has_header,
+   966→            has_iend=has_iend,
+   967→            has_ihdr=has_ihdr,
+   968→            has_idat=has_idat,
+   969→            approximate_pixel_pct=idat_pct,
+   970→            notes=notes,
+   971→        )
+   972→
+   973→
+   974→# ─── Unified Functional Validator ────────────────────────────────────────────
+   975→
+   976→class FunctionalValidator:
+   977→    """
+   978→    Unified validator that dispatches to format-specific validators.
+   979→
+   980→    This is the main entry point for functional recovery assessment.
+   981→
+   982→    Usage:
+   983→        validator = FunctionalValidator()
+   984→        result = validator.validate(data, filename="photo.jpg")
+   985→        print(result.level, result.functional_score)
+   986→    """
+   987→
+   988→    def __init__(self):
+   989→        self.validators = {
+   990→            ".jpg": JPEGValidator(),
+   991→            ".jpeg": JPEGValidator(),
+   992→            ".png": PNGValidator(),
+   993→            ".pdf": PDFValidator(),
+   994→            ".docx": DOCXValidator(),
+   995→            ".xlsx": DOCXValidator(),  # Same ZIP-based structure
+   996→            ".pptx": DOCXValidator(),  # Same ZIP-based structure
+   997→            ".zip": ZIPValidator(),
+   998→            ".mp4": MP4Validator(),
+   999→            ".mov": MP4Validator(),    # Same container format
+  1000→            ".sqlite": SQLiteValidator(),
+  1001→            ".db": SQLiteValidator(),
+  1002→        }
+  1003→
+  1004→    def validate(self, data: bytes,
+  1005→                 filename: str = "",
+  1006→                 original_data: Optional[bytes] = None) -> Dict:
+  1007→        """
+  1008→        Validate a file for functional recovery.
+  1009→
+  1010→        Args:
+  1011→            data: The recovered file data
+  1012→            filename: The filename (used to determine format)
+  1013→            original_data: The original ground truth data (for comparison)
+  1014→
+  1015→        Returns:
+  1016→            Dict with:
+  1017→              - level: RecoveryLevel enum
+  1018→              - functional_score: float 0.0-1.0
+  1019→              - format: str
+  1020→              - details: format-specific result dict
+  1021→        """
+  1022→        ext = Path(filename).suffix.lower() if filename else ""
+  1023→        validator = self.validators.get(ext)
+  1024→
+  1025→        if validator:
+  1026→            result = validator.validate(data, original_data)
+  1027→            return {
+  1028→                "level": result.level,
+  1029→                "level_name": result.level.value,
+  1030→                "functional_score": result.functional_score,
+  1031→                "format": ext,
+  1032→                "details": result.to_dict(),
+  1033→            }
+  1034→        else:
+  1035→            # Generic validation
+  1036→            result = self._generic_validate(data, original_data)
+  1037→            return {
+  1038→                "level": result.level,
+  1039→                "level_name": result.level.value,
+  1040→                "functional_score": result.functional_score,
+  1041→                "format": ext or "unknown",
+  1042→                "details": result.to_dict(),
+  1043→            }
+  1044→
+  1045→    def _generic_validate(self, data: bytes,
+  1046→                          original_data: Optional[bytes] = None) -> GenericValidationResult:
+  1047→        """Generic validation for formats without specific validators."""
+  1048→        if len(data) == 0:
+  1049→            return GenericValidationResult(
+  1050→                level=RecoveryLevel.FAILED,
+  1051→                functional_score=0.0,
+  1052→                notes="Empty file",
+  1053→            )
+  1054→
+  1055→        # Check for SHA-256 match
+  1056→        if original_data and data == original_data:
+  1057→            return GenericValidationResult(
+  1058→                level=RecoveryLevel.FULL,
+  1059→                functional_score=1.0,
+  1060→                size_preserved=True,
+  1061→                notes="Bit-perfect recovery",
+  1062→            )
+  1063→
+  1064→        # Check if size is preserved
+  1065→        size_preserved = original_data is None or len(data) == len(original_data)
+  1066→
+  1067→        # Basic heuristic: if the file has reasonable size and we have
+  1068→        # original data, estimate corruption level
+  1069→        if original_data and len(data) == len(original_data):
+  1070→            diff_bytes = sum(1 for a, b in zip(data, original_data) if a != b)
+  1071→            diff_pct = diff_bytes / len(data)
+  1072→
+  1073→            if diff_pct < 0.001:
+  1074→                return GenericValidationResult(
+  1075→                    level=RecoveryLevel.FUNCTIONAL,
+  1076→                    functional_score=0.9,
+  1077→                    size_preserved=True,
+  1078→                    notes=f"Nearly perfect: {diff_pct:.4%} bytes differ",
+  1079→                )
+  1080→            elif diff_pct < 0.05:
+  1081→                return GenericValidationResult(
+  1082→                    level=RecoveryLevel.PARTIAL,
+  1083→                    functional_score=0.5,
+  1084→                    size_preserved=True,
+  1085→                    notes=f"Moderate corruption: {diff_pct:.2%} bytes differ",
+  1086→                )
+  1087→            else:
+  1088→                return GenericValidationResult(
+  1089→                    level=RecoveryLevel.DEGRADED,
+  1090→                    functional_score=max(0.1, 0.5 - diff_pct * 3),
+  1091→                    size_preserved=True,
+  1092→                    notes=f"Heavy corruption: {diff_pct:.2%} bytes differ",
+  1093→                )
+  1094→
+  1095→        # Without original data, we can only check basic properties
+  1096→        return GenericValidationResult(
+  1097→            level=RecoveryLevel.PARTIAL,
+  1098→            functional_score=0.5,
+  1099→            size_preserved=size_preserved,
+  1100→            notes="No original data available for comparison",
+  1101→        )
+  1102→
+  1103→    def batch_validate(self,
+  1104→                       files: Dict[str, bytes],
+  1105→                       original_files: Optional[Dict[str, bytes]] = None) -> Dict:
+  1106→        """
+  1107→        Validate multiple files at once.
+  1108→
+  1109→        Args:
+  1110→            files: Dict of filename → recovered data
+  1111→            original_files: Dict of filename → original data
+  1112→
+  1113→        Returns:
+  1114→            Dict with:
+  1115→              - results: Dict of filename → validation result
+  1116→              - summary: Aggregate statistics
+  1117→              - functional_recovery_rate: % of files with functional+ recovery
+  1118→        """
+  1119→        results = {}
+  1120→        functional_count = 0
+  1121→        total_count = 0
+  1122→
+  1123→        for name, data in files.items():
+  1124→            orig = original_files.get(name) if original_files else None
+  1125→            result = self.validate(data, name, orig)
+  1126→            results[name] = result
+  1127→
+  1128→            total_count += 1
+  1129→            if result["functional_score"] >= 0.5:  # Partial or better
+  1130→                functional_count += 1
+  1131→
+  1132→        return {
+  1133→            "results": results,
+  1134→            "summary": {
+  1135→                "total_files": total_count,
+  1136→                "functional_recovery": functional_count,
+  1137→                "functional_recovery_rate": functional_count / total_count if total_count else 0.0,
+  1138→                "level_distribution": {
+  1139→                    level.value: sum(1 for r in results.values() if r["level"] == level)
+  1140→                    for level in RecoveryLevel
+  1141→                },
+  1142→            },
+  1143→        }
+  1144→
+  1145→
+  1146→# ─── Validation Table (for documentation) ────────────────────────────────────
+  1147→
+  1148→def print_validation_table() -> str:
+  1149→    """Print the functional validation criteria table."""
+  1150→    lines = [
+  1151→        "# Functional Recovery Validation Criteria",
+  1152→        "",
+  1153→        "| Format | FULL (1.0) | FUNCTIONAL (0.8) | PARTIAL (0.5) | DEGRADED (0.2) | FAILED (0.0) |",
+  1154→        "|--------|-----------|-----------------|--------------|---------------|-------------|",
+  1155→        "| JPEG | SHA-256 match | Opens + valid markers + footer | Header + scan data | Header only | No header |",
+  1156→        "| MP4 | SHA-256 match | ftyp + moov + mdat | ftyp + moov | ftyp only | No structure |",
+  1157→        "| DOCX | SHA-256 match | Valid ZIP + document.xml + text | ZIP + document.xml | ZIP only | No ZIP |",
+  1158→        "| SQLite | SHA-256 match | Header + tables + data | Header + tables | Header only | No header |",
+  1159→        "| ZIP | SHA-256 match | Header + EOCD + central dir | Header + EOCD | Header only | No header |",
+  1160→        "| PDF | SHA-256 match | Header + xref + pages + EOF | Header + pages | Header only | No header |",
+  1161→        "| PNG | SHA-256 match | Header + IHDR + IDAT + IEND | Header + IHDR + IDAT | Header only | No header |",
+  1162→        "",
+  1163→        "Key insight: SHA-256 is ONLY the 'FULL' level.",
+  1164→        "A file can be FUNCTIONALLY recovered even with a different checksum.",
+  1165→    ]
+  1166→    return "\n".join(lines)
+  1167→
+  1168→
+  1169→if __name__ == "__main__":
+  1170→    print(print_validation_table())
+  1171→    print()
+  1172→
+  1173→    # Quick test with sample data
+  1174→    validator = FunctionalValidator()
+  1175→
+  1176→    # Test JPEG validation
+  1177→    jpeg_data = b'\xFF\xD8\xFF\xE0' + b'\x00' * 100 + b'\xFF\xD9'
+  1178→    result = validator.validate(jpeg_data, "photo.jpg")
+  1179→    print(f"JPEG test: {result['level_name']} (score={result['functional_score']:.2f})")
+  1180→    print(f"  Details: {result['details']}")
+  1181→

@@ -1,0 +1,636 @@
+   230→
+   231→        # H1.3: Journal outperforms carving when MFT is partial
+   232→        self.register(
+   233→            "H1.3",
+   234→            "Cuando el MFT está parcialmente dañado, la estrategia Journal-guided "
+   235→            "recupera más archivos que el carving puro.",
+   236→            open_questions=[
+   237→                "¿El journal de NTFS contiene suficiente información de archivo?",
+   238→                "¿Cómo se compara con INDX recovery?",
+   239→                "¿Qué pasa si el journal también está corrupto?",
+   240→            ],
+   241→            dependencies=["H1.2"],
+   242→        )
+   243→
+   244→        # H1.4: Bitmap improves recovery when MFT is damaged
+   245→        self.register(
+   246→            "H1.4",
+   247→            "El bitmap de asignación mejora la recuperación en discos con MFT dañada, "
+   248→            "al reducir el espacio de búsqueda para carving.",
+   249→            open_questions=[
+   250→                "¿Cuánto reduce el espacio de búsqueda?",
+   251→                "¿Qué pasa si el bitmap está parcialmente corrupto?",
+   252→                "¿Un bitmap vacío (todo zeros) es peor que no tener bitmap?",
+   253→            ],
+   254→            dependencies=["H1.2"],
+   255→        )
+   256→
+   257→        # ─── H4: The Damage × Strategy Matrix ────────────────────────────
+   258→        # The most useful artifact is not a single curve, but a MATRIX:
+   259→        # damage_type × strategy → expected outcome. This maps the problem
+   260→        # space and tells us which strategy to use for each damage pattern.
+   261→        # The matrix is the LAB's real product — not a single motor.
+   262→        self.register(
+   263→            "H4",
+   264→            "Para cada tipo de daño, existe una estrategia que produce "
+   265→            "los mejores resultados. La combinación de estas relaciones "
+   266→            "forma una matriz daño×estrategia que predice la estrategia "
+   267→            "óptima para cada estado del medio.",
+   268→            open_questions=[
+   269→                "¿Cuántos tipos de daño distintos existen en la práctica?",
+   270→                "¿La matriz tiene dimensiones finitas o es un espacio continuo?",
+   271→                "¿Se puede construir la matriz empíricamente con el laboratorio?",
+   272→                "¿La matriz es universal (independiente del disco) o específica?",
+   273→                "¿Cómo se generaliza la matriz a filesystems no-NTFS?",
+   274→            ],
+   275→            dependencies=["H2"],
+   276→        )
+   277→        self.add_evidence("H4", Evidence(
+   278→            timestamp=datetime.now(timezone.utc).isoformat(),
+   279→            type=EvidenceType.SIMULATION,
+   280→            supports=True,
+   281→            description="Evidencia preliminar de la matriz: "
+   282→                        "MFT parcial → MFT-First gana (90/100). "
+   283→                        "Head crash inicio → Carving gana (MFT en primeros sectores). "
+   284→                        "Sectores intermitentes → Carving parcialmente gana (2/15 vs 0/15). "
+   285→                        "Runlists corruptos → sin datos aún. "
+   286→                        "Bitmap roto → sin datos aún. "
+   287→                        "La matriz es más útil que una sola curva porque mapea "
+   288→                        "el espacio de problemas completo.",
+   289→            experiment_id="experiment_v2_20260730_142442",
+   290→            strength="weak",
+   291→            details={
+   292→                "matrix_rows": ["MFT parcial", "Head crash inicio", "Sectores intermitentes"],
+   293→                "matrix_cols": ["MFT-First", "Carving", "Motor C"],
+   294→                "filled_cells": 3,
+   295→                "total_cells": 9,
+   296→            },
+   297→        ))
+   298→
+   299→        # ─── H5: Per-format recovery differs ─────────────────────────────
+   300→        # The user loses FILES, not sectors. Each format has different
+   301→        # properties that affect recovery strategy effectiveness.
+   302→        # JPEG (footer FF D9) is easier to carve than TXT (no signature).
+   303→        # The experiment axis should be per-format, not per-MFT-degradation.
+   304→        self.register(
+   305→            "H5",
+   306→            "La efectividad de cada estrategia de recuperación depende "
+   307→            "del formato de archivo. Archivos con firmas fuertes y footers "
+   308→            "confiables (JPEG, PNG) son más recuperables por carving que "
+   309→            "archivos sin firmas (TXT, LOG) o con firmas ambiguas (ZIP/DOCX).",
+   310→            open_questions=[
+   311→                "¿Cuál es la tasa de recuperación por formato para cada estrategia?",
+   312→                "¿Existe un formato donde carving siempre supera a MFT-First?",
+   313→                "¿La fragmentación afecta más a unos formatos que a otros?",
+   314→                "¿Cómo se compara la recuperación de RAW (CR2, NEF) vs JPEG?",
+   315→            ],
+   316→            dependencies=["H1.1"],
+   317→        )
+   318→
+   319→        # ─── H6: Functional recovery is not binary ────────────────────────
+   320→        # "What does 'recovered' mean?" A JPEG with 2 bad pixels is NOT "failed".
+   321→        # An MP4 that plays is NOT "lost". A DOCX that opens but lost an image
+   322→        # is NOT "worth zero". Recovery is functional, not binary.
+   323→        self.register(
+   324→            "H6",
+   325→            "La recuperación de archivos no es binaria (SHA-256 coincide/no). "
+   326→            "Existe un espectro de recuperación funcional: un archivo puede "
+   327→            "ser FULL (bit-perfect), FUNCTIONAL (funciona con daño menor), "
+   328→            "PARTIAL (funciona parcialmente), DEGRADED (contenido accesible "
+   329→            "pero dañado), o FAILED (inutilizable). La métrica de recuperación "
+   330→            "funcional es más representativa del mundo real que el checksum binario.",
+   331→            open_questions=[
+   332→                "¿Cómo se correlaciona la recuperación funcional con la satisfacción del usuario?",
+   333→                "¿Un JPEG con 2 píxeles corruptos tiene el mismo valor que uno perfecto?",
+   334→                "¿Un MP4 que se reproduce pero tiene checksum distinto está 'recuperado'?",
+   335→                "¿Un DOCX que abre pero perdió una imagen vale cero?",
+   336→                "¿Cómo se integra la recuperación funcional con el RVS?",
+   337→            ],
+   338→            dependencies=["H5"],
+   339→        )
+   340→
+   341→        # ─── H7: Recovery Value Score predicts user satisfaction ───────────
+   342→        # Not all files have the same value. A motor that recovers 200 thumbnails
+   343→        # but loses the thesis has objectively done a worse job. RVS captures
+   344→        # this by weighting: Value × Replacement Probability × Recreation Time ×
+   345→        # Emotional Impact.
+   346→        self.register(
+   347→            "H7",
+   348→            "El Recovery Value Score (RVS) es un mejor predictor de la utilidad "
+   349→            "de una recuperación que el conteo bruto de archivos. El RVS incorpora "
+   350→            "cuatro dimensiones: valor intrínseco del archivo, probabilidad de "
+   351→            "reemplazo, tiempo de recreación, e impacto emocional de la pérdida. "
+   352→            "Un motor que recupera la tesis pero pierde 200 thumbnails tiene mayor "
+   353→            "RVS que uno que recupera 200 thumbnails pero pierde la tesis.",
+   354→            open_questions=[
+   355→                "¿El RVS se correlaciona con la satisfacción del usuario?",
+   356→                "¿Son los pesos del RVS correctos? ¿Cómo se calibran?",
+   357→                "¿El RVS debería incluir el formato del archivo como factor?",
+   358→                "¿Cómo se integra el RVS con la recuperación funcional (H6)?",
+   359→                "¿El WFS (Weighted Functional Score = RVS × funcionalidad) "
+   360→                "es la métrica definitiva?",
+   361→            ],
+   362→            dependencies=["H5", "H6"],
+   363→        )
+   364→
+   365→        # ─── H8: The 95% crossover is an artifact ─────────────────────────
+   366→        # The crossover point at 95% MFT degradation is NOT a discovery.
+   367→        # It's a property of the current carving motor's low ceiling.
+   368→        # If carving supported more formats, the curve would change completely.
+   369→        self.register(
+   370→            "H8",
+   371→            "El punto de crossover observado en los experimentos es una propiedad "
+   372→            "del motor de carving actual, no una propiedad del espacio de "
+   373→            "estrategias. El carving básico tiene un techo bajo porque solo "
+   374→            "soporta firmas de header+footer y no distingue formatos ambiguos. "
+   375→            "Un motor de carving con soporte completo de formatos y parsers "
+   376→            "funcionales cambiaría la curva de crossover significativamente.",
+   377→            open_questions=[
+   378→                "¿Dónde está el crossover real con un carving completo?",
+   379→                "¿El crossover depende del dataset (tipos de archivos)?",
+   380→                "¿Existe un crossover para cada formato individual?",
+   381→                "¿Se puede eliminar el crossover con un motor adaptativo?",
+   382→            ],
+   383→            dependencies=["H3", "H5"],
+   384→        )
+   385→
+   386→        # H1.5: The lab represents NTFS well enough
+   387→        self.register(
+   388→            "H1.5",
+   389→            "El RecoveryLab captura suficientes características de NTFS real "
+   390→            "como para que los resultados del laboratorio sean predictivos "
+   391→            "de comportamiento en discos reales.",
+   392→            open_questions=[
+   393→                "¿Los resultados cambian con archivos fragmentados?",
+   394→                "¿Los resultados cambian con jerarquía de directorios?",
+   395→                "¿Los resultados cambian con atributos extendidos?",
+   396→                "¿Qué pasa con discos creados por Windows real?",
+   397→            ],
+   398→        )
+   399→        self.add_evidence("H1.5", Evidence(
+   400→            timestamp=now,
+   401→            type=EvidenceType.SIMULATION,
+   402→            supports=False,
+   403→            description="El laboratorio NO tiene fragmentación (hardcoded 0.0), "
+   404→                        "NO tiene jerarquía de directorios, NO tiene INDX records. "
+   405→                        "Motor A y Motor B recuperan archivos idénticos porque ambos "
+   406→                        "son parseadores de MFT con diferente orden de lectura.",
+   407→            experiment_id="code_review",
+   408→            strength="strong",
+   409→        ))
+   410→
+   411→        # H1.6: Determinism — same scenario produces same result
+   412→        self.register(
+   413→            "H1.6",
+   414→            "El RecoveryLab produce resultados deterministas: "
+   415→            "ejecutar el mismo escenario 100 veces produce exactamente el mismo resultado.",
+   416→            open_questions=[
+   417→                "¿Hay alguna fuente de no-determinismo en el código?",
+   418→                "¿Los RNG con seed producen exactamente las mismas secuencias?",
+   419→            ],
+   420→        )
+   421→
+   422→        # H1.7: Motor C's confidence calculation correlates with real recovery
+   423→        self.register(
+   424→            "H1.7",
+   425→            "La confianza calculada por Motor C (user_readable / user_total) "
+   426→            "está correlacionada con la tasa de recuperación real.",
+   427→            open_questions=[
+   428→                "¿La correlación es lineal o no lineal?",
+   429→                "¿Qué señales adicionales mejorarían la confianza calculada?",
+   430→                "¿MFT Mirror consistencia es una señal útil?",
+   431→            ],
+   432→            dependencies=["H1.2"],
+   433→        )
+   434→
+   435→        # H2: Strategy Crossover — the most important hypothesis
+   436→        # Original: "Motor C supera estrategias fijas"
+   437→        # Refined: The observable frontier where optimal strategy changes
+   438→        # This is FALSIFIABLE — we can find the exact crossover point
+   439→        # H1 asks: "Is MFT useful?"
+   440→        # H2 asks: "When does the optimal strategy change?"
+   441→        # These are DIFFERENT questions. H2 is the more valuable one.
+   442→        self.register(
+   443→            "H2",
+   444→            "Existe una frontera observable donde la estrategia óptima cambia "
+   445→            "según el estado del medio. Específicamente, existe un punto de "
+   446→            "degradación del MFT a partir del cual una estrategia de carving "
+   447→            "supera a una estrategia basada en metadatos.",
+   448→            open_questions=[
+   449→                "¿Cuál es el porcentaje exacto de degradación del MFT donde ocurre el crossover?",
+   450→                "¿El crossover es gradual o abrupto?",
+   451→                "¿El crossover depende del tipo de daño (intermitente vs destrucción total)?",
+   452→                "¿El crossover cambia con el tipo de archivo (JPEG vs PDF vs TXT)?",
+   453→                "¿El crossover se mantiene con discos reales?",
+   454→            ],
+   455→            dependencies=["H1.1"],
+   456→        )
+   457→
+   458→        # BLOCKER-001: All previous A vs B comparisons are invalid
+   459→        self.register(
+   460→            "BLOCKER-001",
+   461→            "Las comparaciones previas Motor A vs Motor B NO son científicamente válidas "
+   462→            "porque ambas estrategias comparten la misma fuente de datos primaria (MFT). "
+   463→            "Motor A no es carving — es 'MFT-last'. Necesitamos un Motor Carving "
+   464→            "real (solo firmas, nunca MFT) para validar H1.1.",
+   465→            open_questions=[
+   466→                "¿Motor Carving recupera menos archivos que MFT-first cuando MFT está intacto?",
+   467→                "¿Motor Carving recupera MÁS archivos que MFT-first cuando MFT está destruido?",
+   468→                "¿Cuál es el punto de crossover?",
+   469→            ],
+   470→        )
+   471→        now_blocker = datetime.now(timezone.utc).isoformat()
+   472→        self.add_evidence("BLOCKER-001", Evidence(
+   473→            timestamp=now_blocker,
+   474→            type=EvidenceType.SIMULATION,
+   475→            supports=True,
+   476→            description="Análisis de código: Motor A tiene FILE_SIGNATURES pero nunca lo usa. "
+   477→                        "Ambos motores llaman a _parse_mft_record(). Motor A lee todo "
+   478→                        "secuencialmente y DESPUÉS parsea MFT. Motor B lee MFT primero. "
+   479→                        "Ambos dependen del MFT como fuente de verdad.",
+   480→            experiment_id="code_review_20260730",
+   481→            strength="strong",
+   482→        ))
+   483→        self.add_evidence("BLOCKER-001", Evidence(
+   484→            timestamp=now_blocker,
+   485→            type=EvidenceType.SIMULATION,
+   486→            supports=True,
+   487→            description="RESUELTO: Motor Carving implementado. Recupera 3-4/15 archivos "
+   488→                        "con firmas (JPEG, PNG, PDF) vs MFT-First 14/15. "
+   489→                        "MFT entries parsed = 0 (verificado: NUNCA lee MFT). "
+   490→                        "Comparación Carving vs MFT-First VALIDADA por strategy_profiles.py.",
+   491→            experiment_id="experiment_v2_20260730_142442",
+   492→            strength="strong",
+   493→        ))
+   494→
+   495→        # ─── H1.1: New evidence from 3-strategy experiment ─────────────
+   496→        self.add_evidence("H1.1", Evidence(
+   497→            timestamp=now_blocker,
+   498→            type=EvidenceType.SIMULATION,
+   499→            supports=True,
+   500→            description="Experimento v2 (100 escenarios, 3 estrategias): "
+   501→                        "MFT-First supera a Carving en 100/100 escenarios. "
+   502→                        "Avg Δ recovery rate: +43.87%. MFT-First recupera "
+   503→                        "significativamente más archivos que Carving puro. "
+   504→                        "STRONG_SUPPORT en 90/100 escenarios.",
+   505→            experiment_id="experiment_v2_20260730_142442",
+   506→            strength="strong",
+   507→            details={
+   508→                "support_pct": 1.0,
+   509→                "avg_delta_recovery": 0.4387,
+   510→                "strong_support_count": 90,
+   511→                "strong_refutation_count": 9,
+   512→            },
+   513→        ))
+   514→        self.add_evidence("H1.1", Evidence(
+   515→            timestamp=now_blocker,
+   516→            type=EvidenceType.SIMULATION,
+   517→            supports=False,
+   518→            description="A09 (sectores intermitentes): Carving recupera 2/15 archivos, "
+   519→                        "MFT-First recupera 0/15. Cuando el MFT es inaccesible, "
+   520→                        "Carving supera a MFT-First. 9 escenarios de STRONG_REFUTATION.",
+   521→            experiment_id="experiment_v2_20260730_142442",
+   522→            strength="strong",
+   523→            details={"attack": "A09", "carving_recovery": 0.133, "mft_recovery": 0.0},
+   524→        ))
+   525→
+   526→        # ─── H2: First evidence — Motor C recovers when both fail ──────
+   527→        self.add_evidence("H2", Evidence(
+   528→            timestamp=now_blocker,
+   529→            type=EvidenceType.SIMULATION,
+   530→            supports=True,
+   531→            description="A09 (sectores intermitentes): Carving=2/15, MFT-First=0/15, "
+   532→                        "Motor C=4/15. Motor C es el ÚNICO que recupera archivos "
+   533→                        "cuando MFT es inaccesible y Carving tiene baja cobertura. "
+   534→                        "Motor C usa diagnóstico (DecisionTrace) para decidir estrategia híbrida.",
+   535→            experiment_id="experiment_v2_20260730_142442",
+   536→            strength="moderate",
+   537→            details={"attack": "A09", "carving": 0.133, "mft": 0.0, "motor_c": 0.267},
+   538→        ))
+   539→        self.add_evidence("H2", Evidence(
+   540→            timestamp=now_blocker,
+   541→            type=EvidenceType.SIMULATION,
+   542→            supports=False,
+   543→            description="MFT-First vs Motor C: Motor C apenas supera a MFT-First "
+   544→                        "(5% supported, avg Δ recovery +1.40%). Motor C gasta más "
+   545→                        "lecturas (-1737 avg). En la mayoría de escenarios, Motor C "
+   546→                        "no mejora sobre MFT-First porque el diagnóstico tiene costo "
+   547→                        "y el fallback no está implementado (Journal/Bitmap/INDX = stubs).",
+   548→            experiment_id="experiment_v2_20260730_142442",
+   549→            strength="moderate",
+   550→            details={"support_pct": 0.05, "avg_delta_recovery": 0.014},
+   551→        ))
+   552→
+   553→        # ─── H2: Crossover Curve evidence ──────────────────────────────
+   554→        # IMPORTANT CAVEAT: The crossover at 95% is NOT a discovery.
+   555→        # It is an artifact of the current carving motor's limited format support.
+   556→        # Carving only recovers 1/15 files (6.7%) because it only supports
+   557→        # JPEG, PNG, PDF, ZIP, MP4, DOCX signatures. If carving supported
+   558→        # TIFF, CR2, NEF, MOV, SQLite, XLSX, etc., the curve would shift.
+   559→        # The 95% crossover point is a property of the current carving motor,
+   560→        # not a property of the strategy space.
+   561→        now_crossover = datetime.now(timezone.utc).isoformat()
+   562→        self.add_evidence("H2", Evidence(
+   563→            timestamp=now_crossover,
+   564→            type=EvidenceType.SIMULATION,
+   565→            supports=True,
+   566→            description="Crossover Curve (21 puntos, 5 repeticiones): "
+   567→                        "MFT-First supera a Carving desde 0% hasta 95% de daño del MFT. "
+   568→                        "CAVEAT: El crossover al 95% NO es un descubrimiento — es una "
+   569→                        "propiedad del carving actual (solo 6.7% recovery, 1/15 archivos). "
+   570→                        "Si el carving soportara más formatos, la curva cambiaría. "
+   571→                        "Lo que SÍ es sólido: las curvas se cruzan, confirmando que "
+   572→                        "los modos de falla son distintos.",
+   573→            experiment_id="crossover_curve_20260730",
+   574→            strength="moderate",  # Downgraded from "strong" — ceiling artifact
+   575→            details={
+   576→                "crossover_point": 0.95,
+   577→                "crossover_type": "gradual",
+   578→                "carving_constant_recovery": 0.067,
+   579→                "mft_at_0_pct": 0.933,
+   580→                "mft_at_100_pct": 0.0,
+   581→                "caveat": "Crossover point is artifact of limited carving format support. "
+   582→                          "Not a discovery. Need expanded carving + per-format experiments.",
+   583→            },
+   584→        ))
+   585→
+   586→        # ─── H2: The REAL insight — different failure modes ─────────────
+   587→        # The one conclusion that IS solid even with current limitations:
+   588→        # metadata-based and signature-based strategies fail differently.
+   589→        self.add_evidence("H2", Evidence(
+   590→            timestamp=now_crossover,
+   591→            type=EvidenceType.SIMULATION,
+   592→            supports=True,
+   593→            description="CONCLUSIÓN SÓLIDA: Una estrategia basada en metadatos y una "
+   594→                        "estrategia basada en firmas no fallan de la misma manera. "
+   595→                        "MFT-First falla cuando el MFT es inaccesible (A09: 0/15). "
+   596→                        "Carving falla cuando los archivos no tienen firmas conocidas "
+   597→                        "o están fragmentados. Sus modos de falla son DISTINTOS. "
+   598→                        "Eso es exactamente el tipo de evidencia que justifica un orquestador.",
+   599→            experiment_id="crossover_curve_20260730",
+   600→            strength="strong",
+   601→            details={
+   602→                "insight": "different_failure_modes",
+   603→                "mft_fails_when": "MFT inaccessible (sectores intermitentes, head crash inicio)",
+   604→                "carving_fails_when": "No signatures, fragmented files, no footers",
+   605→            },
+   606→        ))
+   607→
+   608→        # ─── H3: No universally optimal strategy ─────────────────────────
+   609→        # If H2 is true (there's a crossover frontier), then H3 follows:
+   610→        # No single strategy wins everywhere. The value is in the SELECTOR.
+   611→        # This is the real product: not "the best algorithm" but
+   612→        # "the best system for choosing algorithms."
+   613→        #
+   614→        # CAVEAT: H3 is NOT yet demonstrated. The current evidence is consistent
+   615→        # with H3, but the strategy space evaluated is still too small:
+   616→        #   - Only basic MFT parser vs basic carving (6 signatures)
+   617→        #   - Missing: advanced carving, journal-first, bitmap-guided,
+   618→        #     USN-guided, MFT Mirror recovery, tolerant parser,
+   619→        #     probabilistic carving
+   620→        # We should write: "La evidencia preliminar es consistente con H3,
+   621→        # pero el espacio de estrategias evaluadas aún es reducido
+   622→        # para considerarla demostrada."
+   623→        self.register(
+   624→            "H3",
+   625→            "No existe una estrategia de recuperación universalmente óptima. "
+   626→            "Para cualquier estrategia fija, existe al menos un estado del medio "
+   627→            "donde otra estrategia fija produce mejores resultados.",
+   628→            open_questions=[
+   629→                "¿Es H3 una consecuencia de H2, o una hipótesis independiente?",
+   630→                "¿Se puede demostrar H3 con un contraejemplo para cada estrategia?",
+   631→                "¿H3 implica que Motor C siempre es mejor que cualquier estrategia fija?",
+   632→                "¿Existen estrategias que son 'casi universalmente óptimas'?",
+   633→                "¿El espacio de estrategias evaluadas es suficiente para demostrar H3? "
+   634→                "Actualmente solo tenemos MFT parser básico + carving básico (6 firmas).",
+   635→                "¿Qué pasa con journal-first, bitmap-guided, USN-guided, MFT Mirror, "
+   636→                "parser tolerante, carving probabilístico?",
+   637→            ],
+   638→            dependencies=["H2"],
+   639→        )
+   640→        self.add_evidence("H3", Evidence(
+   641→            timestamp=now_blocker,
+   642→            type=EvidenceType.SIMULATION,
+   643→            supports=True,
+   644→            description="La evidencia preliminar es CONSISTENTE con H3, pero el espacio "
+   645→                        "de estrategias evaluadas aún es reducido para considerarla "
+   646→                        "demostrada. MFT-First supera a Carving en 90/100 escenarios, "
+   647→                        "pero Carving supera a MFT-First en A09 (intermitente). "
+   648→                        "Ninguna estrategia gana en todos los escenarios. "
+   649→                        "Sin embargo, solo comparamos un parser MFT básico contra un "
+   650→                        "carving muy básico (6 firmas). Faltan: carving avanzado, "
+   651→                        "journal-first, bitmap-guided, USN-guided, MFT Mirror, "
+   652→                        "parser tolerante a corrupción, carving probabilístico.",
+   653→            experiment_id="experiment_v2_20260730_142442",
+   654→            strength="weak",  # Downgraded from "moderate" — strategy space too small
+   655→            details={
+   656→                "mft_wins": 90, "carving_wins": 9, "neutral": 1,
+   657→                "note": "A09 es el contraejemplo para MFT-First, pero "
+   658→                        "el espacio de estrategias es demasiado reducido",
+   659→                "strategies_evaluated": ["MFT parser básico", "carving básico (6 firmas)"],
+   660→                "strategies_missing": ["journal-first", "bitmap-guided", "USN-guided",
+   661→                                       "MFT Mirror recovery", "tolerant parser",
+   662→                                       "probabilistic carving", "advanced carving"],
+   663→            },
+   664→        ))
+   665→
+   666→        # ─── Critical review: 95% crossover is NOT a discovery ─────────
+   667→        # The user's key insight: the 95% crossover point is an artifact of the
+   668→        # current carving motor's low ceiling, not a scientific finding.
+   669→        # If carving supported more formats, the curve would change completely.
+   670→        self.add_evidence("H3", Evidence(
+   671→            timestamp=datetime.now(timezone.utc).isoformat(),
+   672→            type=EvidenceType.SIMULATION,
+   673→            supports=True,
+   674→            description="REVISIÓN CRÍTICA: El punto de crossover al 95% NO es un "
+   675→                        "descubrimiento. Es una propiedad del carving actual, que solo "
+   676→                        "recupera 1/15 archivos. El carving básico tiene un techo bajo "
+   677→                        "porque: (1) solo soporta firmas de header+footer, (2) no puede "
+   678→                        "distinguir ZIP/DOCX/XLSX, (3) no tiene parsers funcionales. "
+   679→                        "Si el carving soportara más formatos (JPEG, PNG, TIFF, CR2, NEF, "
+   680→                        "MP4, MOV, ZIP, DOCX, XLSX, SQLite, PDF), la curva cambiaría "
+   681→                        "completamente. El 95% no es una propiedad del espacio de "
+   682→                        "estrategias — es una propiedad del motor de carving actual. "
+   683→                        "H3 sigue siendo consistente con la evidencia (las estrategias "
+   684→                        "fallan de maneras distintas), pero el espacio evaluado es "
+   685→                        "demasiado reducido para considerarla demostrada.",
+   686→            experiment_id="critical_review_20260730",
+   687→            strength="moderate",
+   688→            details={
+   689→                "crossover_artifact": True,
+   690→                "crossover_pct": 0.95,
+   691→                "carving_ceiling": "1/15 archivos",
+   692→                "reason": "Carving básico con soporte limitado de formatos",
+   693→                "missing_strategies": 7,
+   694→                "h3_status": "consistente pero no demostrada",
+   695→            },
+   696→        ))
+   697→
+   698→    def register(self, hypothesis_id: str, statement: str,
+   699→                 status: HypothesisStatus = HypothesisStatus.PENDING,
+   700→                 dependencies: List[str] = None,
+   701→                 open_questions: List[str] = None,
+   702→                 refinement_of: str = None) -> Hypothesis:
+   703→        """Register a new hypothesis."""
+   704→        if hypothesis_id in self.hypotheses:
+   705→            return self.hypotheses[hypothesis_id]
+   706→
+   707→        now = datetime.now(timezone.utc).isoformat()
+   708→        h = Hypothesis(
+   709→            id=hypothesis_id,
+   710→            statement=statement,
+   711→            status=status,
+   712→            dependencies=dependencies or [],
+   713→            open_questions=open_questions or [],
+   714→            refinement_of=refinement_of,
+   715→            created_at=now,
+   716→            updated_at=now,
+   717→        )
+   718→        self.hypotheses[hypothesis_id] = h
+   719→        return h
+   720→
+   721→    def add_evidence(self, hypothesis_id: str, evidence: Evidence):
+   722→        """Add evidence to a hypothesis."""
+   723→        if hypothesis_id not in self.hypotheses:
+   724→            raise ValueError(f"Unknown hypothesis: {hypothesis_id}")
+   725→        self.hypotheses[hypothesis_id].add_evidence(evidence)
+   726→
+   727→    def get(self, hypothesis_id: str) -> Optional[Hypothesis]:
+   728→        """Get a hypothesis by ID."""
+   729→        return self.hypotheses.get(hypothesis_id)
+   730→
+   731→    def all_hypotheses(self) -> List[Hypothesis]:
+   732→        """Get all hypotheses sorted by ID."""
+   733→        return sorted(self.hypotheses.values(), key=lambda h: h.id)
+   734→
+   735→    def summary_table(self) -> str:
+   736→        """Generate a markdown summary table of all hypotheses."""
+   737→        lines = [
+   738→            "# RecoveryLab — Hypothesis Registry",
+   739→            "",
+   740→            "| ID | Hypothesis | Status | Confidence | Evidence | Open Questions |",
+   741→            "|----|-----------|--------|------------|----------|----------------|",
+   742→        ]
+   743→        for h in self.all_hypotheses():
+   744→            supports = sum(1 for e in h.evidence if e.supports)
+   745→            refutes = sum(1 for e in h.evidence if not e.supports)
+   746→            evidence_str = f"{supports}S / {refutes}R"
+   747→            questions = len(h.open_questions)
+   748→            lines.append(
+   749→                f"| {h.id} | {h.statement[:60]}... | {h.status.value} | "
+   750→                f"{h.confidence:.0%} | {evidence_str} | {questions} |"
+   751→            )
+   752→        return "\n".join(lines)
+   753→
+   754→    def detailed_report(self) -> str:
+   755→        """Generate a detailed report of all hypotheses."""
+   756→        lines = ["# RecoveryLab — Detailed Hypothesis Report", ""]
+   757→
+   758→        for h in self.all_hypotheses():
+   759→            lines.append(f"## {h.id}: {h.statement}")
+   760→            lines.append(f"**Status:** {h.status.value}")
+   761→            lines.append(f"**Confidence:** {h.confidence:.0%}")
+   762→            if h.refinement_of:
+   763→                lines.append(f"**Refinement of:** {h.refinement_of}")
+   764→            if h.dependencies:
+   765→                lines.append(f"**Dependencies:** {', '.join(h.dependencies)}")
+   766→            lines.append("")
+   767→
+   768→            if h.evidence:
+   769→                lines.append("### Evidence")
+   770→                for i, e in enumerate(h.evidence, 1):
+   771→                    symbol = "✓" if e.supports else "✗"
+   772→                    lines.append(
+   773→                        f"{i}. {symbol} [{e.type.value}] {e.description} "
+   774→                        f"(strength: {e.strength})"
+   775→                    )
+   776→                lines.append("")
+   777→
+   778→            if h.open_questions:
+   779→                lines.append("### Open Questions")
+   780→                for q in h.open_questions:
+   781→                    lines.append(f"- {q}")
+   782→                lines.append("")
+   783→
+   784→            lines.append("---")
+   785→            lines.append("")
+   786→
+   787→        return "\n".join(lines)
+   788→
+   789→    def save(self, path: Path):
+   790→        """Save the registry to a JSON file."""
+   791→        data = {
+   792→            "generated_at": datetime.now(timezone.utc).isoformat(),
+   793→            "hypotheses": {h_id: h.to_dict() for h_id, h in self.hypotheses.items()},
+   794→        }
+   795→        path.parent.mkdir(parents=True, exist_ok=True)
+   796→        with open(path, 'w') as f:
+   797→            json.dump(data, f, indent=2, ensure_ascii=False)
+   798→
+   799→    def load(self, path: Path):
+   800→        """Load the registry from a JSON file."""
+   801→        with open(path, 'r') as f:
+   802→            data = json.load(f)
+   803→
+   804→        for h_id, h_data in data.get("hypotheses", {}).items():
+   805→            if h_id in self.hypotheses:
+   806→                # Update existing hypothesis with loaded evidence
+   807→                h = self.hypotheses[h_id]
+   808→                for e_data in h_data.get("evidence", []):
+   809→                    # Check if we already have this evidence
+   810→                    already_exists = any(
+   811→                        e.description == e_data["description"]
+   812→                        for e in h.evidence
+   813→                    )
+   814→                    if not already_exists:
+   815→                        h.add_evidence(Evidence(
+   816→                            timestamp=e_data["timestamp"],
+   817→                            type=EvidenceType(e_data["type"]),
+   818→                            supports=e_data["supports"],
+   819→                            description=e_data["description"],
+   820→                            experiment_id=e_data.get("experiment_id", ""),
+   821→                            strength=e_data.get("strength", "moderate"),
+   822→                        ))
+   823→
+   824→    def next_steps(self) -> List[str]:
+   825→        """What experiments should we run next to close open hypotheses?"""
+   826→        steps = []
+   827→
+   828→        # Check what's most needed
+   829→        for h in self.all_hypotheses():
+   830→            if h.status == HypothesisStatus.PENDING:
+   831→                steps.append(
+   832→                    f"[{h.id}] PENDING — needs first experiment: {h.open_questions[0] if h.open_questions else 'design experiment'}"
+   833→                )
+   834→            elif h.status == HypothesisStatus.IN_EVALUATION:
+   835→                steps.append(
+   836→                    f"[{h.id}] IN EVALUATION — needs more evidence: {h.open_questions[0] if h.open_questions else 'gather more data'}"
+   837→                )
+   838→            elif h.status == HypothesisStatus.INCONCLUSIVE:
+   839→                steps.append(
+   840→                    f"[{h.id}] INCONCLUSIVE — conflicting evidence, need decisive experiment"
+   841→                )
+   842→
+   843→        return steps
+   844→
+   845→
+   846→# ─── Singleton for convenience ────────────────────────────────────────────────
+   847→
+   848→_registry = None
+   849→
+   850→def get_registry() -> HypothesisRegistry:
+   851→    """Get the global hypothesis registry."""
+   852→    global _registry
+   853→    if _registry is None:
+   854→        _registry = HypothesisRegistry()
+   855→    return _registry
+   856→
+   857→
+   858→if __name__ == "__main__":
+   859→    registry = get_registry()
+   860→    print(registry.summary_table())
+   861→    print()
+   862→    print("Next steps:")
+   863→    for step in registry.next_steps():
+   864→        print(f"  {step}")
+   865→
