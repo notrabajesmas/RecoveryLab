@@ -1,0 +1,1559 @@
+     1→{
+     2→  "experiment_id": "DIAG-0001",
+     3→  "date": "2026-07-30 22:15",
+     4→  "commit": "3839ee3",
+     5→  "versions": {
+     6→    "protocol": "v1.5",
+     7→    "judge": "v1.0"
+     8→  },
+     9→  "format_results": {
+    10→    "A": {
+    11→      "MFT-First": {
+    12→        "overall_utility": 1.0,
+    13→        "rvs": 1.0,
+    14→        "fqs": 1.0,
+    15→        "files_recovered": 15,
+    16→        "files_correct_checksum": 15
+    17→      },
+    18→      "Carving": {
+    19→        "overall_utility": 0.0,
+    20→        "rvs": 0.0,
+    21→        "fqs": 0.0,
+    22→        "files_recovered": 3,
+    23→        "files_correct_checksum": 0,
+    24→        "signatures_found": {
+    25→          "JPEG": 15,
+    26→          "BMP": 1
+    27→        },
+    28→        "files_carved": 3,
+    29→        "false_positives": 3,
+    30→        "per_file_details": [
+    31→          {
+    32→            "recovered_name": "carved_0001.jpg",
+    33→            "recovered_sha256": "712df33c2d89f268ca352ea614a7e9c3e17cb4a10a7aea0be459739d3a47b8f7",
+    34→            "recovered_size": 63101,
+    35→            "gt_match": "NONE",
+    36→            "match_method": "none",
+    37→            "size_diff": -865081,
+    38→            "truncation_fixes_sha256": true,
+    39→            "failure_reason": "Missing 865081 byte(s) at end: 21 = b'!'. Adding it fixes SHA-256."
+    40→          },
+    41→          {
+    42→            "recovered_name": "carved_0002.jpg",
+    43→            "recovered_sha256": "82bda8b0decb065d964daf8e8a0a70026a015e56a47c56010abb034389a7f194",
+    44→            "recovered_size": 206994,
+    45→            "gt_match": "NONE",
+    46→            "match_method": "none",
+    47→            "size_diff": -923229,
+    48→            "truncation_fixes_sha256": true,
+    49→            "failure_reason": "Missing 923229 byte(s) at end: c8 = b'\\xc8'. Adding it fixes SHA-256."
+    50→          },
+    51→          {
+    52→            "recovered_name": "carved_0001.bmp",
+    53→            "recovered_sha256": "ef535df23e3409e25a174be31eae2277a8767bddc7eaa76103f92620e197dba1",
+    54→            "recovered_size": 50842112,
+    55→            "gt_match": "NONE",
+    56→            "match_method": "none",
+    57→            "size_diff": 0,
+    58→            "truncation_fixes_sha256": false,
+    59→            "failure_reason": "SHA-256 not in ground truth. Data differs from original."
+    60→          }
+    61→        ]
+    62→      }
+    63→    },
+    64→    "B": {
+    65→      "MFT-First": {
+    66→        "overall_utility": 1.0,
+    67→        "rvs": 1.0,
+    68→        "fqs": 1.0,
+    69→        "files_recovered": 15,
+    70→        "files_correct_checksum": 15
+    71→      },
+    72→      "Carving": {
+    73→        "overall_utility": 0.8709,
+    74→        "rvs": 0.9331,
+    75→        "fqs": 0.9333333333333333,
+    76→        "files_recovered": 15,
+    77→        "files_correct_checksum": 14,
+    78→        "signatures_found": {
+    79→          "PNG": 15,
+    80→          "BMP": 1
+    81→        },
+    82→        "files_carved": 15,
+    83→        "false_positives": 1,
+    84→        "per_file_details": [
+    85→          {
+    86→            "recovered_name": "carved_0001.png",
+    87→            "recovered_sha256": "6dcbb3f846ed986f05cbb07feb9c7af687179bc1d470a4132b15ab1c3f16e13e",
+    88→            "recovered_size": 928182,
+    89→            "gt_match": "png_0001.png",
+    90→            "match_method": "sha256",
+    91→            "size_diff": 0,
+    92→            "truncation_fixes_sha256": false,
+    93→            "failure_reason": ""
+    94→          },
+    95→          {
+    96→            "recovered_name": "carved_0002.png",
+    97→            "recovered_sha256": "b80e823618b0527ca7b8f6e228d7507c86cf9189edd2c1075f6c3a9273315f97",
+    98→            "recovered_size": 1130223,
+    99→            "gt_match": "png_0002.png",
+   100→            "match_method": "sha256",
+   101→            "size_diff": 0,
+   102→            "truncation_fixes_sha256": false,
+   103→            "failure_reason": ""
+   104→          },
+   105→          {
+   106→            "recovered_name": "carved_0003.png",
+   107→            "recovered_sha256": "5b49d779598b15e48cb8af42014c5b6e2ad077877386ec3a25e1da2cf83cbeeb",
+   108→            "recovered_size": 2615725,
+   109→            "gt_match": "png_0003.png",
+   110→            "match_method": "sha256",
+   111→            "size_diff": 0,
+   112→            "truncation_fixes_sha256": false,
+   113→            "failure_reason": ""
+   114→          },
+   115→          {
+   116→            "recovered_name": "carved_0004.png",
+   117→            "recovered_sha256": "b64227c441b0d191a7e8fe49045d4c6f1d2d68bfa3846a622f7d28269e4f510a",
+   118→            "recovered_size": 2492678,
+   119→            "gt_match": "png_0004.png",
+   120→            "match_method": "sha256",
+   121→            "size_diff": 0,
+   122→            "truncation_fixes_sha256": false,
+   123→            "failure_reason": ""
+   124→          },
+   125→          {
+   126→            "recovered_name": "carved_0005.png",
+   127→            "recovered_sha256": "0012f8e851e3f6b1f436c71eae506bd9b30d93f69d91a8a155236656412fa687",
+   128→            "recovered_size": 1958849,
+   129→            "gt_match": "png_0005.png",
+   130→            "match_method": "sha256",
+   131→            "size_diff": 0,
+   132→            "truncation_fixes_sha256": false,
+   133→            "failure_reason": ""
+   134→          },
+   135→          {
+   136→            "recovered_name": "carved_0006.png",
+   137→            "recovered_sha256": "92a01aa3b4ffc571b61e83abe240b7279f9a51eb317de964417bf8a6a155cc06",
+   138→            "recovered_size": 1521668,
+   139→            "gt_match": "png_0006.png",
+   140→            "match_method": "sha256",
+   141→            "size_diff": 0,
+   142→            "truncation_fixes_sha256": false,
+   143→            "failure_reason": ""
+   144→          },
+   145→          {
+   146→            "recovered_name": "carved_0007.png",
+   147→            "recovered_sha256": "6020d657436ab3eb0525fae8304c301aa899fd08b4e7227278a6e1d33fa700e4",
+   148→            "recovered_size": 1231152,
+   149→            "gt_match": "png_0007.png",
+   150→            "match_method": "sha256",
+   151→            "size_diff": 0,
+   152→            "truncation_fixes_sha256": false,
+   153→            "failure_reason": ""
+   154→          },
+   155→          {
+   156→            "recovered_name": "carved_0008.png",
+   157→            "recovered_sha256": "fc01e9a1229a7e5b2d939d2f4fa93404899b40c24b2d1799cc999fb87c91f10c",
+   158→            "recovered_size": 1555586,
+   159→            "gt_match": "png_0008.png",
+   160→            "match_method": "sha256",
+   161→            "size_diff": 0,
+   162→            "truncation_fixes_sha256": false,
+   163→            "failure_reason": ""
+   164→          },
+   165→          {
+   166→            "recovered_name": "carved_0009.png",
+   167→            "recovered_sha256": "fe2a7123b3dc24be19087f19bb1051bc1c3e27321d6e2289c9e4e2a60fb80447",
+   168→            "recovered_size": 1186515,
+   169→            "gt_match": "png_0009.png",
+   170→            "match_method": "sha256",
+   171→            "size_diff": 0,
+   172→            "truncation_fixes_sha256": false,
+   173→            "failure_reason": ""
+   174→          },
+   175→          {
+   176→            "recovered_name": "carved_0010.png",
+   177→            "recovered_sha256": "d2d1a6500d626ca9a2052895d69eddfc839649598687e13db3541aba97ac709e",
+   178→            "recovered_size": 78858,
+   179→            "gt_match": "png_0010.png",
+   180→            "match_method": "sha256",
+   181→            "size_diff": 0,
+   182→            "truncation_fixes_sha256": false,
+   183→            "failure_reason": ""
+   184→          },
+   185→          {
+   186→            "recovered_name": "carved_0011.png",
+   187→            "recovered_sha256": "c3367063332460bee0354f0b7234a1a97c9157daf418a0b29251456947c0b7bb",
+   188→            "recovered_size": 1261992,
+   189→            "gt_match": "png_0011.png",
+   190→            "match_method": "sha256",
+   191→            "size_diff": 0,
+   192→            "truncation_fixes_sha256": false,
+   193→            "failure_reason": ""
+   194→          },
+   195→          {
+   196→            "recovered_name": "carved_0012.png",
+   197→            "recovered_sha256": "dbf6deb316ea5381fda1216b744384e7e265a5acc80f8f4f2904904b3d7c5b92",
+   198→            "recovered_size": 2100790,
+   199→            "gt_match": "png_0012.png",
+   200→            "match_method": "sha256",
+   201→            "size_diff": 0,
+   202→            "truncation_fixes_sha256": false,
+   203→            "failure_reason": ""
+   204→          },
+   205→          {
+   206→            "recovered_name": "carved_0013.png",
+   207→            "recovered_sha256": "2aef457b1b394ca376295e3a1e528a038406368fd87832edf893928d16744319",
+   208→            "recovered_size": 816699,
+   209→            "gt_match": "png_0013.png",
+   210→            "match_method": "sha256",
+   211→            "size_diff": 0,
+   212→            "truncation_fixes_sha256": false,
+   213→            "failure_reason": ""
+   214→          },
+   215→          {
+   216→            "recovered_name": "carved_0014.png",
+   217→            "recovered_sha256": "bf350ec828b055f310ff1ebf5d8b23801a798cfb0e1ffdd0123a7d9f0deede60",
+   218→            "recovered_size": 2341891,
+   219→            "gt_match": "png_0014.png",
+   220→            "match_method": "sha256",
+   221→            "size_diff": 0,
+   222→            "truncation_fixes_sha256": false,
+   223→            "failure_reason": ""
+   224→          },
+   225→          {
+   226→            "recovered_name": "carved_0001.bmp",
+   227→            "recovered_sha256": "e7780e05911e5848c01642ccb9528264acaeeda500894610d83e2854df5643f2",
+   228→            "recovered_size": 31589376,
+   229→            "gt_match": "NONE",
+   230→            "match_method": "none",
+   231→            "size_diff": 0,
+   232→            "truncation_fixes_sha256": false,
+   233→            "failure_reason": "SHA-256 not in ground truth. Data differs from original."
+   234→          }
+   235→        ]
+   236→      }
+   237→    },
+   238→    "C": {
+   239→      "MFT-First": {
+   240→        "overall_utility": 1.0,
+   241→        "rvs": 1.0,
+   242→        "fqs": 1.0,
+   243→        "files_recovered": 15,
+   244→        "files_correct_checksum": 15
+   245→      },
+   246→      "Carving": {
+   247→        "overall_utility": 0.0,
+   248→        "rvs": 0.0,
+   249→        "fqs": 0.0,
+   250→        "files_recovered": 15,
+   251→        "files_correct_checksum": 0,
+   252→        "signatures_found": {
+   253→          "PDF": 15
+   254→        },
+   255→        "files_carved": 15,
+   256→        "false_positives": 15,
+   257→        "per_file_details": [
+   258→          {
+   259→            "recovered_name": "carved_0001.pdf",
+   260→            "recovered_sha256": "59832efa03040260b3c7d1d9369dbe9b4d3b250186bf6b64f3982e269ac8f9e6",
+   261→            "recovered_size": 480667,
+   262→            "gt_match": "NONE",
+   263→            "match_method": "none",
+   264→            "size_diff": -1,
+   265→            "truncation_fixes_sha256": true,
+   266→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   267→          },
+   268→          {
+   269→            "recovered_name": "carved_0002.pdf",
+   270→            "recovered_sha256": "5799d36ab7dbde05720bf9152ddada73becd0c84a9170b0b0ce3984cb6ebe372",
+   271→            "recovered_size": 458351,
+   272→            "gt_match": "NONE",
+   273→            "match_method": "none",
+   274→            "size_diff": -1,
+   275→            "truncation_fixes_sha256": true,
+   276→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   277→          },
+   278→          {
+   279→            "recovered_name": "carved_0003.pdf",
+   280→            "recovered_sha256": "82ebeb1305e3bcd79a13253ea53feba0544d829fbe8650aed4a5e5e1862ac21d",
+   281→            "recovered_size": 321714,
+   282→            "gt_match": "NONE",
+   283→            "match_method": "none",
+   284→            "size_diff": -1,
+   285→            "truncation_fixes_sha256": true,
+   286→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   287→          },
+   288→          {
+   289→            "recovered_name": "carved_0004.pdf",
+   290→            "recovered_sha256": "3a4896fa5ec754523d9d79d0f8b7caf838b65aebc5d1da8c4e76b8104154c0c7",
+   291→            "recovered_size": 306333,
+   292→            "gt_match": "NONE",
+   293→            "match_method": "none",
+   294→            "size_diff": -1,
+   295→            "truncation_fixes_sha256": true,
+   296→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   297→          },
+   298→          {
+   299→            "recovered_name": "carved_0005.pdf",
+   300→            "recovered_sha256": "0301504ea5d18e06396bb98a70dc7c4ab6b02dbe93dfcf9a464337a4d392167c",
+   301→            "recovered_size": 415175,
+   302→            "gt_match": "NONE",
+   303→            "match_method": "none",
+   304→            "size_diff": -1,
+   305→            "truncation_fixes_sha256": true,
+   306→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   307→          },
+   308→          {
+   309→            "recovered_name": "carved_0006.pdf",
+   310→            "recovered_sha256": "f7fe4c20ce38bbc39cbc8071e1e490d9c4e488ce247bd2d61072677b0ae54fad",
+   311→            "recovered_size": 184957,
+   312→            "gt_match": "NONE",
+   313→            "match_method": "none",
+   314→            "size_diff": -1,
+   315→            "truncation_fixes_sha256": true,
+   316→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   317→          },
+   318→          {
+   319→            "recovered_name": "carved_0007.pdf",
+   320→            "recovered_sha256": "15946228d4ce91e1d7ef84b238ca4aa5b3b3da8a53867720aa39c5197152063c",
+   321→            "recovered_size": 373574,
+   322→            "gt_match": "NONE",
+   323→            "match_method": "none",
+   324→            "size_diff": -1,
+   325→            "truncation_fixes_sha256": true,
+   326→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   327→          },
+   328→          {
+   329→            "recovered_name": "carved_0008.pdf",
+   330→            "recovered_sha256": "92c68d96056723a84393e3a1abb2e8c623f65ad72364098470a664c8607a1e3f",
+   331→            "recovered_size": 410961,
+   332→            "gt_match": "NONE",
+   333→            "match_method": "none",
+   334→            "size_diff": -1,
+   335→            "truncation_fixes_sha256": true,
+   336→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   337→          },
+   338→          {
+   339→            "recovered_name": "carved_0009.pdf",
+   340→            "recovered_sha256": "a0d01bd6b7cfb2fe11360b3c00ec197bc3eb1ce54a04fba76248f88978d30abf",
+   341→            "recovered_size": 143063,
+   342→            "gt_match": "NONE",
+   343→            "match_method": "none",
+   344→            "size_diff": -1,
+   345→            "truncation_fixes_sha256": true,
+   346→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   347→          },
+   348→          {
+   349→            "recovered_name": "carved_0010.pdf",
+   350→            "recovered_sha256": "567adf26319dd031bd53d75453ddead12b71412b35df062cdfe46b8edee3bc55",
+   351→            "recovered_size": 475343,
+   352→            "gt_match": "NONE",
+   353→            "match_method": "none",
+   354→            "size_diff": -1,
+   355→            "truncation_fixes_sha256": true,
+   356→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   357→          },
+   358→          {
+   359→            "recovered_name": "carved_0011.pdf",
+   360→            "recovered_sha256": "217a79076cb96205264a2eadf21ad5d79e1245d8d65663de90ead176ca40333f",
+   361→            "recovered_size": 152498,
+   362→            "gt_match": "NONE",
+   363→            "match_method": "none",
+   364→            "size_diff": -1,
+   365→            "truncation_fixes_sha256": true,
+   366→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   367→          },
+   368→          {
+   369→            "recovered_name": "carved_0012.pdf",
+   370→            "recovered_sha256": "bcb8d6ac2008c407bcd47890bc6ef01b3a8ddd30fc3f69edd93432c0f403e4c6",
+   371→            "recovered_size": 383545,
+   372→            "gt_match": "NONE",
+   373→            "match_method": "none",
+   374→            "size_diff": -1,
+   375→            "truncation_fixes_sha256": true,
+   376→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   377→          },
+   378→          {
+   379→            "recovered_name": "carved_0013.pdf",
+   380→            "recovered_sha256": "ce6cc96cd895148393a9196afdf922a145639fde6b1a6fe508105b93c6edf257",
+   381→            "recovered_size": 96836,
+   382→            "gt_match": "NONE",
+   383→            "match_method": "none",
+   384→            "size_diff": -1,
+   385→            "truncation_fixes_sha256": true,
+   386→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   387→          },
+   388→          {
+   389→            "recovered_name": "carved_0014.pdf",
+   390→            "recovered_sha256": "b86b06a344e466e394fa982c53dd630f008bdd64ea9fe72d08379b8a635caa26",
+   391→            "recovered_size": 435962,
+   392→            "gt_match": "NONE",
+   393→            "match_method": "none",
+   394→            "size_diff": -1,
+   395→            "truncation_fixes_sha256": true,
+   396→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   397→          },
+   398→          {
+   399→            "recovered_name": "carved_0015.pdf",
+   400→            "recovered_sha256": "10f1db3449924d94eb665e0f3b7aeb2a6b7c2f5e6860161c7f9d771be5d6c392",
+   401→            "recovered_size": 312950,
+   402→            "gt_match": "NONE",
+   403→            "match_method": "none",
+   404→            "size_diff": -1,
+   405→            "truncation_fixes_sha256": true,
+   406→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+   407→          }
+   408→        ]
+   409→      }
+   410→    },
+   411→    "D": {
+   412→      "MFT-First": {
+   413→        "overall_utility": 1.0,
+   414→        "rvs": 1.0,
+   415→        "fqs": 1.0,
+   416→        "files_recovered": 15,
+   417→        "files_correct_checksum": 15
+   418→      },
+   419→      "Carving": {
+   420→        "overall_utility": 1.0,
+   421→        "rvs": 1.0,
+   422→        "fqs": 1.0,
+   423→        "files_recovered": 15,
+   424→        "files_correct_checksum": 15,
+   425→        "signatures_found": {
+   426→          "ZIP": 15,
+   427→          "DOCX": 15,
+   428→          "XLSX": 15
+   429→        },
+   430→        "files_carved": 15,
+   431→        "false_positives": 0,
+   432→        "per_file_details": [
+   433→          {
+   434→            "recovered_name": "carved_0001.zip",
+   435→            "recovered_sha256": "337f764468fcdcff64db431b670c69b32eee24d7ab090b710b0a7cf716485293",
+   436→            "recovered_size": 480668,
+   437→            "gt_match": "zip_0001.zip",
+   438→            "match_method": "sha256",
+   439→            "size_diff": 0,
+   440→            "truncation_fixes_sha256": false,
+   441→            "failure_reason": ""
+   442→          },
+   443→          {
+   444→            "recovered_name": "carved_0002.zip",
+   445→            "recovered_sha256": "5292661fd55859764107fa2490b72976376a46f002604e81c292218e72fc5b13",
+   446→            "recovered_size": 458352,
+   447→            "gt_match": "zip_0002.zip",
+   448→            "match_method": "sha256",
+   449→            "size_diff": 0,
+   450→            "truncation_fixes_sha256": false,
+   451→            "failure_reason": ""
+   452→          },
+   453→          {
+   454→            "recovered_name": "carved_0003.zip",
+   455→            "recovered_sha256": "a924de277f8b203213ae0f334af7b7fa6a017634c177fa1dc827e1362989611a",
+   456→            "recovered_size": 321715,
+   457→            "gt_match": "zip_0003.zip",
+   458→            "match_method": "sha256",
+   459→            "size_diff": 0,
+   460→            "truncation_fixes_sha256": false,
+   461→            "failure_reason": ""
+   462→          },
+   463→          {
+   464→            "recovered_name": "carved_0004.zip",
+   465→            "recovered_sha256": "c24f55603a6101c1c767bebea41df70ef1df2a130b0ce5adb4fa73e32f1e5efa",
+   466→            "recovered_size": 306334,
+   467→            "gt_match": "zip_0004.zip",
+   468→            "match_method": "sha256",
+   469→            "size_diff": 0,
+   470→            "truncation_fixes_sha256": false,
+   471→            "failure_reason": ""
+   472→          },
+   473→          {
+   474→            "recovered_name": "carved_0005.zip",
+   475→            "recovered_sha256": "47dd6b1f04459a929f241427a1359a2f3700c6d279ae618395af289e0021e20c",
+   476→            "recovered_size": 415176,
+   477→            "gt_match": "zip_0005.zip",
+   478→            "match_method": "sha256",
+   479→            "size_diff": 0,
+   480→            "truncation_fixes_sha256": false,
+   481→            "failure_reason": ""
+   482→          },
+   483→          {
+   484→            "recovered_name": "carved_0006.zip",
+   485→            "recovered_sha256": "a80bc9a295859a7397494aefa5121e6b240a57845ccc72936e8d45e833ef1134",
+   486→            "recovered_size": 184958,
+   487→            "gt_match": "zip_0006.zip",
+   488→            "match_method": "sha256",
+   489→            "size_diff": 0,
+   490→            "truncation_fixes_sha256": false,
+   491→            "failure_reason": ""
+   492→          },
+   493→          {
+   494→            "recovered_name": "carved_0007.zip",
+   495→            "recovered_sha256": "ccde7e37c88e23f14f6718ba15f55053a449b8cce7193594411489fb50b6c7a4",
+   496→            "recovered_size": 373575,
+   497→            "gt_match": "zip_0007.zip",
+   498→            "match_method": "sha256",
+   499→            "size_diff": 0,
+   500→            "truncation_fixes_sha256": false,
+   501→            "failure_reason": ""
+   502→          },
+   503→          {
+   504→            "recovered_name": "carved_0008.zip",
+   505→            "recovered_sha256": "f583c19945eb17462666bf698bebb7d88c1f6f343fda64a98f9b4604708a30d6",
+   506→            "recovered_size": 410962,
+   507→            "gt_match": "zip_0008.zip",
+   508→            "match_method": "sha256",
+   509→            "size_diff": 0,
+   510→            "truncation_fixes_sha256": false,
+   511→            "failure_reason": ""
+   512→          },
+   513→          {
+   514→            "recovered_name": "carved_0009.zip",
+   515→            "recovered_sha256": "82d905af5513049f662b5f6b27a4610416e774c771ef1720d92cd96ca7430c47",
+   516→            "recovered_size": 143064,
+   517→            "gt_match": "zip_0009.zip",
+   518→            "match_method": "sha256",
+   519→            "size_diff": 0,
+   520→            "truncation_fixes_sha256": false,
+   521→            "failure_reason": ""
+   522→          },
+   523→          {
+   524→            "recovered_name": "carved_0010.zip",
+   525→            "recovered_sha256": "0ce442fd0929bbb495da799cda1d720d4a0ffbaf8815bc0f0a420f67adeebb4e",
+   526→            "recovered_size": 475344,
+   527→            "gt_match": "zip_0010.zip",
+   528→            "match_method": "sha256",
+   529→            "size_diff": 0,
+   530→            "truncation_fixes_sha256": false,
+   531→            "failure_reason": ""
+   532→          },
+   533→          {
+   534→            "recovered_name": "carved_0011.zip",
+   535→            "recovered_sha256": "2d1b32527dc1d147c3e1e002ddae8d618ff019582a1f2de558ebfa0223793437",
+   536→            "recovered_size": 152499,
+   537→            "gt_match": "zip_0011.zip",
+   538→            "match_method": "sha256",
+   539→            "size_diff": 0,
+   540→            "truncation_fixes_sha256": false,
+   541→            "failure_reason": ""
+   542→          },
+   543→          {
+   544→            "recovered_name": "carved_0012.zip",
+   545→            "recovered_sha256": "5604ec9af227023853bb5a65e74b7c7bc714556ef364ee5a7a134461b8c49e04",
+   546→            "recovered_size": 383546,
+   547→            "gt_match": "zip_0012.zip",
+   548→            "match_method": "sha256",
+   549→            "size_diff": 0,
+   550→            "truncation_fixes_sha256": false,
+   551→            "failure_reason": ""
+   552→          },
+   553→          {
+   554→            "recovered_name": "carved_0013.zip",
+   555→            "recovered_sha256": "e53e90c7087fb50db95c84fc6db17ea31c2b0ae1ef5a5510a0d0174e7f5c315b",
+   556→            "recovered_size": 96837,
+   557→            "gt_match": "zip_0013.zip",
+   558→            "match_method": "sha256",
+   559→            "size_diff": 0,
+   560→            "truncation_fixes_sha256": false,
+   561→            "failure_reason": ""
+   562→          },
+   563→          {
+   564→            "recovered_name": "carved_0014.zip",
+   565→            "recovered_sha256": "03183b71d110f42a4cda1e278a71eba779bf5d13ebf41477d64e937d0a1272a1",
+   566→            "recovered_size": 435963,
+   567→            "gt_match": "zip_0014.zip",
+   568→            "match_method": "sha256",
+   569→            "size_diff": 0,
+   570→            "truncation_fixes_sha256": false,
+   571→            "failure_reason": ""
+   572→          },
+   573→          {
+   574→            "recovered_name": "carved_0015.zip",
+   575→            "recovered_sha256": "d20772aa61af1c454bf3a57ba1fcf3182d6fc6731e0f933e802554406955c4e5",
+   576→            "recovered_size": 312951,
+   577→            "gt_match": "zip_0015.zip",
+   578→            "match_method": "sha256",
+   579→            "size_diff": 0,
+   580→            "truncation_fixes_sha256": false,
+   581→            "failure_reason": ""
+   582→          }
+   583→        ]
+   584→      }
+   585→    },
+   586→    "E": {
+   587→      "MFT-First": {
+   588→        "overall_utility": 1.0,
+   589→        "rvs": 1.0,
+   590→        "fqs": 1.0,
+   591→        "files_recovered": 15,
+   592→        "files_correct_checksum": 15
+   593→      },
+   594→      "Carving": {
+   595→        "overall_utility": 1.0,
+   596→        "rvs": 1.0,
+   597→        "fqs": 1.0,
+   598→        "files_recovered": 15,
+   599→        "files_correct_checksum": 15,
+   600→        "signatures_found": {
+   601→          "ZIP": 15,
+   602→          "DOCX": 15,
+   603→          "XLSX": 15
+   604→        },
+   605→        "files_carved": 15,
+   606→        "false_positives": 0,
+   607→        "per_file_details": [
+   608→          {
+   609→            "recovered_name": "carved_0001.zip",
+   610→            "recovered_sha256": "ae508d8683ab9c213aa36df5f1d4a49683eb109a3dfaf2e48bff797f29cabf56",
+   611→            "recovered_size": 480668,
+   612→            "gt_match": "docx_0001.docx",
+   613→            "match_method": "sha256",
+   614→            "size_diff": 0,
+   615→            "truncation_fixes_sha256": false,
+   616→            "failure_reason": ""
+   617→          },
+   618→          {
+   619→            "recovered_name": "carved_0002.zip",
+   620→            "recovered_sha256": "1138c735109e8df0f420077cb75718135c4e8244b18de845bfc40cfc2c98f058",
+   621→            "recovered_size": 458352,
+   622→            "gt_match": "docx_0002.docx",
+   623→            "match_method": "sha256",
+   624→            "size_diff": 0,
+   625→            "truncation_fixes_sha256": false,
+   626→            "failure_reason": ""
+   627→          },
+   628→          {
+   629→            "recovered_name": "carved_0003.zip",
+   630→            "recovered_sha256": "d16da2271778e8a56ab4ab6d384c2d11a696e403840a1a0f44ce0125d154ccb8",
+   631→            "recovered_size": 321715,
+   632→            "gt_match": "docx_0003.docx",
+   633→            "match_method": "sha256",
+   634→            "size_diff": 0,
+   635→            "truncation_fixes_sha256": false,
+   636→            "failure_reason": ""
+   637→          },
+   638→          {
+   639→            "recovered_name": "carved_0004.zip",
+   640→            "recovered_sha256": "459650f3e38b9746c9b13c8bb6c653d3fc3325b9423707d419116d387d0b340f",
+   641→            "recovered_size": 306334,
+   642→            "gt_match": "docx_0004.docx",
+   643→            "match_method": "sha256",
+   644→            "size_diff": 0,
+   645→            "truncation_fixes_sha256": false,
+   646→            "failure_reason": ""
+   647→          },
+   648→          {
+   649→            "recovered_name": "carved_0005.zip",
+   650→            "recovered_sha256": "52bd87863ae611802c80e5eeebf6b6281bddad83eff5d0cbfddd3d189ae8faae",
+   651→            "recovered_size": 415176,
+   652→            "gt_match": "docx_0005.docx",
+   653→            "match_method": "sha256",
+   654→            "size_diff": 0,
+   655→            "truncation_fixes_sha256": false,
+   656→            "failure_reason": ""
+   657→          },
+   658→          {
+   659→            "recovered_name": "carved_0006.zip",
+   660→            "recovered_sha256": "cb96924dc824521167c0f7592dddee3b5a911da92e2e35741e6b1fcacaf680b5",
+   661→            "recovered_size": 184958,
+   662→            "gt_match": "docx_0006.docx",
+   663→            "match_method": "sha256",
+   664→            "size_diff": 0,
+   665→            "truncation_fixes_sha256": false,
+   666→            "failure_reason": ""
+   667→          },
+   668→          {
+   669→            "recovered_name": "carved_0007.zip",
+   670→            "recovered_sha256": "934da98df0ed9ed2f0be9ec7b7b15e042e3e31b5f0cdd95440ae6b12babc502c",
+   671→            "recovered_size": 373575,
+   672→            "gt_match": "docx_0007.docx",
+   673→            "match_method": "sha256",
+   674→            "size_diff": 0,
+   675→            "truncation_fixes_sha256": false,
+   676→            "failure_reason": ""
+   677→          },
+   678→          {
+   679→            "recovered_name": "carved_0008.zip",
+   680→            "recovered_sha256": "fb83ec5451b263c6261ee573d92fad6c1a0142db35744af9d93875e4ade5fc81",
+   681→            "recovered_size": 410962,
+   682→            "gt_match": "docx_0008.docx",
+   683→            "match_method": "sha256",
+   684→            "size_diff": 0,
+   685→            "truncation_fixes_sha256": false,
+   686→            "failure_reason": ""
+   687→          },
+   688→          {
+   689→            "recovered_name": "carved_0009.zip",
+   690→            "recovered_sha256": "17da2f8ab3db117c91d393f562d9c369e03241cc2a853f612a604b02b2dc7f65",
+   691→            "recovered_size": 143064,
+   692→            "gt_match": "docx_0009.docx",
+   693→            "match_method": "sha256",
+   694→            "size_diff": 0,
+   695→            "truncation_fixes_sha256": false,
+   696→            "failure_reason": ""
+   697→          },
+   698→          {
+   699→            "recovered_name": "carved_0010.zip",
+   700→            "recovered_sha256": "ebba6cbdb1c3970d30f8133e2e161f5536e8c6166cac53699a91dc92616b8ebd",
+   701→            "recovered_size": 475344,
+   702→            "gt_match": "docx_0010.docx",
+   703→            "match_method": "sha256",
+   704→            "size_diff": 0,
+   705→            "truncation_fixes_sha256": false,
+   706→            "failure_reason": ""
+   707→          },
+   708→          {
+   709→            "recovered_name": "carved_0011.zip",
+   710→            "recovered_sha256": "49cc7457f1ab6242fe6d811c54f3a11579079756f1724f7929b86c07678a2b85",
+   711→            "recovered_size": 152499,
+   712→            "gt_match": "docx_0011.docx",
+   713→            "match_method": "sha256",
+   714→            "size_diff": 0,
+   715→            "truncation_fixes_sha256": false,
+   716→            "failure_reason": ""
+   717→          },
+   718→          {
+   719→            "recovered_name": "carved_0012.zip",
+   720→            "recovered_sha256": "61522670b168d98fdcb8a1fc5e03db017ca44eb7d685f0f86d7124f7f26ef9ac",
+   721→            "recovered_size": 383546,
+   722→            "gt_match": "docx_0012.docx",
+   723→            "match_method": "sha256",
+   724→            "size_diff": 0,
+   725→            "truncation_fixes_sha256": false,
+   726→            "failure_reason": ""
+   727→          },
+   728→          {
+   729→            "recovered_name": "carved_0013.zip",
+   730→            "recovered_sha256": "557a943d16c328d3f07e587ab2d3b199b7a9b2450ea57076d51197cd4b39c5e1",
+   731→            "recovered_size": 96837,
+   732→            "gt_match": "docx_0013.docx",
+   733→            "match_method": "sha256",
+   734→            "size_diff": 0,
+   735→            "truncation_fixes_sha256": false,
+   736→            "failure_reason": ""
+   737→          },
+   738→          {
+   739→            "recovered_name": "carved_0014.zip",
+   740→            "recovered_sha256": "0a0bb9f2b14dc5b1a39f777ceb6ac5d406cc40925895d3c3fb9322cce5fe70ae",
+   741→            "recovered_size": 435963,
+   742→            "gt_match": "docx_0014.docx",
+   743→            "match_method": "sha256",
+   744→            "size_diff": 0,
+   745→            "truncation_fixes_sha256": false,
+   746→            "failure_reason": ""
+   747→          },
+   748→          {
+   749→            "recovered_name": "carved_0015.zip",
+   750→            "recovered_sha256": "ccf3c9babea8a2878192f62c725f327983b457cb587653f65e1a70b0b3bb3a06",
+   751→            "recovered_size": 312951,
+   752→            "gt_match": "docx_0015.docx",
+   753→            "match_method": "sha256",
+   754→            "size_diff": 0,
+   755→            "truncation_fixes_sha256": false,
+   756→            "failure_reason": ""
+   757→          }
+   758→        ]
+   759→      }
+   760→    }
+   761→  },
+   762→  "diagnosis": {
+   763→    "question": "¿El cero proviene del algoritmo o del banco de pruebas?",
+   764→    "format_analysis": {
+   765→      "A": {
+   766→        "carving_ou": 0.0,
+   767→        "mft_ou": 1.0,
+   768→        "signatures_found": {
+   769→          "JPEG": 15,
+   770→          "BMP": 1
+   771→        },
+   772→        "files_carved": 3,
+   773→        "files_recovered_by_judge": 3,
+   774→        "files_correct_checksum": 0,
+   775→        "false_positives": 3,
+   776→        "matched_to_gt": 0,
+   777→        "unmatched_to_gt": 3,
+   778→        "truncation_fixable": 2,
+   779→        "per_file_details": [
+   780→          {
+   781→            "recovered_name": "carved_0001.jpg",
+   782→            "recovered_sha256": "712df33c2d89f268ca352ea614a7e9c3e17cb4a10a7aea0be459739d3a47b8f7",
+   783→            "recovered_size": 63101,
+   784→            "gt_match": "NONE",
+   785→            "match_method": "none",
+   786→            "size_diff": -865081,
+   787→            "truncation_fixes_sha256": true,
+   788→            "failure_reason": "Missing 865081 byte(s) at end: 21 = b'!'. Adding it fixes SHA-256."
+   789→          },
+   790→          {
+   791→            "recovered_name": "carved_0002.jpg",
+   792→            "recovered_sha256": "82bda8b0decb065d964daf8e8a0a70026a015e56a47c56010abb034389a7f194",
+   793→            "recovered_size": 206994,
+   794→            "gt_match": "NONE",
+   795→            "match_method": "none",
+   796→            "size_diff": -923229,
+   797→            "truncation_fixes_sha256": true,
+   798→            "failure_reason": "Missing 923229 byte(s) at end: c8 = b'\\xc8'. Adding it fixes SHA-256."
+   799→          },
+   800→          {
+   801→            "recovered_name": "carved_0001.bmp",
+   802→            "recovered_sha256": "ef535df23e3409e25a174be31eae2277a8767bddc7eaa76103f92620e197dba1",
+   803→            "recovered_size": 50842112,
+   804→            "gt_match": "NONE",
+   805→            "match_method": "none",
+   806→            "size_diff": 0,
+   807→            "truncation_fixes_sha256": false,
+   808→            "failure_reason": "SHA-256 not in ground truth. Data differs from original."
+   809→          }
+   810→        ]
+   811→      },
+   812→      "B": {
+   813→        "carving_ou": 0.8709,
+   814→        "mft_ou": 1.0,
+   815→        "signatures_found": {
+   816→          "PNG": 15,
+   817→          "BMP": 1
+   818→        },
+   819→        "files_carved": 15,
+   820→        "files_recovered_by_judge": 15,
+   821→        "files_correct_checksum": 14,
+   822→        "false_positives": 1,
+   823→        "matched_to_gt": 14,
+   824→        "unmatched_to_gt": 1,
+   825→        "truncation_fixable": 0,
+   826→        "per_file_details": [
+   827→          {
+   828→            "recovered_name": "carved_0001.png",
+   829→            "recovered_sha256": "6dcbb3f846ed986f05cbb07feb9c7af687179bc1d470a4132b15ab1c3f16e13e",
+   830→            "recovered_size": 928182,
+   831→            "gt_match": "png_0001.png",
+   832→            "match_method": "sha256",
+   833→            "size_diff": 0,
+   834→            "truncation_fixes_sha256": false,
+   835→            "failure_reason": ""
+   836→          },
+   837→          {
+   838→            "recovered_name": "carved_0002.png",
+   839→            "recovered_sha256": "b80e823618b0527ca7b8f6e228d7507c86cf9189edd2c1075f6c3a9273315f97",
+   840→            "recovered_size": 1130223,
+   841→            "gt_match": "png_0002.png",
+   842→            "match_method": "sha256",
+   843→            "size_diff": 0,
+   844→            "truncation_fixes_sha256": false,
+   845→            "failure_reason": ""
+   846→          },
+   847→          {
+   848→            "recovered_name": "carved_0003.png",
+   849→            "recovered_sha256": "5b49d779598b15e48cb8af42014c5b6e2ad077877386ec3a25e1da2cf83cbeeb",
+   850→            "recovered_size": 2615725,
+   851→            "gt_match": "png_0003.png",
+   852→            "match_method": "sha256",
+   853→            "size_diff": 0,
+   854→            "truncation_fixes_sha256": false,
+   855→            "failure_reason": ""
+   856→          },
+   857→          {
+   858→            "recovered_name": "carved_0004.png",
+   859→            "recovered_sha256": "b64227c441b0d191a7e8fe49045d4c6f1d2d68bfa3846a622f7d28269e4f510a",
+   860→            "recovered_size": 2492678,
+   861→            "gt_match": "png_0004.png",
+   862→            "match_method": "sha256",
+   863→            "size_diff": 0,
+   864→            "truncation_fixes_sha256": false,
+   865→            "failure_reason": ""
+   866→          },
+   867→          {
+   868→            "recovered_name": "carved_0005.png",
+   869→            "recovered_sha256": "0012f8e851e3f6b1f436c71eae506bd9b30d93f69d91a8a155236656412fa687",
+   870→            "recovered_size": 1958849,
+   871→            "gt_match": "png_0005.png",
+   872→            "match_method": "sha256",
+   873→            "size_diff": 0,
+   874→            "truncation_fixes_sha256": false,
+   875→            "failure_reason": ""
+   876→          },
+   877→          {
+   878→            "recovered_name": "carved_0006.png",
+   879→            "recovered_sha256": "92a01aa3b4ffc571b61e83abe240b7279f9a51eb317de964417bf8a6a155cc06",
+   880→            "recovered_size": 1521668,
+   881→            "gt_match": "png_0006.png",
+   882→            "match_method": "sha256",
+   883→            "size_diff": 0,
+   884→            "truncation_fixes_sha256": false,
+   885→            "failure_reason": ""
+   886→          },
+   887→          {
+   888→            "recovered_name": "carved_0007.png",
+   889→            "recovered_sha256": "6020d657436ab3eb0525fae8304c301aa899fd08b4e7227278a6e1d33fa700e4",
+   890→            "recovered_size": 1231152,
+   891→            "gt_match": "png_0007.png",
+   892→            "match_method": "sha256",
+   893→            "size_diff": 0,
+   894→            "truncation_fixes_sha256": false,
+   895→            "failure_reason": ""
+   896→          },
+   897→          {
+   898→            "recovered_name": "carved_0008.png",
+   899→            "recovered_sha256": "fc01e9a1229a7e5b2d939d2f4fa93404899b40c24b2d1799cc999fb87c91f10c",
+   900→            "recovered_size": 1555586,
+   901→            "gt_match": "png_0008.png",
+   902→            "match_method": "sha256",
+   903→            "size_diff": 0,
+   904→            "truncation_fixes_sha256": false,
+   905→            "failure_reason": ""
+   906→          },
+   907→          {
+   908→            "recovered_name": "carved_0009.png",
+   909→            "recovered_sha256": "fe2a7123b3dc24be19087f19bb1051bc1c3e27321d6e2289c9e4e2a60fb80447",
+   910→            "recovered_size": 1186515,
+   911→            "gt_match": "png_0009.png",
+   912→            "match_method": "sha256",
+   913→            "size_diff": 0,
+   914→            "truncation_fixes_sha256": false,
+   915→            "failure_reason": ""
+   916→          },
+   917→          {
+   918→            "recovered_name": "carved_0010.png",
+   919→            "recovered_sha256": "d2d1a6500d626ca9a2052895d69eddfc839649598687e13db3541aba97ac709e",
+   920→            "recovered_size": 78858,
+   921→            "gt_match": "png_0010.png",
+   922→            "match_method": "sha256",
+   923→            "size_diff": 0,
+   924→            "truncation_fixes_sha256": false,
+   925→            "failure_reason": ""
+   926→          },
+   927→          {
+   928→            "recovered_name": "carved_0011.png",
+   929→            "recovered_sha256": "c3367063332460bee0354f0b7234a1a97c9157daf418a0b29251456947c0b7bb",
+   930→            "recovered_size": 1261992,
+   931→            "gt_match": "png_0011.png",
+   932→            "match_method": "sha256",
+   933→            "size_diff": 0,
+   934→            "truncation_fixes_sha256": false,
+   935→            "failure_reason": ""
+   936→          },
+   937→          {
+   938→            "recovered_name": "carved_0012.png",
+   939→            "recovered_sha256": "dbf6deb316ea5381fda1216b744384e7e265a5acc80f8f4f2904904b3d7c5b92",
+   940→            "recovered_size": 2100790,
+   941→            "gt_match": "png_0012.png",
+   942→            "match_method": "sha256",
+   943→            "size_diff": 0,
+   944→            "truncation_fixes_sha256": false,
+   945→            "failure_reason": ""
+   946→          },
+   947→          {
+   948→            "recovered_name": "carved_0013.png",
+   949→            "recovered_sha256": "2aef457b1b394ca376295e3a1e528a038406368fd87832edf893928d16744319",
+   950→            "recovered_size": 816699,
+   951→            "gt_match": "png_0013.png",
+   952→            "match_method": "sha256",
+   953→            "size_diff": 0,
+   954→            "truncation_fixes_sha256": false,
+   955→            "failure_reason": ""
+   956→          },
+   957→          {
+   958→            "recovered_name": "carved_0014.png",
+   959→            "recovered_sha256": "bf350ec828b055f310ff1ebf5d8b23801a798cfb0e1ffdd0123a7d9f0deede60",
+   960→            "recovered_size": 2341891,
+   961→            "gt_match": "png_0014.png",
+   962→            "match_method": "sha256",
+   963→            "size_diff": 0,
+   964→            "truncation_fixes_sha256": false,
+   965→            "failure_reason": ""
+   966→          },
+   967→          {
+   968→            "recovered_name": "carved_0001.bmp",
+   969→            "recovered_sha256": "e7780e05911e5848c01642ccb9528264acaeeda500894610d83e2854df5643f2",
+   970→            "recovered_size": 31589376,
+   971→            "gt_match": "NONE",
+   972→            "match_method": "none",
+   973→            "size_diff": 0,
+   974→            "truncation_fixes_sha256": false,
+   975→            "failure_reason": "SHA-256 not in ground truth. Data differs from original."
+   976→          }
+   977→        ]
+   978→      },
+   979→      "C": {
+   980→        "carving_ou": 0.0,
+   981→        "mft_ou": 1.0,
+   982→        "signatures_found": {
+   983→          "PDF": 15
+   984→        },
+   985→        "files_carved": 15,
+   986→        "files_recovered_by_judge": 15,
+   987→        "files_correct_checksum": 0,
+   988→        "false_positives": 15,
+   989→        "matched_to_gt": 0,
+   990→        "unmatched_to_gt": 15,
+   991→        "truncation_fixable": 15,
+   992→        "per_file_details": [
+   993→          {
+   994→            "recovered_name": "carved_0001.pdf",
+   995→            "recovered_sha256": "59832efa03040260b3c7d1d9369dbe9b4d3b250186bf6b64f3982e269ac8f9e6",
+   996→            "recovered_size": 480667,
+   997→            "gt_match": "NONE",
+   998→            "match_method": "none",
+   999→            "size_diff": -1,
+  1000→            "truncation_fixes_sha256": true,
+  1001→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1002→          },
+  1003→          {
+  1004→            "recovered_name": "carved_0002.pdf",
+  1005→            "recovered_sha256": "5799d36ab7dbde05720bf9152ddada73becd0c84a9170b0b0ce3984cb6ebe372",
+  1006→            "recovered_size": 458351,
+  1007→            "gt_match": "NONE",
+  1008→            "match_method": "none",
+  1009→            "size_diff": -1,
+  1010→            "truncation_fixes_sha256": true,
+  1011→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1012→          },
+  1013→          {
+  1014→            "recovered_name": "carved_0003.pdf",
+  1015→            "recovered_sha256": "82ebeb1305e3bcd79a13253ea53feba0544d829fbe8650aed4a5e5e1862ac21d",
+  1016→            "recovered_size": 321714,
+  1017→            "gt_match": "NONE",
+  1018→            "match_method": "none",
+  1019→            "size_diff": -1,
+  1020→            "truncation_fixes_sha256": true,
+  1021→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1022→          },
+  1023→          {
+  1024→            "recovered_name": "carved_0004.pdf",
+  1025→            "recovered_sha256": "3a4896fa5ec754523d9d79d0f8b7caf838b65aebc5d1da8c4e76b8104154c0c7",
+  1026→            "recovered_size": 306333,
+  1027→            "gt_match": "NONE",
+  1028→            "match_method": "none",
+  1029→            "size_diff": -1,
+  1030→            "truncation_fixes_sha256": true,
+  1031→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1032→          },
+  1033→          {
+  1034→            "recovered_name": "carved_0005.pdf",
+  1035→            "recovered_sha256": "0301504ea5d18e06396bb98a70dc7c4ab6b02dbe93dfcf9a464337a4d392167c",
+  1036→            "recovered_size": 415175,
+  1037→            "gt_match": "NONE",
+  1038→            "match_method": "none",
+  1039→            "size_diff": -1,
+  1040→            "truncation_fixes_sha256": true,
+  1041→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1042→          },
+  1043→          {
+  1044→            "recovered_name": "carved_0006.pdf",
+  1045→            "recovered_sha256": "f7fe4c20ce38bbc39cbc8071e1e490d9c4e488ce247bd2d61072677b0ae54fad",
+  1046→            "recovered_size": 184957,
+  1047→            "gt_match": "NONE",
+  1048→            "match_method": "none",
+  1049→            "size_diff": -1,
+  1050→            "truncation_fixes_sha256": true,
+  1051→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1052→          },
+  1053→          {
+  1054→            "recovered_name": "carved_0007.pdf",
+  1055→            "recovered_sha256": "15946228d4ce91e1d7ef84b238ca4aa5b3b3da8a53867720aa39c5197152063c",
+  1056→            "recovered_size": 373574,
+  1057→            "gt_match": "NONE",
+  1058→            "match_method": "none",
+  1059→            "size_diff": -1,
+  1060→            "truncation_fixes_sha256": true,
+  1061→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1062→          },
+  1063→          {
+  1064→            "recovered_name": "carved_0008.pdf",
+  1065→            "recovered_sha256": "92c68d96056723a84393e3a1abb2e8c623f65ad72364098470a664c8607a1e3f",
+  1066→            "recovered_size": 410961,
+  1067→            "gt_match": "NONE",
+  1068→            "match_method": "none",
+  1069→            "size_diff": -1,
+  1070→            "truncation_fixes_sha256": true,
+  1071→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1072→          },
+  1073→          {
+  1074→            "recovered_name": "carved_0009.pdf",
+  1075→            "recovered_sha256": "a0d01bd6b7cfb2fe11360b3c00ec197bc3eb1ce54a04fba76248f88978d30abf",
+  1076→            "recovered_size": 143063,
+  1077→            "gt_match": "NONE",
+  1078→            "match_method": "none",
+  1079→            "size_diff": -1,
+  1080→            "truncation_fixes_sha256": true,
+  1081→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1082→          },
+  1083→          {
+  1084→            "recovered_name": "carved_0010.pdf",
+  1085→            "recovered_sha256": "567adf26319dd031bd53d75453ddead12b71412b35df062cdfe46b8edee3bc55",
+  1086→            "recovered_size": 475343,
+  1087→            "gt_match": "NONE",
+  1088→            "match_method": "none",
+  1089→            "size_diff": -1,
+  1090→            "truncation_fixes_sha256": true,
+  1091→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1092→          },
+  1093→          {
+  1094→            "recovered_name": "carved_0011.pdf",
+  1095→            "recovered_sha256": "217a79076cb96205264a2eadf21ad5d79e1245d8d65663de90ead176ca40333f",
+  1096→            "recovered_size": 152498,
+  1097→            "gt_match": "NONE",
+  1098→            "match_method": "none",
+  1099→            "size_diff": -1,
+  1100→            "truncation_fixes_sha256": true,
+  1101→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1102→          },
+  1103→          {
+  1104→            "recovered_name": "carved_0012.pdf",
+  1105→            "recovered_sha256": "bcb8d6ac2008c407bcd47890bc6ef01b3a8ddd30fc3f69edd93432c0f403e4c6",
+  1106→            "recovered_size": 383545,
+  1107→            "gt_match": "NONE",
+  1108→            "match_method": "none",
+  1109→            "size_diff": -1,
+  1110→            "truncation_fixes_sha256": true,
+  1111→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1112→          },
+  1113→          {
+  1114→            "recovered_name": "carved_0013.pdf",
+  1115→            "recovered_sha256": "ce6cc96cd895148393a9196afdf922a145639fde6b1a6fe508105b93c6edf257",
+  1116→            "recovered_size": 96836,
+  1117→            "gt_match": "NONE",
+  1118→            "match_method": "none",
+  1119→            "size_diff": -1,
+  1120→            "truncation_fixes_sha256": true,
+  1121→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1122→          },
+  1123→          {
+  1124→            "recovered_name": "carved_0014.pdf",
+  1125→            "recovered_sha256": "b86b06a344e466e394fa982c53dd630f008bdd64ea9fe72d08379b8a635caa26",
+  1126→            "recovered_size": 435962,
+  1127→            "gt_match": "NONE",
+  1128→            "match_method": "none",
+  1129→            "size_diff": -1,
+  1130→            "truncation_fixes_sha256": true,
+  1131→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1132→          },
+  1133→          {
+  1134→            "recovered_name": "carved_0015.pdf",
+  1135→            "recovered_sha256": "10f1db3449924d94eb665e0f3b7aeb2a6b7c2f5e6860161c7f9d771be5d6c392",
+  1136→            "recovered_size": 312950,
+  1137→            "gt_match": "NONE",
+  1138→            "match_method": "none",
+  1139→            "size_diff": -1,
+  1140→            "truncation_fixes_sha256": true,
+  1141→            "failure_reason": "Missing 1 byte(s) at end: 0a = b'\\n'. Adding it fixes SHA-256."
+  1142→          }
+  1143→        ]
+  1144→      },
+  1145→      "D": {
+  1146→        "carving_ou": 1.0,
+  1147→        "mft_ou": 1.0,
+  1148→        "signatures_found": {
+  1149→          "ZIP": 15,
+  1150→          "DOCX": 15,
+  1151→          "XLSX": 15
+  1152→        },
+  1153→        "files_carved": 15,
+  1154→        "files_recovered_by_judge": 15,
+  1155→        "files_correct_checksum": 15,
+  1156→        "false_positives": 0,
+  1157→        "matched_to_gt": 15,
+  1158→        "unmatched_to_gt": 0,
+  1159→        "truncation_fixable": 0,
+  1160→        "per_file_details": [
+  1161→          {
+  1162→            "recovered_name": "carved_0001.zip",
+  1163→            "recovered_sha256": "337f764468fcdcff64db431b670c69b32eee24d7ab090b710b0a7cf716485293",
+  1164→            "recovered_size": 480668,
+  1165→            "gt_match": "zip_0001.zip",
+  1166→            "match_method": "sha256",
+  1167→            "size_diff": 0,
+  1168→            "truncation_fixes_sha256": false,
+  1169→            "failure_reason": ""
+  1170→          },
+  1171→          {
+  1172→            "recovered_name": "carved_0002.zip",
+  1173→            "recovered_sha256": "5292661fd55859764107fa2490b72976376a46f002604e81c292218e72fc5b13",
+  1174→            "recovered_size": 458352,
+  1175→            "gt_match": "zip_0002.zip",
+  1176→            "match_method": "sha256",
+  1177→            "size_diff": 0,
+  1178→            "truncation_fixes_sha256": false,
+  1179→            "failure_reason": ""
+  1180→          },
+  1181→          {
+  1182→            "recovered_name": "carved_0003.zip",
+  1183→            "recovered_sha256": "a924de277f8b203213ae0f334af7b7fa6a017634c177fa1dc827e1362989611a",
+  1184→            "recovered_size": 321715,
+  1185→            "gt_match": "zip_0003.zip",
+  1186→            "match_method": "sha256",
+  1187→            "size_diff": 0,
+  1188→            "truncation_fixes_sha256": false,
+  1189→            "failure_reason": ""
+  1190→          },
+  1191→          {
+  1192→            "recovered_name": "carved_0004.zip",
+  1193→            "recovered_sha256": "c24f55603a6101c1c767bebea41df70ef1df2a130b0ce5adb4fa73e32f1e5efa",
+  1194→            "recovered_size": 306334,
+  1195→            "gt_match": "zip_0004.zip",
+  1196→            "match_method": "sha256",
+  1197→            "size_diff": 0,
+  1198→            "truncation_fixes_sha256": false,
+  1199→            "failure_reason": ""
+  1200→          },
+  1201→          {
+  1202→            "recovered_name": "carved_0005.zip",
+  1203→            "recovered_sha256": "47dd6b1f04459a929f241427a1359a2f3700c6d279ae618395af289e0021e20c",
+  1204→            "recovered_size": 415176,
+  1205→            "gt_match": "zip_0005.zip",
+  1206→            "match_method": "sha256",
+  1207→            "size_diff": 0,
+  1208→            "truncation_fixes_sha256": false,
+  1209→            "failure_reason": ""
+  1210→          },
+  1211→          {
+  1212→            "recovered_name": "carved_0006.zip",
+  1213→            "recovered_sha256": "a80bc9a295859a7397494aefa5121e6b240a57845ccc72936e8d45e833ef1134",
+  1214→            "recovered_size": 184958,
+  1215→            "gt_match": "zip_0006.zip",
+  1216→            "match_method": "sha256",
+  1217→            "size_diff": 0,
+  1218→            "truncation_fixes_sha256": false,
+  1219→            "failure_reason": ""
+  1220→          },
+  1221→          {
+  1222→            "recovered_name": "carved_0007.zip",
+  1223→            "recovered_sha256": "ccde7e37c88e23f14f6718ba15f55053a449b8cce7193594411489fb50b6c7a4",
+  1224→            "recovered_size": 373575,
+  1225→            "gt_match": "zip_0007.zip",
+  1226→            "match_method": "sha256",
+  1227→            "size_diff": 0,
+  1228→            "truncation_fixes_sha256": false,
+  1229→            "failure_reason": ""
+  1230→          },
+  1231→          {
+  1232→            "recovered_name": "carved_0008.zip",
+  1233→            "recovered_sha256": "f583c19945eb17462666bf698bebb7d88c1f6f343fda64a98f9b4604708a30d6",
+  1234→            "recovered_size": 410962,
+  1235→            "gt_match": "zip_0008.zip",
+  1236→            "match_method": "sha256",
+  1237→            "size_diff": 0,
+  1238→            "truncation_fixes_sha256": false,
+  1239→            "failure_reason": ""
+  1240→          },
+  1241→          {
+  1242→            "recovered_name": "carved_0009.zip",
+  1243→            "recovered_sha256": "82d905af5513049f662b5f6b27a4610416e774c771ef1720d92cd96ca7430c47",
+  1244→            "recovered_size": 143064,
+  1245→            "gt_match": "zip_0009.zip",
+  1246→            "match_method": "sha256",
+  1247→            "size_diff": 0,
+  1248→            "truncation_fixes_sha256": false,
+  1249→            "failure_reason": ""
+  1250→          },
+  1251→          {
+  1252→            "recovered_name": "carved_0010.zip",
+  1253→            "recovered_sha256": "0ce442fd0929bbb495da799cda1d720d4a0ffbaf8815bc0f0a420f67adeebb4e",
+  1254→            "recovered_size": 475344,
+  1255→            "gt_match": "zip_0010.zip",
+  1256→            "match_method": "sha256",
+  1257→            "size_diff": 0,
+  1258→            "truncation_fixes_sha256": false,
+  1259→            "failure_reason": ""
+  1260→          },
+  1261→          {
+  1262→            "recovered_name": "carved_0011.zip",
+  1263→            "recovered_sha256": "2d1b32527dc1d147c3e1e002ddae8d618ff019582a1f2de558ebfa0223793437",
+  1264→            "recovered_size": 152499,
+  1265→            "gt_match": "zip_0011.zip",
+  1266→            "match_method": "sha256",
+  1267→            "size_diff": 0,
+  1268→            "truncation_fixes_sha256": false,
+  1269→            "failure_reason": ""
+  1270→          },
+  1271→          {
+  1272→            "recovered_name": "carved_0012.zip",
+  1273→            "recovered_sha256": "5604ec9af227023853bb5a65e74b7c7bc714556ef364ee5a7a134461b8c49e04",
+  1274→            "recovered_size": 383546,
+  1275→            "gt_match": "zip_0012.zip",
+  1276→            "match_method": "sha256",
+  1277→            "size_diff": 0,
+  1278→            "truncation_fixes_sha256": false,
+  1279→            "failure_reason": ""
+  1280→          },
+  1281→          {
+  1282→            "recovered_name": "carved_0013.zip",
+  1283→            "recovered_sha256": "e53e90c7087fb50db95c84fc6db17ea31c2b0ae1ef5a5510a0d0174e7f5c315b",
+  1284→            "recovered_size": 96837,
+  1285→            "gt_match": "zip_0013.zip",
+  1286→            "match_method": "sha256",
+  1287→            "size_diff": 0,
+  1288→            "truncation_fixes_sha256": false,
+  1289→            "failure_reason": ""
+  1290→          },
+  1291→          {
+  1292→            "recovered_name": "carved_0014.zip",
+  1293→            "recovered_sha256": "03183b71d110f42a4cda1e278a71eba779bf5d13ebf41477d64e937d0a1272a1",
+  1294→            "recovered_size": 435963,
+  1295→            "gt_match": "zip_0014.zip",
+  1296→            "match_method": "sha256",
+  1297→            "size_diff": 0,
+  1298→            "truncation_fixes_sha256": false,
+  1299→            "failure_reason": ""
+  1300→          },
+  1301→          {
+  1302→            "recovered_name": "carved_0015.zip",
+  1303→            "recovered_sha256": "d20772aa61af1c454bf3a57ba1fcf3182d6fc6731e0f933e802554406955c4e5",
+  1304→            "recovered_size": 312951,
+  1305→            "gt_match": "zip_0015.zip",
+  1306→            "match_method": "sha256",
+  1307→            "size_diff": 0,
+  1308→            "truncation_fixes_sha256": false,
+  1309→            "failure_reason": ""
+  1310→          }
+  1311→        ]
+  1312→      },
+  1313→      "E": {
+  1314→        "carving_ou": 1.0,
+  1315→        "mft_ou": 1.0,
+  1316→        "signatures_found": {
+  1317→          "ZIP": 15,
+  1318→          "DOCX": 15,
+  1319→          "XLSX": 15
+  1320→        },
+  1321→        "files_carved": 15,
+  1322→        "files_recovered_by_judge": 15,
+  1323→        "files_correct_checksum": 15,
+  1324→        "false_positives": 0,
+  1325→        "matched_to_gt": 15,
+  1326→        "unmatched_to_gt": 0,
+  1327→        "truncation_fixable": 0,
+  1328→        "per_file_details": [
+  1329→          {
+  1330→            "recovered_name": "carved_0001.zip",
+  1331→            "recovered_sha256": "ae508d8683ab9c213aa36df5f1d4a49683eb109a3dfaf2e48bff797f29cabf56",
+  1332→            "recovered_size": 480668,
+  1333→            "gt_match": "docx_0001.docx",
+  1334→            "match_method": "sha256",
+  1335→            "size_diff": 0,
+  1336→            "truncation_fixes_sha256": false,
+  1337→            "failure_reason": ""
+  1338→          },
+  1339→          {
+  1340→            "recovered_name": "carved_0002.zip",
+  1341→            "recovered_sha256": "1138c735109e8df0f420077cb75718135c4e8244b18de845bfc40cfc2c98f058",
+  1342→            "recovered_size": 458352,
+  1343→            "gt_match": "docx_0002.docx",
+  1344→            "match_method": "sha256",
+  1345→            "size_diff": 0,
+  1346→            "truncation_fixes_sha256": false,
+  1347→            "failure_reason": ""
+  1348→          },
+  1349→          {
+  1350→            "recovered_name": "carved_0003.zip",
+  1351→            "recovered_sha256": "d16da2271778e8a56ab4ab6d384c2d11a696e403840a1a0f44ce0125d154ccb8",
+  1352→            "recovered_size": 321715,
+  1353→            "gt_match": "docx_0003.docx",
+  1354→            "match_method": "sha256",
+  1355→            "size_diff": 0,
+  1356→            "truncation_fixes_sha256": false,
+  1357→            "failure_reason": ""
+  1358→          },
+  1359→          {
+  1360→            "recovered_name": "carved_0004.zip",
+  1361→            "recovered_sha256": "459650f3e38b9746c9b13c8bb6c653d3fc3325b9423707d419116d387d0b340f",
+  1362→            "recovered_size": 306334,
+  1363→            "gt_match": "docx_0004.docx",
+  1364→            "match_method": "sha256",
+  1365→            "size_diff": 0,
+  1366→            "truncation_fixes_sha256": false,
+  1367→            "failure_reason": ""
+  1368→          },
+  1369→          {
+  1370→            "recovered_name": "carved_0005.zip",
+  1371→            "recovered_sha256": "52bd87863ae611802c80e5eeebf6b6281bddad83eff5d0cbfddd3d189ae8faae",
+  1372→            "recovered_size": 415176,
+  1373→            "gt_match": "docx_0005.docx",
+  1374→            "match_method": "sha256",
+  1375→            "size_diff": 0,
+  1376→            "truncation_fixes_sha256": false,
+  1377→            "failure_reason": ""
+  1378→          },
+  1379→          {
+  1380→            "recovered_name": "carved_0006.zip",
+  1381→            "recovered_sha256": "cb96924dc824521167c0f7592dddee3b5a911da92e2e35741e6b1fcacaf680b5",
+  1382→            "recovered_size": 184958,
+  1383→            "gt_match": "docx_0006.docx",
+  1384→            "match_method": "sha256",
+  1385→            "size_diff": 0,
+  1386→            "truncation_fixes_sha256": false,
+  1387→            "failure_reason": ""
+  1388→          },
+  1389→          {
+  1390→            "recovered_name": "carved_0007.zip",
+  1391→            "recovered_sha256": "934da98df0ed9ed2f0be9ec7b7b15e042e3e31b5f0cdd95440ae6b12babc502c",
+  1392→            "recovered_size": 373575,
+  1393→            "gt_match": "docx_0007.docx",
+  1394→            "match_method": "sha256",
+  1395→            "size_diff": 0,
+  1396→            "truncation_fixes_sha256": false,
+  1397→            "failure_reason": ""
+  1398→          },
+  1399→          {
+  1400→            "recovered_name": "carved_0008.zip",
+  1401→            "recovered_sha256": "fb83ec5451b263c6261ee573d92fad6c1a0142db35744af9d93875e4ade5fc81",
+  1402→            "recovered_size": 410962,
+  1403→            "gt_match": "docx_0008.docx",
+  1404→            "match_method": "sha256",
+  1405→            "size_diff": 0,
+  1406→            "truncation_fixes_sha256": false,
+  1407→            "failure_reason": ""
+  1408→          },
+  1409→          {
+  1410→            "recovered_name": "carved_0009.zip",
+  1411→            "recovered_sha256": "17da2f8ab3db117c91d393f562d9c369e03241cc2a853f612a604b02b2dc7f65",
+  1412→            "recovered_size": 143064,
+  1413→            "gt_match": "docx_0009.docx",
+  1414→            "match_method": "sha256",
+  1415→            "size_diff": 0,
+  1416→            "truncation_fixes_sha256": false,
+  1417→            "failure_reason": ""
+  1418→          },
+  1419→          {
+  1420→            "recovered_name": "carved_0010.zip",
+  1421→            "recovered_sha256": "ebba6cbdb1c3970d30f8133e2e161f5536e8c6166cac53699a91dc92616b8ebd",
+  1422→            "recovered_size": 475344,
+  1423→            "gt_match": "docx_0010.docx",
+  1424→            "match_method": "sha256",
+  1425→            "size_diff": 0,
+  1426→            "truncation_fixes_sha256": false,
+  1427→            "failure_reason": ""
+  1428→          },
+  1429→          {
+  1430→            "recovered_name": "carved_0011.zip",
+  1431→            "recovered_sha256": "49cc7457f1ab6242fe6d811c54f3a11579079756f1724f7929b86c07678a2b85",
+  1432→            "recovered_size": 152499,
+  1433→            "gt_match": "docx_0011.docx",
+  1434→            "match_method": "sha256",
+  1435→            "size_diff": 0,
+  1436→            "truncation_fixes_sha256": false,
+  1437→            "failure_reason": ""
+  1438→          },
+  1439→          {
+  1440→            "recovered_name": "carved_0012.zip",
+  1441→            "recovered_sha256": "61522670b168d98fdcb8a1fc5e03db017ca44eb7d685f0f86d7124f7f26ef9ac",
+  1442→            "recovered_size": 383546,
+  1443→            "gt_match": "docx_0012.docx",
+  1444→            "match_method": "sha256",
+  1445→            "size_diff": 0,
+  1446→            "truncation_fixes_sha256": false,
+  1447→            "failure_reason": ""
+  1448→          },
+  1449→          {
+  1450→            "recovered_name": "carved_0013.zip",
+  1451→            "recovered_sha256": "557a943d16c328d3f07e587ab2d3b199b7a9b2450ea57076d51197cd4b39c5e1",
+  1452→            "recovered_size": 96837,
+  1453→            "gt_match": "docx_0013.docx",
+  1454→            "match_method": "sha256",
+  1455→            "size_diff": 0,
+  1456→            "truncation_fixes_sha256": false,
+  1457→            "failure_reason": ""
+  1458→          },
+  1459→          {
+  1460→            "recovered_name": "carved_0014.zip",
+  1461→            "recovered_sha256": "0a0bb9f2b14dc5b1a39f777ceb6ac5d406cc40925895d3c3fb9322cce5fe70ae",
+  1462→            "recovered_size": 435963,
+  1463→            "gt_match": "docx_0014.docx",
+  1464→            "match_method": "sha256",
+  1465→            "size_diff": 0,
+  1466→            "truncation_fixes_sha256": false,
+  1467→            "failure_reason": ""
+  1468→          },
+  1469→          {
+  1470→            "recovered_name": "carved_0015.zip",
+  1471→            "recovered_sha256": "ccf3c9babea8a2878192f62c725f327983b457cb587653f65e1a70b0b3bb3a06",
+  1472→            "recovered_size": 312951,
+  1473→            "gt_match": "docx_0015.docx",
+  1474→            "match_method": "sha256",
+  1475→            "size_diff": 0,
+  1476→            "truncation_fixes_sha256": false,
+  1477→            "failure_reason": ""
+  1478→          }
+  1479→        ]
+  1480→      }
+  1481→    },
+  1482→    "zero_origin": "FORMAT_SPECIFIC_PARSER_ISSUES",
+  1483→    "zero_origin_explanation": "El carving funciona para ['B', 'D', 'E'] pero falla para ['A', 'C']. Las causas raíz son específicas por formato: PDF tiene un bug de footer (1 byte), JPEG tiene un problema de deduplicación. El motor de carving en sí funciona — el scanner encuentra firmas correctamente. El problema está en la extracción (footer detection + deduplication), no en la detección (signature scanning).",
+  1484→    "hypothesis_ranking": [
+  1485→      {
+  1486→        "id": "H-CARVING-001",
+  1487→        "statement": "El parser de carving tiene un bug",
+  1488→        "probability": "HIGH",
+  1489→        "evidence": "PDF footer bug: %%EOF vs %%EOF\\n. JPEG deduplication bug: 12/15 files removed.",
+  1490→        "refined": "No es un bug general del parser, sino bugs específicos: footer de PDF y deduplicación de JPEG."
+  1491→      },
+  1492→      {
+  1493→        "id": "H-CARVING-005",
+  1494→        "statement": "Los footers siguen siendo insuficientes",
+  1495→        "probability": "HIGH",
+  1496→        "evidence": "PDF: footer %%EOF no incluye \\n. JPEG: footer FF D9 funciona pero deduplicación elimina archivos.",
+  1497→        "refined": "El footer de PDF es incorrecto (falta \\n). El footer de JPEG funciona pero la deduplicación interfiere."
+  1498→      },
+  1499→      {
+  1500→        "id": "H-CARVING-007",
+  1501→        "statement": "La implementación del carving todavía está incompleta",
+  1502→        "probability": "MEDIUM",
+  1503→        "evidence": "El scanner funciona (encuentra firmas), pero la extracción tiene bugs (PDF footer, JPEG dedup).",
+  1504→        "refined": "El carving está parcialmente implementado: la detección funciona, la extracción tiene bugs."
+  1505→      },
+  1506→      {
+  1507→        "id": "H-CARVING-003",
+  1508→        "statement": "El generador produce archivos poco realistas",
+  1509→        "probability": "LOW",
+  1510→        "evidence": "ZIP/DOCX/PNG carving funciona perfectamente. Los archivos generados son carveables.",
+  1511→        "refined": "El generador produce archivos válidos. El problema está en el carving, no en el generador."
+  1512→      },
+  1513→      {
+  1514→        "id": "H-CARVING-002",
+  1515→        "statement": "El dataset no contiene suficientes formatos carveables",
+  1516→        "probability": "LOW",
+  1517→        "evidence": "Todos los formatos probados son carveables. El problema es la extracción, no la detección."
+  1518→      },
+  1519→      {
+  1520→        "id": "H-CARVING-004",
+  1521→        "statement": "El Judge penaliza excesivamente el carving",
+  1522→        "probability": "LOW",
+  1523→        "evidence": "Cuando el carving extrae datos correctos (ZIP/DOCX/PNG), el Judge los puntúa correctamente."
+  1524→      },
+  1525→      {
+  1526→        "id": "H-CARVING-006",
+  1527→        "statement": "El RVS/FQS favorecen tipos de archivo que carving no puede recuperar",
+  1528→        "probability": "LOW",
+  1529→        "evidence": "Cuando carving funciona (ZIP/DOCX/PNG), RVS/FQS son correctos. No hay sesgo en el scoring."
+  1530→      }
+  1531→    ],
+  1532→    "root_causes": [
+  1533→      {
+  1534→        "id": "RC-001",
+  1535→        "format": "PDF",
+  1536→        "cause": "Footer mismatch: carving motor uses %%EOF (5 bytes) but file generator produces %%EOF\\n (6 bytes)",
+  1537→        "impact": "ALL carved PDF files are 1 byte short. SHA-256 doesn't match.",
+  1538→        "fix": "Change PDF signature footer from %%EOF to %%EOF\\n in motor_carving.py",
+  1539→        "severity": "HIGH — causes 100% PDF carving failure"
+  1540→      },
+  1541→      {
+  1542→        "id": "RC-002",
+  1543→        "format": "JPEG",
+  1544→        "cause": "Deduplication/overlap removal: carving motor finds 15 JPEG signatures but only carves 3 files",
+  1545→        "impact": "Most JPEG files are not carved. The 3 carved files are too short (missing millions of bytes).",
+  1546→        "fix": "Investigate why _deduplicate_carves removes 12/15 JPEG carves. Likely: large files overlap with other signatures.",
+  1547→        "severity": "HIGH — causes near-total JPEG carving failure"
+  1548→      },
+  1549→      {
+  1550→        "id": "RC-003",
+  1551→        "format": "PNG",
+  1552→        "cause": "1 false positive: BMP signature detected within PNG data",
+  1553→        "impact": "Minor — 14/15 PNG files recovered correctly",
+  1554→        "fix": "Improve BMP signature detection to avoid false positives within PNG data",
+  1555→        "severity": "LOW — minor impact on PNG carving"
+  1556→      }
+  1557→    ]
+  1558→  }
+  1559→}

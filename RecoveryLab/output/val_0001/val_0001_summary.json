@@ -1,0 +1,100 @@
+{
+  "experiment_id": "VAL-0001",
+  "date": "2026-07-30 22:32",
+  "versions": {
+    "protocol": "v1.5",
+    "judge": "N/A"
+  },
+  "config": {
+    "files_per_format": 100,
+    "seed": 42,
+    "formats": [
+      "JPEG",
+      "PNG",
+      "PDF",
+      "ZIP",
+      "DOCX"
+    ]
+  },
+  "format_results": {
+    "JPEG": {
+      "format": "JPEG",
+      "files_generated": 100,
+      "files_carved": 53,
+      "files_matched_exact": 1,
+      "files_false_positive": 52,
+      "files_missing": 99,
+      "files_truncated": 50,
+      "exact_match_rate": 0.01,
+      "carve_rate": 0.53,
+      "signatures_found": {
+        "JPEG": 99,
+        "BMP": 2
+      }
+    },
+    "PNG": {
+      "format": "PNG",
+      "files_generated": 100,
+      "files_carved": 71,
+      "files_matched_exact": 70,
+      "files_false_positive": 1,
+      "files_missing": 30,
+      "files_truncated": 0,
+      "exact_match_rate": 0.7,
+      "carve_rate": 0.71,
+      "signatures_found": {
+        "PNG": 100,
+        "BMP": 2
+      }
+    },
+    "PDF": {
+      "format": "PDF",
+      "files_generated": 100,
+      "files_carved": 81,
+      "files_matched_exact": 0,
+      "files_false_positive": 81,
+      "files_missing": 100,
+      "files_truncated": 80,
+      "exact_match_rate": 0.0,
+      "carve_rate": 0.81,
+      "signatures_found": {
+        "PDF": 100,
+        "BMP": 1
+      }
+    },
+    "ZIP": {
+      "format": "ZIP",
+      "files_generated": 100,
+      "files_carved": 18,
+      "files_matched_exact": 17,
+      "files_false_positive": 1,
+      "files_missing": 83,
+      "files_truncated": 0,
+      "exact_match_rate": 0.17,
+      "carve_rate": 0.18,
+      "signatures_found": {
+        "ZIP": 100,
+        "DOCX": 100,
+        "XLSX": 100,
+        "BMP": 2
+      }
+    },
+    "DOCX": {
+      "format": "DOCX",
+      "files_generated": 100,
+      "files_carved": 41,
+      "files_matched_exact": 40,
+      "files_false_positive": 1,
+      "files_missing": 60,
+      "files_truncated": 0,
+      "exact_match_rate": 0.4,
+      "carve_rate": 0.41,
+      "signatures_found": {
+        "ZIP": 100,
+        "DOCX": 100,
+        "XLSX": 100,
+        "BMP": 2
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "defect_id": "RC-003",
+  "title": "Deduplicación escala-dependiente — elimina archivos válidos proporcionalmente a N",
+  "origin": "VAL-0001",
+  "date_identified": "2026-07-31",
+  "severity": "HIGH",
+  "status": "IDENTIFIED",
+  "defect_type": "ALGORITHMIC_POLICY",
+
+  "observation": {
+    "pure": "En VAL-0001 (N=100 por formato), los parsers de carving produjeron: ZIP 17/100 match exacto, DOCX 40/100, PNG 70/100, PDF 0/100, JPEG 1/100. El scanner de firmas detectó 100 firmas en cada formato. Sin embargo, la deduplicación eliminó la mayoría de los archivos carved. En DIAG-0001 (N=15), ZIP obtuvo 15/15 y DOCX obtuvo 15/15.",
+    "context": "La heurística de deduplicación (_deduplicate_carves) elimina archivos cuando sus rangos se superponen en más del 50% del más pequeño. Con más archivos en la imagen, más archivos se superponen, y más archivos se eliminan. Esto es un problema de escala, no de formato."
+  },
+
+  "interpretation": "La deduplicación es un problema que empeora con la escala. No es específico de JPEG (como se pensaba en DIAG-0001), sino que afecta a TODOS los formatos cuando hay suficientes archivos. El efecto es proporcional a la densidad de archivos en la imagen.",
+
+  "evidence": {
+    "experiment": "VAL-0001",
+    "comparison_with_DIAG": {
+      "DIAG-0001_N15": {
+        "ZIP": {"match_rate": 1.0, "carved": 15, "total": 15},
+        "DOCX": {"match_rate": 1.0, "carved": 15, "total": 15},
+        "PNG": {"match_rate": 0.933, "carved": 14, "total": 15},
+        "PDF": {"match_rate": 0.0, "carved": 15, "total": 15},
+        "JPEG": {"match_rate": 0.0, "carved": 3, "total": 15}
+      },
+      "VAL-0001_N100": {
+        "ZIP": {"match_rate": 0.17, "carved": 17, "total": 100},
+        "DOCX": {"match_rate": 0.40, "carved": 40, "total": 100},
+        "PNG": {"match_rate": 0.70, "carved": 70, "total": 100},
+        "PDF": {"match_rate": 0.0, "carved": 0, "total": 100},
+        "JPEG": {"match_rate": 0.01, "carved": 1, "total": 100}
+      }
+    },
+    "signatures_found": {
+      "ZIP": {"ZIP": 100, "DOCX": 100, "XLSX": 100, "BMP": 2},
+      "DOCX": {"ZIP": 100, "DOCX": 100, "XLSX": 100, "BMP": 2}
+    },
+    "key_observation": "El scanner detecta 100 firmas ZIP pero solo 18 archivos son carved. La deduplicación elimina 82/100 archivos."
+  },
+
+  "scope": {
+    "affected_component": "motors/motor_carving.py — _deduplicate_carves method",
+    "affected_formats": ["ALL — severity proportional to file density"],
+    "risk": "HIGH — invalidates conclusions drawn at N=15 scale"
+  },
+
+  "root_cause_analysis": {
+    "location": "motor_carving.py, _deduplicate_carves()",
+    "mechanism": "Cuando dos firmas detectadas tienen rangos superpuestos (start_A < end_B), el método elimina la carve más corta. Con más archivos, más rangos se superponen. El problema se agrava cuando ZIP/DOCX/XLSX comparten la misma firma PK (300 firmas para 100 archivos), creando 3x más superposiciones.",
+    "amplification_factor": "ZIP/DOCX/XLSX comparten la firma PK\\x03\\x04. Para 100 archivos, hay 300 firmas (100 ZIP + 100 DOCX + 100 XLSX) compitiendo por los mismos rangos. La deduplicación resuelve las colisiones eliminando la mayoría.",
+    "why_it_matters": "DIAG-0001 (N=15) concluyó que ZIP/DOCX funcionaban perfectamente. VAL-0001 (N=100) demuestra que esa conclusión es escala-dependiente. A escala real, la deduplicación es la principal fuente de pérdida de archivos."
+  },
+
+  "claims_affected": [
+    "CLAIM-001 (si menciona resultados de carving como baseline)",
+    "DIAG-0001 conclusiones sobre '3 parsers funcionan' son escala-dependientes"
+  ],
+
+  "remediation_proposal": "PENDIENTE — requiere diseño profundo. No es un parche simple. Opciones: A-E como en RC-002, pero con urgencia mayor porque afecta a TODOS los formatos.",
+
+  "notes": "Este defecto fue descubierto por VAL-0001, que aumentó N de 15 a 100. Demuestra que las conclusiones de DIAG-0001 son válidas solo a baja escala. La deduplicación es el problema central del carving motor, no un problema secundario de JPEG."
+}

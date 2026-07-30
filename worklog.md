@@ -525,3 +525,44 @@ Stage Summary:
 - Carving motor weakness identified: doesn't recover files even on corrupted images
 - Evidence chain: EXP-0001 → EXP-0002 → EXP-0003 → EXP-0005 (4 experiments)
 - RCR (Reproducible Claims Ratio): 2/5 claims at REPEATED level (40%)
+
+---
+Task ID: 15
+Agent: Main
+Task: Novena ronda de auditoría — RC-001/RC-002, RP-001, VAL-0001, RC-003
+
+Work Log:
+- Created formal defect records:
+  - RC-001: PDF footer inconsistent (missing \n after %%EOF). Implementation bug, 1 byte off, affects 100% of PDFs.
+  - RC-002: JPEG deduplication too aggressive. Algorithmic policy, not a simple bug. 5 design options documented.
+  - RC-003: Scale-dependent deduplication (NEW — discovered by VAL-0001). Affects ALL formats when N increases.
+- Created RP-001: Remediation Proposal for PDF footer. Formal traceable modification: change footer from %%EOF to %%EOF\n.
+  - Risk: LOW. Impact: Only PDF parser. Expected OU after fix: ~1.0.
+  - Implementation order: Approve RP-001 → Make change → Run VAL-0001 → Update RC-001 → Commit.
+- Designed and implemented VAL-0001: "¿Los parsers individuales funcionan correctamente?"
+  - Family: VAL (Validation of measurement instruments)
+  - No MFT, no corruption, no RVS, no Judge, no hypotheses
+  - Only: Known input → Known output
+  - 100 files per format (JPEG, PNG, PDF, ZIP, DOCX)
+- EXECUTED VAL-0001 with groundbreaking results:
+  - JPEG: 1/100 exact match, 53 carved, 50 truncated (RC-002 + RC-003)
+  - PNG: 70/100 exact match, 71 carved, 30 missing (RC-003)
+  - PDF: 0/100 exact match, 81 carved, 80 truncated by 1 byte (RC-001)
+  - ZIP: 17/100 exact match, 18 carved, 83 missing (RC-003 — catastrophic!)
+  - DOCX: 40/100 exact match, 41 carved, 60 missing (RC-003)
+- KEY DISCOVERY: Scale-dependent deduplication (RC-003)
+  - DIAG-0001 (N=15): ZIP 100%, DOCX 100% — "3 parsers work"
+  - VAL-0001 (N=100): ZIP 17%, DOCX 40% — deduplication is the primary problem
+  - The scanner detects 100 ZIP signatures but only 18 files are carved
+  - ZIP/DOCX/XLSX share PK header → 300 signatures for 100 files → deduplication eliminates most
+- Updated CLAIM-001: Amended to be extremely specific, with scale-dependence limitations
+- Updated gate_index.json: All claims now reflect VAL-0001 findings
+- No code was modified during this entire session — pure observation and documentation
+
+Stage Summary:
+- RC-001, RC-002, RC-003 formalized as JSON defect records in /RecoveryLab/defects/
+- RP-001 formalized as JSON remediation proposal in /RecoveryLab/remediation_proposals/
+- VAL-0001 experiment script and results in /RecoveryLab/output/val_0001/
+- CLAIM-001 amended with scale-dependence limitations
+- RC-003 is the most important new finding: deduplication is the primary problem, not just JPEG
+- The "3 parsers work" conclusion from DIAG-0001 is scale-dependent and only valid at N=15

@@ -1,0 +1,60 @@
+{
+  "experiment_id": "VAL-0001",
+  "experiment_type": "VALIDATION",
+  "date": "2026-07-30 22:32",
+  "protocol_version": "v1.5",
+  "judge_version": "N/A",
+  "question": "¿Los parsers individuales funcionan correctamente?",
+  "design": "100 archivos por formato, sin corrupción, sin Judge, sin hipótesis",
+  "formats_tested": [
+    "JPEG",
+    "PNG",
+    "PDF",
+    "ZIP",
+    "DOCX"
+  ],
+  "observation_pure": {
+    "JPEG": {
+      "files_generated": 100,
+      "files_matched_exact": 1,
+      "files_carved": 53,
+      "files_missing": 99,
+      "files_false_positive": 52,
+      "exact_match_rate": 0.01
+    },
+    "PNG": {
+      "files_generated": 100,
+      "files_matched_exact": 70,
+      "files_carved": 71,
+      "files_missing": 30,
+      "files_false_positive": 1,
+      "exact_match_rate": 0.7
+    },
+    "PDF": {
+      "files_generated": 100,
+      "files_matched_exact": 0,
+      "files_carved": 81,
+      "files_missing": 100,
+      "files_false_positive": 81,
+      "exact_match_rate": 0.0
+    },
+    "ZIP": {
+      "files_generated": 100,
+      "files_matched_exact": 17,
+      "files_carved": 18,
+      "files_missing": 83,
+      "files_false_positive": 1,
+      "exact_match_rate": 0.17
+    },
+    "DOCX": {
+      "files_generated": 100,
+      "files_matched_exact": 40,
+      "files_carved": 41,
+      "files_missing": 60,
+      "files_false_positive": 1,
+      "exact_match_rate": 0.4
+    }
+  },
+  "no_interpretation": true,
+  "notes": "Observación pura. No se modificó código. No se interpretan resultados."
+}

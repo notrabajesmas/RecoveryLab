@@ -1,11 +1,12 @@
 [
   {
     "claim_id": "CLAIM-001",
-    "title": "MFT-First supera a Carving en Overall Utility cuando los metadatos son confiables",
-    "status": "ACTIVE",
+    "title": "En EXP-0001 y DIAG-0001, MFT-First obtuvo OU superior a Carving Motor en datasets sinteticos",
+    "status": "ACTIVE — AMENDED",
     "evidence_level": "OBSERVED",
-    "evidence_count": 1,
-    "datasets_count": 1
+    "evidence_count": 2,
+    "datasets_count": 6,
+    "limitations": "Escala-dependiente (RC-003). Causas raiz identificadas (RC-001, RC-002, RC-003). No se puede generalizar a 'MFT-First es mejor'."
   },
   {
     "claim_id": "CLAIM-002",
@@ -29,14 +30,16 @@
     "status": "ACTIVE",
     "evidence_level": "OBSERVED",
     "evidence_count": 1,
-    "datasets_count": 1
+    "datasets_count": 1,
+    "note": "RC-003 refuerza este claim: el carving limitado es escala-dependiente"
   },
   {
     "claim_id": "CLAIM-005",
     "title": "JPEG, PNG y PDF son parsers de referencia dorada (19/19 tests)",
-    "status": "ACTIVE",
+    "status": "ACTIVE — UNDER_REVIEW",
     "evidence_level": "OBSERVED",
     "evidence_count": 1,
-    "datasets_count": 1
+    "datasets_count": 1,
+    "note": "VAL-0001 muestra que a N=100, los parsers no son dorada: ZIP 17%, DOCX 40%. Necesita reevaluacion."
   }
 ]

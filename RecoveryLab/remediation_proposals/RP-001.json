@@ -1,0 +1,66 @@
+{
+  "proposal_id": "RP-001",
+  "title": "Fix PDF footer extraction — incluir newline final en firma de cierre",
+  "origin": "DIAG-0001",
+  "defect_ref": "RC-001",
+  "date_proposed": "2026-07-31",
+  "status": "PROPOSED",
+  "author": "RecoveryLab — derivado de auditoría externa",
+
+  "problem_statement": {
+    "observation": "En DIAG-0001, los 15/15 PDFs carved difieren del ground truth por exactamente 1 byte (0x0A = newline). El carving motor usa %%EOF como footer pero el generador produce %%EOF\\n.",
+    "impact": "100% de los PDFs carved fallan SHA-256, resultando en OU = 0.0 para PDF en Carving Motor."
+  },
+
+  "evidence": {
+    "experiment": "DIAG-0001",
+    "dataset": "C (PDF-only, 15 archivos)",
+    "finding": "15/15 PDFs difieren por exactamente 1 byte al final. Agregar b'\\n' restaura SHA-256 correcto en 15/15 casos.",
+    "confidence": "HIGH — evidencia directa y consistente"
+  },
+
+  "root_cause": {
+    "component": "motors/motor_carving.py",
+    "location": "PDF_SIGNATURES['footer']",
+    "current_value": "b'%%EOF'",
+    "expected_value": "b'%%EOF\\n'"
+  },
+
+  "proposed_fix": {
+    "description": "Cambiar el footer de la firma PDF de b'%%EOF' a b'%%EOF\\n' en motor_carving.py",
+    "code_change": "PDF_SIGNATURES: footer = b'%%EOF\\n'",
+    "lines_affected": 1,
+    "complexity": "TRIVIAL — cambio de un solo literal"
+  },
+
+  "expected_impact": {
+    "component": "Solo PDF parser del carving motor",
+    "formats_affected": ["PDF"],
+    "formats_unaffected": ["ZIP", "DOCX", "PNG", "JPEG"],
+    "expected_ou_after_fix": "PDF OU deberia subir de 0.0 a ~1.0 (basado en evidencia DIAG-0001: 15/15 truncation-fixable)"
+  },
+
+  "risk_assessment": {
+    "risk_level": "LOW",
+    "rationale": "El cambio solo afecta la delimitación de PDFs. Los otros formatos no usan este footer. El estándar PDF permite %%EOF con o sin newline, pero el generador del laboratorio siempre produce %%EOF\\n. El cambio hace el carving consistente con el generador.",
+    "potential_side_effects": "Ninguna identificada. Si se usaran PDFs externos que terminan en %%EOF sin newline, el carving no los detectaría. Pero ese escenario no existe en el laboratorio actual."
+  },
+
+  "claims_affected": [],
+
+  "validation_plan": {
+    "pre_fix": "DIAG-0001 ya establece el baseline: PDF OU = 0.0",
+    "post_fix": "Ejecutar VAL-0001 (validación de parsers) con PDFs. Esperado: PDF OU = 1.0.",
+    "regression": "Verificar que ZIP, DOCX, PNG, JPEG OU no cambian post-fix."
+  },
+
+  "implementation_order": {
+    "step_1": "Aprobar RP-001",
+    "step_2": "Hacer el cambio en motor_carving.py",
+    "step_3": "Ejecutar VAL-0001 para validar",
+    "step_4": "Actualizar RC-001 status a FIXED",
+    "step_5": "Commit con referencia a RP-001 y RC-001"
+  },
+
+  "notes": "Este RP fue creado ANTES de hacer el fix. Transforma una intuición en una modificación trazable. El protocolo exige que toda modificación al código tenga un RP asociado con evidencia, riesgo y plan de validación."
+}
