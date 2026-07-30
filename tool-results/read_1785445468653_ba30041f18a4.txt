@@ -1,0 +1,502 @@
+     1→     1→     1→#!/usr/bin/env python3
+     2→     2→     2→"""
+     3→     3→     3→Generate Research Protocol v1.2 — RecoveryLab
+     4→     4→     4→===============================================
+     5→     5→     5→Updated version incorporating second round of external review.
+     6→     6→     6→
+     7→     7→     7→Key changes from v1.1:
+     8→     8→     8→  1. Added Section 12: Threats to Validity (Internal, External, Statistical, Construct)
+     9→     9→     9→  2. Added Section 13: Hypothesis Set v1.0 (Frozen) — no rewriting, new = H9+, refuted = marked
+    10→    10→    10→  3. Added ★★★ KPI as primary progress metric throughout the document
+    11→    11→    11→  4. Version bump to v1.2
+    12→    12→    12→"""
+    13→    13→    13→
+    14→    14→    14→import sys
+    15→    15→    15→import os
+    16→    16→    16→
+    17→    17→    17→DOCX_SCRIPTS = os.path.join("/home/z/my-project/skills/docx", "scripts")
+    18→    18→    18→if DOCX_SCRIPTS not in sys.path:
+    19→    19→    19→    sys.path.insert(0, DOCX_SCRIPTS)
+    20→    20→    20→
+    21→    21→    21→from docx import Document
+    22→    22→    22→from docx.shared import Inches, Pt, Cm, RGBColor, Emu
+    23→    23→    23→from docx.enum.text import WD_ALIGN_PARAGRAPH
+    24→    24→    24→from docx.enum.table import WD_TABLE_ALIGNMENT
+    25→    25→    25→from docx.enum.section import WD_ORIENT
+    26→    26→    26→from docx.oxml.ns import qn, nsdecls
+    27→    27→    27→from docx.oxml import parse_xml
+    28→    28→    28→import datetime
+    29→    29→    29→
+    30→    30→    30→# ─── Color Palette ────────────────────────────────────────────────────────────
+    31→    31→    31→P = {
+    32→    32→    32→    "primary": "#162032",
+    33→    33→    33→    "body": "#1C2A3D",
+    34→    34→    34→    "secondary": "#5B6B7D",
+    35→    35→    35→    "accent": "#8B7E5A",
+    36→    36→    36→    "surface": "#F5F7FA",
+    37→    37→    37→    "white": "#FFFFFF",
+    38→    38→    38→    "star_gold": "#C9A84C",
+    39→    39→    39→    "star_dim": "#B0B0B0",
+    40→    40→    40→    "red": "#C0392B",
+    41→    41→    41→    "green": "#27AE60",
+    42→    42→    42→    "orange": "#E67E22",
+    43→    43→    43→    "blue": "#2980B9",
+    44→    44→    44→    "threat_open": "#E74C3C",
+    45→    45→    45→    "threat_mitigated": "#F39C12",
+    46→    46→    46→    "threat_resolved": "#27AE60",
+    47→    47→    47→}
+    48→    48→    48→
+    49→    49→    49→def c(hex_color):
+    50→    50→    50→    hex_color = hex_color.replace("#", "")
+    51→    51→    51→    return RGBColor(int(hex_color[:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16))
+    52→    52→    52→
+    53→    53→    53→def set_cell_shading(cell, color_hex):
+    54→    54→    54→    shading = parse_xml(f'<w:shd {nsdecls("w")} w:fill="{color_hex.replace("#", "")}"/>')
+    55→    55→    55→    cell._tc.get_or_add_tcPr().append(shading)
+    56→    56→    56→
+    57→    57→    57→def add_styled_table(doc, headers, rows, col_widths=None):
+    58→    58→    58→    table = doc.add_table(rows=1 + len(rows), cols=len(headers))
+    59→    59→    59→    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    60→    60→    60→    table.style = 'Table Grid'
+    61→    61→    61→    for i, header in enumerate(headers):
+    62→    62→    62→        cell = table.rows[0].cells[i]
+    63→    63→    63→        cell.text = ""
+    64→    64→    64→        p = cell.paragraphs[0]
+    65→    65→    65→        run = p.add_run(header)
+    66→    66→    66→        run.bold = True
+    67→    67→    67→        run.font.size = Pt(10)
+    68→    68→    68→        run.font.color.rgb = c(P["white"])
+    69→    69→    69→        run.font.name = "Calibri"
+    70→    70→    70→        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    71→    71→    71→        set_cell_shading(cell, P["primary"])
+    72→    72→    72→    for row_idx, row_data in enumerate(rows):
+    73→    73→    73→        for col_idx, cell_text in enumerate(row_data):
+    74→    74→    74→            cell = table.rows[row_idx + 1].cells[col_idx]
+    75→    75→    75→            cell.text = ""
+    76→    76→    76→            p = cell.paragraphs[0]
+    77→    77→    77→            run = p.add_run(str(cell_text))
+    78→    78→    78→            run.font.size = Pt(9.5)
+    79→    79→    79→            run.font.name = "Calibri"
+    80→    80→    80→            run.font.color.rgb = c(P["body"])
+    81→    81→    81→            if row_idx % 2 == 1:
+    82→    82→    82→                set_cell_shading(cell, P["surface"])
+    83→    83→    83→    if col_widths:
+    84→    84→    84→        for row in table.rows:
+    85→    85→    85→            for idx, width in enumerate(col_widths):
+    86→    86→    86→                if idx < len(row.cells):
+    87→    87→    87→                    row.cells[idx].width = Cm(width)
+    88→    88→    88→    return table
+    89→    89→    89→
+    90→    90→    90→def add_callout_box(doc, title, text, color=P["accent"]):
+    91→    91→    91→    p = doc.add_paragraph()
+    92→    92→    92→    p.paragraph_format.space_before = Pt(10)
+    93→    93→    93→    p.paragraph_format.space_after = Pt(4)
+    94→    94→    94→    run = p.add_run(title)
+    95→    95→    95→    run.bold = True
+    96→    96→    96→    run.font.size = Pt(11)
+    97→    97→    97→    run.font.color.rgb = c(color)
+    98→    98→    98→    run.font.name = "Calibri"
+    99→    99→    99→    p = doc.add_paragraph()
+   100→   100→   100→    p.paragraph_format.left_indent = Cm(0.5)
+   101→   101→   101→    run = p.add_run(text)
+   102→   102→   102→    run.font.size = Pt(11)
+   103→   103→   103→    run.font.name = "Calibri"
+   104→   104→   104→    run.font.color.rgb = c(P["body"])
+   105→   105→   105→    run.italic = True
+   106→   106→   106→
+   107→   107→   107→
+   108→   108→   108→def build_research_protocol():
+   109→   109→   109→    doc = Document()
+   110→   110→   110→
+   111→   111→   111→    # ─── Page Setup ────────────────────────────────────────────────────────
+   112→   112→   112→    section = doc.sections[0]
+   113→   113→   113→    section.page_width = Cm(21.0)
+   114→   114→   114→    section.page_height = Cm(29.7)
+   115→   115→   115→    section.top_margin = Cm(2.54)
+   116→   116→   116→    section.bottom_margin = Cm(2.54)
+   117→   117→   117→    section.left_margin = Cm(3.0)
+   118→   118→   118→    section.right_margin = Cm(2.5)
+   119→   119→   119→
+   120→   120→   120→    style = doc.styles['Normal']
+   121→   121→   121→    font = style.font
+   122→   122→   122→    font.name = 'Calibri'
+   123→   123→   123→    font.size = Pt(11)
+   124→   124→   124→    font.color.rgb = c(P["body"])
+   125→   125→   125→
+   126→   126→   126→    # ═══════════════════════════════════════════════════════════════════════
+   127→   127→   127→    # COVER PAGE
+   128→   128→   128→    # ═══════════════════════════════════════════════════════════════════════
+   129→   129→   129→    for _ in range(4):
+   130→   130→   130→        doc.add_paragraph()
+   131→   131→   131→
+   132→   132→   132→    p = doc.add_paragraph()
+   133→   133→   133→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   134→   134→   134→    run = p.add_run("RECOVERYLAB")
+   135→   135→   135→    run.font.size = Pt(14)
+   136→   136→   136→    run.font.color.rgb = c(P["secondary"])
+   137→   137→   137→    run.font.name = "Calibri"
+   138→   138→   138→    run.bold = True
+   139→   139→   139→
+   140→   140→   140→    p = doc.add_paragraph()
+   141→   141→   141→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   142→   142→   142→    run = p.add_run("Research Protocol v1.2")
+   143→   143→   143→    run.font.size = Pt(28)
+   144→   144→   144→    run.font.color.rgb = c(P["primary"])
+   145→   145→   145→    run.font.name = "Calibri"
+   146→   146→   146→    run.bold = True
+   147→   147→   147→
+   148→   148→   148→    p = doc.add_paragraph()
+   149→   149→   149→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   150→   150→   150→    run = p.add_run("Congelar la arquitectura, auditar la ciencia")
+   151→   151→   151→    run.font.size = Pt(14)
+   152→   152→   152→    run.font.color.rgb = c(P["accent"])
+   153→   153→   153→    run.font.name = "Calibri"
+   154→   154→   154→    run.italic = True
+   155→   155→   155→
+   156→   156→   156→    p = doc.add_paragraph()
+   157→   157→   157→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   158→   158→   158→    run = p.add_run("Revision incorporando auditoria externa (ronda 2)")
+   159→   159→   159→    run.font.size = Pt(11)
+   160→   160→   160→    run.font.color.rgb = c(P["secondary"])
+   161→   161→   161→    run.font.name = "Calibri"
+   162→   162→   162→
+   163→   163→   163→    p = doc.add_paragraph()
+   164→   164→   164→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   165→   165→   165→    run = p.add_run("_" * 50)
+   166→   166→   166→    run.font.color.rgb = c(P["accent"])
+   167→   167→   167→    run.font.size = Pt(10)
+   168→   168→   168→
+   169→   169→   169→    # ── KPI Hero ──
+   170→   170→   170→    p = doc.add_paragraph()
+   171→   171→   171→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   172→   172→   172→    p.paragraph_format.space_before = Pt(20)
+   173→   173→   173→    p.paragraph_format.space_after = Pt(4)
+   174→   174→   174→    run = p.add_run("Indicador Principal de Progreso")
+   175→   175→   175→    run.font.size = Pt(10)
+   176→   176→   176→    run.font.color.rgb = c(P["secondary"])
+   177→   177→   177→    run.font.name = "Calibri"
+   178→   178→   178→    run.bold = True
+   179→   179→   179→
+   180→   180→   180→    p = doc.add_paragraph()
+   181→   181→   181→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   182→   182→   182→    p.paragraph_format.space_after = Pt(4)
+   183→   183→   183→    run = p.add_run("Resultados con 3 estrellas o mas: 2 / 15")
+   184→   184→   184→    run.font.size = Pt(16)
+   185→   185→   185→    run.font.color.rgb = c(P["accent"])
+   186→   186→   186→    run.font.name = "Calibri"
+   187→   187→   187→    run.bold = True
+   188→   188→   188→
+   189→   189→   189→    p = doc.add_paragraph()
+   190→   190→   190→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   191→   191→   191→    run = p.add_run("Objetivo Fase A: alcanzar al menos 5 resultados con 3+ estrellas")
+   192→   192→   192→    run.font.size = Pt(10)
+   193→   193→   193→    run.font.color.rgb = c(P["secondary"])
+   194→   194→   194→    run.font.name = "Calibri"
+   195→   195→   195→
+   196→   196→   196→    p = doc.add_paragraph()
+   197→   197→   197→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   198→   198→   198→    run = p.add_run("_" * 50)
+   199→   199→   199→    run.font.color.rgb = c(P["accent"])
+   200→   200→   200→    run.font.size = Pt(10)
+   201→   201→   201→
+   202→   202→   202→    # Metadata
+   203→   203→   203→    p = doc.add_paragraph()
+   204→   204→   204→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   205→   205→   205→    run = p.add_run("Documento vivo - Version 1.2")
+   206→   206→   206→    run.font.size = Pt(11)
+   207→   207→   207→    run.font.color.rgb = c(P["secondary"])
+   208→   208→   208→    run.font.name = "Calibri"
+   209→   209→   209→
+   210→   210→   210→    p = doc.add_paragraph()
+   211→   211→   211→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   212→   212→   212→    run = p.add_run(f"Fecha: {datetime.datetime.now().strftime('%Y-%m-%d')}")
+   213→   213→   213→    run.font.size = Pt(11)
+   214→   214→   214→    run.font.color.rgb = c(P["secondary"])
+   215→   215→   215→
+   216→   216→   216→    p = doc.add_paragraph()
+   217→   217→   217→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   218→   218→   218→    run = p.add_run("Clasificacion: INTERNO - Solo para uso del laboratorio")
+   219→   219→   219→    run.font.size = Pt(10)
+   220→   220→   220→    run.font.color.rgb = c(P["red"])
+   221→   221→   221→
+   222→   222→   222→    # Change log
+   223→   223→   223→    p = doc.add_paragraph()
+   224→   224→   224→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   225→   225→   225→    p.paragraph_format.space_before = Pt(16)
+   226→   226→   226→    run = p.add_run("Cambios respecto a v1.1")
+   227→   227→   227→    run.font.size = Pt(10)
+   228→   228→   228→    run.font.color.rgb = c(P["secondary"])
+   229→   229→   229→    run.bold = True
+   230→   230→   230→
+   231→   231→   231→    changes = [
+   232→   232→   232→        "Nueva Seccion 12: Threats to Validity (interna, externa, estadistica, constructiva)",
+   233→   233→   233→        "Nueva Seccion 13: Hypothesis Set v1.0 (Frozen) - hipotesis congeladas, no se reescriben",
+   234→   234→   234→        "KPI de progreso: resultados con 3+ estrellas como indicador principal",
+   235→   235→   235→    ]
+   236→   236→   236→    for change in changes:
+   237→   237→   237→        p = doc.add_paragraph()
+   238→   238→   238→        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   239→   239→   239→        run = p.add_run(f"  {change}")
+   240→   240→   240→        run.font.size = Pt(9)
+   241→   241→   241→        run.font.color.rgb = c(P["secondary"])
+   242→   242→   242→
+   243→   243→   243→    doc.add_page_break()
+   244→   244→   244→
+   245→   245→   245→    # ═══════════════════════════════════════════════════════════════════════
+   246→   246→   246→    # SECTION 1: PREGUNTA CENTRAL
+   247→   247→   247→    # ═══════════════════════════════════════════════════════════════════════
+   248→   248→   248→    h = doc.add_heading("1. Pregunta Central del Proyecto", level=1)
+   249→   249→   249→    for run in h.runs:
+   250→   250→   250→        run.font.color.rgb = c(P["primary"])
+   251→   251→   251→
+   252→   252→   252→    p = doc.add_paragraph()
+   253→   253→   253→    run = p.add_run(
+   254→   254→   254→        "El proyecto ya no gira alrededor del Motor C. Gira alrededor de una pregunta:"
+   255→   255→   255→    )
+   256→   256→   256→    run.font.size = Pt(11)
+   257→   257→   257→
+   258→   258→   258→    p = doc.add_paragraph()
+   259→   259→   259→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   260→   260→   260→    p.paragraph_format.space_before = Pt(12)
+   261→   261→   261→    p.paragraph_format.space_after = Pt(12)
+   262→   262→   262→    run = p.add_run(
+   263→   263→   263→        "\u00bfComo medir objetivamente la utilidad de una estrategia de recuperacion?"
+   264→   264→   264→    )
+   265→   265→   265→    run.font.size = Pt(14)
+   266→   266→   266→    run.font.color.rgb = c(P["accent"])
+   267→   267→   267→    run.bold = True
+   268→   268→   268→    run.italic = True
+   269→   269→   269→
+   270→   270→   270→    p = doc.add_paragraph()
+   271→   271→   271→    run = p.add_run(
+   272→   272→   272→        "Esta pregunta es mucho mas amplia que cualquier motor individual. Es mucho mas dificil de copiar. "
+   273→   273→   273→        "Y es la base sobre la cual se construye todo el proyecto. Si el laboratorio demuestra que sus resultados "
+   274→   274→   274→        "son reproducibles, comparables y resisten auditorias externas, habremos construido algo que vale "
+   275→   275→   275→        "mucho mas que un motor de recuperacion: una infraestructura de evaluacion objetiva que es "
+   276→   276→   276→        "extraordinariamente dificil de desarrollar y de replicar."
+   277→   277→   277→    )
+   278→   278→   278→    run.font.size = Pt(11)
+   279→   279→   279→
+   280→   280→   280→    # ═══════════════════════════════════════════════════════════════════════
+   281→   281→   281→    # SECTION 2: VARIABLES EXPERIMENTALES
+   282→   282→   282→    # ═══════════════════════════════════════════════════════════════════════
+   283→   283→   283→    h = doc.add_heading("2. Variables Experimentales", level=1)
+   284→   284→   284→    for run in h.runs:
+   285→   285→   285→        run.font.color.rgb = c(P["primary"])
+   286→   286→   286→
+   287→   287→   287→    h2 = doc.add_heading("2.1 Variable Independiente", level=2)
+   288→   288→   288→    for run in h2.runs:
+   289→   289→   289→        run.font.color.rgb = c(P["primary"])
+   290→   290→   290→
+   291→   291→   291→    p = doc.add_paragraph()
+   292→   292→   292→    run = p.add_run(
+   293→   293→   293→        "La variable independiente es aquella que el experimentador controla. Solo una debe cambiar "
+   294→   294→   294→        "por experimento. Si cambian dos a la vez, las conclusiones se vuelven ambiguas. Este es "
+   295→   295→   295→        "el principio fundamental del control experimental: cada experimento debe aislar exactamente "
+   296→   296→   296→        "un factor para que la relacion causal sea interpretable. Cuando dos variables cambian "
+   297→   297→   297→        "simultaneamente, es imposible determinar cual de ellas produjo el efecto observado, y "
+   298→   298→   298→        "cualquier conclusion queda invalidada por esta confoundacion."
+   299→   299→   299→    )
+   300→   300→   300→    run.font.size = Pt(11)
+   301→   301→   301→
+   302→   302→   302→    add_styled_table(
+   303→   303→   303→        doc,
+   304→   304→   304→        ["Variable Independiente", "Valores", "Experimento Asociado"],
+   305→   305→   305→        [
+   306→   306→   306→            ["Tipo de dano", "MFT parcial, head crash, sectores intermitentes, ruido aleatorio", "H4 Matrix"],
+   307→   307→   307→            ["Nivel de dano", "0%, 10%, 20%, ..., 100%", "Crossover Curve"],
+   308→   308→   308→            ["Formato de archivo", "JPEG, PNG, PDF (congelados)", "H5 Per-Format"],
+   309→   309→   309→            ["Estrategia", "Carving, MFT-First, Hybrid, Motor C", "H1.1 / H2"],
+   310→   310→   310→            ["Presupuesto de lectura", "0, 100, 500, 1000, 5000 sectores", "H1.7 Budget"],
+   311→   311→   311→        ],
+   312→   312→   312→        col_widths=[4.0, 6.0, 5.0],
+   313→   313→   313→    )
+   314→   314→   314→
+   315→   315→   315→    p = doc.add_paragraph()
+   316→   316→   316→    p.paragraph_format.space_before = Pt(8)
+   317→   317→   317→    run = p.add_run("Regla critica: ")
+   318→   318→   318→    run.bold = True
+   319→   319→   319→    run.font.color.rgb = c(P["red"])
+   320→   320→   320→    run.font.size = Pt(11)
+   321→   321→   321→    run2 = p.add_run(
+   322→   322→   322→        "Solo UNA variable independiente por experimento. Si se cambia el formato Y el nivel de dano "
+   323→   323→   323→        "simultaneamente, no se puede atribuir la diferencia a ninguno de los dos. Esta regla no es "
+   324→   324→   324→        "negociable: es la base de la inferencia causal."
+   325→   325→   325→    )
+   326→   326→   326→    run2.font.size = Pt(11)
+   327→   327→   327→
+   328→   328→   328→    h2 = doc.add_heading("2.2 Variable Dependiente", level=2)
+   329→   329→   329→    for run in h2.runs:
+   330→   330→   330→        run.font.color.rgb = c(P["primary"])
+   331→   331→   331→
+   332→   332→   332→    p = doc.add_paragraph()
+   333→   333→   333→    run = p.add_run(
+   334→   334→   334→        "La variable dependiente es lo que se mide. Debe elegirse ANTES de ejecutar el experimento, "
+   335→   335→   335→        "no despues de ver los resultados. Cambiar la definicion de exito a posteriori invalida "
+   336→   336→   336→        "cualquier conclusion. El RecoveryLab tiene multiples metricas disponibles, pero cada "
+   337→   337→   337→        "experimento debe declarar cual es la principal. La declaracion previa es la unica defensa "
+   338→   338→   338→        "contra el sesgo de confirmacion: si siempre es posible encontrar una metrica que favorezca "
+   339→   339→   339→        "nuestro resultado, ninguna conclusion es confiable."
+   340→   340→   340→    )
+   341→   341→   341→    run.font.size = Pt(11)
+   342→   342→   342→
+   343→   343→   343→    add_styled_table(
+   344→   344→   344→        doc,
+   345→   345→   345→        ["Metrica", "Tipo", "Definicion", "Rango"],
+   346→   346→   346→        [
+   347→   347→   347→            ["Recovery Rate", "Conteo", "Fraccion de archivos recuperados (SHA-256 match)", "0.0-1.0"],
+   348→   348→   348→            ["RVS", "Valor", "Valor recuperado = suma(archivo_i.valor x peso_i) / total_valor", "0.0-1.0"],
+   349→   349→   349→            ["FQS", "Calidad", "Calidad funcional = suma(archivo_i.score x tamano_i) / total_tamano", "0.0-1.0"],
+   350→   350→   350→            ["Overall Utility", "Compuesto", "RVS x FQS - utilidad total de la recuperacion", "0.0-1.0"],
+   351→   351→   351→            ["Read Efficiency", "Eficiencia", "Lecturas utiles / Lecturas totales", "0.0-1.0"],
+   352→   352→   352→            ["Time to First File", "Tiempo", "Lecturas antes del primer archivo recuperado", "0-N"],
+   353→   353→   353→        ],
+   354→   354→   354→        col_widths=[3.0, 2.0, 6.5, 1.5],
+   355→   355→   355→    )
+   356→   356→   356→
+   357→   357→   357→    p = doc.add_paragraph()
+   358→   358→   358→    p.paragraph_format.space_before = Pt(8)
+   359→   359→   359→    run = p.add_run("Metrica principal declarada: ")
+   360→   360→   360→    run.bold = True
+   361→   361→   361→    run.font.size = Pt(11)
+   362→   362→   362→    run2 = p.add_run(
+   363→   363→   363→        "Overall Utility (RVS x FQS) es la metrica principal del laboratorio. "
+   364→   364→   364→        "Recovery Rate se mantiene como metrica secundaria para comparabilidad con herramientas externas. "
+   365→   365→   365→        "Cada experimento debe declarar explicitamente cual metrica es la principal antes de ejecutar."
+   366→   366→   366→    )
+   367→   367→   367→    run2.font.size = Pt(11)
+   368→   368→   368→
+   369→   369→   369→    # ═══════════════════════════════════════════════════════════════════════
+   370→   370→   370→    # SECTION 3: CRITERIO DE EXITO
+   371→   371→   371→    # ═══════════════════════════════════════════════════════════════════════
+   372→   372→   372→    h = doc.add_heading("3. Criterio de Exito", level=1)
+   373→   373→   373→    for run in h.runs:
+   374→   374→   374→        run.font.color.rgb = c(P["primary"])
+   375→   375→   375→
+   376→   376→   376→    p = doc.add_paragraph()
+   377→   377→   377→    run = p.add_run(
+   378→   378→   378→        "El criterio de exito define cuando una estrategia se considera superior a otra. "
+   379→   379→   379→        "Este criterio debe declararse ANTES de ejecutar el experimento. Si se define a posteriori, "
+   380→   380→   380→        "siempre es posible encontrar un criterio que favorezca cualquier resultado. La definicion "
+   381→   381→   381→        "previa es la unica defensa contra el sesgo de confirmacion."
+   382→   382→   382→    )
+   383→   383→   383→    run.font.size = Pt(11)
+   384→   384→   384→
+   385→   385→   385→    add_callout_box(
+   386→   386→   386→        doc,
+   387→   387→   387→        "Cambio en v1.1: Umbral empirico en lugar de 5% fijo",
+   388→   388→   388→        "En la version 1.0 se establecia un umbral fijo del 5% de mejora en Overall Utility. "
+   389→   389→   389→        "Este numero era arbitrario: no surgia de datos experimentales, sino de una decision "
+   390→   390→   390→        "subjetiva. Un umbral de significancia debe derivarse de la variabilidad observada, "
+   391→   391→   391→        "el error de medicion y la repetibilidad de los experimentos.",
+   392→   392→   392→        P["orange"]
+   393→   393→   393→    )
+   394→   394→   394→
+   395→   395→   395→    p = doc.add_paragraph()
+   396→   396→   396→    p.paragraph_format.space_before = Pt(12)
+   397→   397→   397→    p.paragraph_format.space_after = Pt(4)
+   398→   398→   398→    run = p.add_run("Criterio de exito v1.2:")
+   399→   399→   399→    run.bold = True
+   400→   400→   400→    run.font.size = Pt(12)
+   401→   401→   401→    run.font.color.rgb = c(P["accent"])
+   402→   402→   402→
+   403→   403→   403→    p = doc.add_paragraph()
+   404→   404→   404→    p.paragraph_format.left_indent = Cm(1.0)
+   405→   405→   405→    run = p.add_run("Una estrategia A se considera superior a una estrategia B unicamente si:")
+   406→   406→   406→    run.font.size = Pt(11)
+   407→   407→   407→
+   408→   408→   408→    criteria = [
+   409→   409→   409→        "Overall Utility (RVS x FQS) mejora por encima del umbral empirico (ver Seccion 3.1) sobre la estrategia B",
+   410→   410→   410→        "La diferencia es consistente en al menos 10 repeticiones con el mismo dataset",
+   411→   411→   411→        "La diferencia se mantiene en al menos 3 datasets distintos",
+   412→   412→   412→        "La mejora no se debe exclusivamente a una dimension (RVS o FQS) sino a ambas",
+   413→   413→   413→    ]
+   414→   414→   414→    for i, criterion in enumerate(criteria, 1):
+   415→   415→   415→        p = doc.add_paragraph()
+   416→   416→   416→        p.paragraph_format.left_indent = Cm(1.5)
+   417→   417→   417→        run = p.add_run(f"{i}. {criterion}")
+   418→   418→   418→        run.font.size = Pt(11)
+   419→   419→   419→
+   420→   420→   420→    p = doc.add_paragraph()
+   421→   421→   421→    p.paragraph_format.space_before = Pt(8)
+   422→   422→   422→    run = p.add_run(
+   423→   423→   423→        "Si solo se cumple el criterio 1 pero no los criterios 2-4, el resultado se clasifica como "
+   424→   424→   424→        "observacion aislada (1 estrella) y no como evidencia solida. La consistencia es tan importante "
+   425→   425→   425→        "como la magnitud de la mejora. Un resultado que no se replica es un resultado que no existe "
+   426→   426→   426→        "desde el punto de vista cientifico."
+   427→   427→   427→    )
+   428→   428→   428→    run.font.size = Pt(11)
+   429→   429→   429→
+   430→   430→   430→    # 3.1 Umbral Empirico
+   431→   431→   431→    h2 = doc.add_heading("3.1 Calibracion del Umbral Empirico", level=2)
+   432→   432→   432→    for run in h2.runs:
+   433→   433→   433→        run.font.color.rgb = c(P["primary"])
+   434→   434→   434→
+   435→   435→   435→    p = doc.add_paragraph()
+   436→   436→   436→    run = p.add_run(
+   437→   437→   437→        "El umbral de significancia no debe ser un numero elegido arbitrariamente. Debe surgir de los "
+   438→   438→   438→        "datos del laboratorio. El procedimiento para calibrarlo es el siguiente: se ejecuta el mismo "
+   439→   439→   439→        "experimento (misma estrategia, mismo dataset, mismas condiciones) multiples veces, y se mide "
+   440→   440→   440→        "la variabilidad natural de Overall Utility. Si las fluctuaciones entre ejecuciones son del 3%, "
+   441→   441→   441→        "entonces una mejora del 3% no es significativa: esta dentro del ruido. El umbral debe ser "
+   442→   442→   442→        "al menos 2 veces la desviacion estandar de la variabilidad observada, para que una mejora "
+   443→   443→   443→        "declarada tenga una probabilidad baja de ser producto del azar."
+   444→   444→   444→    )
+   445→   445→   445→    run.font.size = Pt(11)
+   446→   446→   446→
+   447→   447→   447→    p = doc.add_paragraph()
+   448→   448→   448→    run = p.add_run("Procedimiento de calibracion:")
+   449→   449→   449→    run.bold = True
+   450→   450→   450→    run.font.size = Pt(11)
+   451→   451→   451→
+   452→   452→   452→    cal_steps = [
+   453→   453→   453→        "Ejecutar el experimento baseline (Carving sobre JPEG, dataset estandar) 30 veces seguidas.",
+   454→   454→   454→        "Registrar Overall Utility en cada ejecucion. Calcular media y desviacion estandar.",
+   455→   455→   455→        "Definir umbral = max(2 x desviacion_estandar, 0.01). Es decir: al menos 2 sigma, con un piso absoluto del 1%.",
+   456→   456→   456→        "Repetir para cada formato (PNG, PDF) y cada estrategia (Carving, MFT-First, Hybrid).",
+   457→   457→   457→        "El umbral final es el maximo entre todos los umbrales calculados. Esto garantiza que el umbral es conservador.",
+   458→   458→   458→        "Si la variabilidad es muy baja (determinista), el umbral se mantiene en el piso del 1%.",
+   459→   459→   459→    ]
+   460→   460→   460→    for i, step in enumerate(cal_steps, 1):
+   461→   461→   461→        p = doc.add_paragraph()
+   462→   462→   462→        p.paragraph_format.left_indent = Cm(1.0)
+   463→   463→   463→        run = p.add_run(f"{i}. {step}")
+   464→   464→   464→        run.font.size = Pt(11)
+   465→   465→   465→
+   466→   466→   466→    p = doc.add_paragraph()
+   467→   467→   467→    p.paragraph_format.space_before = Pt(8)
+   468→   468→   468→    run = p.add_run("Estado actual: ")
+   469→   469→   469→    run.bold = True
+   470→   470→   470→    run.font.size = Pt(11)
+   471→   471→   471→    run2 = p.add_run(
+   472→   472→   472→        "Este procedimiento aun no se ha ejecutado. El umbral definitivo se determinara "
+   473→   473→   473→        "despues de las 30 ejecuciones baseline. Hasta entonces, se usa un umbral provisional "
+   474→   474→   474→        "del 3% (conservador, basado en la variabilidad observada en ejecuciones previas)."
+   475→   475→   475→    )
+   476→   476→   476→    run2.font.size = Pt(11)
+   477→   477→   477→
+   478→   478→   478→    # ═══════════════════════════════════════════════════════════════════════
+   479→   479→   479→    # SECTION 4: REGISTRO DE CONFIANZA
+   480→   480→   480→    # ═══════════════════════════════════════════════════════════════════════
+   481→   481→   481→    h = doc.add_heading("4. Registro de Confianza", level=1)
+   482→   482→   482→    for run in h.runs:
+   483→   483→   483→        run.font.color.rgb = c(P["primary"])
+   484→   484→   484→
+   485→   485→   485→    p = doc.add_paragraph()
+   486→   486→   486→    run = p.add_run(
+   487→   487→   487→        "El registro de confianza es la forma mas transparente de comunicar la solidez cientifica "
+   488→   488→   488→        "de cada resultado. En lugar de porcentajes arbitrarios de confianza, utiliza un sistema "
+   489→   489→   489→        "de estrellas que mapea directamente al tipo de evidencia acumulada. Este sistema es "
+   490→   490→   490→        "mas honesto que cualquier numero: un lector puede ver inmediatamente que evidencia "
+   491→   491→   491→        "respalda un resultado y que tan lejos esta de ser validado externamente."
+   492→   492→   492→    )
+   493→   493→   493→    run.font.size = Pt(11)
+   494→   494→   494→
+   495→   495→   495→    add_styled_table(
+   496→   496→   496→        doc,
+   497→   497→   497→        ["Estrellas", "Evidencia Requerida", "Significado"],
+   498→   498→   498→        [
+   499→   499→   499→            ["*", "Observacion aislada (1 run, 1 dataset)", "Preliminar - no citar como conclusion"],
+   500→   500→   500→            ["**", "Repetido 10+ veces (determinista, mismo dataset)", "Estable - pero no generalizado"],
+
+[showing lines 1-500 of 1477; use offset=501 with limit to continue reading]

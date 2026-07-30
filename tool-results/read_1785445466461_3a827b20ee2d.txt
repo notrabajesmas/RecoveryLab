@@ -1,0 +1,1477 @@
+     1→     1→#!/usr/bin/env python3
+     2→     2→"""
+     3→     3→Generate Research Protocol v1.2 — RecoveryLab
+     4→     4→===============================================
+     5→     5→Updated version incorporating second round of external review.
+     6→     6→
+     7→     7→Key changes from v1.1:
+     8→     8→  1. Added Section 12: Threats to Validity (Internal, External, Statistical, Construct)
+     9→     9→  2. Added Section 13: Hypothesis Set v1.0 (Frozen) — no rewriting, new = H9+, refuted = marked
+    10→    10→  3. Added ★★★ KPI as primary progress metric throughout the document
+    11→    11→  4. Version bump to v1.2
+    12→    12→"""
+    13→    13→
+    14→    14→import sys
+    15→    15→import os
+    16→    16→
+    17→    17→DOCX_SCRIPTS = os.path.join("/home/z/my-project/skills/docx", "scripts")
+    18→    18→if DOCX_SCRIPTS not in sys.path:
+    19→    19→    sys.path.insert(0, DOCX_SCRIPTS)
+    20→    20→
+    21→    21→from docx import Document
+    22→    22→from docx.shared import Inches, Pt, Cm, RGBColor, Emu
+    23→    23→from docx.enum.text import WD_ALIGN_PARAGRAPH
+    24→    24→from docx.enum.table import WD_TABLE_ALIGNMENT
+    25→    25→from docx.enum.section import WD_ORIENT
+    26→    26→from docx.oxml.ns import qn, nsdecls
+    27→    27→from docx.oxml import parse_xml
+    28→    28→import datetime
+    29→    29→
+    30→    30→# ─── Color Palette ────────────────────────────────────────────────────────────
+    31→    31→P = {
+    32→    32→    "primary": "#162032",
+    33→    33→    "body": "#1C2A3D",
+    34→    34→    "secondary": "#5B6B7D",
+    35→    35→    "accent": "#8B7E5A",
+    36→    36→    "surface": "#F5F7FA",
+    37→    37→    "white": "#FFFFFF",
+    38→    38→    "star_gold": "#C9A84C",
+    39→    39→    "star_dim": "#B0B0B0",
+    40→    40→    "red": "#C0392B",
+    41→    41→    "green": "#27AE60",
+    42→    42→    "orange": "#E67E22",
+    43→    43→    "blue": "#2980B9",
+    44→    44→    "threat_open": "#E74C3C",
+    45→    45→    "threat_mitigated": "#F39C12",
+    46→    46→    "threat_resolved": "#27AE60",
+    47→    47→}
+    48→    48→
+    49→    49→def c(hex_color):
+    50→    50→    hex_color = hex_color.replace("#", "")
+    51→    51→    return RGBColor(int(hex_color[:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16))
+    52→    52→
+    53→    53→def set_cell_shading(cell, color_hex):
+    54→    54→    shading = parse_xml(f'<w:shd {nsdecls("w")} w:fill="{color_hex.replace("#", "")}"/>')
+    55→    55→    cell._tc.get_or_add_tcPr().append(shading)
+    56→    56→
+    57→    57→def add_styled_table(doc, headers, rows, col_widths=None):
+    58→    58→    table = doc.add_table(rows=1 + len(rows), cols=len(headers))
+    59→    59→    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    60→    60→    table.style = 'Table Grid'
+    61→    61→    for i, header in enumerate(headers):
+    62→    62→        cell = table.rows[0].cells[i]
+    63→    63→        cell.text = ""
+    64→    64→        p = cell.paragraphs[0]
+    65→    65→        run = p.add_run(header)
+    66→    66→        run.bold = True
+    67→    67→        run.font.size = Pt(10)
+    68→    68→        run.font.color.rgb = c(P["white"])
+    69→    69→        run.font.name = "Calibri"
+    70→    70→        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    71→    71→        set_cell_shading(cell, P["primary"])
+    72→    72→    for row_idx, row_data in enumerate(rows):
+    73→    73→        for col_idx, cell_text in enumerate(row_data):
+    74→    74→            cell = table.rows[row_idx + 1].cells[col_idx]
+    75→    75→            cell.text = ""
+    76→    76→            p = cell.paragraphs[0]
+    77→    77→            run = p.add_run(str(cell_text))
+    78→    78→            run.font.size = Pt(9.5)
+    79→    79→            run.font.name = "Calibri"
+    80→    80→            run.font.color.rgb = c(P["body"])
+    81→    81→            if row_idx % 2 == 1:
+    82→    82→                set_cell_shading(cell, P["surface"])
+    83→    83→    if col_widths:
+    84→    84→        for row in table.rows:
+    85→    85→            for idx, width in enumerate(col_widths):
+    86→    86→                if idx < len(row.cells):
+    87→    87→                    row.cells[idx].width = Cm(width)
+    88→    88→    return table
+    89→    89→
+    90→    90→def add_callout_box(doc, title, text, color=P["accent"]):
+    91→    91→    p = doc.add_paragraph()
+    92→    92→    p.paragraph_format.space_before = Pt(10)
+    93→    93→    p.paragraph_format.space_after = Pt(4)
+    94→    94→    run = p.add_run(title)
+    95→    95→    run.bold = True
+    96→    96→    run.font.size = Pt(11)
+    97→    97→    run.font.color.rgb = c(color)
+    98→    98→    run.font.name = "Calibri"
+    99→    99→    p = doc.add_paragraph()
+   100→   100→    p.paragraph_format.left_indent = Cm(0.5)
+   101→   101→    run = p.add_run(text)
+   102→   102→    run.font.size = Pt(11)
+   103→   103→    run.font.name = "Calibri"
+   104→   104→    run.font.color.rgb = c(P["body"])
+   105→   105→    run.italic = True
+   106→   106→
+   107→   107→
+   108→   108→def build_research_protocol():
+   109→   109→    doc = Document()
+   110→   110→
+   111→   111→    # ─── Page Setup ────────────────────────────────────────────────────────
+   112→   112→    section = doc.sections[0]
+   113→   113→    section.page_width = Cm(21.0)
+   114→   114→    section.page_height = Cm(29.7)
+   115→   115→    section.top_margin = Cm(2.54)
+   116→   116→    section.bottom_margin = Cm(2.54)
+   117→   117→    section.left_margin = Cm(3.0)
+   118→   118→    section.right_margin = Cm(2.5)
+   119→   119→
+   120→   120→    style = doc.styles['Normal']
+   121→   121→    font = style.font
+   122→   122→    font.name = 'Calibri'
+   123→   123→    font.size = Pt(11)
+   124→   124→    font.color.rgb = c(P["body"])
+   125→   125→
+   126→   126→    # ═══════════════════════════════════════════════════════════════════════
+   127→   127→    # COVER PAGE
+   128→   128→    # ═══════════════════════════════════════════════════════════════════════
+   129→   129→    for _ in range(4):
+   130→   130→        doc.add_paragraph()
+   131→   131→
+   132→   132→    p = doc.add_paragraph()
+   133→   133→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   134→   134→    run = p.add_run("RECOVERYLAB")
+   135→   135→    run.font.size = Pt(14)
+   136→   136→    run.font.color.rgb = c(P["secondary"])
+   137→   137→    run.font.name = "Calibri"
+   138→   138→    run.bold = True
+   139→   139→
+   140→   140→    p = doc.add_paragraph()
+   141→   141→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   142→   142→    run = p.add_run("Research Protocol v1.2")
+   143→   143→    run.font.size = Pt(28)
+   144→   144→    run.font.color.rgb = c(P["primary"])
+   145→   145→    run.font.name = "Calibri"
+   146→   146→    run.bold = True
+   147→   147→
+   148→   148→    p = doc.add_paragraph()
+   149→   149→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   150→   150→    run = p.add_run("Congelar la arquitectura, auditar la ciencia")
+   151→   151→    run.font.size = Pt(14)
+   152→   152→    run.font.color.rgb = c(P["accent"])
+   153→   153→    run.font.name = "Calibri"
+   154→   154→    run.italic = True
+   155→   155→
+   156→   156→    p = doc.add_paragraph()
+   157→   157→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   158→   158→    run = p.add_run("Revision incorporando auditoria externa (ronda 2)")
+   159→   159→    run.font.size = Pt(11)
+   160→   160→    run.font.color.rgb = c(P["secondary"])
+   161→   161→    run.font.name = "Calibri"
+   162→   162→
+   163→   163→    p = doc.add_paragraph()
+   164→   164→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   165→   165→    run = p.add_run("_" * 50)
+   166→   166→    run.font.color.rgb = c(P["accent"])
+   167→   167→    run.font.size = Pt(10)
+   168→   168→
+   169→   169→    # ── KPI Hero ──
+   170→   170→    p = doc.add_paragraph()
+   171→   171→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   172→   172→    p.paragraph_format.space_before = Pt(20)
+   173→   173→    p.paragraph_format.space_after = Pt(4)
+   174→   174→    run = p.add_run("Indicador Principal de Progreso")
+   175→   175→    run.font.size = Pt(10)
+   176→   176→    run.font.color.rgb = c(P["secondary"])
+   177→   177→    run.font.name = "Calibri"
+   178→   178→    run.bold = True
+   179→   179→
+   180→   180→    p = doc.add_paragraph()
+   181→   181→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   182→   182→    p.paragraph_format.space_after = Pt(4)
+   183→   183→    run = p.add_run("Resultados con 3 estrellas o mas: 2 / 15")
+   184→   184→    run.font.size = Pt(16)
+   185→   185→    run.font.color.rgb = c(P["accent"])
+   186→   186→    run.font.name = "Calibri"
+   187→   187→    run.bold = True
+   188→   188→
+   189→   189→    p = doc.add_paragraph()
+   190→   190→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   191→   191→    run = p.add_run("Objetivo Fase A: alcanzar al menos 5 resultados con 3+ estrellas")
+   192→   192→    run.font.size = Pt(10)
+   193→   193→    run.font.color.rgb = c(P["secondary"])
+   194→   194→    run.font.name = "Calibri"
+   195→   195→
+   196→   196→    p = doc.add_paragraph()
+   197→   197→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   198→   198→    run = p.add_run("_" * 50)
+   199→   199→    run.font.color.rgb = c(P["accent"])
+   200→   200→    run.font.size = Pt(10)
+   201→   201→
+   202→   202→    # Metadata
+   203→   203→    p = doc.add_paragraph()
+   204→   204→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   205→   205→    run = p.add_run("Documento vivo - Version 1.2")
+   206→   206→    run.font.size = Pt(11)
+   207→   207→    run.font.color.rgb = c(P["secondary"])
+   208→   208→    run.font.name = "Calibri"
+   209→   209→
+   210→   210→    p = doc.add_paragraph()
+   211→   211→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   212→   212→    run = p.add_run(f"Fecha: {datetime.datetime.now().strftime('%Y-%m-%d')}")
+   213→   213→    run.font.size = Pt(11)
+   214→   214→    run.font.color.rgb = c(P["secondary"])
+   215→   215→
+   216→   216→    p = doc.add_paragraph()
+   217→   217→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   218→   218→    run = p.add_run("Clasificacion: INTERNO - Solo para uso del laboratorio")
+   219→   219→    run.font.size = Pt(10)
+   220→   220→    run.font.color.rgb = c(P["red"])
+   221→   221→
+   222→   222→    # Change log
+   223→   223→    p = doc.add_paragraph()
+   224→   224→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   225→   225→    p.paragraph_format.space_before = Pt(16)
+   226→   226→    run = p.add_run("Cambios respecto a v1.1")
+   227→   227→    run.font.size = Pt(10)
+   228→   228→    run.font.color.rgb = c(P["secondary"])
+   229→   229→    run.bold = True
+   230→   230→
+   231→   231→    changes = [
+   232→   232→        "Nueva Seccion 12: Threats to Validity (interna, externa, estadistica, constructiva)",
+   233→   233→        "Nueva Seccion 13: Hypothesis Set v1.0 (Frozen) - hipotesis congeladas, no se reescriben",
+   234→   234→        "KPI de progreso: resultados con 3+ estrellas como indicador principal",
+   235→   235→    ]
+   236→   236→    for change in changes:
+   237→   237→        p = doc.add_paragraph()
+   238→   238→        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   239→   239→        run = p.add_run(f"  {change}")
+   240→   240→        run.font.size = Pt(9)
+   241→   241→        run.font.color.rgb = c(P["secondary"])
+   242→   242→
+   243→   243→    doc.add_page_break()
+   244→   244→
+   245→   245→    # ═══════════════════════════════════════════════════════════════════════
+   246→   246→    # SECTION 1: PREGUNTA CENTRAL
+   247→   247→    # ═══════════════════════════════════════════════════════════════════════
+   248→   248→    h = doc.add_heading("1. Pregunta Central del Proyecto", level=1)
+   249→   249→    for run in h.runs:
+   250→   250→        run.font.color.rgb = c(P["primary"])
+   251→   251→
+   252→   252→    p = doc.add_paragraph()
+   253→   253→    run = p.add_run(
+   254→   254→        "El proyecto ya no gira alrededor del Motor C. Gira alrededor de una pregunta:"
+   255→   255→    )
+   256→   256→    run.font.size = Pt(11)
+   257→   257→
+   258→   258→    p = doc.add_paragraph()
+   259→   259→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   260→   260→    p.paragraph_format.space_before = Pt(12)
+   261→   261→    p.paragraph_format.space_after = Pt(12)
+   262→   262→    run = p.add_run(
+   263→   263→        "\u00bfComo medir objetivamente la utilidad de una estrategia de recuperacion?"
+   264→   264→    )
+   265→   265→    run.font.size = Pt(14)
+   266→   266→    run.font.color.rgb = c(P["accent"])
+   267→   267→    run.bold = True
+   268→   268→    run.italic = True
+   269→   269→
+   270→   270→    p = doc.add_paragraph()
+   271→   271→    run = p.add_run(
+   272→   272→        "Esta pregunta es mucho mas amplia que cualquier motor individual. Es mucho mas dificil de copiar. "
+   273→   273→        "Y es la base sobre la cual se construye todo el proyecto. Si el laboratorio demuestra que sus resultados "
+   274→   274→        "son reproducibles, comparables y resisten auditorias externas, habremos construido algo que vale "
+   275→   275→        "mucho mas que un motor de recuperacion: una infraestructura de evaluacion objetiva que es "
+   276→   276→        "extraordinariamente dificil de desarrollar y de replicar."
+   277→   277→    )
+   278→   278→    run.font.size = Pt(11)
+   279→   279→
+   280→   280→    # ═══════════════════════════════════════════════════════════════════════
+   281→   281→    # SECTION 2: VARIABLES EXPERIMENTALES
+   282→   282→    # ═══════════════════════════════════════════════════════════════════════
+   283→   283→    h = doc.add_heading("2. Variables Experimentales", level=1)
+   284→   284→    for run in h.runs:
+   285→   285→        run.font.color.rgb = c(P["primary"])
+   286→   286→
+   287→   287→    h2 = doc.add_heading("2.1 Variable Independiente", level=2)
+   288→   288→    for run in h2.runs:
+   289→   289→        run.font.color.rgb = c(P["primary"])
+   290→   290→
+   291→   291→    p = doc.add_paragraph()
+   292→   292→    run = p.add_run(
+   293→   293→        "La variable independiente es aquella que el experimentador controla. Solo una debe cambiar "
+   294→   294→        "por experimento. Si cambian dos a la vez, las conclusiones se vuelven ambiguas. Este es "
+   295→   295→        "el principio fundamental del control experimental: cada experimento debe aislar exactamente "
+   296→   296→        "un factor para que la relacion causal sea interpretable. Cuando dos variables cambian "
+   297→   297→        "simultaneamente, es imposible determinar cual de ellas produjo el efecto observado, y "
+   298→   298→        "cualquier conclusion queda invalidada por esta confoundacion."
+   299→   299→    )
+   300→   300→    run.font.size = Pt(11)
+   301→   301→
+   302→   302→    add_styled_table(
+   303→   303→        doc,
+   304→   304→        ["Variable Independiente", "Valores", "Experimento Asociado"],
+   305→   305→        [
+   306→   306→            ["Tipo de dano", "MFT parcial, head crash, sectores intermitentes, ruido aleatorio", "H4 Matrix"],
+   307→   307→            ["Nivel de dano", "0%, 10%, 20%, ..., 100%", "Crossover Curve"],
+   308→   308→            ["Formato de archivo", "JPEG, PNG, PDF (congelados)", "H5 Per-Format"],
+   309→   309→            ["Estrategia", "Carving, MFT-First, Hybrid, Motor C", "H1.1 / H2"],
+   310→   310→            ["Presupuesto de lectura", "0, 100, 500, 1000, 5000 sectores", "H1.7 Budget"],
+   311→   311→        ],
+   312→   312→        col_widths=[4.0, 6.0, 5.0],
+   313→   313→    )
+   314→   314→
+   315→   315→    p = doc.add_paragraph()
+   316→   316→    p.paragraph_format.space_before = Pt(8)
+   317→   317→    run = p.add_run("Regla critica: ")
+   318→   318→    run.bold = True
+   319→   319→    run.font.color.rgb = c(P["red"])
+   320→   320→    run.font.size = Pt(11)
+   321→   321→    run2 = p.add_run(
+   322→   322→        "Solo UNA variable independiente por experimento. Si se cambia el formato Y el nivel de dano "
+   323→   323→        "simultaneamente, no se puede atribuir la diferencia a ninguno de los dos. Esta regla no es "
+   324→   324→        "negociable: es la base de la inferencia causal."
+   325→   325→    )
+   326→   326→    run2.font.size = Pt(11)
+   327→   327→
+   328→   328→    h2 = doc.add_heading("2.2 Variable Dependiente", level=2)
+   329→   329→    for run in h2.runs:
+   330→   330→        run.font.color.rgb = c(P["primary"])
+   331→   331→
+   332→   332→    p = doc.add_paragraph()
+   333→   333→    run = p.add_run(
+   334→   334→        "La variable dependiente es lo que se mide. Debe elegirse ANTES de ejecutar el experimento, "
+   335→   335→        "no despues de ver los resultados. Cambiar la definicion de exito a posteriori invalida "
+   336→   336→        "cualquier conclusion. El RecoveryLab tiene multiples metricas disponibles, pero cada "
+   337→   337→        "experimento debe declarar cual es la principal. La declaracion previa es la unica defensa "
+   338→   338→        "contra el sesgo de confirmacion: si siempre es posible encontrar una metrica que favorezca "
+   339→   339→        "nuestro resultado, ninguna conclusion es confiable."
+   340→   340→    )
+   341→   341→    run.font.size = Pt(11)
+   342→   342→
+   343→   343→    add_styled_table(
+   344→   344→        doc,
+   345→   345→        ["Metrica", "Tipo", "Definicion", "Rango"],
+   346→   346→        [
+   347→   347→            ["Recovery Rate", "Conteo", "Fraccion de archivos recuperados (SHA-256 match)", "0.0-1.0"],
+   348→   348→            ["RVS", "Valor", "Valor recuperado = suma(archivo_i.valor x peso_i) / total_valor", "0.0-1.0"],
+   349→   349→            ["FQS", "Calidad", "Calidad funcional = suma(archivo_i.score x tamano_i) / total_tamano", "0.0-1.0"],
+   350→   350→            ["Overall Utility", "Compuesto", "RVS x FQS - utilidad total de la recuperacion", "0.0-1.0"],
+   351→   351→            ["Read Efficiency", "Eficiencia", "Lecturas utiles / Lecturas totales", "0.0-1.0"],
+   352→   352→            ["Time to First File", "Tiempo", "Lecturas antes del primer archivo recuperado", "0-N"],
+   353→   353→        ],
+   354→   354→        col_widths=[3.0, 2.0, 6.5, 1.5],
+   355→   355→    )
+   356→   356→
+   357→   357→    p = doc.add_paragraph()
+   358→   358→    p.paragraph_format.space_before = Pt(8)
+   359→   359→    run = p.add_run("Metrica principal declarada: ")
+   360→   360→    run.bold = True
+   361→   361→    run.font.size = Pt(11)
+   362→   362→    run2 = p.add_run(
+   363→   363→        "Overall Utility (RVS x FQS) es la metrica principal del laboratorio. "
+   364→   364→        "Recovery Rate se mantiene como metrica secundaria para comparabilidad con herramientas externas. "
+   365→   365→        "Cada experimento debe declarar explicitamente cual metrica es la principal antes de ejecutar."
+   366→   366→    )
+   367→   367→    run2.font.size = Pt(11)
+   368→   368→
+   369→   369→    # ═══════════════════════════════════════════════════════════════════════
+   370→   370→    # SECTION 3: CRITERIO DE EXITO
+   371→   371→    # ═══════════════════════════════════════════════════════════════════════
+   372→   372→    h = doc.add_heading("3. Criterio de Exito", level=1)
+   373→   373→    for run in h.runs:
+   374→   374→        run.font.color.rgb = c(P["primary"])
+   375→   375→
+   376→   376→    p = doc.add_paragraph()
+   377→   377→    run = p.add_run(
+   378→   378→        "El criterio de exito define cuando una estrategia se considera superior a otra. "
+   379→   379→        "Este criterio debe declararse ANTES de ejecutar el experimento. Si se define a posteriori, "
+   380→   380→        "siempre es posible encontrar un criterio que favorezca cualquier resultado. La definicion "
+   381→   381→        "previa es la unica defensa contra el sesgo de confirmacion."
+   382→   382→    )
+   383→   383→    run.font.size = Pt(11)
+   384→   384→
+   385→   385→    add_callout_box(
+   386→   386→        doc,
+   387→   387→        "Cambio en v1.1: Umbral empirico en lugar de 5% fijo",
+   388→   388→        "En la version 1.0 se establecia un umbral fijo del 5% de mejora en Overall Utility. "
+   389→   389→        "Este numero era arbitrario: no surgia de datos experimentales, sino de una decision "
+   390→   390→        "subjetiva. Un umbral de significancia debe derivarse de la variabilidad observada, "
+   391→   391→        "el error de medicion y la repetibilidad de los experimentos.",
+   392→   392→        P["orange"]
+   393→   393→    )
+   394→   394→
+   395→   395→    p = doc.add_paragraph()
+   396→   396→    p.paragraph_format.space_before = Pt(12)
+   397→   397→    p.paragraph_format.space_after = Pt(4)
+   398→   398→    run = p.add_run("Criterio de exito v1.2:")
+   399→   399→    run.bold = True
+   400→   400→    run.font.size = Pt(12)
+   401→   401→    run.font.color.rgb = c(P["accent"])
+   402→   402→
+   403→   403→    p = doc.add_paragraph()
+   404→   404→    p.paragraph_format.left_indent = Cm(1.0)
+   405→   405→    run = p.add_run("Una estrategia A se considera superior a una estrategia B unicamente si:")
+   406→   406→    run.font.size = Pt(11)
+   407→   407→
+   408→   408→    criteria = [
+   409→   409→        "Overall Utility (RVS x FQS) mejora por encima del umbral empirico (ver Seccion 3.1) sobre la estrategia B",
+   410→   410→        "La diferencia es consistente en al menos 10 repeticiones con el mismo dataset",
+   411→   411→        "La diferencia se mantiene en al menos 3 datasets distintos",
+   412→   412→        "La mejora no se debe exclusivamente a una dimension (RVS o FQS) sino a ambas",
+   413→   413→    ]
+   414→   414→    for i, criterion in enumerate(criteria, 1):
+   415→   415→        p = doc.add_paragraph()
+   416→   416→        p.paragraph_format.left_indent = Cm(1.5)
+   417→   417→        run = p.add_run(f"{i}. {criterion}")
+   418→   418→        run.font.size = Pt(11)
+   419→   419→
+   420→   420→    p = doc.add_paragraph()
+   421→   421→    p.paragraph_format.space_before = Pt(8)
+   422→   422→    run = p.add_run(
+   423→   423→        "Si solo se cumple el criterio 1 pero no los criterios 2-4, el resultado se clasifica como "
+   424→   424→        "observacion aislada (1 estrella) y no como evidencia solida. La consistencia es tan importante "
+   425→   425→        "como la magnitud de la mejora. Un resultado que no se replica es un resultado que no existe "
+   426→   426→        "desde el punto de vista cientifico."
+   427→   427→    )
+   428→   428→    run.font.size = Pt(11)
+   429→   429→
+   430→   430→    # 3.1 Umbral Empirico
+   431→   431→    h2 = doc.add_heading("3.1 Calibracion del Umbral Empirico", level=2)
+   432→   432→    for run in h2.runs:
+   433→   433→        run.font.color.rgb = c(P["primary"])
+   434→   434→
+   435→   435→    p = doc.add_paragraph()
+   436→   436→    run = p.add_run(
+   437→   437→        "El umbral de significancia no debe ser un numero elegido arbitrariamente. Debe surgir de los "
+   438→   438→        "datos del laboratorio. El procedimiento para calibrarlo es el siguiente: se ejecuta el mismo "
+   439→   439→        "experimento (misma estrategia, mismo dataset, mismas condiciones) multiples veces, y se mide "
+   440→   440→        "la variabilidad natural de Overall Utility. Si las fluctuaciones entre ejecuciones son del 3%, "
+   441→   441→        "entonces una mejora del 3% no es significativa: esta dentro del ruido. El umbral debe ser "
+   442→   442→        "al menos 2 veces la desviacion estandar de la variabilidad observada, para que una mejora "
+   443→   443→        "declarada tenga una probabilidad baja de ser producto del azar."
+   444→   444→    )
+   445→   445→    run.font.size = Pt(11)
+   446→   446→
+   447→   447→    p = doc.add_paragraph()
+   448→   448→    run = p.add_run("Procedimiento de calibracion:")
+   449→   449→    run.bold = True
+   450→   450→    run.font.size = Pt(11)
+   451→   451→
+   452→   452→    cal_steps = [
+   453→   453→        "Ejecutar el experimento baseline (Carving sobre JPEG, dataset estandar) 30 veces seguidas.",
+   454→   454→        "Registrar Overall Utility en cada ejecucion. Calcular media y desviacion estandar.",
+   455→   455→        "Definir umbral = max(2 x desviacion_estandar, 0.01). Es decir: al menos 2 sigma, con un piso absoluto del 1%.",
+   456→   456→        "Repetir para cada formato (PNG, PDF) y cada estrategia (Carving, MFT-First, Hybrid).",
+   457→   457→        "El umbral final es el maximo entre todos los umbrales calculados. Esto garantiza que el umbral es conservador.",
+   458→   458→        "Si la variabilidad es muy baja (determinista), el umbral se mantiene en el piso del 1%.",
+   459→   459→    ]
+   460→   460→    for i, step in enumerate(cal_steps, 1):
+   461→   461→        p = doc.add_paragraph()
+   462→   462→        p.paragraph_format.left_indent = Cm(1.0)
+   463→   463→        run = p.add_run(f"{i}. {step}")
+   464→   464→        run.font.size = Pt(11)
+   465→   465→
+   466→   466→    p = doc.add_paragraph()
+   467→   467→    p.paragraph_format.space_before = Pt(8)
+   468→   468→    run = p.add_run("Estado actual: ")
+   469→   469→    run.bold = True
+   470→   470→    run.font.size = Pt(11)
+   471→   471→    run2 = p.add_run(
+   472→   472→        "Este procedimiento aun no se ha ejecutado. El umbral definitivo se determinara "
+   473→   473→        "despues de las 30 ejecuciones baseline. Hasta entonces, se usa un umbral provisional "
+   474→   474→        "del 3% (conservador, basado en la variabilidad observada en ejecuciones previas)."
+   475→   475→    )
+   476→   476→    run2.font.size = Pt(11)
+   477→   477→
+   478→   478→    # ═══════════════════════════════════════════════════════════════════════
+   479→   479→    # SECTION 4: REGISTRO DE CONFIANZA
+   480→   480→    # ═══════════════════════════════════════════════════════════════════════
+   481→   481→    h = doc.add_heading("4. Registro de Confianza", level=1)
+   482→   482→    for run in h.runs:
+   483→   483→        run.font.color.rgb = c(P["primary"])
+   484→   484→
+   485→   485→    p = doc.add_paragraph()
+   486→   486→    run = p.add_run(
+   487→   487→        "El registro de confianza es la forma mas transparente de comunicar la solidez cientifica "
+   488→   488→        "de cada resultado. En lugar de porcentajes arbitrarios de confianza, utiliza un sistema "
+   489→   489→        "de estrellas que mapea directamente al tipo de evidencia acumulada. Este sistema es "
+   490→   490→        "mas honesto que cualquier numero: un lector puede ver inmediatamente que evidencia "
+   491→   491→        "respalda un resultado y que tan lejos esta de ser validado externamente."
+   492→   492→    )
+   493→   493→    run.font.size = Pt(11)
+   494→   494→
+   495→   495→    add_styled_table(
+   496→   496→        doc,
+   497→   497→        ["Estrellas", "Evidencia Requerida", "Significado"],
+   498→   498→        [
+   499→   499→            ["*", "Observacion aislada (1 run, 1 dataset)", "Preliminar - no citar como conclusion"],
+   500→   500→            ["**", "Repetido 10+ veces (determinista, mismo dataset)", "Estable - pero no generalizado"],
+   501→   501→            ["***", "Repetido con datasets distintos", "Generalizable - pero no validado externamente"],
+   502→   502→            ["****", "Validado con herramientas externas (multiples familias)", "Robusto - comparable con el estado del arte"],
+   503→   503→            ["*****", "Validado con hardware real", "Definitivo - predictivo del mundo real"],
+   504→   504→        ],
+   505→   505→        col_widths=[2.0, 6.0, 5.0],
+   506→   506→    )
+   507→   507→
+   508→   508→    p = doc.add_paragraph()
+   509→   509→    p.paragraph_format.space_before = Pt(6)
+   510→   510→    run = p.add_run("Reglas del registro: ")
+   511→   511→    run.bold = True
+   512→   512→    run.font.size = Pt(11)
+   513→   513→    run2 = p.add_run(
+   514→   514→        "Las estrellas solo pueden subir (acumulacion de evidencia), nunca bajar. "
+   515→   515→        "Si aparece evidencia contradictoria, el resultado se marca como CONTESTADO pero "
+   516→   516→        "no pierde estrellas. El lector debe decidir como interpretar la contradiccion. "
+   517→   517→        "Ademas, cada estrella debe estar vinculada a un registro de los experimentos que la soportan."
+   518→   518→    )
+   519→   519→    run2.font.size = Pt(11)
+   520→   520→
+   521→   521→    # ── ★★★ KPI ──
+   522→   522→    h2 = doc.add_heading("4.1 KPI de Progreso: Resultados con 3+ Estrellas", level=2)
+   523→   523→    for run in h2.runs:
+   524→   524→        run.font.color.rgb = c(P["primary"])
+   525→   525→
+   526→   526→    p = doc.add_paragraph()
+   527→   527→    run = p.add_run(
+   528→   528→        "El indicador mas importante del proyecto no es el Recovery Rate, ni siquiera el Overall Utility. "
+   529→   529→        "Es la cantidad de resultados que alcanzan 3 estrellas o mas. Este numero refleja la solidez "
+   530→   530→        "real del laboratorio: no cuantos resultados tenemos, sino cuantos estan lo suficientemente "
+   531→   531→        "validados como para ser citados como conclusiones. Un resultado con 3 estrellas ha sido "
+   532→   532→        "repetido con datasets distintos y es generalizable. Un resultado con 1-2 estrellas es "
+   533→   533→        "preliminar y no debe usarse como base para decisiones arquitectonicas."
+   534→   534→    )
+   535→   535→    run.font.size = Pt(11)
+   536→   536→
+   537→   537→    # KPI Dashboard
+   538→   538→    add_styled_table(
+   539→   539→        doc,
+   540→   540→        ["KPI", "Actual", "Objetivo Fase A", "Objetivo Fase B"],
+   541→   541→        [
+   542→   542→            ["Resultados con 3+ estrellas", "2 / 15", "5 / 15", "8 / 15"],
+   543→   543→            ["Resultados con 4+ estrellas", "0 / 15", "0 / 15", "3 / 15"],
+   544→   544→            ["Hipotesis principales con 3+", "1 / 4 (H1.1)", "4 / 4", "4 / 4"],
+   545→   545→            ["Umbral empirico calibrado", "No", "Si", "Si"],
+   546→   546→            ["RVS calibrado con usuarios", "No", "No", "Si"],
+   547→   547→        ],
+   548→   548→        col_widths=[5.0, 3.0, 3.0, 3.0],
+   549→   549→    )
+   550→   550→
+   551→   551→    p = doc.add_paragraph()
+   552→   552→    p.paragraph_format.space_before = Pt(6)
+   553→   553→    run = p.add_run(
+   554→   554→        "Antes de ampliar el motor, antes de agregar IA y antes de incorporar nuevos formatos, "
+   555→   555→        "el objetivo es que varias hipotesis importantes lleguen a 3 estrellas mediante repeticion, "
+   556→   556→        "multiples datasets y validacion consistente. A partir de ahi, el laboratorio empezara a "
+   557→   557→        "tener una base experimental solida sobre la cual construir el resto del proyecto."
+   558→   558→    )
+   559→   559→    run.font.size = Pt(11)
+   560→   560→    run.italic = True
+   561→   561→
+   562→   562→    # Current state table
+   563→   563→    h2 = doc.add_heading("4.2 Estado Actual del Registro", level=2)
+   564→   564→    for run in h2.runs:
+   565→   565→        run.font.color.rgb = c(P["primary"])
+   566→   566→
+   567→   567→    add_styled_table(
+   568→   568→        doc,
+   569→   569→        ["Resultado", "Estrellas", "Resumen"],
+   570→   570→        [
+   571→   571→            ["H1.1", "*** (3/5)", "MFT-First supera a Carving consistentemente. 100/100 escenarios."],
+   572→   572→            ["H1.2", "* (1/5)", "Umbral de cambio de estrategia no determinado."],
+   573→   573→            ["H2", "** (2/5)", "Crossover existe pero es artefacto del carving limitado."],
+   574→   574→            ["H4", "* (1/5)", "Matriz preliminar con 3 celdas de muchas."],
+   575→   575→            ["H5", "* (1/5)", "Sin experimento sistematico por formato."],
+   576→   576→            ["H6", "** (2/5)", "FunctionalValidator implementado, 19/19 tests."],
+   577→   577→            ["H7", "* (1/5)", "RVS implementado, sin validacion de usuarios (ver Seccion 5.4)."],
+   578→   578→            ["H8", "* (1/5)", "Crossover al 95% es artefacto, no descubrimiento."],
+   579→   579→            ["RVS", "** (2/5)", "4 dimensiones implementadas, sin calibracion externa."],
+   580→   580→            ["FQS", "** (2/5)", "5 niveles funcionales, 19/19 tests."],
+   581→   581→            ["WFS", "* (1/5)", "Concepto definido (RVS x FQS), aun no integrado en Judge."],
+   582→   582→            ["BLOCKER-001", "*** (3/5)", "Resuelto: comparaciones previas invalidas."],
+   583→   583→            ["H1.5", "* (1/5)", "Gaps: sin fragmentacion, sin INDX, sin jerarquia."],
+   584→   584→            ["H1.6", "** (2/5)", "100 ejecuciones, resultados deterministas."],
+   585→   585→            ["H1.7", "* (1/5)", "Motor C apenas supera MFT-First (5% support)."],
+   586→   586→        ],
+   587→   587→        col_widths=[2.5, 2.0, 10.5],
+   588→   588→    )
+   589→   589→
+   590→   590→    p = doc.add_paragraph()
+   591→   591→    p.paragraph_format.space_before = Pt(6)
+   592→   592→    run = p.add_run("Resumen: ")
+   593→   593→    run.bold = True
+   594→   594→    run.font.size = Pt(11)
+   595→   595→    run2 = p.add_run(
+   596→   596→        "8 resultados a 1 estrella, 5 a 2 estrellas, 2 a 3 estrellas, 0 a 4 estrellas, "
+   597→   597→        "0 a 5 estrellas. La mayoria de los resultados son preliminares. "
+   598→   598→        "El cuello de botella real es: cuantos resultados alcanzan 3 estrellas o mas?"
+   599→   599→    )
+   600→   600→    run2.font.size = Pt(11)
+   601→   601→
+   602→   602→    # ═══════════════════════════════════════════════════════════════════════
+   603→   603→    # SECTION 5: DECOMPOSICION DE METRICAS
+   604→   604→    # ═══════════════════════════════════════════════════════════════════════
+   605→   605→    h = doc.add_heading("5. Decomposicion de Metricas", level=1)
+   606→   606→    for run in h.runs:
+   607→   607→        run.font.color.rgb = c(P["primary"])
+   608→   608→
+   609→   609→    p = doc.add_paragraph()
+   610→   610→    run = p.add_run(
+   611→   611→        "La metrica compuesta anterior (WFS) mezclaba dos dimensiones distintas: "
+   612→   612→        "que archivos se recuperaron y que tan bien se recuperaron. La separacion "
+   613→   613→        "es esencial porque un motor puede ganar por dos razones muy diferentes, "
+   614→   614→        "y la interpretacion cambia completamente segun cual sea. Un motor que recupera "
+   615→   615→        "la tesis pero con pixeles corruptos tiene alto RVS y bajo FQS; un motor que "
+   616→   616→        "recupera perfectamente 200 thumbnails tiene bajo RVS y alto FQS. Sin esta "
+   617→   617→        "separacion, ambas victorias se ven identicas, y eso es cientificamente inaceptable."
+   618→   618→    )
+   619→   619→    run.font.size = Pt(11)
+   620→   620→
+   621→   621→    p = doc.add_paragraph()
+   622→   622→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   623→   623→    p.paragraph_format.space_before = Pt(12)
+   624→   624→    p.paragraph_format.space_after = Pt(12)
+   625→   625→    run = p.add_run("Overall Utility = RVS (Valor) x FQS (Calidad)")
+   626→   626→    run.font.size = Pt(14)
+   627→   627→    run.font.color.rgb = c(P["accent"])
+   628→   628→    run.bold = True
+   629→   629→
+   630→   630→    # RVS
+   631→   631→    h2 = doc.add_heading("5.1 RVS - Recovery Value Score (Que se recupero)", level=2)
+   632→   632→    for run in h2.runs:
+   633→   633→        run.font.color.rgb = c(P["primary"])
+   634→   634→
+   635→   635→    p = doc.add_paragraph()
+   636→   636→    run = p.add_run(
+   637→   637→        "El RVS mide el valor de lo recuperado, ponderado por la importancia de cada archivo. "
+   638→   638→        "No es lo mismo recuperar la tesis que 200 thumbnails. El RVS incorpora cuatro dimensiones: "
+   639→   639→        "valor intrinseco del archivo, probabilidad de reemplazo, tiempo de recreacion, e impacto "
+   640→   640→        "emocional de la perdida. Un motor que recupera la tesis pero pierde 200 thumbnails tiene "
+   641→   641→        "mayor RVS que uno que hace lo contrario, porque la tesis tiene mas valor, es mas dificil "
+   642→   642→        "de reemplazar, requiere mas tiempo para recrear, y su perdida tiene mayor impacto emocional."
+   643→   643→    )
+   644→   644→    run.font.size = Pt(11)
+   645→   645→
+   646→   646→    add_styled_table(
+   647→   647→        doc,
+   648→   648→        ["Tipo de Archivo", "Valor", "Reemplazo", "Recreacion", "Emocional", "RVS Peso"],
+   649→   649→        [
+   650→   650→            ["tesis.docx", "100", "0.05", "500h", "100", "100"],
+   651→   651→            ["sqlite.db", "95", "0.02", "200h", "50", "95"],
+   652→   652→            ["foto familiar", "90", "0.00", "0h", "100", "90"],
+   653→   653→            ["video vacaciones", "70", "0.00", "0h", "80", "70"],
+   654→   654→            ["PSD proyecto", "65", "0.10", "40h", "30", "65"],
+   655→   655→            ["RAW foto", "60", "0.00", "0h", "60", "60"],
+   656→   656→            ["MP4 descargado", "20", "0.90", "1h", "5", "20"],
+   657→   657→            ["Linux ISO", "2", "1.00", "0.5h", "0", "2"],
+   658→   658→            ["thumbnail", "1", "1.00", "0h", "0", "1"],
+   659→   659→        ],
+   660→   660→        col_widths=[3.0, 1.5, 1.5, 2.0, 2.0, 1.5],
+   661→   661→    )
+   662→   662→
+   663→   663→    add_callout_box(
+   664→   664→        doc,
+   665→   665→        "Limitacion reconocida: RVS necesita calibracion con usuarios reales",
+   666→   666→        "La tabla de valores anterior es una asignacion razonable hecha por el laboratorio. "
+   667→   667→        "Pero sigue siendo una decision interna. No ha sido calibrada con comportamiento real "
+   668→   668→        "de usuarios. Ver Seccion 5.4 para el plan de calibracion.",
+   669→   669→        P["orange"]
+   670→   670→    )
+   671→   671→
+   672→   672→    # FQS
+   673→   673→    h2 = doc.add_heading("5.2 FQS - Functional Quality Score (Que tan bien se recupero)", level=2)
+   674→   674→    for run in h2.runs:
+   675→   675→        run.font.color.rgb = c(P["primary"])
+   676→   676→
+   677→   677→    p = doc.add_paragraph()
+   678→   678→    run = p.add_run(
+   679→   679→        "El FQS mide la calidad funcional de la recuperacion. No es lo mismo recuperar un "
+   680→   680→        "JPEG bit-perfect que uno con 2 pixeles corruptos. El FQS reemplaza el binario "
+   681→   681→        "SHA-256 coincide/no coincide con un espectro de calidad funcional que refleja "
+   682→   682→        "mejor la experiencia real del usuario. Un archivo que abre y funciona tiene valor "
+   683→   683→        "incluso si su checksum no coincide exactamente. La ventaja del FQS es que captura "
+   684→   684→        "gradaciones de calidad que el binario pasa por alto: un JPEG con 2 pixeles malos "
+   685→   685→        "no es lo mismo que un JPEG completamente corrupto, pero ambos son 'fallo' en el "
+   686→   686→        "modelo binario."
+   687→   687→    )
+   688→   688→    run.font.size = Pt(11)
+   689→   689→
+   690→   690→    add_styled_table(
+   691→   691→        doc,
+   692→   692→        ["Nivel", "Score", "Definicion", "Ejemplo"],
+   693→   693→        [
+   694→   694→            ["FULL", "1.0", "SHA-256 coincide exactamente", "Copia bit-perfect del original"],
+   695→   695→            ["FUNCTIONAL", "0.8", "Archivo funciona con dano menor", "JPEG con 2 pixeles corruptos"],
+   696→   696→            ["PARTIAL", "0.5", "Funciona parcialmente, perdida de datos", "MP4 que se reproduce hasta la mitad"],
+   697→   697→            ["DEGRADED", "0.2", "Contenido accesible pero daniado", "DOCX que abre pero perdio imagenes"],
+   698→   698→            ["FAILED", "0.0", "Completamente inutilizable", "Datos aleatorios sin estructura"],
+   699→   699→        ],
+   700→   700→        col_widths=[2.5, 1.5, 5.0, 5.0],
+   701→   701→    )
+   702→   702→
+   703→   703→    # Diagnostic
+   704→   704→    h2 = doc.add_heading("5.3 Diagnostico: Por que gano un motor?", level=2)
+   705→   705→    for run in h2.runs:
+   706→   706→        run.font.color.rgb = c(P["primary"])
+   707→   707→
+   708→   708→    p = doc.add_paragraph()
+   709→   709→    run = p.add_run(
+   710→   710→        "La separacion RVS x FQS permite diagnosticar por que un motor gano. "
+   711→   711→        "Un motor puede ganar por dos razones fundamentalmente distintas, y la "
+   712→   712→        "interpretacion cambia completamente segun cual sea la dominante."
+   713→   713→    )
+   714→   714→    run.font.size = Pt(11)
+   715→   715→
+   716→   716→    add_styled_table(
+   717→   717→        doc,
+   718→   718→        ["RVS", "FQS", "Diagnostico", "Interpretacion"],
+   719→   719→        [
+   720→   720→            ["Alto", "Alto", "STRONG", "Recupero archivos importantes con buena calidad"],
+   721→   721→            ["Alto", "Bajo", "VALUE-DRIVEN", "Recupero archivos importantes pero con mala calidad"],
+   722→   722→            ["Bajo", "Alto", "QUALITY-DRIVEN", "Recupero archivos bien pero no eran importantes"],
+   723→   723→            ["Bajo", "Bajo", "WEAK", "Fallo en ambas dimensiones"],
+   724→   724→        ],
+   725→   725→        col_widths=[2.0, 2.0, 3.0, 7.0],
+   726→   726→    )
+   727→   727→
+   728→   728→    # RVS Calibration Plan
+   729→   729→    h2 = doc.add_heading("5.4 Plan de Calibracion de RVS con Usuarios Reales", level=2)
+   730→   730→    for run in h2.runs:
+   731→   731→        run.font.color.rgb = c(P["primary"])
+   732→   732→
+   733→   733→    p = doc.add_paragraph()
+   734→   734→    run = p.add_run(
+   735→   735→        "La tabla de valores de RVS (Seccion 5.1) es una asignacion razonable hecha por el "
+   736→   736→        "laboratorio, pero sigue siendo una decision interna. No ha sido validada con comportamiento "
+   737→   737→        "real de usuarios. Esto es el punto mas debil del protocolo actual: los pesos de RVS "
+   738→   738→        "determinan que estrategia se considera superior, y si esos pesos estan mal calibrados, "
+   739→   739→        "todas las conclusiones del laboratorio se basan en una premisa incorrecta."
+   740→   740→    )
+   741→   741→    run.font.size = Pt(11)
+   742→   742→
+   743→   743→    p = doc.add_paragraph()
+   744→   744→    run = p.add_run(
+   745→   745→        "Para que el RVS deje de ser un modelo disenado por el laboratorio y pase a estar "
+   746→   746→        "calibrado con comportamiento real, se necesita una encuesta de calibracion. La pregunta "
+   747→   747→        "central de la encuesta es simple: 'Si solo pudieras recuperar uno de estos archivos, "
+   748→   748→        "cual elegirias?' La respuesta a esta pregunta, repetida con suficiente diversidad de "
+   749→   749→        "usuarios, produce una ranking de valor que reemplaza la tabla actual."
+   750→   750→    )
+   751→   751→    run.font.size = Pt(11)
+   752→   752→
+   753→   753→    p = doc.add_paragraph()
+   754→   754→    run = p.add_run("Poblaciones objetivo para la encuesta:")
+   755→   755→    run.bold = True
+   756→   756→    run.font.size = Pt(11)
+   757→   757→
+   758→   758→    survey_pops = [
+   759→   759→        "Fotografos profesionales: valoran RAW y fotos familiares, desprecian ISO y thumbnails.",
+   760→   760→        "Estudios juridicos: valoran documentos y bases de datos, desprecian thumbnails.",
+   761→   761→        "Empresas de tecnologia: valoran bases de datos y codigo, desprecian ISO.",
+   762→   762→        "Usuarios domesticos: valoran fotos y videos familiares, desprecian archivos de sistema.",
+   763→   763→        "Estudiantes: valoran tesis y documentos, desprecian thumbnails.",
+   764→   764→    ]
+   765→   765→    for pop in survey_pops:
+   766→   766→        p = doc.add_paragraph(style='List Bullet')
+   767→   767→        run = p.add_run(pop)
+   768→   768→        run.font.size = Pt(11)
+   769→   769→
+   770→   770→    p = doc.add_paragraph()
+   771→   771→    run = p.add_run("Metodologia de la encuesta:")
+   772→   772→    run.bold = True
+   773→   773→    run.font.size = Pt(11)
+   774→   774→
+   775→   775→    survey_methods = [
+   776→   776→        "Presentar pares de archivos y pedir al usuario que elija cual recuperaria primero.",
+   777→   777→        "Usar el metodo de comparacion por pares (Bradley-Terry) para obtener un ranking continuo.",
+   778→   778→        "Minimo 30 respuestas por poblacion para obtener estimaciones estables.",
+   779→   779→        "Comparar los pesos obtenidos con la tabla actual. Si difieren significativamente, actualizar la tabla y recalcular resultados previos.",
+   780→   780→        "Publicar los datos de la encuesta como parte del Benchmark Suite para transparencia.",
+   781→   781→    ]
+   782→   782→    for method in survey_methods:
+   783→   783→        p = doc.add_paragraph(style='List Bullet')
+   784→   784→        run = p.add_run(method)
+   785→   785→        run.font.size = Pt(11)
+   786→   786→
+   787→   787→    p = doc.add_paragraph()
+   788→   788→    p.paragraph_format.space_before = Pt(6)
+   789→   789→    run = p.add_run("Estado: ")
+   790→   790→    run.bold = True
+   791→   791→    run.font.color.rgb = c(P["orange"])
+   792→   792→    run.font.size = Pt(11)
+   793→   793→    run2 = p.add_run(
+   794→   794→        "La encuesta no se ha realizado. Es una actividad de la Fase B, no de la Fase A. "
+   795→   795→        "Hasta que se complete, los pesos de RVS deben tratarse como supuestos, no como "
+   796→   796→        "hechos. Cada resultado que dependa de RVS debe incluir un descargo: 'Los pesos de "
+   797→   797→        "valor son asignaciones del laboratorio, no estan calibrados con usuarios reales.'"
+   798→   798→    )
+   799→   799→    run2.font.size = Pt(11)
+   800→   800→
+   801→   801→    # ═══════════════════════════════════════════════════════════════════════
+   802→   802→    # SECTION 6: AUDITORIA DE HIPOTESIS
+   803→   803→    # ═══════════════════════════════════════════════════════════════════════
+   804→   804→    h = doc.add_heading("6. Auditoria de Hipotesis", level=1)
+   805→   805→    for run in h.runs:
+   806→   806→        run.font.color.rgb = c(P["primary"])
+   807→   807→
+   808→   808→    p = doc.add_paragraph()
+   809→   809→    run = p.add_run(
+   810→   810→        "Cada hipotesis debe declarar explicitamente su variable independiente, variable dependiente, "
+   811→   811→        "y criterio de exito antes de ejecutar el experimento. Si estos no estan definidos, "
+   812→   812→        "la hipotesis no es testeable y debe ser reformulada. Una hipotesis sin criterio de "
+   813→   813→        "refutacion no es una hipotesis cientifica: es una opinion. El protocolo exige que cada "
+   814→   814→        "hipotesis defina explicitamente que resultado la refutaria, no solo que resultado la "
+   815→   815→        "confirmaria."
+   816→   816→    )
+   817→   817→    run.font.size = Pt(11)
+   818→   818→
+   819→   819→    add_styled_table(
+   820→   820→        doc,
+   821→   821→        ["Hipotesis", "Variable Independiente", "Variable Dependiente", "Criterio de Exito", "Confiabilidad"],
+   822→   822→        [
+   823→   823→            ["H1.1", "Estrategia (Carving vs MFT-First)", "Overall Utility", "MFT-First > Carving por umbral empirico+ en 3+ datasets", "***"],
+   824→   824→            ["H1.2", "Confianza en metadatos (0-100%)", "Estrategia optima", "Cambio de estrategia en umbral definido", "*"],
+   825→   825→            ["H2", "Nivel de dano MFT (0-100%)", "Recovery Rate", "Crossover observable con carving completo", "**"],
+   826→   826→            ["H4", "Tipo de dano", "Mejor estrategia", "Matriz completa con >80% celdas llenas", "*"],
+   827→   827→            ["H5", "Formato de archivo", "Recovery Rate por formato", "Diferencia >10% entre formatos", "*"],
+   828→   828→            ["H6", "Nivel de dano en archivo", "FQS", "Espectro no-binario con >2 niveles", "**"],
+   829→   829→            ["H7", "Tipo de archivo recuperado", "RVS", "Tesis > 200 thumbnails (RVS calibrado)", "*"],
+   830→   830→            ["H8", "Motor de carving (limitado vs completo)", "Crossover point", "Cambio significativo en crossover", "*"],
+   831→   831→        ],
+   832→   832→        col_widths=[1.5, 3.5, 2.5, 4.0, 1.5],
+   833→   833→    )
+   834→   834→
+   835→   835→    # ═══════════════════════════════════════════════════════════════════════
+   836→   836→    # SECTION 7: HOJA DE RUTA POR FASES
+   837→   837→    # ═══════════════════════════════════════════════════════════════════════
+   838→   838→    h = doc.add_heading("7. Hoja de Ruta por Fases", level=1)
+   839→   839→    for run in h.runs:
+   840→   840→        run.font.color.rgb = c(P["primary"])
+   841→   841→
+   842→   842→    h2 = doc.add_heading("7.1 Fase A - Ahora Mismo (Congelar)", level=2)
+   843→   843→    for run in h2.runs:
+   844→   844→        run.font.color.rgb = c(P["primary"])
+   845→   845→
+   846→   846→    phase_a_items = [
+   847→   847→        "Congelar nuevas funcionalidades. No agregar nuevos formatos (MP4, DOCX, SQLite) al motor de carving.",
+   848→   848→        "Consolidar el protocolo experimental. Este documento es el paso 1.",
+   849→   849→        "Ejecutar experimentos por formato con JPEG, PNG y PDF unicamente.",
+   850→   850→        "Repetir los experimentos suficientes veces para verificar estabilidad (minimo 10 repeticiones, 3 datasets).",
+   851→   851→        "Completar la integracion de Overall Utility = RVS x FQS en el Judge.",
+   852→   852→        "Calibrar el umbral empirico de significancia (30 ejecuciones baseline, ver Seccion 3.1).",
+   853→   853→        "Exigir ratio 1:1 de codigo de recuperacion vs codigo de validacion.",
+   854→   854→    ]
+   855→   855→    for item in phase_a_items:
+   856→   856→        p = doc.add_paragraph(style='List Bullet')
+   857→   857→        run = p.add_run(item)
+   858→   858→        run.font.size = Pt(11)
+   859→   859→
+   860→   860→    h2 = doc.add_heading("7.2 Fase B - Validacion Externa", level=2)
+   861→   861→    for run in h2.runs:
+   862→   862→        run.font.color.rgb = c(P["primary"])
+   863→   863→
+   864→   864→    p = doc.add_paragraph()
+   865→   865→    run = p.add_run(
+   866→   866→        "Validar el laboratorio contra herramientas reales. Pero no basta con comparar contra "
+   867→   867→        "una sola herramienta. PhotoRec representa carving puro, pero el laboratorio evalua "
+   868→   868→        "multiples familias de estrategias: MFT-first, hybridas, orquestadores, presupuestos "
+   869→   869→        "de lectura. Para que la validacion externa sea significativa, necesitamos comparar "
+   870→   870→        "contra herramientas que representen CADA familia de estrategias, no solo una."
+   871→   871→    )
+   872→   872→    run.font.size = Pt(11)
+   873→   873→
+   874→   874→    add_styled_table(
+   875→   875→        doc,
+   876→   876→        ["Familia de Estrategia", "Herramienta Representativa", "Que valida"],
+   877→   877→        [
+   878→   878→            ["Carving puro", "PhotoRec / TestDisk", "Si nuestro carving es comparable al estado del arte"],
+   879→   879→            ["MFT-first", "R-Studio / ReclaiMe", "Si nuestras estrategias MFT son comparables a herramientas comerciales"],
+   880→   880→            ["Hybrida", "DMDE (Disk Drill)", "Si nuestras estrategias hibridas son comparables"],
+   881→   881→            ["Orquestador", "UFS Explorer", "Si nuestro Motor C es comparable a herramientas que adaptan estrategia"],
+   882→   882→        ],
+   883→   883→        col_widths=[3.5, 4.0, 6.5],
+   884→   884→    )
+   885→   885→
+   886→   886→    p = doc.add_paragraph()
+   887→   887→    p.paragraph_format.space_before = Pt(8)
+   888→   888→    run = p.add_run(
+   889→   889→        "Cada herramienta externa se ejecuta sobre los mismos datasets de JPEG/PNG/PDF. "
+   890→   890→        "Se comparan Recovery Rate, RVS y FQS. Si las conclusiones del laboratorio coinciden "
+   891→   891→        "con el comportamiento de las herramientas de la misma familia, los resultados ganan "
+   892→   892→        "la cuarta estrella. Si no coinciden, el laboratorio tiene un problema de validez que "
+   893→   893→        "debe resolverse antes de continuar."
+   894→   894→    )
+   895→   895→    run.font.size = Pt(11)
+   896→   896→
+   897→   897→    phase_b_items = [
+   898→   898→        "Ejecutar PhotoRec sobre los mismos datasets de JPEG/PNG/PDF (carving baseline).",
+   899→   899→        "Ejecutar R-Studio o ReclaiMe sobre los mismos datasets (MFT-first baseline).",
+   900→   900→        "Ejecutar DMDE sobre los mismos datasets (hybrid baseline).",
+   901→   901→        "Comparar Recovery Rate, RVS y FQS de cada herramienta vs los motores del laboratorio.",
+   902→   902→        "Si los resultados no son consistentes con la herramienta de la misma familia, investigar y documentar las discrepancias.",
+   903→   903→        "Ejecutar la encuesta de calibracion de RVS (ver Seccion 5.4).",
+   904→   904→        "Publicar los resultados de la comparacion como parte del Benchmark Suite.",
+   905→   905→    ]
+   906→   906→    for item in phase_b_items:
+   907→   907→        p = doc.add_paragraph(style='List Bullet')
+   908→   908→        run = p.add_run(item)
+   909→   909→        run.font.size = Pt(11)
+   910→   910→
+   911→   911→    h2 = doc.add_heading("7.3 Fase C - Expansion Controlada", level=2)
+   912→   912→    for run in h2.runs:
+   913→   913→        run.font.color.rgb = c(P["primary"])
+   914→   914→
+   915→   915→    p = doc.add_paragraph()
+   916→   916→    run = p.add_run(
+   917→   917→        "Solo entonces incorporar un formato nuevo (por ejemplo MP4) y exigirle el mismo "
+   918→   918→        "estandar de calidad y pruebas que ya se alcanzo con JPEG, PNG y PDF. Cada nuevo "
+   919→   919→        "formato debe pasar por el mismo proceso: parser impecable, 19+ tests de validacion, "
+   920→   920→        "experimentos por formato, y estabilidad verificada. La regla es simple: un parser "
+   921→   921→        "excelente de JPEG tiene muchisimo mas valor cientifico que diez parsers aceptables."
+   922→   922→    )
+   923→   923→    run.font.size = Pt(11)
+   924→   924→
+   925→   925→    # ═══════════════════════════════════════════════════════════════════════
+   926→   926→    # SECTION 8: FORMATOS CONGELADOS
+   927→   927→    # ═══════════════════════════════════════════════════════════════════════
+   928→   928→    h = doc.add_heading("8. Formatos Congelados - Referencia Dorada", level=1)
+   929→   929→    for run in h.runs:
+   930→   930→        run.font.color.rgb = c(P["primary"])
+   931→   931→
+   932→   932→    p = doc.add_paragraph()
+   933→   933→    run = p.add_run(
+   934→   934→        "Los tres parsers actuales (JPEG, PNG, PDF) tienen 19/19 tests pasados. "
+   935→   935→        "Esto vale oro. Antes de agregar un nuevo formato, estos tres deben convertirse "
+   936→   936→        "en una referencia absoluta. La calidad de los parsers existentes es la base "
+   937→   937→        "sobre la cual se construye la credibilidad del laboratorio. Un parser con 19/19 "
+   938→   938→        "tests no es solo un parser que funciona: es un parser que se puede usar como "
+   939→   939→        "patron de referencia para calibrar otros parsers y para validar que los "
+   940→   940→        "experimentos de recuperacion no estan sesgados por defectos del parser."
+   941→   941→    )
+   942→   942→    run.font.size = Pt(11)
+   943→   943→
+   944→   944→    add_styled_table(
+   945→   945→        doc,
+   946→   946→        ["Formato", "Parser", "Tests", "Estado", "Accion"],
+   947→   947→        [
+   948→   948→            ["JPEG", "motor_carving.py", "19/19", "IMPECABLE", "Convertir en referencia dorada"],
+   949→   949→            ["PNG", "motor_carving.py", "19/19", "IMPECABLE", "Convertir en referencia dorada"],
+   950→   950→            ["PDF", "motor_carving.py", "19/19", "IMPECABLE", "Convertir en referencia dorada"],
+   951→   951→            ["MP4", "No implementado", "0/0", "CONGELADO", "No implementar hasta Fase C"],
+   952→   952→            ["DOCX", "No implementado", "0/0", "CONGELADO", "No implementar hasta Fase C"],
+   953→   953→            ["SQLite", "No implementado", "0/0", "CONGELADO", "No implementar hasta Fase C"],
+   954→   954→            ["CR2/NEF", "No implementado", "0/0", "CONGELADO", "No implementar hasta Fase C"],
+   955→   955→            ["TXT", "Imposible", "0/0", "IMPOSIBLE", "Sin firma ni footer - no es carvable"],
+   956→   956→        ],
+   957→   957→        col_widths=[2.0, 3.0, 1.5, 2.5, 5.0],
+   958→   958→    )
+   959→   959→
+   960→   960→    # ═══════════════════════════════════════════════════════════════════════
+   961→   961→    # SECTION 9: REGLA DE ORO
+   962→   962→    # ═══════════════════════════════════════════════════════════════════════
+   963→   963→    h = doc.add_heading("9. Regla de Oro", level=1)
+   964→   964→    for run in h.runs:
+   965→   965→        run.font.color.rgb = c(P["primary"])
+   966→   966→
+   967→   967→    p = doc.add_paragraph()
+   968→   968→    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+   969→   969→    p.paragraph_format.space_before = Pt(12)
+   970→   970→    p.paragraph_format.space_after = Pt(12)
+   971→   971→    run = p.add_run(
+   972→   972→        "Por cada 500 lineas nuevas de codigo de recuperacion, "
+   973→   973→        "agregar al menos 500 lineas de validacion, pruebas y metricas."
+   974→   974→    )
+   975→   975→    run.font.size = Pt(13)
+   976→   976→    run.font.color.rgb = c(P["accent"])
+   977→   977→    run.bold = True
+   978→   978→    run.italic = True
+   979→   979→
+   980→   980→    p = doc.add_paragraph()
+   981→   981→    run = p.add_run(
+   982→   982→        "Esta regla no es una sugerencia. Es la unica defensa contra la tentacion de agregar "
+   983→   983→        "funcionalidades sin validarlas. La calidad del laboratorio es su activo mas valioso. "
+   984→   984→        "Un motor con 3 parsers impecables y 19/19 tests es mas cientificamente valioso que "
+   985→   985→        "un motor con 17 parsers mediocres y tests insuficientes. Si realmente se mantiene esta "
+   986→   986→        "disciplina durante uno o dos anos, RecoveryLab podria terminar siendo mucho mas confiable "
+   987→   987→        "que muchos proyectos open source donde el codigo crece mucho mas rapido que las pruebas."
+   988→   988→    )
+   989→   989→    run.font.size = Pt(11)
+   990→   990→
+   991→   991→    # ═══════════════════════════════════════════════════════════════════════
+   992→   992→    # SECTION 10: PRODUCTO
+   993→   993→    # ═══════════════════════════════════════════════════════════════════════
+   994→   994→    h = doc.add_heading("10. Producto del Proyecto", level=1)
+   995→   995→    for run in h.runs:
+   996→   996→        run.font.color.rgb = c(P["primary"])
+   997→   997→
+   998→   998→    add_callout_box(
+   999→   999→        doc,
+  1000→  1000→        "Producto como hipotesis de negocio, no como declaracion",
+  1001→  1001→        "En la version 1.0 se afirmaba: 'El producto ya no es un motor sino un Benchmark Suite.' "
+  1002→  1002→        "Esto puede ser cierto, pero todavia es una hipotesis de negocio. No esta demostrado que "
+  1003→  1003→        "exista suficiente demanda por una plataforma de benchmarking para recuperacion de datos. "
+  1004→  1004→        "La redaccion correcta es una pregunta, no una afirmacion.",
+  1005→  1005→        P["orange"]
+  1006→  1006→    )
+  1007→  1007→
+  1008→  1008→    p = doc.add_paragraph()
+  1009→  1009→    run = p.add_run(
+  1010→  1010→        "Estamos investigando si el verdadero activo competitivo del proyecto termina siendo "
+  1011→  1011→        "el RecoveryLab Benchmark Suite: una plataforma objetiva para evaluar estrategias de "
+  1012→  1012→        "recuperacion de datos. Esta hipotesis de negocio se basa en la observacion de que "
+  1013→  1013→        "medir objetivamente la utilidad de una estrategia de recuperacion es un problema "
+  1014→  1014→        "mas amplio y mas dificil de replicar que construir un motor individual. Pero no "
+  1015→  1015→        "esta demostrado que exista suficiente demanda por esta plataforma. La validacion "
+  1016→  1016→        "de esta hipotesis de negocio es parte del trabajo futuro, no una conclusion actual."
+  1017→  1017→    )
+  1018→  1018→    run.font.size = Pt(11)
+  1019→  1019→
+  1020→  1020→    p = doc.add_paragraph()
+  1021→  1021→    run = p.add_run(
+  1022→  1022→        "La diferencia entre decir 'nuestro producto ES el Benchmark Suite' y 'estamos investigando "
+  1023→  1023→        "si el verdadero activo competitivo termina siendo el Benchmark Suite' es pequena en "
+  1024→  1024→        "redaccion pero enorme en metodologia. La primera afirmacion cierra la puerta a "
+  1025→  1025→        "evidencia contradictoria. La segunda la deja abierta. La honestidad metodologica "
+  1026→  1026→        "exige la segunda formulacion."
+  1027→  1027→    )
+  1028→  1028→    run.font.size = Pt(11)
+  1029→  1029→
+  1030→  1030→    # ═══════════════════════════════════════════════════════════════════════
+  1031→  1031→    # SECTION 11: OBJETIVOS OPERATIVOS INMEDIATOS
+  1032→  1032→    # ═══════════════════════════════════════════════════════════════════════
+  1033→  1033→    h = doc.add_heading("11. Objetivos Operativos Inmediatos", level=1)
+  1034→  1034→    for run in h.runs:
+  1035→  1035→        run.font.color.rgb = c(P["primary"])
+  1036→  1036→
+  1037→  1037→    p = doc.add_paragraph()
+  1038→  1038→    run = p.add_run(
+  1039→  1039→        "Durante las proximas semanas, no se escribira una sola linea nueva del motor. "
+  1040→  1040→        "El trabajo se concentra exclusivamente en cuatro objetivos. La credibilidad del "
+  1041→  1041→        "laboratorio vale mas que agregar capacidades nuevas."
+  1042→  1042→    )
+  1043→  1043→    run.font.size = Pt(11)
+  1044→  1044→
+  1045→  1045→    h2 = doc.add_heading("11.1 Referencia Dorada: JPEG, PNG, PDF", level=2)
+  1046→  1046→    for run in h2.runs:
+  1047→  1047→        run.font.color.rgb = c(P["primary"])
+  1048→  1048→
+  1049→  1049→    p = doc.add_paragraph()
+  1050→  1050→    run = p.add_run(
+  1051→  1051→        "Conseguir que JPEG, PNG y PDF sean una referencia dorada absolutamente confiable. "
+  1052→  1052→        "Esto significa que los tres parsers deben pasar no solo los 19 tests existentes, sino "
+  1053→  1053→        "que deben ser robustos ante edge cases, datasets adversarios, y condiciones de dano "
+  1054→  1054→        "extremo. La referencia dorada es el estandar contra el cual se mide todo lo demas."
+  1055→  1055→    )
+  1056→  1056→    run.font.size = Pt(11)
+  1057→  1057→
+  1058→  1058→    for item in [
+  1059→  1059→        "Verificar que los 19/19 tests pasan consistentemente en 30 ejecuciones consecutivas.",
+  1060→  1060→        "Agregar tests de edge cases: archivos vacios, archivos de 1 byte, archivos con headers corruptos.",
+  1061→  1061→        "Agregar tests adversarios: archivos que empiezan con la firma de un formato pero son otro.",
+  1062→  1062→        "Documentar las limitaciones conocidas de cada parser.",
+  1063→  1063→    ]:
+  1064→  1064→        p = doc.add_paragraph(style='List Bullet')
+  1065→  1065→        run = p.add_run(item)
+  1066→  1066→        run.font.size = Pt(11)
+  1067→  1067→
+  1068→  1068→    h2 = doc.add_heading("11.2 Alcanzar 3 Estrellas en Hipotesis Principales", level=2)
+  1069→  1069→    for run in h2.runs:
+  1070→  1070→        run.font.color.rgb = c(P["primary"])
+  1071→  1071→
+  1072→  1072→    p = doc.add_paragraph()
+  1073→  1073→    run = p.add_run(
+  1074→  1074→        "Ejecutar todos los experimentos suficientes veces para alcanzar al menos 3 estrellas "
+  1075→  1075→        "en las hipotesis principales, antes de abrir nuevas lineas de investigacion. Las "
+  1076→  1076→        "hipotesis principales son H1.1, H6 y H7. Actualmente H1.1 esta en 3 estrellas, "
+  1077→  1077→        "pero H6 y H7 estan en 1-2 estrellas. Elevarlas requiere ejecutar con multiples "
+  1078→  1078→        "datasets distintos, no solo repeticiones del mismo dataset."
+  1079→  1079→    )
+  1080→  1080→    run.font.size = Pt(11)
+  1081→  1081→
+  1082→  1082→    add_styled_table(
+  1083→  1083→        doc,
+  1084→  1084→        ["Hipotesis", "Estrellas Actuales", "Estrellas Objetivo", "Accion Requerida"],
+  1085→  1085→        [
+  1086→  1086→            ["H1.1", "***", "*** (mantener)", "Ejecutar en 3+ datasets distintos para confirmar"],
+  1087→  1087→            ["H6", "**", "***", "Ejecutar FQS en 3+ datasets distintos"],
+  1088→  1088→            ["H7", "*", "***", "Calibrar RVS con encuesta + ejecutar en 3+ datasets"],
+  1089→  1089→            ["H2", "**", "***", "Repetir con carving completo (H8 resuelto)"],
+  1090→  1090→        ],
+  1091→  1091→        col_widths=[2.0, 2.5, 2.5, 7.0],
+  1092→  1092→    )
+  1093→  1093→
+  1094→  1094→    h2 = doc.add_heading("11.3 Validacion con Herramientas Externas", level=2)
+  1095→  1095→    for run in h2.runs:
+  1096→  1096→        run.font.color.rgb = c(P["primary"])
+  1097→  1097→
+  1098→  1098→    p = doc.add_paragraph()
+  1099→  1099→    run = p.add_run(
+  1100→  1100→        "Validar los resultados contra herramientas externas usando exactamente los mismos "
+  1101→  1101→        "datasets. No solo PhotoRec, sino herramientas que representen cada familia de "
+  1102→  1102→        "estrategias (ver Seccion 7.2). La validacion con multiples familias es esencial "
+  1103→  1103→        "porque cada familia opera bajo supuestos distintos."
+  1104→  1104→    )
+  1105→  1105→    run.font.size = Pt(11)
+  1106→  1106→
+  1107→  1107→    for item in [
+  1108→  1108→        "Preparar los datasets en formato compatible con cada herramienta externa.",
+  1109→  1109→        "Ejecutar PhotoRec (carving), R-Studio (MFT-first), y DMDE (hybrid) sobre los mismos datasets.",
+  1110→  1110→        "Comparar Recovery Rate, RVS y FQS de cada herramienta vs los motores del laboratorio.",
+  1111→  1111→        "Documentar discrepancias y investigar sus causas.",
+  1112→  1112→    ]:
+  1113→  1113→        p = doc.add_paragraph(style='List Bullet')
+  1114→  1114→        run = p.add_run(item)
+  1115→  1115→        run.font.size = Pt(11)
+  1116→  1116→
+  1117→  1117→    h2 = doc.add_heading("11.4 Primeros Datasets del Mundo Real", level=2)
+  1118→  1118→    for run in h2.runs:
+  1119→  1119→        run.font.color.rgb = c(P["primary"])
+  1120→  1120→
+  1121→  1121→    p = doc.add_paragraph()
+  1122→  1122→    run = p.add_run(
+  1123→  1123→        "Buscar los primeros datasets provenientes del mundo real, aunque sean pocos. "
+  1124→  1124→        "Aqui empieza la transicion desde un laboratorio bien disenado hacia evidencia con "
+  1125→  1125→        "mayor validez externa. Los datasets sinteticos son necesarios para el control "
+  1126→  1126→        "experimental, pero no son suficientes: un laboratorio que solo funciona con datos "
+  1127→  1127→        "sinteticos puede tener sesgos invisibles que solo aparecen con datos reales."
+  1128→  1128→    )
+  1129→  1129→    run.font.size = Pt(11)
+  1130→  1130→
+  1131→  1131→    for item in [
+  1132→  1132→        "Identificar fuentes de imagenes de disco reales (anonymized, de dominio publico).",
+  1133→  1133→        "Crear al menos 1 dataset real con ground truth verificable.",
+  1134→  1134→        "Ejecutar los mismos experimentos sobre el dataset real y comparar con resultados sinteticos.",
+  1135→  1135→        "Si los resultados difieren significativamente, investigar sesgos del laboratorio.",
+  1136→  1136→    ]:
+  1137→  1137→        p = doc.add_paragraph(style='List Bullet')
+  1138→  1138→        run = p.add_run(item)
+  1139→  1139→        run.font.size = Pt(11)
+  1140→  1140→
+  1141→  1141→    p = doc.add_paragraph()
+  1142→  1142→    p.paragraph_format.space_before = Pt(8)
+  1143→  1143→    run = p.add_run(
+  1144→  1144→        "Si estos cuatro objetivos se cumplen, recien entonces tendria sentido volver a hablar "
+  1145→  1145→        "de Motor C, IA, aprendizaje adaptativo o nuevos formatos. En este punto del proyecto, "
+  1146→  1146→        "la credibilidad del laboratorio vale mas que agregar capacidades nuevas."
+  1147→  1147→    )
+  1148→  1148→    run.font.size = Pt(11)
+  1149→  1149→    run.italic = True
+  1150→  1150→
+  1151→  1151→    # ═══════════════════════════════════════════════════════════════════════
+  1152→  1152→    # SECTION 12: THREATS TO VALIDITY (NUEVO)
+  1153→  1153→    # ═══════════════════════════════════════════════════════════════════════
+  1154→  1154→    h = doc.add_heading("12. Threats to Validity (Amenazas a la Validez)", level=1)
+  1155→  1155→    for run in h.runs:
+  1156→  1156→        run.font.color.rgb = c(P["primary"])
+  1157→  1157→
+  1158→  1158→    p = doc.add_paragraph()
+  1159→  1159→    run = p.add_run(
+  1160→  1160→        "Esta seccion es una Practica estandar en trabajos cientificos. Su proposito es explicitar "
+  1161→  1161→        "los factores que podrian invalidar las conclusiones del laboratorio. No es una admission "
+  1162→  1162→        "de debilidad: es una demonstration de rigor. Un laboratorio que no reconoce sus amenazas "
+  1163→  1163→        "a la validez es un laboratorio que no las ha pensado. Cada vez que aparezca una amenaza "
+  1164→  1164→        "nueva, no se elimina: se agrega aqui junto con su estado (ABIERTA, MITIGADA o RESUELTA). "
+  1165→  1165→        "Con el tiempo esta seccion puede convertirse en una de las mas importantes del protocolo."
+  1166→  1166→    )
+  1167→  1167→    run.font.size = Pt(11)
+  1168→  1168→
+  1169→  1169→    # 12.1 Internal Validity
+  1170→  1170→    h2 = doc.add_heading("12.1 Validez Interna", level=2)
+  1171→  1171→    for run in h2.runs:
+  1172→  1172→        run.font.color.rgb = c(P["primary"])
+  1173→  1173→
+  1174→  1174→    p = doc.add_paragraph()
+  1175→  1175→    run = p.add_run(
+  1176→  1176→        "La validez interna pregunta: existe algun sesgo dentro del propio RecoveryLab que podria "
+  1177→  1177→        "explicar los resultados observados? Es la pregunta mas incmoda porque implica que el "
+  1178→  1178→        "laboratorio podria estar enganandose a si mismo. Las amenazas a la validez interna son "
+  1179→  1179→        "las mas peligrosas porque son invisibles desde adentro: el experimentador no detecta sus "
+  1180→  1180→        "propios sesgos."
+  1181→  1181→    )
+  1182→  1182→    run.font.size = Pt(11)
+  1183→  1183→
+  1184→  1184→    add_styled_table(
+  1185→  1185→        doc,
+  1186→  1186→        ["Amenaza", "Descripcion", "Estado", "Mitigacion"],
+  1187→  1187→        [
+  1188→  1188→            ["Motores conocen ground truth",
+  1189→  1189→             "Los motores podrian acceder a informacion que no tendrian en un escenario real (ubicacion de archivos, checksums, etc.)",
+  1190→  1190→             "MITIGADA",
+  1191→  1191→             "Motor A (Carving) no lee MFT. Motor B (MFT-First) lee MFT legible pero no el ground truth directo. Verificar que ningun motor importa ground truth."],
+  1192→  1192→            ["Datasets favorecen una estrategia",
+  1193→  1193→             "Los datasets sinteticos podrian estar disenados de forma que favorezcan MFT-First (MFT intacto) o Carving (MFT destruido)",
+  1194→  1194→             "ABIERTA",
+  1195→  1195→             "Verificar distribucion de dano en datasets. Usar multiples generadores de datasets. Fase B: comparar con datasets reales."],
+  1196→  1196→            ["Parser sesgado",
+  1197→  1197→             "El parser de carving podria tener bugs que lo hagan peor de lo que seria un carving real",
+  1198→  1198→             "MITIGADA",
+  1199→  1199→             "19/19 tests de carving impecable. Fase B: comparar con PhotoRec (carving real)."],
+  1200→  1200→            ["Confirmacion de hipotesis",
+  1201→  1201→             "El experimentador podria (inconscientemente) disenar experimentos que favorezcan sus hipotesis",
+  1202→  1202→             "MITIGADA",
+  1203→  1203→             "Criterio de exito declarado antes de ejecutar. Umbral empirico. Registro de confianza publico."],
+  1204→  1204→            ["Carving limitado",
+  1205→  1205→             "El carving actual solo detecta 3 formatos (JPEG/PNG/PDF). Esto infla artificialmente el crossover point.",
+  1206→  1206→             "ABIERTA",
+  1207→  1207→             "H8 registrado. Congelado hasta Fase C. Crossover actual marcado como artefacto."],
+  1208→  1208→        ],
+  1209→  1209→        col_widths=[3.0, 4.5, 2.0, 4.5],
+  1210→  1210→    )
+  1211→  1211→
+  1212→  1212→    # 12.2 External Validity
+  1213→  1213→    h2 = doc.add_heading("12.2 Validez Externa", level=2)
+  1214→  1214→    for run in h2.runs:
+  1215→  1215→        run.font.color.rgb = c(P["primary"])
+  1216→  1216→
+  1217→  1217→    p = doc.add_paragraph()
+  1218→  1218→    run = p.add_run(
+  1219→  1219→        "La validez externa pregunta: los resultados del laboratorio son representativos de lo que "
+  1220→  1220→        "ocurriria en el mundo real? Un laboratorio puede ser internamente consistente pero "
+  1221→  1221→        "externamente irrelevante si sus condiciones experimentales no reflejan las condiciones "
+  1222→  1222→        "reales de recuperacion de datos. Esta es la pregunta mas dificil de responder porque "
+  1223→  1223→        "requiere datos que el laboratorio no tiene todavia."
+  1224→  1224→    )
+  1225→  1225→    run.font.size = Pt(11)
+  1226→  1226→
+  1227→  1227→    add_styled_table(
+  1228→  1228→        doc,
+  1229→  1229→        ["Amenaza", "Descripcion", "Estado", "Mitigacion"],
+  1230→  1230→        [
+  1231→  1231→            ["Solo datasets sinteticos",
+  1232→  1232→             "Todos los resultados provienen de imagenes de disco generadas artificialmente. No se ha validado con discos reales.",
+  1233→  1233→             "ABIERTA",
+  1234→  1234→             "Objetivo 11.4: buscar primeros datasets reales. Fase B: validacion con herramientas externas."],
+  1235→  1235→            ["Solo NTFS",
+  1236→  1236→             "El laboratorio solo evalua NTFS. Otros filesystems (ext4, APFS, HFS+) quedan fuera.",
+  1237→  1237→             "ABIERTA",
+  1238→  1238→             "Registrar como limitacion. No expandir filesystems hasta que NTFS sea solido."],
+  1239→  1239→            ["Solo dano simulado",
+  1240→  1240→             "Los modelos de dano (head crash, MFT parcial, etc.) son simulaciones. El dano real puede tener patrones diferentes.",
+  1241→  1241→             "ABIERTA",
+  1242→  1242→             "Fase B: validacion con herramientas que se usan en escenarios reales. Objetivo 5 estrellas: hardware real."],
+  1243→  1243→            ["Tamano de imagen limitado",
+  1244→  1244→             "Las imagenes de disco son de 10 MB. Los discos reales son de 100 GB a varios TB.",
+  1245→  1245→             "ABIERTA",
+  1246→  1246→             "Registrar como limitacion. Evaluar escalabilidad en futuras fases."],
+  1247→  1247→            ["Solo carving de 3 formatos",
+  1248→  1248→             "JPEG, PNG, PDF. Los discos reales contienen decenas de formatos.",
+  1249→  1249→             "ABIERTA",
+  1250→  1250→             "Congelado hasta Fase C. Parser excelente de 3 formatos > parser mediocre de 17."],
+  1251→  1251→        ],
+  1252→  1252→        col_widths=[3.0, 4.5, 2.0, 4.5],
+  1253→  1253→    )
+  1254→  1254→
+  1255→  1255→    # 12.3 Statistical Validity
+  1256→  1256→    h2 = doc.add_heading("12.3 Validez Estadistica", level=2)
+  1257→  1257→    for run in h2.runs:
+  1258→  1258→        run.font.color.rgb = c(P["primary"])
+  1259→  1259→
+  1260→  1260→    p = doc.add_paragraph()
+  1261→  1261→    run = p.add_run(
+  1262→  1262→        "La validez estadistica pregunta: las conclusiones estan soportadas por suficiente evidencia "
+  1263→  1263→        "cuantitativa? Un resultado observado una vez no es un resultado: es una observacion. "
+  1264→  1264→        "La pregunta clave es: cuantas repeticiones se necesitan para que un resultado sea "
+  1265→  1265→        "estadisticamente significativo? Y cual es la potencia estadistica de los experimentos "
+  1266→  1266→        "actuales?"
+  1267→  1267→    )
+  1268→  1268→    run.font.size = Pt(11)
+  1269→  1269→
+  1270→  1270→    add_styled_table(
+  1271→  1271→        doc,
+  1272→  1272→        ["Amenaza", "Descripcion", "Estado", "Mitigacion"],
+  1273→  1273→        [
+  1274→  1274→            ["Repeticiones insuficientes",
+  1275→  1275→             "Muchos resultados tienen solo 1-3 ejecuciones. No hay potencia estadistica.",
+  1276→  1276→             "MITIGADA",
+  1277→  1277→             "H1.1: 100 ejecuciones (***). H1.6: 100 ejecuciones (**). Objetivo: minimo 10 repeticiones por resultado."],
+  1278→  1278→            ["Sin potencia estadistica formal",
+  1279→  1279→             "No se ha calculado la potencia estadistica de ningun experimento. No se sabe si N es suficiente.",
+  1280→  1280→             "ABIERTA",
+  1281→  1281→             "Calcular potencia despues de las 30 ejecuciones baseline (Seccion 3.1). El umbral empirico incluye este calculo."],
+  1282→  1282→            ["Variabilidad desconocida",
+  1283→  1283→             "No se conoce la variabilidad natural de las metricas. El umbral de significancia era arbitrario (5%).",
+  1284→  1284→             "MITIGADA",
+  1285→  1285→             "Seccion 3.1: calibracion empirica del umbral. Umbral provisional de 3% hasta calibracion."],
+  1286→  1286→            ["Multiples comparaciones",
+  1287→  1287→             "Al comparar multiples estrategias, la probabilidad de falsos positivos aumenta (problema de multiplicidad).",
+  1288→  1288→             "ABIERTA",
+  1289→  1289→             "Registrar como amenaza. Considerar correccion de Bonferroni o FDR en futuras analisis."],
+  1290→  1290→            ["Resultados deterministas",
+  1291→  1291→             "Los resultados son deterministas (misma semilla = mismo resultado). Esto infla la consistencia artificialmente.",
+  1292→  1292→             "ABIERTA",
+  1293→  1293→             "Usar multiples semillas y datasets. La consistencia entre datasets distintos (no solo entre repeticiones) es la que importa para la generalizacion."],
+  1294→  1294→        ],
+  1295→  1295→        col_widths=[3.0, 4.5, 2.0, 4.5],
+  1296→  1296→    )
+  1297→  1297→
+  1298→  1298→    # 12.4 Construct Validity
+  1299→  1299→    h2 = doc.add_heading("12.4 Validez Constructiva", level=2)
+  1300→  1300→    for run in h2.runs:
+  1301→  1301→        run.font.color.rgb = c(P["primary"])
+  1302→  1302→
+  1303→  1303→    p = doc.add_paragraph()
+  1304→  1304→    run = p.add_run(
+  1305→  1305→        "La validez constructiva pregunta: las metricas realmente miden lo que dicen medir? "
+  1306→  1306→        "Esta es la pregunta mas filosofica pero tambien la mas fundamental. Si Overall Utility "
+  1307→  1307→        "no representa realmente la utilidad para el usuario, si RVS no representa realmente el "
+  1308→  1308→        "valor, o si FQS no representa realmente la calidad funcional, entonces todas las "
+  1309→  1309→        "conclusiones del laboratorio son correctas internamente pero irrelevantes en la practica. "
+  1310→  1310→        "Las amenazas a la validez constructiva son las mas dificiles de mitigar porque requieren "
+  1311→  1311→        "validacion externa con usuarios reales."
+  1312→  1312→    )
+  1313→  1313→    run.font.size = Pt(11)
+  1314→  1314→
+  1315→  1315→    add_styled_table(
+  1316→  1316→        doc,
+  1317→  1317→        ["Amenaza", "Descripcion", "Estado", "Mitigacion"],
+  1318→  1318→        [
+  1319→  1319→            ["Overall Utility no representa utilidad real",
+  1320→  1320→             "RVS x FQS es una formula matematica. No esta demostrado que este producto represente la utilidad percibida por el usuario.",
+  1321→  1321→             "ABIERTA",
+  1322→  1322→             "Fase B: encuesta de calibracion. Si los usuarios no coinciden con el ranking de Overall Utility, la metrica debe reformularse."],
+  1323→  1323→            ["RVS no representa valor real",
+  1324→  1324→             "Los pesos de RVS son asignados por el laboratorio, no calibrados con usuarios. La tesis vale 100, el thumbnail vale 1: pero es una decision interna.",
+  1325→  1325→             "ABIERTA",
+  1326→  1326→             "Seccion 5.4: plan de calibracion con Bradley-Terry. Mientras tanto: descargo explicito en cada resultado que use RVS."],
+  1327→  1327→            ["FQS no representa calidad funcional real",
+  1328→  1328→             "Los 5 niveles (FULL a FAILED) son definidos por el laboratorio. Un usuario podria considerar 'funcional' algo que nosotros clasificamos como 'degraded'.",
+  1329→  1329→             "ABIERTA",
+  1330→  1330→             "Encuesta de calibracion para FQS (simultanea con la de RVS). Verificar si los niveles de FQS coinciden con la percepcion de usuarios."],
+  1331→  1331→            ["Recuperacion binaria vs funcional",
+  1332→  1332→             "La transicion de 'SHA-256 match' a 'funcional' es una mejora, pero los umbrales (0.8, 0.5, 0.2) son arbitrarios.",
+  1333→  1333→             "ABIERTA",
+  1334→  1334→             "Calibrar los umbrales de FQS con usuarios reales. Verificar si 0.8 es realmente 'funcional' o si deberia ser 0.7 o 0.9."],
+  1335→  1335→        ],
+  1336→  1336→        col_widths=[3.0, 4.5, 2.0, 4.5],
+  1337→  1337→    )
+  1338→  1338→
+  1339→  1339→    # Summary of threats
+  1340→  1340→    p = doc.add_paragraph()
+  1341→  1341→    p.paragraph_format.space_before = Pt(12)
+  1342→  1342→    run = p.add_run("Resumen de amenazas: ")
+  1343→  1343→    run.bold = True
+  1344→  1344→    run.font.size = Pt(11)
+  1345→  1345→    run2 = p.add_run(
+  1346→  1346→        "4 amenazas MITIGADAS, 12 ABIERTAS, 0 RESUELTAS. La mayoria de las amenazas abiertas "
+  1347→  1347→        "requieren validacion externa (Fase B) o datos reales (Fase B/C). Esto es esperado en "
+  1348→  1348→        "un laboratorio en Fase A. La honestidad sobre estas amenazas es mas valiosa que "
+  1349→  1349→        "ignorarlas: un lector que ve las amenazas puede evaluar la confianza que merecen los "
+  1350→  1350→        "resultados. Un lector que no las ve no puede."
+  1351→  1351→    )
+  1352→  1352→    run2.font.size = Pt(11)
+  1353→  1353→
+  1354→  1354→    # ═══════════════════════════════════════════════════════════════════════
+  1355→  1355→    # SECTION 13: HYPOTHESIS SET v1.0 (FROZEN) (NUEVO)
+  1356→  1356→    # ═══════════════════════════════════════════════════════════════════════
+  1357→  1357→    h = doc.add_heading("13. Hypothesis Set v1.0 (Frozen)", level=1)
+  1358→  1358→    for run in h.runs:
+  1359→  1359→        run.font.color.rgb = c(P["primary"])
+  1360→  1360→
+  1361→  1361→    p = doc.add_paragraph()
+  1362→  1362→    run = p.add_run(
+  1363→  1363→        "A lo largo del proyecto, las hipotesis fueron reformuladas multiples veces (H1 se dividio "
+  1364→  1364→        "en H1.1 y H1.2, H2 se reformulo, H3 se creo y se debilito, etc.). Esto fue util durante "
+  1365→  1365→        "la exploracion: las hipotesis evolucionaron a medida que la comprension del problema "
+  1366→  1366→        "mejoraba. Pero llega un punto donde la reformulacion continua destruye la trazabilidad "
+  1367→  1367→        "del historial cientifico. Si una hipotesis se reescribe cada vez que los resultados no "
+  1368→  1368→        "la favorecen, nunca puede ser refutada, y un experimento que no puede ser refutado no "
+  1369→  1369→        "es un experimento."
+  1370→  1370→    )
+  1371→  1371→    run.font.size = Pt(11)
+  1372→  1372→
+  1373→  1373→    p = doc.add_paragraph()
+  1374→  1374→    run = p.add_run(
+  1375→  1375→        "Por eso se declara el conjunto actual de hipotesis como Hypothesis Set v1.0 (Frozen). "
+  1376→  1376→        "A partir de este momento, las hipotesis congeladas no se reescriben. Si aparece una "
+  1377→  1377→        "idea nueva, nace como H9, H10 o H11. Si una hipotesis resulta incorrecta, se marca "
+  1378→  1378→        "como REFUTADA, no se modifica retroactivamente. Esto hace que el historial cientifico "
+  1379→  1379→        "sea mucho mas limpio y permite que futuros lectores entiendan la evolucion del "
+  1380→  1380→        "pensamiento sin ambiguedad."
+  1381→  1381→    )
+  1382→  1382→    run.font.size = Pt(11)
+  1383→  1383→
+  1384→  1384→    # Frozen rules
+  1385→  1385→    p = doc.add_paragraph()
+  1386→  1386→    p.paragraph_format.space_before = Pt(8)
+  1387→  1387→    run = p.add_run("Reglas del congelamiento:")
+  1388→  1388→    run.bold = True
+  1389→  1389→    run.font.size = Pt(12)
+  1390→  1390→    run.font.color.rgb = c(P["accent"])
+  1391→  1391→
+  1392→  1392→    frozen_rules = [
+  1393→  1393→        "Las hipotesis congeladas (H1.1 a H8) no se reescriben. Su formulacion es definitiva.",
+  1394→  1394→        "Si una hipotesis resulta incorrecta, se marca como REFUTADA con la evidencia que la refuta. No se modifica.",
+  1395→  1395→        "Si aparece una idea nueva, se registra como H9, H10, H11, etc. No se fusiona con una existente.",
+  1396→  1396→        "Si una hipotesis necesita mayor granularidad, se crean sub-hipotesis (H9.1, H9.2), no se reescribe la original.",
+  1397→  1397→        "El historial de cada hipotesis (creacion, reformulaciones previas, evidencia acumulada) se mantiene en el registro.",
+  1398→  1398→        "Cualquier cambio de hipotesis posterior al congelamiento se documenta con fecha, razon y aprobacion.",
+  1399→  1399→    ]
+  1400→  1400→    for i, rule in enumerate(frozen_rules, 1):
+  1401→  1401→        p = doc.add_paragraph()
+  1402→  1402→        p.paragraph_format.left_indent = Cm(1.0)
+  1403→  1403→        run = p.add_run(f"{i}. {rule}")
+  1404→  1404→        run.font.size = Pt(11)
+  1405→  1405→
+  1406→  1406→    # Current frozen set
+  1407→  1407→    h2 = doc.add_heading("13.1 Conjunto Congelado Actual", level=2)
+  1408→  1408→    for run in h2.runs:
+  1409→  1409→        run.font.color.rgb = c(P["primary"])
+  1410→  1410→
+  1411→  1411→    add_styled_table(
+  1412→  1412→        doc,
+  1413→  1413→        ["ID", "Hipotesis (formulacion congelada)", "Estado", "Estrellas"],
+  1414→  1414→        [
+  1415→  1415→            ["H1.1", "Priorizar metadatos recuperables reduce significativamente el costo de adquisicion cuando los metadatos son suficientemente confiables", "ACTIVA", "***"],
+  1416→  1416→            ["H1.2", "Cuando la confianza en metadatos baja de un umbral, la estrategia optima cambia de priorizacion a hibrida", "ACTIVA", "*"],
+  1417→  1417→            ["H1.5", "Los gaps actuales (sin fragmentacion, sin INDX, sin jerarquia) limitan la capacidad de evaluacion", "ACTIVA", "*"],
+  1418→  1418→            ["H1.6", "Los resultados son deterministas: misma semilla produce mismo resultado", "ACTIVA", "**"],
+  1419→  1419→            ["H1.7", "Motor C (orquestador) supera a MFT-First cuando el presupuesto de lectura es limitado", "ACTIVA", "*"],
+  1420→  1420→            ["H2", "Existe una frontera observable donde la estrategia optima cambia segun el estado del medio", "CONTESTADA", "**"],
+  1421→  1421→            ["H4", "La estrategia optima depende del tipo de dano (Damage x Strategy Matrix)", "ACTIVA", "*"],
+  1422→  1422→            ["H5", "La eficacia de recuperacion varia significativamente por formato de archivo", "ACTIVA", "*"],
+  1423→  1423→            ["H6", "La recuperacion funcional no es binaria: existe un espectro de calidad funcional (FQS)", "ACTIVA", "**"],
+  1424→  1424→            ["H7", "El RVS predice la satisfaccion del usuario: los usuarios valoran mas recuperar la tesis que 200 thumbnails", "ACTIVA", "*"],
+  1425→  1425→            ["H8", "El crossover al 95% MFT damage es un artefacto del carving limitado, no un descubrimiento genuino", "ACTIVA", "*"],
+  1426→  1426→        ],
+  1427→  1427→        col_widths=[1.5, 8.0, 2.0, 1.5],
+  1428→  1428→    )
+  1429→  1429→
+  1430→  1430→    p = doc.add_paragraph()
+  1431→  1431→    p.paragraph_format.space_before = Pt(6)
+  1432→  1432→    run = p.add_run("Nota: ")
+  1433→  1433→    run.bold = True
+  1434→  1434→    run.font.size = Pt(11)
+  1435→  1435→    run2 = p.add_run(
+  1436→  1436→        "H3 fue eliminada del conjunto congelado. La hipotesis original ('No existe una estrategia "
+  1437→  1437→        "de recuperacion universalmente optima') fue absorbida por H4 y H2. Su eliminacion se "
+  1438→  1438→        "documenta aqui: H3 fue creada en Task 2, debilitada en Task 3, y su contenido sustantivo "
+  1439→  1439→        "vive ahora en H4. No se reescribe: se elimina y se explica por que."
+  1440→  1440→    )
+  1441→  1441→    run2.font.size = Pt(11)
+  1442→  1442→
+  1443→  1443→    # Future hypotheses
+  1444→  1444→    h2 = doc.add_heading("13.2 Espacio para Hipotesis Futuras", level=2)
+  1445→  1445→    for run in h2.runs:
+  1446→  1446→        run.font.color.rgb = c(P["primary"])
+  1447→  1447→
+  1448→  1448→    p = doc.add_paragraph()
+  1449→  1449→    run = p.add_run(
+  1450→  1450→        "Las siguientes hipotesis son candidatas a futuro. No estan congeladas todavia porque "
+  1451→  1451→        "no han sido formuladas con la precision necesaria (variable independiente, variable "
+  1452→  1452→        "dependiente, criterio de exito). Cuando alcancen esa precision, se registraran como "
+  1453→  1453→        "H9, H10, etc. y se congelaran."
+  1454→  1454→    )
+  1455→  1455→    run.font.size = Pt(11)
+  1456→  1456→
+  1457→  1457→    future_hyps = [
+  1458→  1458→        "H9 (candidata): El umbral empirico de significancia (Seccion 3.1) es estable entre datasets.",
+  1459→  1459→        "H10 (candidata): Los pesos de RVS calibrados con usuarios (Seccion 5.4) difieren significativamente de los asignados por el laboratorio.",
+  1460→  1460→        "H11 (candidata): Los resultados del laboratorio con datasets sinteticos predicen los resultados con datasets reales.",
+  1461→  1461→    ]
+  1462→  1462→    for hyp in future_hyps:
+  1463→  1463→        p = doc.add_paragraph(style='List Bullet')
+  1464→  1464→        run = p.add_run(hyp)
+  1465→  1465→        run.font.size = Pt(11)
+  1466→  1466→
+  1467→  1467→    # ─── Save ──────────────────────────────────────────────────────────────
+  1468→  1468→    output_path = "/home/z/my-project/download/Research_Protocol_v1.2.docx"
+  1469→  1469→    doc.save(output_path)
+  1470→  1470→    print(f"Research Protocol v1.2 saved to: {output_path}")
+  1471→  1471→    return output_path
+  1472→  1472→
+  1473→  1473→
+  1474→  1474→if __name__ == "__main__":
+  1475→  1475→    path = build_research_protocol()
+  1476→  1476→    print(f"Generated: {path}")
+  1477→  1477→

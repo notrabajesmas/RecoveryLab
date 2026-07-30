@@ -1,6 +1,58 @@
 # RecoveryLab — Work Log
 
 ---
+Task ID: 9
+Agent: Main
+Task: Incorporar tercera ronda de auditoria externa — Research Protocol v1.4
+
+Work Log:
+- Updated Research Protocol from v1.3 to v1.4 incorporating five new recommendations from external review
+- New Section 16: Separation of Observation and Explanation (6th sacred rule)
+  - Stricter than Evidence Gate: even "observamos..." can hide interpretation
+  - Pure observation = numbers only, no adjectives, no "porque"
+  - Explanation always in separate paragraph, linked to a hypothesis
+  - Example: "Observamos que Motor C elige correctamente" = NO
+  - Example: "En 27/30 ejecuciones Motor C selecciono carving" = YES
+- New Section 17: Evidence Ledger
+  - Per-experiment traceability: ID, date, dataset, seed, motor, commit, results, affected claims, threats
+  - No claim can cite evidence that doesn't exist in the ledger
+  - Ledger is append-only, stored in /data/evidence_ledger.csv
+  - Creates complete traceability chain: claim → experiment → commit → code
+- New Section 18: Judge API Freeze
+  - RVS v1.0, FQS v1.0, Overall Utility v1.0 FROZEN during Phase A
+  - If metrics need to evolve: Judge v1.1 + re-execute all affected experiments
+  - Never mix results from different Judge versions
+  - RVS calibration with users will likely require Judge v1.1
+- New Section 19: Reproducibility Contract
+  - run_all.py: git clone + python run_all.py = identical results
+  - Same datasets, same CSVs, same figures, same claims, same ledger
+  - 7 strict rules for reproducibility
+  - Non-reproducible results are not laboratory results — they are informal observations
+- New Section 20: Reproducible Claims Ratio (RCR) as primary KPI
+  - RCR = Reproducible Claims / Total Claims
+  - Current: 0/5 = 0%. Phase A target: >= 60%. Phase B target: >= 80%
+  - Replaces ★★★ as PRIMARY KPI (★★★ remains as secondary)
+  - Measures what matters: how many claims survive when anyone repeats the experiment
+- Phase A strict regimen: only 4 activities for several weeks
+  1. 30 baseline runs for empirical threshold
+  2. RVS calibration with users
+  3. JPEG/PNG/PDF validation against external tools
+  4. Convert all experiments to reproducible
+- Cover page updated with RCR as primary KPI, 6 sacred rules
+- Subtitle changed from "Congelar la arquitectura, auditar la ciencia" to "El proyecto que necesita madurar, no reinventarse"
+- Generated: /home/z/my-project/download/Research_Protocol_v1.4.docx
+- Script: /home/z/my-project/scripts/generate_research_protocol_v1.4.py
+
+Stage Summary:
+- The reviewer identified a "punto de inflexion real": the project no longer needs reinvention, it needs maturation
+- The next bottleneck is reproducibility, not the laboratory itself
+- RCR is the new primary KPI: it measures how many claims survive external verification
+- Judge API Freeze prevents the measurement system from changing mid-experiment
+- Evidence Ledger creates near-perfect traceability: claim → experiment → commit → code
+- Separation of Observation and Explanation is the strictest language control rule yet
+- The reviewer's key question: "Que evidencia necesito para que otra persona crea lo que encontre?"
+
+---
 Task ID: 8
 Agent: Main
 Task: Implementar Evidence Gate, tres niveles, experimento RVS, y meta-regla
