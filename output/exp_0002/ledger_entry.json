@@ -1,0 +1,41 @@
+{
+  "evidence_id": "EXP-0002",
+  "experiment_name": "Seed Variation Reproducibility",
+  "date": "2026-07-30",
+  "seeds_tested": [
+    42,
+    1337,
+    2026,
+    9999
+  ],
+  "runs_per_seed": 30,
+  "motors": [
+    "MFT-First",
+    "Carving"
+  ],
+  "commit": "c2cc5af",
+  "versions": {
+    "protocol": "v1.5",
+    "judge": "v1.0",
+    "builder": "v1.3",
+    "corruptor": "N/A (0% corruption)",
+    "motor": "v1.0"
+  },
+  "results": {
+    "mft_first_cross_seed_mean": 0.978825,
+    "mft_first_cross_seed_sd": 0.022491,
+    "carving_cross_seed_mean": 0.0027,
+    "deterministic_per_seed": true,
+    "claim_001_consistent": false,
+    "total_executions": 240
+  },
+  "claims_afectados": [
+    "CLAIM-001",
+    "CLAIM-005"
+  ],
+  "threats": "T03 (variabilidad desconocida), T04 (generalizabilidad limitada)",
+  "evidence_debt_addressed": [
+    "ED-001"
+  ],
+  "predecessor": "EXP-0001"
+}

@@ -1,0 +1,45 @@
+{
+  "evidence_id": "EXP-0005",
+  "experiment_name": "External Strategy Validation",
+  "date": "2026-07-30",
+  "configs_tested": [
+    "healthy_10mb",
+    "mft20_10mb",
+    "mft60_10mb"
+  ],
+  "commit": "c2cc5af",
+  "versions": {
+    "protocol": "v1.5",
+    "judge": "v1.0",
+    "builder": "v1.3",
+    "motor": "v1.0"
+  },
+  "results": {
+    "MFT-First": {
+      "ou_by_config": {
+        "healthy_10mb": 0.9589,
+        "mft20_10mb": 0.5508,
+        "mft60_10mb": 0.1794
+      },
+      "degradation_pattern": "declining"
+    },
+    "Carving": {
+      "ou_by_config": {
+        "healthy_10mb": 0.0,
+        "mft20_10mb": 0.0,
+        "mft60_10mb": 0.0
+      },
+      "degradation_pattern": "declining"
+    }
+  },
+  "claims_afectados": [
+    "CLAIM-001",
+    "CLAIM-004"
+  ],
+  "evidence_debt_addressed": [
+    "ED-001",
+    "ED-004"
+  ],
+  "predecessor": "EXP-0004",
+  "external_tools_pending": true
+}

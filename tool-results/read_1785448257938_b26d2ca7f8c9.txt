@@ -1,0 +1,440 @@
+     1→# RecoveryLab — Work Log
+     2→
+     3→---
+     4→Task ID: 12
+     5→Agent: Main
+     6→Task: EXP-0001 — Baseline Stability Characterization (first experiment of Phase A)
+     7→
+     8→Work Log:
+     9→- Implemented exp_0001_baseline_stability.py following auditor's exact specifications:
+    10→  - Named as experiment, not utility (exp_0001, not baseline.py)
+    11→  - Success criteria declared BEFORE execution
+    12→  - All variables frozen: same dataset, seed, commit, Judge, protocol, motor, config
+    13→  - 7 metrics measured: Overall Utility, RVS, FQS, Recovery Rate, Read Count, Runtime, Hash
+    14→  - 5 artifacts produced: baseline_runs.csv, baseline_summary.json, baseline_report.md, ledger_entry.json, claim_updates.json
+    15→- Ran 30 executions with MFT-First (primary) and 30 with Carving (secondary/floor)
+    16→- Key findings:
+    17→  - Laboratory is FULLY DETERMINISTIC under identical conditions (SD=0 for all metrics)
+    18→  - MFT-First: OU=0.958900, RVS=0.9725, FQS=0.9860, Recovery Rate=93.33% (all 30 runs identical)
+    19→  - Carving: OU=0.0000 on healthy image (expected — no MFT access, cannot identify file boundaries)
+    20→  - Runtime is the only source of variability (CV=3.9% for MFT-First, 0.74% for Carving)
+    21→  - No temporal drift detected
+    22→  - Empirical threshold falls back to floor of 1.0% (SD=0 → threshold = max(2*0, 0.01) = 1%)
+    23→- Evidence Debt status:
+    24→  - ED-008 (variabilidad desconocida): PAGADA — laboratory is deterministic
+    25→  - ED-001 (umbral empirico): EN PROGRESO — threshold calibrated at 1.0% floor, but needs corrupted datasets for meaningful variability
+    26→- CLAIM updates:
+    27→  - CLAIM-001 (MFT-First > Carving): Can advance to REPEATED on healthy image basis
+    28→  - CLAIM-005 (Parsers golden reference): Can advance to REPEATED
+    29→  - CLAIM-004 (Crossover artifact): No change — requires corruption experiments
+    30→- Important observation: The 1% floor threshold is provisional. Future experiments with corruption
+    31→  (non-deterministic conditions) will need their own baseline calibration.
+    32→- Script: /home/z/my-project/RecoveryLab/exp_0001_baseline_stability.py
+    33→- Artifacts: /home/z/my-project/output/exp_0001/
+    34→
+    35→Stage Summary:
+    36→- EXP-0001 successfully demonstrates that the laboratory produces deterministic, stable measurements
+    37→- ED-008 is resolved: the laboratory's intrinsic variability is zero under identical conditions
+    38→- ED-001 is partially addressed: the 1% floor threshold is defined, but meaningful calibration requires corrupted datasets
+    39→- The auditor's distinction between ED-008 and ED-001 proved correct: ED-008 asks "what is the variability?" (answer: zero) while ED-001 asks "can we trust the lab?" (answer: needs more experiments — EXP-0002, EXP-0003)
+    40→- Next steps: EXP-0002 (reproducibility on another machine), EXP-0003 (second seed), EXP-0004 (external validation)
+    41→
+    42→---
+    43→Task ID: 11
+    44→Agent: Main
+    45→Task: Incorporar quinta ronda (definitiva) de auditoria externa — Research Protocol v1.5 (Frozen for Phase A) + Research Constitution
+    46→
+    47→Work Log:
+    48→- Created Research Protocol v1.5 (Frozen for Phase A) incorporating auditor's definitive review
+    49→- Section 0 (NEW): Freeze Clause — protocol frozen for Phase A, changes require RP-XXX proposal
+    50→  - Justification explicita, evaluacion de impacto sobre experimentos ejecutados, Decision Log update
+    51→  - Criterio: "No se cambia porque aparecio una idea mejor. Se cambia porque la evidencia mostro que el protocolo falla."
+    52→- Section 23 (NEW): Decision Log — recording WHY, not just WHAT
+    53→  - 8 fields: ID, Fecha, Decision, Motivo, Evidencia, Alternativas, Impacto, RP-XXX
+    54→  - 5 initial entries (DL-001 through DL-005)
+    55→  - Append-only, stored in /data/decision_log.csv
+    56→- Section 24 (NEW): Evidence Debt — structured tracking of evidence gaps
+    57→  - 8 fields: ID, Deuda, Impacto, Prioridad, Seccion, Estado, Fecha creacion, Fecha pago
+    58→  - 8 initial debts: ED-001 (umbral empirico) through ED-008 (variabilidad desconocida)
+    59→  - 4 CRITICAS: ED-001, ED-002, ED-004, ED-008
+    60→  - CRITICAL debts must be resolved before Phase A graduation
+    61→- Section 25 (NEW): Phase A Graduation Criteria — formal exit conditions
+    62→  - 7 mandatory criteria: RCR>=80%, 5+ ★★★, Judge stable, 1+ external validation/family, 30 baseline, RVS calibrated, run_all.py reproducible
+    63→  - 4 desirable criteria: 8+ threats mitigated, 3+ golden reference parsers, <4 CRITICAL debts, Decision Log complete
+    64→  - 6-step graduation procedure
+    65→- Section 26 (NEW): Experiment Versioning — versioning all components per experiment
+    66→  - Every experiment records version of ALL components (Protocol, Judge, Builder, Corruptor, Motor, etc.)
+    67→  - Current version table for all 9 components
+    68→  - Evidence Ledger updated to include "Versiones" field
+    69→- Section 27 (NEW): Complexity as Scientific Cost
+    70→  - Explicit acknowledgment: "El proyecto no morira por errores. Morira por complejidad."
+    71→  - 5 principles of complexity control
+    72→  - Auditor's role shift: from questioning conclusions to questioning protocol obedience
+    73→- Updated Meta-Regla (Section 22): "Cada nuevo documento, modulo o algoritmo debe responder: Reduce una deuda de evidencia identificada?"
+    74→- Cover page updated with:
+    75→  - FROZEN FOR PHASE A banner
+    76→  - Freeze Clause on cover
+    77→  - Complexity risk warning
+    78→  - Three assets table (Framework, Protocol, Evidence)
+    79→  - Updated graduation target (RCR >= 80%)
+    80→- Created Research Constitution v1.0 (separate document, 2 pages, 8 principles)
+    81→  - Principle I: Evidence over intuition
+    82→  - Principle II: No claim before its evidence
+    83→  - Principle III: Hypotheses don't change during a phase
+    84→  - Principle IV: Every experiment must be reproducible
+    85→  - Principle V: Negative results have equal value
+    86→  - Principle VI: Reducing evidence debt > adding features
+    87→  - Principle VII: Complexity is a scientific cost
+    88→  - Principle VIII: Every interpretation must trace to an observation
+    89→- Generated: /home/z/my-project/download/Research_Protocol_v1.5_Frozen_Phase_A.docx
+    90→- Generated: /home/z/my-project/download/Research_Constitution_v1.0.docx
+    91→- Scripts: /home/z/my-project/scripts/generate_research_protocol_v1.5.py, /home/z/my-project/scripts/generate_research_constitution.py
+    92→
+    93→Stage Summary:
+    94→- The auditor's definitive review: "Si yo fuera el auditor que va a firmar el inicio de la Fase A, el protocolo v1.5 ya estaria listo"
+    95→- Protocol is now FROZEN for Phase A — changes require formal Proposal (RP-XXX)
+    96→- Three gaps closed: Decision Log (why), Evidence Debt (what's missing), Graduation Criteria (when done)
+    97→- Research Constitution is a separate document defining principles, not procedures
+    98→- The project has three distinct assets: Framework (advanced), Protocol (mature), Evidence (in construction)
+    99→- The auditor's single condition for Phase A: "No modificar mas el protocolo salvo que aparezca una evidencia que demuestre que el propio protocolo es insuficiente"
+   100→- The project transformation is complete: from building a recovery engine → building a laboratory → building an evidence production system
+   101→
+   102→---
+   103→Task ID: 10
+   104→Agent: Main
+   105→Task: Incorporar cuarta ronda de auditoria externa (final) — Research Protocol v1.5
+   106→
+   107→Work Log:
+   108→- Updated Research Protocol from v1.4 to v1.5 incorporating three final recommendations from external review
+   109→- New Section 23: Decision Log (why decisions were made, not just what happened)
+   110→  - Distinct from Evidence Ledger: records WHY, not WHAT
+   111→  - 6 initial entries: D-001 (Eliminar H3), D-002 (Congelar Judge), D-003 (JPEG/PNG/PDF referencia), D-004 (RCR como KPI), D-005 (Fase A estricta), D-006 (Separar observacion)
+   112→  - Fields: ID, Decision, Motivo, Evidencia, Alternativas consideradas, Fecha
+   113→  - Append-only, stored in /data/decision_log.csv
+   114→- New Section 24: Evidence Debt (like technical debt, but for evidence gaps)
+   115→  - 10 initial debts: ED-001 (hardware real) to ED-010 (Judge versioning)
+   116→  - 3 CRITICAL debts: ED-001 (hardware), ED-003 (reproducibilidad), ED-009 (RCR=0%)
+   117→  - Every new module must reduce an identified evidence debt
+   118→  - CRITICAL debts must be resolved before Phase A graduation
+   119→  - Evidence Debt vs Threats to Validity comparison table
+   120→- New Section 25: Phase A Graduation Criteria (formal exit criteria)
+   121→  - 7 simultaneous conditions: RCR >= 80%, 5+ Claims ★★★, Judge stable, external validation (4 families), baseline complete, RVS calibrated, evidence debt critical = 0
+   122→  - Current vs graduation status table showing gaps
+   123→  - Graduation is a Decision Log event with evidence for each criterion
+   124→- New Section 26: Complexity Risk (explicitly acknowledged)
+   125→  - New risk: not bias, not methodology, but complexity
+   126→  - "Un proyecto puede morir no porque este equivocado, sino porque se vuelve imposible de mantener"
+   127→  - 7th sacred rule: every new module must reduce an evidence debt
+   128→- Cover page updated with:
+   129→  - 7 sacred rules (new: "Solo reducir deuda de evidencia")
+   130→  - Graduation criteria summary on cover
+   131→  - Meta-rule extended: "Cada nuevo documento, modulo o algoritmo debe responder: Reduce una deuda de evidencia identificada?"
+   132→  - Subtitle: "De la produccion de software a la produccion de evidencia"
+   133→- Generated: /home/z/my-project/download/Research_Protocol_v1.5.docx
+   134→- Script: /home/z/my-project/scripts/generate_research_protocol_v1.5.py
+   135→
+   136→Stage Summary:
+   137→- The reviewer identified this as the final audit round: "Ya no intentaria agregar secciones grandes"
+   138→- Three gaps closed: Decision Log (why), Evidence Debt (what's missing), Graduation Criteria (when done)
+   139→- The reviewer's final rule: "Cada nuevo documento, modulo o algoritmo debe responder: Reduce una deuda de evidencia identificada?"
+   140→- The project transformation is now complete: from building a recovery engine → building a laboratory → building an evidence production system
+   141→- Complexity is the new risk: too many mechanisms, not enough evidence
+   142→- Phase A has a formal exit criteria for the first time
+   143→
+   144→---
+   145→Task ID: 9
+   146→Agent: Main
+   147→Task: Incorporar tercera ronda de auditoria externa — Research Protocol v1.4
+   148→
+   149→Work Log:
+   150→- Updated Research Protocol from v1.3 to v1.4 incorporating five new recommendations from external review
+   151→- New Section 16: Separation of Observation and Explanation (6th sacred rule)
+   152→  - Stricter than Evidence Gate: even "observamos..." can hide interpretation
+   153→  - Pure observation = numbers only, no adjectives, no "porque"
+   154→  - Explanation always in separate paragraph, linked to a hypothesis
+   155→  - Example: "Observamos que Motor C elige correctamente" = NO
+   156→  - Example: "En 27/30 ejecuciones Motor C selecciono carving" = YES
+   157→- New Section 17: Evidence Ledger
+   158→  - Per-experiment traceability: ID, date, dataset, seed, motor, commit, results, affected claims, threats
+   159→  - No claim can cite evidence that doesn't exist in the ledger
+   160→  - Ledger is append-only, stored in /data/evidence_ledger.csv
+   161→  - Creates complete traceability chain: claim → experiment → commit → code
+   162→- New Section 18: Judge API Freeze
+   163→  - RVS v1.0, FQS v1.0, Overall Utility v1.0 FROZEN during Phase A
+   164→  - If metrics need to evolve: Judge v1.1 + re-execute all affected experiments
+   165→  - Never mix results from different Judge versions
+   166→  - RVS calibration with users will likely require Judge v1.1
+   167→- New Section 19: Reproducibility Contract
+   168→  - run_all.py: git clone + python run_all.py = identical results
+   169→  - Same datasets, same CSVs, same figures, same claims, same ledger
+   170→  - 7 strict rules for reproducibility
+   171→  - Non-reproducible results are not laboratory results — they are informal observations
+   172→- New Section 20: Reproducible Claims Ratio (RCR) as primary KPI
+   173→  - RCR = Reproducible Claims / Total Claims
+   174→  - Current: 0/5 = 0%. Phase A target: >= 60%. Phase B target: >= 80%
+   175→  - Replaces ★★★ as PRIMARY KPI (★★★ remains as secondary)
+   176→  - Measures what matters: how many claims survive when anyone repeats the experiment
+   177→- Phase A strict regimen: only 4 activities for several weeks
+   178→  1. 30 baseline runs for empirical threshold
+   179→  2. RVS calibration with users
+   180→  3. JPEG/PNG/PDF validation against external tools
+   181→  4. Convert all experiments to reproducible
+   182→- Cover page updated with RCR as primary KPI, 6 sacred rules
+   183→- Subtitle changed from "Congelar la arquitectura, auditar la ciencia" to "El proyecto que necesita madurar, no reinventarse"
+   184→- Generated: /home/z/my-project/download/Research_Protocol_v1.4.docx
+   185→- Script: /home/z/my-project/scripts/generate_research_protocol_v1.4.py
+   186→
+   187→Stage Summary:
+   188→- The reviewer identified a "punto de inflexion real": the project no longer needs reinvention, it needs maturation
+   189→- The next bottleneck is reproducibility, not the laboratory itself
+   190→- RCR is the new primary KPI: it measures how many claims survive external verification
+   191→- Judge API Freeze prevents the measurement system from changing mid-experiment
+   192→- Evidence Ledger creates near-perfect traceability: claim → experiment → commit → code
+   193→- Separation of Observation and Explanation is the strictest language control rule yet
+   194→- The reviewer's key question: "Que evidencia necesito para que otra persona crea lo que encontre?"
+   195→
+   196→---
+   197→Task ID: 8
+   198→Agent: Main
+   199→Task: Implementar Evidence Gate, tres niveles, experimento RVS, y meta-regla
+   200→
+   201→Work Log:
+   202→- Created three-level directory structure: /data, /analysis, /claims
+   203→- Implemented evidence_gate.py (core module):
+   204→  - 5 EvidenceLevel: OBSERVED → HARDWARE_VALIDATED
+   205→  - Language enforcement: "demuestra" forbidden at levels 1-3
+   206→  - Claim system with evidence entries, threat links, gate status
+   207→  - KPI dashboard (research-based, not code-based)
+   208→  - Auto-generated CLAIM-001 to CLAIM-005 markdown files
+   209→- Created rvs_calibration_experiment.py:
+   210→  - 12 survey pairs (tesis vs thumbnails, RAW vs MP4, etc.)
+   211→  - 5 target populations x 30+ respondents
+   212→  - Bradley-Terry model implementation (fixed MM algorithm)
+   213→  - Synthetic simulation verified: ranking tesis(78.5) > thumbnails(8.7) > ISO(5.0)
+   214→  - Survey markdown and experiment design JSON generated
+   215→- Updated protocol to v1.3:
+   216→  - Section 14: Evidence Gate (language control)
+   217→  - Section 15: Three-Level Architecture (/data, /analysis, /claims)
+   218→  - Section 16: Meta-Rule ("No agregar feature sin aumentar evidencia")
+   219→  - Section 17: RVS Calibration Experiment design
+   220→  - Meta-rule on cover page in red
+   221→  - Research KPI dashboard (not software dashboard)
+   222→
+   223→Stage Summary:
+   224→- The project's three stages are now explicit: (1) build recovery engine, (2) build laboratory, (3) build system that guarantees conclusions are trustworthy
+   225→- Evidence Gate is the most important structural change: it controls language based on evidence level
+   226→- Three-level architecture separates observation from interpretation
+   227→- RVS calibration experiment is designed and ready to distribute
+   228→- Meta-rule: "No agregar una sola caracteristica nueva si no aumenta la calidad de la evidencia"
+   229→
+   230→---
+   231→Task ID: 7
+   232→Agent: Main
+   233→Task: Incorporar segunda ronda de auditoría externa — Research Protocol v1.2
+   234→
+   235→Work Log:
+   236→- Added Section 12: Threats to Validity (4 subsections)
+   237→  - 12.1 Internal Validity: 5 threats (2 mitigated, 3 open)
+   238→  - 12.2 External Validity: 5 threats (0 mitigated, 5 open)
+   239→  - 12.3 Statistical Validity: 5 threats (2 mitigated, 3 open)
+   240→  - 12.4 Construct Validity: 4 threats (0 mitigated, 4 open)
+   241→  - Total: 4 mitigated, 12 open, 0 resolved
+   242→- Added Section 13: Hypothesis Set v1.0 (Frozen)
+   243→  - 6 freezing rules: no rewriting, new = H9+, refuted = marked
+   244→  - Full frozen hypothesis table (H1.1-H8, H3 eliminated and documented)
+   245→  - Future hypothesis space (H9, H10, H11 candidates)
+   246→- Added ★★★ KPI as primary progress metric
+   247→  - KPI dashboard on cover page: "Resultados con 3+ estrellas: 2/15"
+   248→  - KPI table in Section 4.1 with Phase A/B targets
+   249→  - Explicit statement: this is the real bottleneck, not Recovery Rate or Overall Utility
+   250→- Generated: /home/z/my-project/download/Research_Protocol_v1.2.docx
+   251→
+   252→Stage Summary:
+   253→- Protocol now has 13 sections covering all major scientific rigor dimensions
+   254→- Threats to Validity makes the lab's weaknesses explicit and trackable
+   255→- Frozen hypothesis set prevents retroactive rewriting and preserves scientific history
+   256→- The ★★★ count (2/15) is the single most important number in the project
+   257→- The project's true bottleneck is evidence accumulation, not feature development
+   258→
+   259→---
+   260→Task ID:6
+   261→Agent: Main
+   262→Task: Incorporar auditoría externa al Research Protocol — v1.1
+   263→
+   264→Work Log:
+   265→- Updated Research Protocol from v1.0 to v1.1 incorporating four critical corrections from external review
+   266→- Correction 1 (Section 10): Changed "El producto ES Benchmark Suite" to hypothesis language — "Estamos investigando si el verdadero activo competitivo termina siendo el Benchmark Suite"
+   267→- Correction 2 (Section 7.2): Expanded external validation beyond PhotoRec to include 4 tool families: Carving (PhotoRec), MFT-first (R-Studio/ReclaiMe), Hybrid (DMDE), Orchestrator (UFS Explorer)
+   268→- Correction 3 (Section 3): Replaced arbitrary 5% threshold with empirical calibration framework — 30 baseline runs, threshold = max(2×σ, 1%), provisional threshold of 3% until calibrated
+   269→- Correction 4 (Section 5.4): Added RVS calibration plan with real users — Bradley-Terry pairwise comparison, 5 target populations, 30+ responses per population
+   270→- Added Section 11: Immediate Operational Objectives (4 objectives from reviewer feedback)
+   271→- Generated script: /home/z/my-project/scripts/generate_research_protocol_v1.1.py
+   272→- Generated document: /home/z/my-project/download/Research_Protocol_v1.1.docx
+   273→
+   274→Stage Summary:
+   275→- Research Protocol v1.1 is now more scientifically rigorous: product identity is hypothesis, not statement
+   276→- External validation now covers all strategy families, not just carving
+   277→- Success criterion is empirically calibrated, not arbitrarily chosen
+   278→- RVS has a path to real-user calibration (currently the weakest point)
+   279→- The four immediate objectives are: (1) golden reference JPEG/PNG/PDF, (2) reach ★★★ on main hypotheses, (3) validate against external tools, (4) get first real-world datasets
+   280→
+   281→---
+   282→Task ID: 5
+   283→Agent: Main
+   284→Task: Congelar la arquitectura y auditar la ciencia — Research Protocol v1.0
+   285→
+   286→Work Log:
+   287→- Created confidence_registry.py (recovery_judge/confidence_registry.py):
+   288→  - Star-based confidence system: 1 star (isolated observation) → 5 stars (validated with real hardware)
+   289→  - Stars can only go UP (accumulation of evidence), never down
+   290→  - Contradictions mark results as CONTESTED but don't lower stars
+   291→  - Current state: 8 results at 1-star, 5 at 2-star, 2 at 3-star, 0 at 4/5-star
+   292→  - Honest assessment: most results are preliminary
+   293→- Created fqs.py (recovery_judge/fqs.py):
+   294→  - Functional Quality Score (FQS): measures HOW WELL files were recovered
+   295→  - Size-weighted: 5MB JPEG with 90% quality contributes more than 1KB TXT
+   296→  - FQSResult: per-file scores, level distribution, SHA-256 match rate
+   297→  - compute_overall_utility(rvs, fqs): Overall Utility = RVS × FQS
+   298→  - Diagnostic: "VALUE-DRIVEN", "QUALITY-DRIVEN", "STRONG", "WEAK"
+   299→- Created hypothesis_audit.py (RecoveryLab/hypothesis_audit.py):
+   300→  - Audits each hypothesis: IV, DV, success criterion
+   301→  - Status: TESTABLE (3), NEEDS_REFORMULATION (5), CONTESTED (1), FROZEN (2)
+   302→  - Only H1.1, H6, H1.6 are testable in current form
+   303→  - H5 and H8 are FROZEN until Phase C
+   304→  - H2 is CONTESTED (crossover is artifact)
+   305→- Created Research Protocol v1.0 (docx):
+   306→  - 10 sections: Pregunta Central, Variables, Criterio de Exito, Registro de Confianza,
+   307→    Decomposicion de Metricas, Auditoria de Hipotesis, Fases, Formatos Congelados,
+   308→    Regla de Oro, Producto
+   309→  - Generated at /home/z/my-project/download/Research_Protocol_v1.0.docx
+   310→- Updated __init__.py to export FQS and ConfidenceRegistry
+   311→
+   312→Stage Summary:
+   313→- The science audit is complete: 3/11 hypotheses are testable, 5 need reformulation, 1 contested, 2 frozen
+   314→- WFS decomposed into RVS × FQS — now we know WHY a motor won
+   315→- Confidence registry provides honest, transparent assessment of evidence strength
+   316→- Research Protocol v1.0 is the living document that governs the laboratory
+   317→- The central question is: "How to objectively measure the utility of a recovery strategy?"
+   318→- Phase A: Freeze, consolidate, execute JPEG/PNG/PDF only
+   319→- Phase B: Validate against real tools (PhotoRec, TestDisk)
+   320→- Phase C: Controlled expansion with same quality bar
+   321→
+   322→---
+   323→Task ID: 4
+   324→Agent: Main
+   325→Task: Quality over quantity — RVS enriquecido, recuperación funcional, Judge refactor, parsers impecables
+   326→
+   327→Work Log:
+   328→- Implemented RVS enriquecido (rvs.py v2):
+   329→  - Formula: composite = intrinsic_value × (1 - replacement_prob × recreation_time × (1 - emotional_impact))
+   330→  - 14 FileCategory values: THESIS (score≈1.0) → THUMBNAIL (score≈0.01)
+   331→  - Filename pattern overrides: tesis.docx → THESIS, foto_familia_navidad.jpg → PHOTO_FAMILY
+   332→  - Size bonus: logarithmic, 0-10% bonus
+   333→  - value_comparison_report(): Motor A vs Motor B with "most valuable lost" file
+   334→  - Key result: Motor with thesis+DB = RVS 79.8%, Motor with 3 thumbnails = RVS 0.0%
+   335→- Implemented Functional Recovery Validator (functional_validator.py):
+   336→  - RecoveryLevel enum: FULL (1.0), FUNCTIONAL (0.8), PARTIAL (0.5), DEGRADED (0.2), FAILED (0.0)
+   337→  - Format-specific validators: JPEGValidator, MP4Validator, DOCXValidator, SQLiteValidator, ZIPValidator, PDFValidator, PNGValidator
+   338→  - Each validator checks format-specific structure (JPEG: SOI+SOS+EOI, MP4: ftyp+moov+mdat, etc.)
+   339→  - FunctionalValidator: unified dispatcher
+   340→  - Key insight: JPEG with 2 corrupted bytes → FUNCTIONAL (0.85), not FAILED
+   341→- Refactored Judge (judge.py v2):
+   342→  - Four independent components: Identity Matcher (SHA-256), Functional Validator, Ground Truth Comparator, RVS Calculator
+   343→  - New metrics: functional_recovery_rate, full_recovery_rate, weighted_functional_score, level_distribution
+   344→  - RecoveryMetrics now includes: Functional Recovery Rate, Full Recovery Rate, Weighted Functional Score
+   345→- Audited carving motor: created test_carving_impeccable.py (19 tests, all passing)
+   346→  - JPEG: basic detection, EXIF, multiple files, no false positives, functional validation
+   347→  - PNG: basic detection, functional validation, no false positives
+   348→  - PDF: basic detection, functional validation, no false positives
+   349→  - Signature database: consistency, header specificity, mask consistency
+   350→  - Carving purity: never reads MFT
+   351→  - RVS integration: thesis vs thumbnail value comparison
+   352→- Updated hypothesis_registry.py:
+   353→  - Added critical review evidence for H3: "95% crossover is NOT a discovery"
+   354→  - Added H6: Functional recovery is not binary
+   355→  - Added H7: RVS predicts user satisfaction
+   356→  - Added H8: 95% crossover is an artifact
+   357→
+   358→Stage Summary:
+   359→- The paradigm shift is complete: "recovered" is no longer binary
+   360→- RVS enriquecido: thesis = score 1.0, thumbnail = score 0.01
+   361→- Functional validation: JPEG with 2 bad pixels = FUNCTIONAL (0.85), not FAILED
+   362→- Weighted Functional Score (WFS) = RVS × functionality — the most important single metric
+   363→- 19 tests passing for the three core parsers (JPEG, PNG, PDF)
+   364→- 4 new hypotheses registered (H6, H7, H8)
+   365→- The 1:1 rule is in effect: 500 lines of recovery code → 500 lines of validation
+   366→
+   367→---
+   368→Task ID: 3
+   369→Agent: Main
+   370→Task: Strategic pivot — caveats, matrix, RVS, per-format experiments
+   371→
+   372→Work Log:
+   373→- User identified that crossover at 95% is NOT a discovery — it's an artifact of limited carving
+   374→- Softened H3: "La evidencia preliminar es consistente con H3, pero el espacio de estrategias evaluadas aún es reducido para considerarla demostrada"
+   375→- Added H4: Damage × Strategy Matrix — the lab's real product
+   376→- Added H5: Per-format recovery differs — the experiment axis should be per-format, not per-MFT-degradation
+   377→- Added BLOCKER-003: Crossover at 95% is artifact of carving ceiling
+   378→- Added BLOCKER-004: Strategy space too small for H3
+   379→- Created damage_strategy_matrix.py: DamageType × StrategyID → StrategyOutcome matrix
+   380→  - 17 damage types, 10 strategies (3 implemented, 7 future)
+   381→  - Verdicts: WINNER/VIABLE/POOR/UNTESTED
+   382→  - build_expected_matrix() with theoretical predictions
+   383→  - Export to JSON, print as markdown table
+   384→- Created recovery_judge/rvs.py: Recovery Value Score
+   385→  - Not all files have the same value: thesis.docx = 100 points, thumb.db = 1 point
+   386→  - FileValueCategory: CRITICAL/HIGH/MEDIUM_HIGH/MEDIUM/LOW/MINIMAL
+   387→  - CRITICAL_PATTERNS: filenames that suggest irreplaceable work
+   388→  - Size bonus: logarithmic, larger files are worth more
+   389→  - Integrated into Judge: every recovery now computes RVS
+   390→  - Added rvs and rvs_breakdown fields to RecoveryMetrics
+   391→- Expanded Motor Carving from 6 to 17 signatures:
+   392→  - Added: TIFF, TIFF_BE, MOV, XLSX, SQLite, GIF, BMP, RAR, 7Z, PSD, AVI
+   393→  - Updated _resolve_zip_docx to handle XLSX (xl/ internal path)
+   394→  - Updated FILE_FOOTERS in file_generator.py with new formats
+   395→- Created per_format_experiment.py: Per-format experiment runner
+   396→  - 10 formats: JPEG, PNG, PDF, DOCX, XLSX, MP4, CR2, NEF, SQLite, TXT
+   397→  - Corruption levels: 0%→100% in 10% steps (11 points)
+   398→  - For each format × corruption level: Carving vs MFT-First
+   399→  - Measures: recovery rate, RVS, efficiency, false positives
+   400→  - Fills the Damage × Strategy Matrix with real data
+   401→- Added build_single_format_dataset() to DatasetBuilder
+   402→  - Generates images with predominantly one file format
+   403→  - Per-format size ranges (photos larger, docs smaller)
+   404→
+   405→Stage Summary:
+   406→- The project's question has transformed: from "can we build better software?" to "can we build the best laboratory to discover when each strategy works best?"
+   407→- The crossover at 95% is downgraded from "strong" to "moderate" — it's an artifact
+   408→- H3 is downgraded from "moderate" to "weak" — strategy space too small
+   409→- The REAL solid conclusion: "metadata-based and signature-based strategies fail differently"
+   410→- Two new key artifacts: the Damage × Strategy Matrix and the RVS
+   411→- The per-format experiment is the next major experiment to run
+   412→
+   413→---
+   414→Task ID: 2
+   415→Agent: Main
+   416→Task: Strategy Crossover Curve — H2 and H3
+   417→
+   418→Work Log:
+   419→- Reframed H2: "Existe una frontera observable donde la estrategia óptima cambia según el estado del medio"
+   420→- Created H3: "No existe una estrategia de recuperación universalmente óptima"
+   421→- Built crossover_curve.py: progressive MFT degradation (0%→100%) with 3 strategies
+   422→  - 21 data points, 5 repetitions per point, statistical analysis (CI, p-value, Cohen's d)
+   423→  - Visualization with 4 panels: Recovery Rate, Delta, Significance, Effect Size
+   424→- Ran crossover curve experiment
+   425→  - Crossover at 95% MFT damage (gradual)
+   426→  - Carving is constant at 6.7% (doesn't depend on MFT)
+   427→  - MFT-First degrades linearly with MFT damage
+   428→  - At 100% MFT damage, Carving wins (6.7% vs 0.0%)
+   429→- H3 is now SUPPORTED (1S/0R): MFT-First doesn't win everywhere, Carving doesn't win everywhere
+   430→- H2 is INCONCLUSIVE (2S/1R): Frontier exists but crossover is at 95% (too high for practical use)
+   431→
+   432→Stage Summary:
+   433→- Key finding: Carving is constant (6.7%) regardless of MFT damage — this is the "floor" of recovery
+   434→- MFT-First degrades linearly — it crosses the Carving floor at 95% damage
+   435→- The crossover exists but is at a very high damage level
+   436→- Problem: Carving only recovers files with detectable signatures (JPEG, PNG, PDF)
+   437→- Files without signatures (TXT, EXE, DLL, AVI, CR2, NEF, MOV, JSON) are invisible to Carving
+   438→- This means the crossover curve is dominated by the "invisible files" problem
+   439→- Next step: Need to separate the crossover by FILE TYPE (JPEG vs PDF vs TXT)
+   440→

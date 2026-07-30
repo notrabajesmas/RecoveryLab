@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "master_seed": 42,
+  "num_images": 1,
+  "volume_size": 10485760,
+  "cluster_size": 4096,
+  "files_per_image": 30,
+  "images": [
+    {
+      "index": 1,
+      "image_file": "dataset_001.img",
+      "manifest_file": "dataset_001_manifest.json",
+      "seed": 2746317213,
+      "serial": "0x46685257",
+      "volume_size": 9324821,
+      "file_count": 30
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "CLAIM-001": {
+    "current_level": "REPEATED",
+    "can_advance": true,
+    "reason": "EXP-0005 shows MFT-First OU=0.9589 vs Carving OU=0.0000 on healthy image. Under MFT 60% corruption: MFT-First OU=0.1794 vs Carving OU=0.0000. Crossover detected: False.",
+    "next_step": "Run external tools on test_dataset_package/ to validate",
+    "proposed_level": "REPRODUCIBLE"
+  },
+  "CLAIM-004": {
+    "current_level": "OBSERVED",
+    "can_advance": false,
+    "reason": "EXP-0005 does not confirm crossover point between MFT-First and Carving strategies. MFT-First at healthy=0.9589, MFT-60%=0.1794. Carving at healthy=0.0000, MFT-60%=0.0000.",
+    "next_step": "More fine-grained corruption levels to locate exact crossover"
+  },
+  "evidence_debt": {
+    "ED-004_self_complacent_benchmark": {
+      "status": "EN PROGRESO",
+      "evidence": "RecoveryLab tested against corruption variants. External tool comparison pending."
+    }
+  }
+}

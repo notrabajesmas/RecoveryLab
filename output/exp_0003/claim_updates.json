@@ -1,0 +1,21 @@
+{
+  "CLAIM-001": {
+    "current_level": "REPEATED",
+    "can_advance": false,
+    "reason": "EXP-0003 on this machine produces consistent results. Cross-machine reproduction requires running on a DIFFERENT machine.",
+    "next_step": "Execute reproduction_package/ on another machine to reach REPRODUCIBLE"
+  },
+  "CLAIM-005": {
+    "current_level": "REPEATED",
+    "can_advance": false,
+    "reason": "Same machine verification passed. Cross-machine validation pending.",
+    "next_step": "Execute reproduction_package/ on another machine"
+  },
+  "evidence_debt": {
+    "ED-001_umbral_empirico": {
+      "status": "EN PROGRESO",
+      "evidence": "Same-machine verification: deterministic=True",
+      "note": "Requires cross-machine reproduction to complete ED-001."
+    }
+  }
+}

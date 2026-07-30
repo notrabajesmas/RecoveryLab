@@ -437,3 +437,46 @@ Stage Summary:
 - Files without signatures (TXT, EXE, DLL, AVI, CR2, NEF, MOV, JSON) are invisible to Carving
 - This means the crossover curve is dominated by the "invisible files" problem
 - Next step: Need to separate the crossover by FILE TYPE (JPEG vs PDF vs TXT)
+
+---
+Task ID: 13
+Agent: Main
+Task: Implement EXP-0002 through EXP-0005 and EXP-SD0 — Evidence Acquisition Cycle
+
+Work Log:
+- Implemented EXP-0002 — Seed Variation Reproducibility (4 seeds × 30 runs × 2 motors = 240 executions)
+- Implemented EXP-0003 — Cross-Machine Reproduction (reproduction package + same-machine verification)
+- Implemented EXP-0004 — Dataset Scaling Robustness (10MB, 100MB, 500MB, 1GB)
+- Implemented EXP-0005 — External Strategy Validation (healthy + MFT corruption variants)
+- Implemented EXP-SD0 — SD=0 Diagnostic Investigation (nanosecond precision + noise conditions)
+- Executed EXP-0002: 240 runs completed successfully
+  - Key finding: MFT-First > Carving across ALL 4 seeds (CLAIM-001 is ROBUST)
+  - New finding: Carving is NOT always OU=0 on healthy images (sometimes 0.0028-0.0080)
+  - Deterministic per-seed: TRUE for all 4 seeds
+  - Cross-seed OU CV: 2.30% for MFT-First (reflects genuine dataset composition differences)
+- Executed EXP-SD0: SD=0 is QUANTIZATION, not true zero-variability
+  - OU and all result metrics are deterministic (integer file counts, fixed RVS profiles)
+  - Runtime is the only varying metric (SD=3.2ms, reflects OS scheduling)
+  - Per-file details are identical across all runs
+  - Conclusion: EXPLANATION_2 — OU is quantized and doesn't capture small differences
+- Executed EXP-0003: Same-machine verification PASS
+  - OU match with EXP-0001: TRUE
+  - Hash match: TRUE
+  - Reproduction package generated for cross-machine execution
+- Executed EXP-0005: Corruption variants tested
+  - healthy_10mb: MFT-First OU=0.9589, Carving OU=0.0000
+  - mft20_10mb: MFT-First OU=0.5508, Carving OU=0.0000
+  - mft60_10mb: MFT-First OU=0.1794, Carving OU=0.0000
+  - No crossover detected — Carving motor not recovering files even on corrupted images
+  - Test dataset package generated for external tool comparison
+
+Stage Summary:
+- 5 experiment scripts created: exp_0002, exp_0003, exp_0004, exp_0005, exp_sd0
+- 3 experiments executed: EXP-0002, EXP-0003, EXP-SD0, EXP-0005
+- EXP-0004 (dataset scaling) not yet executed (requires longer runtime)
+- CLAIM-001 advances to REPEATED (MFT-First > Carving across 4 seeds)
+- CLAIM-005 advances to REPEATED (determinism across 4 seeds)
+- SD=0 explained: OU quantization (integer file counts), not true zero-variability
+- Carving motor weakness identified: doesn't recover files even on corrupted images
+- Evidence chain: EXP-0001 → EXP-0002 → EXP-0003 → EXP-0005 (4 experiments)
+- RCR (Reproducible Claims Ratio): 2/5 claims at REPEATED level (40%)

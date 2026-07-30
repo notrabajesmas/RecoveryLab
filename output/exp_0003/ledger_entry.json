@@ -1,0 +1,25 @@
+{
+  "evidence_id": "EXP-0003",
+  "experiment_name": "Cross-Machine Reproduction",
+  "date": "2026-07-30",
+  "machine": "c-6a6ba435-1416dbb8-9f6f5e659461",
+  "platform": "Linux-5.10.134-013.8.3.kangaroo.al8.x86_64-x86_64-with-glibc2.41",
+  "python_version": "3.12.13",
+  "codebase_hash": "1822d0a07e4d597e",
+  "commit": "c2cc5af",
+  "results": {
+    "mft_first_ou": 0.9589,
+    "carving_ou": 0.0,
+    "deterministic": true,
+    "matches_exp_0001": true
+  },
+  "claims_afectados": [
+    "CLAIM-001",
+    "CLAIM-005"
+  ],
+  "evidence_debt_addressed": [
+    "ED-001"
+  ],
+  "predecessor": "EXP-0002",
+  "next_step": "Execute reproduction package on another machine"
+}

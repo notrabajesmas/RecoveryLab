@@ -1,0 +1,9 @@
+{
+  "experiment_id": "EXP-0003",
+  "commit": "c2cc5af",
+  "codebase_hash": "1822d0a07e4d597e",
+  "reference_environment": "c-6a6ba435-1416dbb8-9f6f5e659461",
+  "seed": 42,
+  "num_runs": 30,
+  "timestamp": "2026-07-30T22:00:06.897694"
+}

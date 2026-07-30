@@ -1,0 +1,286 @@
+{
+  "per_config": {
+    "healthy_10mb": {
+      "MFT-First": {
+        "overall_utility": {
+          "mean": 0.9589,
+          "sd": 0.0,
+          "min": 0.9589,
+          "max": 0.9589
+        },
+        "rvs": {
+          "mean": 0.9725,
+          "sd": 0.0,
+          "min": 0.9725,
+          "max": 0.9725
+        },
+        "fqs": {
+          "mean": 0.985999,
+          "sd": 0.0,
+          "min": 0.985999,
+          "max": 0.985999
+        },
+        "recovery_rate": {
+          "mean": 0.933333,
+          "sd": 0.0,
+          "min": 0.933333,
+          "max": 0.933333
+        },
+        "read_count": {
+          "mean": 14593,
+          "sd": 0.0,
+          "min": 14593,
+          "max": 14593
+        },
+        "runtime_ms": {
+          "mean": 53.938513,
+          "sd": 1.447663,
+          "min": 52.77622,
+          "max": 57.422692
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true
+        },
+        "diagnostic": "STRONG: Recovered important files with good quality"
+      },
+      "Carving": {
+        "overall_utility": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "rvs": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "fqs": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "recovery_rate": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "read_count": {
+          "mean": 19296,
+          "sd": 0.0,
+          "min": 19296,
+          "max": 19296
+        },
+        "runtime_ms": {
+          "mean": 192.916956,
+          "sd": 0.996594,
+          "min": 191.737988,
+          "max": 194.167169
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true
+        },
+        "diagnostic": "WEAK: Both value and quality are low"
+      }
+    },
+    "mft20_10mb": {
+      "MFT-First": {
+        "overall_utility": {
+          "mean": 0.5508,
+          "sd": 0.0,
+          "min": 0.5508,
+          "max": 0.5508
+        },
+        "rvs": {
+          "mean": 0.735,
+          "sd": 0.0,
+          "min": 0.735,
+          "max": 0.735
+        },
+        "fqs": {
+          "mean": 0.749396,
+          "sd": 0.0,
+          "min": 0.749396,
+          "max": 0.749396
+        },
+        "recovery_rate": {
+          "mean": 0.733333,
+          "sd": 0.0,
+          "min": 0.733333,
+          "max": 0.733333
+        },
+        "read_count": {
+          "mean": 9953,
+          "sd": 0.0,
+          "min": 9953,
+          "max": 9953
+        },
+        "runtime_ms": {
+          "mean": 35.602606,
+          "sd": 0.440815,
+          "min": 35.042427,
+          "max": 36.572677
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true
+        },
+        "diagnostic": "STRONG: Recovered important files with good quality"
+      },
+      "Carving": {
+        "overall_utility": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "rvs": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "fqs": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "recovery_rate": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "read_count": {
+          "mean": 19296,
+          "sd": 0.0,
+          "min": 19296,
+          "max": 19296
+        },
+        "runtime_ms": {
+          "mean": 193.058532,
+          "sd": 0.989045,
+          "min": 191.532688,
+          "max": 194.633048
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true
+        },
+        "diagnostic": "WEAK: Both value and quality are low"
+      }
+    },
+    "mft60_10mb": {
+      "MFT-First": {
+        "overall_utility": {
+          "mean": 0.1794,
+          "sd": 0.0,
+          "min": 0.1794,
+          "max": 0.1794
+        },
+        "rvs": {
+          "mean": 0.4164,
+          "sd": 0.0,
+          "min": 0.4164,
+          "max": 0.4164
+        },
+        "fqs": {
+          "mean": 0.430886,
+          "sd": 0.0,
+          "min": 0.430886,
+          "max": 0.430886
+        },
+        "recovery_rate": {
+          "mean": 0.366667,
+          "sd": 0.0,
+          "min": 0.366667,
+          "max": 0.366667
+        },
+        "read_count": {
+          "mean": 4633,
+          "sd": 0.0,
+          "min": 4633,
+          "max": 4633
+        },
+        "runtime_ms": {
+          "mean": 17.285962,
+          "sd": 0.208798,
+          "min": 16.81293,
+          "max": 17.474643
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true
+        },
+        "diagnostic": "WEAK: Both value and quality are low"
+      },
+      "Carving": {
+        "overall_utility": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "rvs": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "fqs": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "recovery_rate": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "min": 0.0,
+          "max": 0.0
+        },
+        "read_count": {
+          "mean": 19296,
+          "sd": 0.0,
+          "min": 19296,
+          "max": 19296
+        },
+        "runtime_ms": {
+          "mean": 193.94833,
+          "sd": 1.679899,
+          "min": 191.806789,
+          "max": 198.107413
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true
+        },
+        "diagnostic": "WEAK: Both value and quality are low"
+      }
+    }
+  },
+  "cross_config": {
+    "MFT-First": {
+      "ou_by_config": {
+        "healthy_10mb": 0.9589,
+        "mft20_10mb": 0.5508,
+        "mft60_10mb": 0.1794
+      },
+      "degradation_pattern": "declining"
+    },
+    "Carving": {
+      "ou_by_config": {
+        "healthy_10mb": 0.0,
+        "mft20_10mb": 0.0,
+        "mft60_10mb": 0.0
+      },
+      "degradation_pattern": "declining"
+    }
+  }
+}

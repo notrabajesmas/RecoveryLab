@@ -1,0 +1,702 @@
+{
+  "per_seed": {
+    "42": {
+      "MFT-First": {
+        "overall_utility": {
+          "mean": 0.9589,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.9589,
+          "max": 0.9589,
+          "range": 0.0,
+          "ci_95_lower": 0.9589,
+          "ci_95_upper": 0.9589,
+          "n": 30
+        },
+        "rvs": {
+          "mean": 0.9725,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.9725,
+          "max": 0.9725,
+          "range": 0.0,
+          "ci_95_lower": 0.9725,
+          "ci_95_upper": 0.9725,
+          "n": 30
+        },
+        "fqs": {
+          "mean": 0.985999,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.985999,
+          "max": 0.985999,
+          "range": 0.0,
+          "ci_95_lower": 0.985999,
+          "ci_95_upper": 0.985999,
+          "n": 30
+        },
+        "recovery_rate": {
+          "mean": 0.933333,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.933333,
+          "max": 0.933333,
+          "range": 0.0,
+          "ci_95_lower": 0.933333,
+          "ci_95_upper": 0.933333,
+          "n": 30
+        },
+        "read_count": {
+          "mean": 14593,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 14593,
+          "max": 14593,
+          "range": 0,
+          "ci_95_lower": 14593.0,
+          "ci_95_upper": 14593.0,
+          "n": 30
+        },
+        "runtime_ms": {
+          "mean": 58.725764,
+          "sd": 2.155131,
+          "cv_percent": 3.6698,
+          "min": 56.592949,
+          "max": 66.751399,
+          "range": 10.15845,
+          "ci_95_lower": 57.921115,
+          "ci_95_upper": 59.530413,
+          "n": 30
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true,
+          "hash_values": [
+            "b13216d954cf42a8"
+          ]
+        },
+        "temporal_drift": {
+          "first_half_mean": 0.9589,
+          "second_half_mean": 0.9589,
+          "drift": 0.0,
+          "drift_percent": 0.0,
+          "interpretation": "No drift detected"
+        }
+      },
+      "Carving": {
+        "overall_utility": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "range": 0.0,
+          "ci_95_lower": 0.0,
+          "ci_95_upper": 0.0,
+          "n": 30
+        },
+        "rvs": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "range": 0.0,
+          "ci_95_lower": 0.0,
+          "ci_95_upper": 0.0,
+          "n": 30
+        },
+        "fqs": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "range": 0.0,
+          "ci_95_lower": 0.0,
+          "ci_95_upper": 0.0,
+          "n": 30
+        },
+        "recovery_rate": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "range": 0.0,
+          "ci_95_lower": 0.0,
+          "ci_95_upper": 0.0,
+          "n": 30
+        },
+        "read_count": {
+          "mean": 19296,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 19296,
+          "max": 19296,
+          "range": 0,
+          "ci_95_lower": 19296.0,
+          "ci_95_upper": 19296.0,
+          "n": 30
+        },
+        "runtime_ms": {
+          "mean": 195.211305,
+          "sd": 2.049458,
+          "cv_percent": 1.0499,
+          "min": 193.474444,
+          "max": 201.653488,
+          "range": 8.179044,
+          "ci_95_lower": 194.44611,
+          "ci_95_upper": 195.976499,
+          "n": 30
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true,
+          "hash_values": [
+            "7cb03b75dd0ddd65"
+          ]
+        },
+        "temporal_drift": {
+          "first_half_mean": 0.0,
+          "second_half_mean": 0.0,
+          "drift": 0.0,
+          "drift_percent": 0.0,
+          "interpretation": "No drift detected"
+        }
+      }
+    },
+    "1337": {
+      "MFT-First": {
+        "overall_utility": {
+          "mean": 0.9983,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.9983,
+          "max": 0.9983,
+          "range": 0.0,
+          "ci_95_lower": 0.9983,
+          "ci_95_upper": 0.9983,
+          "n": 30
+        },
+        "rvs": {
+          "mean": 0.9989,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.9989,
+          "max": 0.9989,
+          "range": 0.0,
+          "ci_95_lower": 0.9989,
+          "ci_95_upper": 0.9989,
+          "n": 30
+        },
+        "fqs": {
+          "mean": 0.999448,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.999448,
+          "max": 0.999448,
+          "range": 0.0,
+          "ci_95_lower": 0.999448,
+          "ci_95_upper": 0.999448,
+          "n": 30
+        },
+        "recovery_rate": {
+          "mean": 0.933333,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.933333,
+          "max": 0.933333,
+          "range": 0.0,
+          "ci_95_lower": 0.933333,
+          "ci_95_upper": 0.933333,
+          "n": 30
+        },
+        "read_count": {
+          "mean": 18121,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 18121,
+          "max": 18121,
+          "range": 0,
+          "ci_95_lower": 18121.0,
+          "ci_95_upper": 18121.0,
+          "n": 30
+        },
+        "runtime_ms": {
+          "mean": 289.523184,
+          "sd": 3.651541,
+          "cv_percent": 1.2612,
+          "min": 282.717878,
+          "max": 297.581648,
+          "range": 14.86377,
+          "ci_95_lower": 288.159829,
+          "ci_95_upper": 290.886538,
+          "n": 30
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true,
+          "hash_values": [
+            "26b53c1cde5ee9d1"
+          ]
+        },
+        "temporal_drift": {
+          "first_half_mean": 0.9983,
+          "second_half_mean": 0.9983,
+          "drift": 0.0,
+          "drift_percent": 0.0,
+          "interpretation": "No drift detected"
+        }
+      },
+      "Carving": {
+        "overall_utility": {
+          "mean": 0.0028,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.0028,
+          "max": 0.0028,
+          "range": 0.0,
+          "ci_95_lower": 0.0028,
+          "ci_95_upper": 0.0028,
+          "n": 30
+        },
+        "rvs": {
+          "mean": 0.0524,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.0524,
+          "max": 0.0524,
+          "range": 0.0,
+          "ci_95_lower": 0.0524,
+          "ci_95_upper": 0.0524,
+          "n": 30
+        },
+        "fqs": {
+          "mean": 0.053189,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.053189,
+          "max": 0.053189,
+          "range": 0.0,
+          "ci_95_lower": 0.053189,
+          "ci_95_upper": 0.053189,
+          "n": 30
+        },
+        "recovery_rate": {
+          "mean": 0.033333,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.033333,
+          "max": 0.033333,
+          "range": 0.0,
+          "ci_95_lower": 0.033333,
+          "ci_95_upper": 0.033333,
+          "n": 30
+        },
+        "read_count": {
+          "mean": 27424,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 27424,
+          "max": 27424,
+          "range": 0,
+          "ci_95_lower": 27424.0,
+          "ci_95_upper": 27424.0,
+          "n": 30
+        },
+        "runtime_ms": {
+          "mean": 255.947962,
+          "sd": 1.937079,
+          "cv_percent": 0.7568,
+          "min": 254.064966,
+          "max": 263.198159,
+          "range": 9.133193,
+          "ci_95_lower": 255.224726,
+          "ci_95_upper": 256.671198,
+          "n": 30
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true,
+          "hash_values": [
+            "1f6822061184ba49"
+          ]
+        },
+        "temporal_drift": {
+          "first_half_mean": 0.0028,
+          "second_half_mean": 0.0028,
+          "drift": 0.0,
+          "drift_percent": 0.0,
+          "interpretation": "No drift detected"
+        }
+      }
+    },
+    "2026": {
+      "MFT-First": {
+        "overall_utility": {
+          "mean": 0.9598,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.9598,
+          "max": 0.9598,
+          "range": 0.0,
+          "ci_95_lower": 0.9598,
+          "ci_95_upper": 0.9598,
+          "n": 30
+        },
+        "rvs": {
+          "mean": 0.9732,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.9732,
+          "max": 0.9732,
+          "range": 0.0,
+          "ci_95_lower": 0.9732,
+          "ci_95_upper": 0.9732,
+          "n": 30
+        },
+        "fqs": {
+          "mean": 0.986252,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.986252,
+          "max": 0.986252,
+          "range": 0.0,
+          "ci_95_lower": 0.986252,
+          "ci_95_upper": 0.986252,
+          "n": 30
+        },
+        "recovery_rate": {
+          "mean": 0.933333,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.933333,
+          "max": 0.933333,
+          "range": 0.0,
+          "ci_95_lower": 0.933333,
+          "ci_95_upper": 0.933333,
+          "n": 30
+        },
+        "read_count": {
+          "mean": 15913,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 15913,
+          "max": 15913,
+          "range": 0,
+          "ci_95_lower": 15913.0,
+          "ci_95_upper": 15913.0,
+          "n": 30
+        },
+        "runtime_ms": {
+          "mean": 67.81366,
+          "sd": 0.801894,
+          "cv_percent": 1.1825,
+          "min": 66.535092,
+          "max": 70.303206,
+          "range": 3.768114,
+          "ci_95_lower": 67.514261,
+          "ci_95_upper": 68.113058,
+          "n": 30
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true,
+          "hash_values": [
+            "b9c034eaca93b1e2"
+          ]
+        },
+        "temporal_drift": {
+          "first_half_mean": 0.9598,
+          "second_half_mean": 0.9598,
+          "drift": 0.0,
+          "drift_percent": 0.0,
+          "interpretation": "No drift detected"
+        }
+      },
+      "Carving": {
+        "overall_utility": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "range": 0.0,
+          "ci_95_lower": 0.0,
+          "ci_95_upper": 0.0,
+          "n": 30
+        },
+        "rvs": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "range": 0.0,
+          "ci_95_lower": 0.0,
+          "ci_95_upper": 0.0,
+          "n": 30
+        },
+        "fqs": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "range": 0.0,
+          "ci_95_lower": 0.0,
+          "ci_95_upper": 0.0,
+          "n": 30
+        },
+        "recovery_rate": {
+          "mean": 0.0,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "range": 0.0,
+          "ci_95_lower": 0.0,
+          "ci_95_upper": 0.0,
+          "n": 30
+        },
+        "read_count": {
+          "mean": 25648,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 25648,
+          "max": 25648,
+          "range": 0,
+          "ci_95_lower": 25648.0,
+          "ci_95_upper": 25648.0,
+          "n": 30
+        },
+        "runtime_ms": {
+          "mean": 246.291051,
+          "sd": 2.930685,
+          "cv_percent": 1.1899,
+          "min": 242.867154,
+          "max": 254.983511,
+          "range": 12.116357,
+          "ci_95_lower": 245.196838,
+          "ci_95_upper": 247.385264,
+          "n": 30
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true,
+          "hash_values": [
+            "e0504cef3ada47c1"
+          ]
+        },
+        "temporal_drift": {
+          "first_half_mean": 0.0,
+          "second_half_mean": 0.0,
+          "drift": 0.0,
+          "drift_percent": 0.0,
+          "interpretation": "No drift detected"
+        }
+      }
+    },
+    "9999": {
+      "MFT-First": {
+        "overall_utility": {
+          "mean": 0.9983,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.9983,
+          "max": 0.9983,
+          "range": 0.0,
+          "ci_95_lower": 0.9983,
+          "ci_95_upper": 0.9983,
+          "n": 30
+        },
+        "rvs": {
+          "mean": 0.9989,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.9989,
+          "max": 0.9989,
+          "range": 0.0,
+          "ci_95_lower": 0.9989,
+          "ci_95_upper": 0.9989,
+          "n": 30
+        },
+        "fqs": {
+          "mean": 0.999429,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.999429,
+          "max": 0.999429,
+          "range": 0.0,
+          "ci_95_lower": 0.999429,
+          "ci_95_upper": 0.999429,
+          "n": 30
+        },
+        "recovery_rate": {
+          "mean": 0.933333,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.933333,
+          "max": 0.933333,
+          "range": 0.0,
+          "ci_95_lower": 0.933333,
+          "ci_95_upper": 0.933333,
+          "n": 30
+        },
+        "read_count": {
+          "mean": 17505,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 17505,
+          "max": 17505,
+          "range": 0,
+          "ci_95_lower": 17505.0,
+          "ci_95_upper": 17505.0,
+          "n": 30
+        },
+        "runtime_ms": {
+          "mean": 169.545269,
+          "sd": 2.398966,
+          "cv_percent": 1.4149,
+          "min": 166.470296,
+          "max": 179.844611,
+          "range": 13.374315,
+          "ci_95_lower": 168.649581,
+          "ci_95_upper": 170.440957,
+          "n": 30
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true,
+          "hash_values": [
+            "fb2498d41e6e010e"
+          ]
+        },
+        "temporal_drift": {
+          "first_half_mean": 0.9983,
+          "second_half_mean": 0.9983,
+          "drift": 0.0,
+          "drift_percent": 0.0,
+          "interpretation": "No drift detected"
+        }
+      },
+      "Carving": {
+        "overall_utility": {
+          "mean": 0.008,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.008,
+          "max": 0.008,
+          "range": 0.0,
+          "ci_95_lower": 0.008,
+          "ci_95_upper": 0.008,
+          "n": 30
+        },
+        "rvs": {
+          "mean": 0.0896,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.0896,
+          "max": 0.0896,
+          "range": 0.0,
+          "ci_95_lower": 0.0896,
+          "ci_95_upper": 0.0896,
+          "n": 30
+        },
+        "fqs": {
+          "mean": 0.089637,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.089637,
+          "max": 0.089637,
+          "range": 0.0,
+          "ci_95_lower": 0.089637,
+          "ci_95_upper": 0.089637,
+          "n": 30
+        },
+        "recovery_rate": {
+          "mean": 0.066667,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 0.066667,
+          "max": 0.066667,
+          "range": 0.0,
+          "ci_95_lower": 0.066667,
+          "ci_95_upper": 0.066667,
+          "n": 30
+        },
+        "read_count": {
+          "mean": 24232,
+          "sd": 0.0,
+          "cv_percent": 0.0,
+          "min": 24232,
+          "max": 24232,
+          "range": 0,
+          "ci_95_lower": 24232.0,
+          "ci_95_upper": 24232.0,
+          "n": 30
+        },
+        "runtime_ms": {
+          "mean": 233.443282,
+          "sd": 1.774054,
+          "cv_percent": 0.76,
+          "min": 231.783956,
+          "max": 241.283299,
+          "range": 9.499343,
+          "ci_95_lower": 232.780914,
+          "ci_95_upper": 234.10565,
+          "n": 30
+        },
+        "hash_consistency": {
+          "unique_hashes": 1,
+          "all_identical": true,
+          "hash_values": [
+            "43c00d2eda6ac544"
+          ]
+        },
+        "temporal_drift": {
+          "first_half_mean": 0.008,
+          "second_half_mean": 0.008,
+          "drift": 0.0,
+          "drift_percent": 0.0,
+          "interpretation": "No drift detected"
+        }
+      }
+    }
+  },
+  "cross_seed": {
+    "MFT-First": {
+      "cross_seed_mean": 0.978825,
+      "cross_seed_sd": 0.022491,
+      "cross_seed_cv_percent": 2.2977,
+      "per_seed_means": {
+        "42": 0.9589,
+        "1337": 0.9983,
+        "2026": 0.9598,
+        "9999": 0.9983
+      },
+      "all_positive": true,
+      "direction_consistent": true,
+      "min_seed_mean": 0.9589,
+      "max_seed_mean": 0.9983,
+      "range": 0.0394
+    },
+    "Carving": {
+      "cross_seed_mean": 0.0027,
+      "cross_seed_sd": 0.003772,
+      "cross_seed_cv_percent": 139.6972,
+      "per_seed_means": {
+        "42": 0.0,
+        "1337": 0.0028,
+        "2026": 0.0,
+        "9999": 0.008
+      },
+      "all_positive": false,
+      "direction_consistent": false,
+      "min_seed_mean": 0.0,
+      "max_seed_mean": 0.008,
+      "range": 0.008
+    }
+  }
+}

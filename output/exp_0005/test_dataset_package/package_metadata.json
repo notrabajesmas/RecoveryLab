@@ -1,0 +1,11 @@
+{
+  "experiment_id": "EXP-0005",
+  "commit": "c2cc5af",
+  "seed": 42,
+  "datasets": [
+    "healthy_10mb",
+    "mft20_10mb",
+    "mft60_10mb"
+  ],
+  "timestamp": "2026-07-30T21:59:49.341469"
+}

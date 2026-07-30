@@ -1,0 +1,166 @@
+{
+  "environment": {
+    "python_version": "3.12.13 (main, Jul 18 2026, 17:02:19) [Clang 22.1.3 ]",
+    "python_executable": "/home/z/.venv/bin/python3",
+    "platform": "Linux-5.10.134-013.8.3.kangaroo.al8.x86_64-x86_64-with-glibc2.41",
+    "machine": "x86_64",
+    "processor": "",
+    "hostname": "c-6a6ba435-1416dbb8-9f6f5e659461",
+    "os_name": "posix",
+    "os_release": "5.10.134-013.8.3.kangaroo.al8.x86_64",
+    "os_version": "#1 SMP Fri May 29 08:22:43 UTC 2026",
+    "cpu_count": 2,
+    "timestamp": "2026-07-30T21:59:59.177307",
+    "python_path": [
+      "/home/z/my-project/RecoveryLab",
+      "/home/z/my-project/RecoveryLab",
+      "/home/z/my-project/RecoveryLab",
+      "/home/z/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python312.zip",
+      "/home/z/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12"
+    ],
+    "total_memory_gb": 3.95
+  },
+  "codebase_hash": "1822d0a07e4d597e",
+  "commit": "c2cc5af",
+  "results": {
+    "MFT-First": {
+      "overall_utility": {
+        "mean": 0.9589,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.9589,
+        "max": 0.9589
+      },
+      "rvs": {
+        "mean": 0.9725,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.9725,
+        "max": 0.9725
+      },
+      "fqs": {
+        "mean": 0.985999,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.985999,
+        "max": 0.985999
+      },
+      "recovery_rate": {
+        "mean": 0.933333,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.933333,
+        "max": 0.933333
+      },
+      "read_count": {
+        "mean": 14593,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 14593,
+        "max": 14593
+      },
+      "runtime_ms": {
+        "mean": 57.890427,
+        "sd": 12.619177,
+        "cv_percent": 21.7984,
+        "min": 54.25627,
+        "max": 124.583525
+      },
+      "hash_consistency": {
+        "unique_hashes": 1,
+        "all_identical": true,
+        "hash_values": [
+          "b13216d954cf42a8"
+        ]
+      }
+    },
+    "Carving": {
+      "overall_utility": {
+        "mean": 0.0,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "rvs": {
+        "mean": 0.0,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "fqs": {
+        "mean": 0.0,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "recovery_rate": {
+        "mean": 0.0,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "read_count": {
+        "mean": 19296,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 19296,
+        "max": 19296
+      },
+      "runtime_ms": {
+        "mean": 194.149191,
+        "sd": 1.025335,
+        "cv_percent": 0.5281,
+        "min": 192.226523,
+        "max": 196.812287
+      },
+      "hash_consistency": {
+        "unique_hashes": 1,
+        "all_identical": true,
+        "hash_values": [
+          "7cb03b75dd0ddd65"
+        ]
+      }
+    }
+  },
+  "comparison_with_exp_0001": {
+    "exp_0001_available": true,
+    "MFT-First": {
+      "ou_mean": {
+        "exp_0001": 0.9589,
+        "exp_0003": 0.9589,
+        "match": true
+      },
+      "ou_sd": {
+        "exp_0001": 0.0,
+        "exp_0003": 0.0,
+        "match": true
+      },
+      "hash_identical": {
+        "exp_0001": true,
+        "exp_0003": true,
+        "match": true
+      }
+    },
+    "Carving": {
+      "ou_mean": {
+        "exp_0001": 0.0,
+        "exp_0003": 0.0,
+        "match": true
+      },
+      "ou_sd": {
+        "exp_0001": 0.0,
+        "exp_0003": 0.0,
+        "match": true
+      },
+      "hash_identical": {
+        "exp_0001": true,
+        "exp_0003": true,
+        "match": true
+      }
+    }
+  }
+}

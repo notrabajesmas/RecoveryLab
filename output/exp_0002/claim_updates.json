@@ -1,0 +1,43 @@
+{
+  "CLAIM-001": {
+    "current_level": "OBSERVED",
+    "can_advance": true,
+    "reason": "EXP-0002 confirms MFT-First > Carving across all 4 seeds. MFT-First OU range: [0.958900, 0.998300]. Carving OU range: [0.000000, 0.008000]. The advantage is robust to dataset composition. NEW FINDING: Carving is NOT always OU=0 on healthy images \u2014 it sometimes recovers a tiny amount (0.0028-0.0080). This is a genuine observation, not a failure.",
+    "next_step": "EXP-0003: cross-machine reproduction to reach REPRODUCIBLE",
+    "proposed_level": "REPEATED"
+  },
+  "CLAIM-002": {
+    "current_level": "OBSERVED",
+    "can_advance": false,
+    "reason": "EXP-0002 does not directly test functional recovery granularity. Requires corruption experiments to see partial recovery.",
+    "next_step": "EXP-0004: dataset scaling with corruption"
+  },
+  "CLAIM-005": {
+    "current_level": "OBSERVED",
+    "can_advance": true,
+    "reason": "EXP-0002 confirms determinism across 4 different seeds. Hash identical within each seed group. Parser reliability is not seed-dependent.",
+    "next_step": "EXP-0003: cross-machine verification",
+    "proposed_level": "REPEATED"
+  },
+  "evidence_debt": {
+    "ED-001_umbral_empirico": {
+      "status": "EN PROGRESO",
+      "evidence": "Cross-seed MFT-First OU CV = 2.2977%, MFT-First > Carving across all seeds = True",
+      "note": "ED-001 requires cross-machine validation (EXP-0003) to reach PAGADA."
+    },
+    "ED-008_variabilidad_desconocida": {
+      "status": "PAGADA",
+      "evidence": "Deterministic per seed = True, cross-seed OU SD = 0.022491"
+    }
+  },
+  "new_finding": {
+    "carving_not_always_zero": {
+      "description": "Carving is NOT always OU=0 on healthy NTFS images. It sometimes recovers a tiny amount (0.0028-0.0080). This varies by seed/dataset composition.",
+      "seeds_with_nonzero_carving": [
+        "1337",
+        "9999"
+      ],
+      "implication": "The floor measurement for Carving is not exactly zero. This means CLAIM-001's margin is slightly smaller than previously estimated, but still overwhelmingly large."
+    }
+  }
+}

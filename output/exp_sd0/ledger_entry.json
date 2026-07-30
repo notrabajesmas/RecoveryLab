@@ -1,0 +1,12 @@
+{
+  "evidence_id": "EXP-SD0",
+  "experiment_name": "SD=0 Diagnostic Investigation",
+  "date": "2026-07-30",
+  "commit": "c2cc5af",
+  "question": "Why is SD=0 in EXP-0001?",
+  "answer": "EXPLANATION_2: Overall Utility is quantized (discrete file counts). Runtime shows variability but OU does not because it's computed from integer file counts and fixed RVS profiles.",
+  "sd0_is_genuine": false,
+  "metrics_with_sd_zero": 16,
+  "metrics_with_sd_nonzero": 2,
+  "noise_changes_result": false
+}

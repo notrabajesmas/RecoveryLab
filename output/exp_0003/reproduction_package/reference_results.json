@@ -1,0 +1,12 @@
+{
+  "MFT-First": {
+    "ou_mean": 0.9589,
+    "ou_sd": 0.0,
+    "result_hash": "b13216d954cf42a8"
+  },
+  "Carving": {
+    "ou_mean": 0.0,
+    "ou_sd": 0.0,
+    "result_hash": "7cb03b75dd0ddd65"
+  }
+}

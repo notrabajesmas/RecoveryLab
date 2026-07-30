@@ -1,0 +1,318 @@
+{
+  "standard": {
+    "per_metric_analysis": {
+      "overall_utility": {
+        "mean": 0.9589,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0.9589,
+        "max": 0.9589
+      },
+      "rvs": {
+        "mean": 0.9725,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0.9725,
+        "max": 0.9725
+      },
+      "fqs": {
+        "mean": 0.985999,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0.985999,
+        "max": 0.985999
+      },
+      "recovery_rate": {
+        "mean": 0.933333,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0.933333,
+        "max": 0.933333
+      },
+      "read_count": {
+        "mean": 14593,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 14593,
+        "max": 14593
+      },
+      "runtime_ms": {
+        "mean": 51.082948,
+        "sd": 3.223619,
+        "sd_is_zero": false,
+        "unique_values": 30,
+        "min": 45.947708,
+        "max": 54.864475
+      },
+      "runtime_ns": {
+        "mean": 51082948.166667,
+        "sd": 3223618.873936,
+        "sd_is_zero": false,
+        "unique_values": 30,
+        "min": 45947708,
+        "max": 54864475
+      },
+      "files_recovered": {
+        "mean": 30,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 30,
+        "max": 30
+      },
+      "files_correct_checksum": {
+        "mean": 28,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 28,
+        "max": 28
+      },
+      "files_missing": {
+        "mean": 0,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0,
+        "max": 0
+      },
+      "bytes_recovered": {
+        "mean": 7344892,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 7344892,
+        "max": 7344892
+      },
+      "bytes_correct": {
+        "mean": 7343892,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 7343892,
+        "max": 7343892
+      },
+      "integrity_score": {
+        "mean": 0.953313,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0.953313,
+        "max": 0.953313
+      },
+      "read_efficiency": {
+        "mean": 0.999931,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0.999931,
+        "max": 0.999931
+      },
+      "sectors_wasted": {
+        "mean": 1,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 1,
+        "max": 1
+      },
+      "mft_entries_parsed": {
+        "mean": 42,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 42,
+        "max": 42
+      },
+      "rvs_total_value_recovered": {
+        "mean": 15.3543,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 15.3543,
+        "max": 15.3543
+      },
+      "rvs_total_value_ground_truth": {
+        "mean": 15.7888,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 15.7888,
+        "max": 15.7888
+      }
+    },
+    "per_file_consistency": {
+      "unique_per_file_jsons": 1,
+      "all_identical": true
+    },
+    "summary": {
+      "metrics_with_sd_zero": 16,
+      "metrics_with_sd_nonzero": 2,
+      "total_metrics_checked": 18
+    },
+    "explanation": "EXPLANATION_2: Overall Utility is quantized (discrete file counts). Runtime shows variability but OU does not because it's computed from integer file counts and fixed RVS profiles."
+  },
+  "with_noise": {
+    "per_metric_analysis": {
+      "overall_utility": {
+        "mean": 0.9589,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0.9589,
+        "max": 0.9589
+      },
+      "rvs": {
+        "mean": 0.9725,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0.9725,
+        "max": 0.9725
+      },
+      "fqs": {
+        "mean": 0.985999,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0.985999,
+        "max": 0.985999
+      },
+      "recovery_rate": {
+        "mean": 0.933333,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0.933333,
+        "max": 0.933333
+      },
+      "read_count": {
+        "mean": 14593,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 14593,
+        "max": 14593
+      },
+      "runtime_ms": {
+        "mean": 48.501909,
+        "sd": 3.470519,
+        "sd_is_zero": false,
+        "unique_values": 30,
+        "min": 44.895732,
+        "max": 54.17613
+      },
+      "runtime_ns": {
+        "mean": 48501909.033333,
+        "sd": 3470519.341596,
+        "sd_is_zero": false,
+        "unique_values": 30,
+        "min": 44895732,
+        "max": 54176130
+      },
+      "files_recovered": {
+        "mean": 30,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 30,
+        "max": 30
+      },
+      "files_correct_checksum": {
+        "mean": 28,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 28,
+        "max": 28
+      },
+      "files_missing": {
+        "mean": 0,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0,
+        "max": 0
+      },
+      "bytes_recovered": {
+        "mean": 7344892,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 7344892,
+        "max": 7344892
+      },
+      "bytes_correct": {
+        "mean": 7343892,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 7343892,
+        "max": 7343892
+      },
+      "integrity_score": {
+        "mean": 0.953313,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0.953313,
+        "max": 0.953313
+      },
+      "read_efficiency": {
+        "mean": 0.999931,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 0.999931,
+        "max": 0.999931
+      },
+      "sectors_wasted": {
+        "mean": 1,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 1,
+        "max": 1
+      },
+      "mft_entries_parsed": {
+        "mean": 42,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 42,
+        "max": 42
+      },
+      "rvs_total_value_recovered": {
+        "mean": 15.3543,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 15.3543,
+        "max": 15.3543
+      },
+      "rvs_total_value_ground_truth": {
+        "mean": 15.7888,
+        "sd": 0.0,
+        "sd_is_zero": true,
+        "unique_values": 1,
+        "min": 15.7888,
+        "max": 15.7888
+      }
+    },
+    "per_file_consistency": {
+      "unique_per_file_jsons": 1,
+      "all_identical": true
+    },
+    "summary": {
+      "metrics_with_sd_zero": 16,
+      "metrics_with_sd_nonzero": 2,
+      "total_metrics_checked": 18
+    },
+    "explanation": "EXPLANATION_2: Overall Utility is quantized (discrete file counts). Runtime shows variability but OU does not because it's computed from integer file counts and fixed RVS profiles."
+  }
+}

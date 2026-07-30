@@ -1,0 +1,7 @@
+config,motor,ou_mean,ou_sd,rvs_mean,fqs_mean,recovery_rate_mean,read_count_mean,runtime_mean_ms,hash_identical
+healthy_10mb,MFT-First,0.9589,0.0,0.9725,0.985999,0.933333,14593,53.938513,True
+healthy_10mb,Carving,0.0,0.0,0.0,0.0,0.0,19296,192.916956,True
+mft20_10mb,MFT-First,0.5508,0.0,0.735,0.749396,0.733333,9953,35.602606,True
+mft20_10mb,Carving,0.0,0.0,0.0,0.0,0.0,19296,193.058532,True
+mft60_10mb,MFT-First,0.1794,0.0,0.4164,0.430886,0.366667,4633,17.285962,True
+mft60_10mb,Carving,0.0,0.0,0.0,0.0,0.0,19296,193.94833,True
