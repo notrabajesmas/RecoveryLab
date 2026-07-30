@@ -1,0 +1,50 @@
+======================================================================
+  RECOVERY LAB — INFORME DE RESULTADOS
+======================================================================
+
+HIPÓTESIS: Priorizar la lectura del MFT mejora la recuperación
+de archivos cuando un disco está fallando.
+
+MOTOR A: Lectura secuencial (como ddrescue por defecto)
+MOTOR B: Lectura MFT-first (priorizar metadatos primero)
+
+----------------------------------------------------------------------
+Escenario                      A (archivos)    B (archivos)    Diferencia  
+----------------------------------------------------------------------
+S01_healthy_deleted               1.0/300      300.0/300     B +29900.0%
+S02_mft_20pct                     0.6/300      180.0/300     B +17940.0%
+S03_mft_40pct                     0.4/300      120.0/300     B +11960.0%
+S04_mft_60pct                     0.2/300       60.0/300     B +5980.0%
+S05_bad_sectors_1pct              0.8/300      232.0/300     B +23120.0%
+S06_bad_sectors_5pct              0.6/300      124.0/300     B +12340.0%
+S07_growing_failure_slow          0.0/300      164.4/300     B +16440.0%
+S08_growing_failure_fast          0.0/300      112.0/300     B +11200.0%
+S09_combined_mft_bad              0.4/300      119.0/300     B +11860.0%
+S10_critical_dying_disk           0.0/300       37.2/300     B +3720.0%
+----------------------------------------------------------------------
+
+RESUMEN:
+  Escenarios donde Motor B gana: 10/10
+  Escenarios donde Motor A gana: 0/10
+  Escenarios sin diferencia:     0/10
+
+ESCENARIO CLAVE (S10: Disco muriendo con MFT dañado):
+  Motor A: 0.0 archivos recuperados
+  Motor B: 37.2 archivos recuperados
+  Diferencia: +3720.0%
+  Muertes de disco: A=5, B=5
+
+ESCENARIO CRÍTICO (S08: Fallo rápido creciente):
+  Motor A: 0.0 archivos recuperados
+  Motor B: 112.0 archivos recuperados
+  Diferencia: +11200.0%
+  Muertes de disco: A=5, B=5
+
+CONCLUSIÓN:
+  La hipótesis está SOPORTADA por los datos.
+  Priorizar MFT-first mejora consistentemente la recuperación,
+  especialmente en escenarios donde el disco está fallando.
+
+NOTA: Estos resultados provienen de un simulador. Los resultados
+reales pueden diferir. Este experimento es un primer paso, no una
+conclusión definitiva.

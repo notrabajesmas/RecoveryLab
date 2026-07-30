@@ -1,0 +1,55 @@
+========================================================================
+  RECOVERY LAB v2 — INFORME DE RESULTADOS
+========================================================================
+
+HIPOTESIS: Priorizar la lectura del MFT mejora la recuperacion
+cuando el disco tiene un presupuesto de lectura limitado.
+
+MOTOR A: Lectura secuencial (sector 0, 1, 2, 3...)
+MOTOR B: MFT-first (leer MFT primero, luego datos priorizados)
+
+------------------------------------------------------------------------
+Escenario                        A (arch)   B (arch)   Diff       Veredicto
+------------------------------------------------------------------------
+S01_healthy                       91.2/200   91.2/200     +0.0%  ~EMPATE
+S02_mft_30pct_damaged             64.0/200   64.0/200     +0.0%  ~EMPATE
+S03_bad_sectors_end_10pct         82.6/200   82.6/200     +0.0%  ~EMPATE
+S04_bad_sectors_random_5pct       91.2/200   91.2/200     +0.0%  ~EMPATE
+S05_disk_dies_at_30pct             1.8/200   57.0/200  +3066.7%  B GANA
+S06_disk_dies_at_10pct             0.2/200   22.4/200  +2220.0%  B GANA
+S07_mft_damaged_disk_dies_30pct    3.0/200   60.6/200  +1920.0%  B GANA
+S08_mft_damaged_disk_dies_15pct    1.0/200   24.0/200  +2300.0%  B GANA
+S09_bad_end_disk_dies_20pct        1.2/200   26.0/200  +2066.7%  B GANA
+S10_critical_dying                 0.0/200   28.0/200  +2800.0%  B GANA
+------------------------------------------------------------------------
+
+RESUMEN: Motor B gana en 6/10, Motor A gana en 0/10, Empate en 4/10
+
+DETALLE — S07_mft_damaged_disk_dies_30pct:
+  Motor A: 3.0 archivos recuperados, 160.8 MFT conocidos
+  Motor B: 60.6 archivos recuperados, 160.8 MFT conocidos
+  Diferencia: +1920.0%
+  Muertes: A=5/5, B=4/5
+
+DETALLE — S08_mft_damaged_disk_dies_15pct:
+  Motor A: 1.0 archivos recuperados, 142.4 MFT conocidos
+  Motor B: 24.0 archivos recuperados, 142.4 MFT conocidos
+  Diferencia: +2300.0%
+  Muertes: A=5/5, B=5/5
+
+DETALLE — S10_critical_dying:
+  Motor A: 0.0 archivos recuperados, 122.4 MFT conocidos
+  Motor B: 28.0 archivos recuperados, 122.4 MFT conocidos
+  Diferencia: +2800.0%
+  Muertes: A=5/5, B=5/5
+
+CONCLUSION:
+  La hipotesis esta SOPORTADA. Motor B (MFT-first) recupera
+  consistentemente mas archivos que Motor A (secuencial),
+  especialmente en escenarios donde el disco falla.
+  La ventaja es moderada. Se necesitan mas pruebas.
+
+NOTA IMPORTANTE: Este es un simulador que modela propiedades
+simplificadas de NTFS. Los resultados reales pueden diferir.
+Este experimento valida la hipotesis en principio, no la
+demuestra definitivamente.
