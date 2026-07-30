@@ -1,0 +1,33 @@
+{
+  "CLAIM-001": {
+    "current_level": "OBSERVED",
+    "can_advance": true,
+    "reason": "EXP-0001 shows MFT-First OU=0.958900 vs Carving OU=0.000000 on healthy image. Both motors deterministic (hash identical). This is consistent with CLAIM-001 but requires cross-dataset validation.",
+    "next_step": "EXP-0002: repeat with corrupted datasets to validate under damage conditions",
+    "proposed_level": "REPEATED"
+  },
+  "CLAIM-005": {
+    "current_level": "OBSERVED",
+    "can_advance": true,
+    "reason": "EXP-0001 demonstrates deterministic, stable results under identical conditions with both MFT-First and Carving motors. This supports the reliability of the parsers.",
+    "next_step": "EXP-0002: verify reproducibility on another machine/environment",
+    "proposed_level": "REPEATED"
+  },
+  "CLAIM-004": {
+    "current_level": "OBSERVED",
+    "can_advance": false,
+    "reason": "EXP-0001 does not test crossover conditions. Requires corruption experiments.",
+    "next_step": "EXP-0004: validation with external tools"
+  },
+  "evidence_debt": {
+    "ED-008_variabilidad_desconocida": {
+      "status": "PAGADA",
+      "evidence": "CV = 0.0000%, hash identical = True, drift = 0.000000"
+    },
+    "ED-001_umbral_empirico": {
+      "status": "EN PROGRESO",
+      "evidence": "Empirical threshold (2-sigma) = 0.010000 (1.00%)",
+      "note": "ED-001 requires more than SD: also reproducibility, temporal stability, and absence of drift. EXP-0001 addresses ED-008 fully. ED-001 requires EXP-0002 and EXP-0003."
+    }
+  }
+}

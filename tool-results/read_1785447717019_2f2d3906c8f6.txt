@@ -1,0 +1,913 @@
+     1→"""
+     2→RecoveryLab — Corruption Models
+     3→=================================
+     4→Real-world failure patterns, not random corruption.
+     5→
+     6→Each model is based on how actual drives fail:
+     7→  - Head crash: first/last sectors damaged
+     8→  - Scratch: continuous zone of damage
+     9→  - Intermittent: every Nth sector fails
+    10→  - MFT partial: entries zeroed out
+    11→  - Bitmap corruption: allocation data lost
+    12→  - CRC errors: bit flips in data
+    13→  - Slow sectors: metadata marking (for simulation)
+    14→  - Timeout: metadata marking (for simulation)
+    15→
+    16→Every corruption is logged exactly — reproducibility is paramount.
+    17→"""
+    18→
+    19→import random
+    20→import hashlib
+    21→import struct
+    22→import copy
+    23→from dataclasses import dataclass, field
+    24→from typing import List, Dict, Optional, Tuple
+    25→from enum import Enum
+    26→from pathlib import Path
+    27→
+    28→
+    29→class CorruptionType(Enum):
+    30→    """Types of corruption that can be applied."""
+    31→    HEAD_CRASH_START = "head_crash_start"
+    32→    HEAD_CRASH_END = "head_crash_end"
+    33→    SCRATCH_CONTINUOUS = "scratch_continuous"
+    34→    INTERMITTENT_SECTORS = "intermittent_sectors"
+    35→    MFT_PARTIAL_DELETE = "mft_partial_delete"
+    36→    BITMAP_CORRUPTION = "bitmap_corruption"
+    37→    JOURNAL_CORRUPTION = "journal_corruption"
+    38→    CRC_ERRORS = "crc_errors"
+    39→    SLOW_SECTORS = "slow_sectors"
+    40→    TIMEOUT_PATTERN = "timeout_pattern"
+    41→    # ─── Noise models (Objeción 6) ─────────────────────────────────────
+    42→    RANDOM_NOISE = "random_noise"              # Random bytes in random sectors
+    43→    PARTIAL_OVERWRITE = "partial_overwrite"     # Partial file overwrite
+    44→    FRAGMENTATION_CHAOS = "fragmentation_chaos" # Unpredictable fragmentation
+    45→    TIMESTAMP_INCONSISTENCY = "timestamp_inconsistency"  # Inconsistent timestamps
+    46→
+    47→
+    48→@dataclass
+    49→class CorruptionEntry:
+    50→    """A single corruption operation applied to the image."""
+    51→    type: CorruptionType
+    52→    description: str
+    53→    sectors_affected: List[int]       # Absolute sector numbers
+    54→    clusters_affected: List[int]      # Absolute cluster numbers
+    55→    byte_range: Tuple[int, int]       # (start, end) byte offsets
+    56→    severity: float                    # 0.0-1.0
+    57→    details: Dict = field(default_factory=dict)  # Additional info
+    58→
+    59→
+    60→@dataclass
+    61→class CorruptionResult:
+    62→    """Result of applying corruption to an image."""
+    63→    corrupted_image: bytes
+    64→    corruption_log: List[CorruptionEntry]
+    65→    manifest_corruption: Dict   # Corruption info to add to manifest
+    66→
+    67→
+    68→class CorruptionModel:
+    69→    """Base class for all corruption models."""
+    70→
+    71→    def __init__(self, seed: int = 42):
+    72→        self.rng = random.Random(seed)
+    73→        self.seed = seed
+    74→
+    75→    def apply(self, image: bytearray, manifest: Dict) -> CorruptionResult:
+    76→        """Apply corruption to image. Must be overridden."""
+    77→        raise NotImplementedError
+    78→
+    79→    def _log_entry(self, ctype: CorruptionType, desc: str,
+    80→                   sectors: List[int], clusters: List[int],
+    81→                   byte_range: Tuple[int, int], severity: float,
+    82→                   details: Dict = None) -> CorruptionEntry:
+    83→        return CorruptionEntry(
+    84→            type=ctype,
+    85→            description=desc,
+    86→            sectors_affected=sectors,
+    87→            clusters_affected=clusters,
+    88→            byte_range=byte_range,
+    89→            severity=severity,
+    90→            details=details or {},
+    91→        )
+    92→
+    93→
+    94→# ─── Concrete Models ──────────────────────────────────────────────────────────
+    95→
+    96→class HeadCrashStartModel(CorruptionModel):
+    97→    """First sectors damaged — head crash at start of platter."""
+    98→
+    99→    def apply(self, image: bytearray, manifest: Dict,
+   100→              severity: float = 0.05) -> CorruptionResult:
+   101→        total_sectors = len(image) // 512
+   102→        affected = int(total_sectors * severity)
+   103→        start_sector = 0
+   104→        end_sector = affected
+   105→
+   106→        # Zero out sectors (simulating unreadable data)
+   107→        for s in range(start_sector, end_sector):
+   108→            offset = s * 512
+   109→            image[offset:offset+512] = b'\x00' * 512
+   110→
+   111→        sectors = list(range(start_sector, end_sector))
+   112→        clusters = list(set(s // (manifest["cluster_size"] // 512) for s in sectors))
+   113→
+   114→        log = [self._log_entry(
+   115→            CorruptionType.HEAD_CRASH_START,
+   116→            f"Head crash at start: sectors 0-{end_sector-1} ({affected} sectors)",
+   117→            sectors, clusters, (0, end_sector * 512),
+   118→            severity,
+   119→            {"pattern": "first_sectors", "affected_sectors": affected},
+   120→        )]
+   121→
+   122→        return CorruptionResult(
+   123→            corrupted_image=bytes(image),
+   124→            corruption_log=log,
+   125→            manifest_corruption={
+   126→                "type": "head_crash_start",
+   127→                "severity": severity,
+   128→                "sectors_affected": affected,
+   129→                "clusters_affected": len(clusters),
+   130→            },
+   131→        )
+   132→
+   133→
+   134→class HeadCrashEndModel(CorruptionModel):
+   135→    """Last sectors damaged — end of platter."""
+   136→
+   137→    def apply(self, image: bytearray, manifest: Dict,
+   138→              severity: float = 0.05) -> CorruptionResult:
+   139→        total_sectors = len(image) // 512
+   140→        affected = int(total_sectors * severity)
+   141→        start_sector = total_sectors - affected
+   142→
+   143→        for s in range(start_sector, total_sectors):
+   144→            offset = s * 512
+   145→            image[offset:offset+512] = b'\x00' * 512
+   146→
+   147→        sectors = list(range(start_sector, total_sectors))
+   148→        clusters = list(set(s // (manifest["cluster_size"] // 512) for s in sectors))
+   149→
+   150→        log = [self._log_entry(
+   151→            CorruptionType.HEAD_CRASH_END,
+   152→            f"Head crash at end: sectors {start_sector}-{total_sectors-1}",
+   153→            sectors, clusters,
+   154→            (start_sector * 512, total_sectors * 512),
+   155→            severity,
+   156→            {"pattern": "last_sectors", "affected_sectors": affected},
+   157→        )]
+   158→
+   159→        return CorruptionResult(
+   160→            corrupted_image=bytes(image),
+   161→            corruption_log=log,
+   162→            manifest_corruption={
+   163→                "type": "head_crash_end",
+   164→                "severity": severity,
+   165→                "sectors_affected": affected,
+   166→            },
+   167→        )
+   168→
+   169→
+   170→class ScratchContinuousModel(CorruptionModel):
+   171→    """Continuous zone of damage — scratch across platter."""
+   172→
+   173→    def apply(self, image: bytearray, manifest: Dict,
+   174→              severity: float = 0.05,
+   175→              position: Optional[float] = None) -> CorruptionResult:
+   176→        total_sectors = len(image) // 512
+   177→        affected = int(total_sectors * severity)
+   178→
+   179→        # Position: where the scratch starts (0.0-1.0)
+   180→        if position is None:
+   181→            position = self.rng.uniform(0.1, 0.8)
+   182→
+   183→        start_sector = int(total_sectors * position)
+   184→        end_sector = min(start_sector + affected, total_sectors)
+   185→
+   186→        for s in range(start_sector, end_sector):
+   187→            offset = s * 512
+   188→            image[offset:offset+512] = b'\x00' * 512
+   189→
+   190→        sectors = list(range(start_sector, end_sector))
+   191→        clusters = list(set(s // (manifest["cluster_size"] // 512) for s in sectors))
+   192→
+   193→        log = [self._log_entry(
+   194→            CorruptionType.SCRATCH_CONTINUOUS,
+   195→            f"Scratch at {position:.0%}: sectors {start_sector}-{end_sector-1}",
+   196→            sectors, clusters,
+   197→            (start_sector * 512, end_sector * 512),
+   198→            severity,
+   199→            {"pattern": "continuous", "position": position,
+   200→             "start_sector": start_sector, "end_sector": end_sector},
+   201→        )]
+   202→
+   203→        return CorruptionResult(
+   204→            corrupted_image=bytes(image),
+   205→            corruption_log=log,
+   206→            manifest_corruption={
+   207→                "type": "scratch_continuous",
+   208→                "severity": severity,
+   209→                "position": position,
+   210→                "sectors_affected": affected,
+   211→            },
+   212→        )
+   213→
+   214→
+   215→class IntermittentSectorsModel(CorruptionModel):
+   216→    """Every Nth sector fails — failing head."""
+   217→
+   218→    def apply(self, image: bytearray, manifest: Dict,
+   219→              severity: float = 0.02,
+   220→              interval: Optional[int] = None) -> CorruptionResult:
+   221→        total_sectors = len(image) // 512
+   222→        if interval is None:
+   223→            interval = max(1, int(1.0 / severity))
+   224→
+   225→        affected_sectors = []
+   226→        for s in range(0, total_sectors, interval):
+   227→            offset = s * 512
+   228→            image[offset:offset+512] = b'\x00' * 512
+   229→            affected_sectors.append(s)
+   230→
+   231→        clusters = list(set(s // (manifest["cluster_size"] // 512)
+   232→                          for s in affected_sectors))
+   233→
+   234→        log = [self._log_entry(
+   235→            CorruptionType.INTERMITTENT_SECTORS,
+   236→            f"Intermittent failure: every {interval}th sector zeroed",
+   237→            affected_sectors, clusters,
+   238→            (0, len(image)),
+   239→            severity,
+   240→            {"pattern": "intermittent", "interval": interval,
+   241→             "affected_count": len(affected_sectors)},
+   242→        )]
+   243→
+   244→        return CorruptionResult(
+   245→            corrupted_image=bytes(image),
+   246→            corruption_log=log,
+   247→            manifest_corruption={
+   248→                "type": "intermittent_sectors",
+   249→                "severity": severity,
+   250→                "interval": interval,
+   251→                "affected_count": len(affected_sectors),
+   252→            },
+   253→        )
+   254→
+   255→
+   256→class MFTPartialDeleteModel(CorruptionModel):
+   257→    """Partial MFT deletion — 20%/40%/60% of MFT entries zeroed."""
+   258→
+   259→    def apply(self, image: bytearray, manifest: Dict,
+   260→              severity: float = 0.40) -> CorruptionResult:
+   261→        mft_info = manifest["mft"]
+   262→        mft_start = mft_info["start_cluster"]
+   263→        cluster_size = manifest["cluster_size"]
+   264→        record_size = mft_info.get("record_size", 1024)
+   265→        records_per_cluster = cluster_size // record_size
+   266→
+   267→        # Determine which MFT records to delete
+   268→        # System records (0-11) are protected — we delete user records
+   269→        total_user_records = len([f for f in manifest["files"]
+   270→                                 if f.get("id", 0) >= 12])
+   271→        num_to_delete = int(total_user_records * severity)
+   272→
+   273→        # Select which records to delete (deterministic)
+   274→        user_record_ids = [f["id"] for f in manifest["files"]
+   275→                          if f.get("id", 0) >= 12]
+   276→        self.rng.shuffle(user_record_ids)
+   277→        to_delete = user_record_ids[:num_to_delete]
+   278→
+   279→        # Zero out the selected MFT records
+   280→        affected_clusters = set()
+   281→        for rec_id in to_delete:
+   282→            # Calculate byte offset
+   283→            byte_offset = (mft_start * cluster_size) + (rec_id * record_size)
+   284→            image[byte_offset:byte_offset+record_size] = b'\x00' * record_size
+   285→
+   286→            # Determine cluster
+   287→            cluster = mft_start + (rec_id * record_size) // cluster_size
+   288→            affected_clusters.add(cluster)
+   289→
+   290→        # Also delete the "FILE" signature for these records
+   291→        deleted_names = []
+   292→        for f in manifest["files"]:
+   293→            if f.get("id", 0) in to_delete:
+   294→                deleted_names.append(f["name"])
+   295→
+   296→        log = [self._log_entry(
+   297→            CorruptionType.MFT_PARTIAL_DELETE,
+   298→            f"MFT partial delete: {num_to_delete}/{total_user_records} entries zeroed ({severity:.0%})",
+   299→            [], list(affected_clusters),
+   300→            (mft_start * cluster_size, mft_start * cluster_size + len(manifest["files"]) * record_size),
+   301→            severity,
+   302→            {"deleted_record_ids": to_delete,
+   303→             "deleted_names": deleted_names,
+   304→             "mft_start_cluster": mft_start},
+   305→        )]
+   306→
+   307→        return CorruptionResult(
+   308→            corrupted_image=bytes(image),
+   309→            corruption_log=log,
+   310→            manifest_corruption={
+   311→                "type": "mft_partial_delete",
+   312→                "severity": severity,
+   313→                "records_deleted": num_to_delete,
+   314→                "total_user_records": total_user_records,
+   315→                "deleted_record_ids": to_delete,
+   316→            },
+   317→        )
+   318→
+   319→
+   320→class BitmapCorruptionModel(CorruptionModel):
+   321→    """Bitmap partially or fully zeroed."""
+   322→
+   323→    def apply(self, image: bytearray, manifest: Dict,
+   324→              severity: float = 0.50) -> CorruptionResult:
+   325→        bitmap_info = manifest["bitmap"]
+   326→        bitmap_start = bitmap_info["start_cluster"]
+   327→        cluster_size = manifest["cluster_size"]
+   328→        bitmap_clusters = bitmap_info.get("clusters", [bitmap_start])
+   329→        bitmap_byte_count = len(bitmap_clusters) * cluster_size
+   330→
+   331→        bitmap_offset = bitmap_start * cluster_size
+   332→
+   333→        if severity >= 1.0:
+   334→            # Full bitmap deletion
+   335→            image[bitmap_offset:bitmap_offset+bitmap_byte_count] = b'\x00' * bitmap_byte_count
+   336→        else:
+   337→            # Partial: zero out a fraction of the bitmap
+   338→            zero_bytes = int(bitmap_byte_count * severity)
+   339→            start_byte = self.rng.randint(0, bitmap_byte_count - zero_bytes)
+   340→            image[bitmap_offset+start_byte:bitmap_offset+start_byte+zero_bytes] = b'\x00' * zero_bytes
+   341→
+   342→        log = [self._log_entry(
+   343→            CorruptionType.BITMAP_CORRUPTION,
+   344→            f"Bitmap corruption: {severity:.0%} zeroed",
+   345→            [], [bitmap_start],
+   346→            (bitmap_offset, bitmap_offset + bitmap_byte_count),
+   347→            severity,
+   348→            {"bitmap_start_cluster": bitmap_start,
+   349→             "bitmap_bytes": bitmap_byte_count,
+   350→             "fully_zeroed": severity >= 1.0},
+   351→        )]
+   352→
+   353→        return CorruptionResult(
+   354→            corrupted_image=bytes(image),
+   355→            corruption_log=log,
+   356→            manifest_corruption={
+   357→                "type": "bitmap_corruption",
+   358→                "severity": severity,
+   359→            },
+   360→        )
+   361→
+   362→
+   363→class JournalCorruptionModel(CorruptionModel):
+   364→    """Journal ($LogFile) corrupted."""
+   365→
+   366→    def apply(self, image: bytearray, manifest: Dict,
+   367→              severity: float = 1.0) -> CorruptionResult:
+   368→        logfile_info = manifest.get("logfile", {})
+   369→        logfile_start = logfile_info.get("start_cluster", 0)
+   370→        if logfile_start == 0:
+   371→            # No logfile info — skip
+   372→            return CorruptionResult(
+   373→                corrupted_image=bytes(image),
+   374→                corruption_log=[],
+   375→                manifest_corruption={"type": "journal_corruption", "skipped": True},
+   376→            )
+   377→
+   378→        cluster_size = manifest["cluster_size"]
+   379→        logfile_clusters = logfile_info.get("clusters", [logfile_start])
+   380→        logfile_byte_count = len(logfile_clusters) * cluster_size
+   381→        logfile_offset = logfile_start * cluster_size
+   382→
+   383→        if severity >= 1.0:
+   384→            # Full corruption
+   385→            # Write random data instead of zeros (more realistic for journal corruption)
+   386→            random_data = bytes(self.rng.getrandbits(8) for _ in range(logfile_byte_count))
+   387→            image[logfile_offset:logfile_offset+logfile_byte_count] = random_data
+   388→        else:
+   389→            zero_bytes = int(logfile_byte_count * severity)
+   390→            start_byte = self.rng.randint(0, max(0, logfile_byte_count - zero_bytes))
+   391→            random_data = bytes(self.rng.getrandbits(8) for _ in range(zero_bytes))
+   392→            image[logfile_offset+start_byte:logfile_offset+start_byte+zero_bytes] = random_data
+   393→
+   394→        log = [self._log_entry(
+   395→            CorruptionType.JOURNAL_CORRUPTION,
+   396→            f"Journal corruption: {severity:.0%} corrupted",
+   397→            [], logfile_clusters,
+   398→            (logfile_offset, logfile_offset + logfile_byte_count),
+   399→            severity,
+   400→            {"logfile_start_cluster": logfile_start},
+   401→        )]
+   402→
+   403→        return CorruptionResult(
+   404→            corrupted_image=bytes(image),
+   405→            corruption_log=log,
+   406→            manifest_corruption={
+   407→                "type": "journal_corruption",
+   408→                "severity": severity,
+   409→            },
+   410→        )
+   411→
+   412→
+   413→class CRCErrorsModel(CorruptionModel):
+   414→    """Random bit flips in data sectors — CRC errors."""
+   415→
+   416→    def apply(self, image: bytearray, manifest: Dict,
+   417→              severity: float = 0.005) -> CorruptionResult:
+   418→        total_sectors = len(image) // 512
+   419→        num_affected = int(total_sectors * severity)
+   420→
+   421→        # Choose random sectors to corrupt
+   422→        affected_sectors = self.rng.sample(range(total_sectors), num_affected)
+   423→
+   424→        for s in affected_sectors:
+   425→            offset = s * 512
+   426→            # Flip 1-4 random bits in the sector
+   427→            num_flips = self.rng.randint(1, 4)
+   428→            for _ in range(num_flips):
+   429→                byte_pos = self.rng.randint(0, 511)
+   430→                bit_pos = self.rng.randint(0, 7)
+   431→                image[offset + byte_pos] ^= (1 << bit_pos)
+   432→
+   433→        clusters = list(set(s // (manifest["cluster_size"] // 512)
+   434→                          for s in affected_sectors))
+   435→
+   436→        log = [self._log_entry(
+   437→            CorruptionType.CRC_ERRORS,
+   438→            f"CRC errors: {num_affected} sectors with bit flips",
+   439→            affected_sectors, clusters,
+   440→            (0, len(image)),
+   441→            severity,
+   442→            {"pattern": "bit_flips", "affected_count": num_affected,
+   443→             "flips_per_sector": "1-4"},
+   444→        )]
+   445→
+   446→        return CorruptionResult(
+   447→            corrupted_image=bytes(image),
+   448→            corruption_log=log,
+   449→            manifest_corruption={
+   450→                "type": "crc_errors",
+   451→                "severity": severity,
+   452→                "affected_sectors": num_affected,
+   453→            },
+   454→        )
+   455→
+   456→
+   457→class SlowSectorsModel(CorruptionModel):
+   458→    """
+   459→    Sectors marked as slow — metadata-based simulation.
+   460→
+   461→    This doesn't modify the image bytes. Instead, it creates a metadata
+   462→    file that the recovery motors can read to simulate slow sectors.
+   463→    """
+   464→
+   465→    def apply(self, image: bytearray, manifest: Dict,
+   466→              severity: float = 0.02) -> CorruptionResult:
+   467→        total_sectors = len(image) // 512
+   468→        num_slow = int(total_sectors * severity)
+   469→
+   470→        # Choose random sectors to mark as slow
+   471→        slow_sectors = sorted(self.rng.sample(range(total_sectors), num_slow))
+   472→
+   473→        # Create metadata about slow sectors
+   474→        slow_metadata = {
+   475→            "type": "slow_sectors",
+   476→            "sectors": slow_sectors,
+   477→            "delay_ms": 500,  # Simulated delay per slow sector
+   478→            "description": "Sectors that take >500ms to read",
+   479→        }
+   480→
+   481→        log = [self._log_entry(
+   482→            CorruptionType.SLOW_SECTORS,
+   483→            f"Slow sectors: {num_slow} sectors marked as slow (>500ms)",
+   484→            slow_sectors, [],
+   485→            (0, len(image)),
+   486→            severity,
+   487→            slow_metadata,
+   488→        )]
+   489→
+   490→        return CorruptionResult(
+   491→            corrupted_image=bytes(image),  # Image unchanged
+   492→            corruption_log=log,
+   493→            manifest_corruption={
+   494→                "type": "slow_sectors",
+   495→                "severity": severity,
+   496→                "affected_sectors": num_slow,
+   497→                "delay_ms": 500,
+   498→                "slow_sector_list": slow_sectors,
+   499→            },
+   500→        )
+   501→
+   502→
+   503→class TimeoutPatternModel(CorruptionModel):
+   504→    """
+   505→    Every Nth sector times out — metadata-based simulation.
+   506→
+   507→    Like slow sectors, this is metadata-only. The recovery motor
+   508→    must handle this in its simulation layer.
+   509→    """
+   510→
+   511→    def apply(self, image: bytearray, manifest: Dict,
+   512→              severity: float = 0.01,
+   513→              interval: Optional[int] = None) -> CorruptionResult:
+   514→        total_sectors = len(image) // 512
+   515→        if interval is None:
+   516→            interval = max(1, int(1.0 / severity))
+   517→
+   518→        timeout_sectors = list(range(0, total_sectors, interval))
+   519→
+   520→        timeout_metadata = {
+   521→            "type": "timeout_pattern",
+   522→            "interval": interval,
+   523→            "sectors": timeout_sectors,
+   524→            "timeout_seconds": 30,
+   525→            "description": f"Every {interval}th sector times out (30s)",
+   526→        }
+   527→
+   528→        log = [self._log_entry(
+   529→            CorruptionType.TIMEOUT_PATTERN,
+   530→            f"Timeout pattern: every {interval}th sector times out",
+   531→            timeout_sectors, [],
+   532→            (0, len(image)),
+   533→            severity,
+   534→            timeout_metadata,
+   535→        )]
+   536→
+   537→        return CorruptionResult(
+   538→            corrupted_image=bytes(image),  # Image unchanged
+   539→            corruption_log=log,
+   540→            manifest_corruption={
+   541→                "type": "timeout_pattern",
+   542→                "severity": severity,
+   543→                "interval": interval,
+   544→                "affected_sectors": len(timeout_sectors),
+   545→                "timeout_seconds": 30,
+   546→            },
+   547→        )
+   548→
+   549→
+   550→# ─── Noise Models (Objeción 6: Reality doesn't break things cleanly) ─────────
+   551→
+   552→class RandomNoiseModel(CorruptionModel):
+   553→    """
+   554→    Random bytes written to random sectors.
+   555→
+   556→    Unlike CRC errors (1-4 bit flips), this writes ENTIRE random bytes
+   557→    to random sectors. This simulates:
+   558→      - Firmware bugs writing garbage
+   559→      - Controller errors
+   560→      - Electromagnetic interference
+   561→      - Partial sector corruption
+   562→
+   563→    Reality rarely breaks things by zeroing them out.
+   564→    """
+   565→
+   566→    def apply(self, image: bytearray, manifest: Dict,
+   567→              severity: float = 0.01) -> CorruptionResult:
+   568→        total_sectors = len(image) // 512
+   569→        num_affected = int(total_sectors * severity)
+   570→
+   571→        # Choose random sectors to corrupt
+   572→        affected_sectors = self.rng.sample(range(total_sectors), num_affected)
+   573→
+   574→        for s in affected_sectors:
+   575→            offset = s * 512
+   576→            # Write random bytes to the entire sector
+   577→            # (Not just bit flips — full random garbage)
+   578→            random_data = bytes(self.rng.getrandbits(8) for _ in range(512))
+   579→            image[offset:offset + 512] = random_data
+   580→
+   581→        clusters = list(set(s // (manifest["cluster_size"] // 512)
+   582→                          for s in affected_sectors))
+   583→
+   584→        log = [self._log_entry(
+   585→            CorruptionType.RANDOM_NOISE,
+   586→            f"Random noise: {num_affected} sectors overwritten with random data",
+   587→            affected_sectors, clusters,
+   588→            (0, len(image)),
+   589→            severity,
+   590→            {"pattern": "random_bytes", "affected_count": num_affected,
+   591→             "note": "Full random bytes, not bit flips — simulates firmware/controller errors"},
+   592→        )]
+   593→
+   594→        return CorruptionResult(
+   595→            corrupted_image=bytes(image),
+   596→            corruption_log=log,
+   597→            manifest_corruption={
+   598→                "type": "random_noise",
+   599→                "severity": severity,
+   600→                "affected_sectors": num_affected,
+   601→            },
+   602→        )
+   603→
+   604→
+   605→class PartialOverwriteModel(CorruptionModel):
+   606→    """
+   607→    Partial file overwrite — simulates data being partially overwritten.
+   608→
+   609→    In real scenarios, files are often partially overwritten by new data:
+   610→      - File partially overwritten by another file
+   611→      - Log file rotating over old data
+   612→      - Temporary file overwriting part of a document
+   613→      - OS writing metadata over file data
+   614→
+   615→    This is DIFFERENT from zeroing: the overwritten part contains REAL data
+   616→    from another file, making it harder to detect that corruption occurred.
+   617→    """
+   618→
+   619→    def apply(self, image: bytearray, manifest: Dict,
+   620→              severity: float = 0.10) -> CorruptionResult:
+   621→        cluster_size = manifest["cluster_size"]
+   622→        user_files = [f for f in manifest["files"] if f.get("id", 0) >= 12]
+   623→
+   624→        if not user_files:
+   625→            return CorruptionResult(
+   626→                corrupted_image=bytes(image),
+   627→                corruption_log=[],
+   628→                manifest_corruption={"type": "partial_overwrite", "skipped": True},
+   629→            )
+   630→
+   631→        # Select random files to partially overwrite
+   632→        num_files = max(1, int(len(user_files) * severity))
+   633→        files_to_overwrite = self.rng.sample(user_files, min(num_files, len(user_files)))
+   634→
+   635→        affected_clusters = set()
+   636→        overwritten_files = []
+   637→
+   638→        for file_info in files_to_overwrite:
+   639→            clusters = file_info.get("clusters", [])
+   640→            if not clusters:
+   641→                continue
+   642→
+   643→            # Overwrite a random subset of the file's clusters
+   644→            # (not all — that would be a full delete)
+   645→            num_clusters_to_overwrite = max(1, len(clusters) // 2)
+   646→            clusters_to_overwrite = self.rng.sample(
+   647→                clusters, min(num_clusters_to_overwrite, len(clusters))
+   648→            )
+   649→
+   650→            for c in clusters_to_overwrite:
+   651→                offset = c * cluster_size
+   652→                if offset + cluster_size <= len(image):
+   653→                    # Write random data (simulating another file's content)
+   654→                    random_data = bytes(self.rng.getrandbits(8)
+   655→                                       for _ in range(cluster_size))
+   656→                    image[offset:offset + cluster_size] = random_data
+   657→                    affected_clusters.add(c)
+   658→
+   659→            overwritten_files.append({
+   660→                "name": file_info.get("name", "unknown"),
+   661→                "clusters_overwritten": len(clusters_to_overwrite),
+   662→                "clusters_total": len(clusters),
+   663→            })
+   664→
+   665→        log = [self._log_entry(
+   666→            CorruptionType.PARTIAL_OVERWRITE,
+   667→            f"Partial overwrite: {len(overwritten_files)} files partially overwritten",
+   668→            [], list(affected_clusters),
+   669→            (0, len(image)),
+   670→            severity,
+   671→            {"overwritten_files": overwritten_files,
+   672→             "note": "Overwritten with random data, not zeros — harder to detect"},
+   673→        )]
+   674→
+   675→        return CorruptionResult(
+   676→            corrupted_image=bytes(image),
+   677→            corruption_log=log,
+   678→            manifest_corruption={
+   679→                "type": "partial_overwrite",
+   680→                "severity": severity,
+   681→                "files_overwritten": len(overwritten_files),
+   682→                "overwritten_file_details": overwritten_files,
+   683→            },
+   684→        )
+   685→
+   686→
+   687→class FragmentationChaosModel(CorruptionModel):
+   688→    """
+   689→    Unpredictable fragmentation — simulates a heavily used disk.
+   690→
+   691→    On a real disk used for years, files are scattered across the disk
+   692→    in unpredictable patterns. This model doesn't physically fragment
+   693→    the files (that requires rebuilding the NTFS image), but it
+   694→    corrupts the MFT run lists to make them inconsistent with the
+   695→    actual data placement.
+   696→
+   697→    This specifically tests whether the motor can handle:
+   698→      - Run lists that point to wrong clusters
+   699→      - Run lists with impossible offsets
+   700→      - Inconsistent VCN ranges
+   701→    """
+   702→
+   703→    def apply(self, image: bytearray, manifest: Dict,
+   704→              severity: float = 0.20) -> CorruptionResult:
+   705→        mft_info = manifest["mft"]
+   706→        mft_start = mft_info["start_cluster"]
+   707→        cluster_size = manifest["cluster_size"]
+   708→        record_size = mft_info.get("record_size", 1024)
+   709→        mft_record_count = mft_info.get("record_count", 0)
+   710→
+   711→        # Select user MFT records to corrupt run lists
+   712→        user_records = [i for i in range(12, mft_record_count)]
+   713→        num_to_corrupt = max(1, int(len(user_records) * severity))
+   714→        records_to_corrupt = self.rng.sample(
+   715→            user_records, min(num_to_corrupt, len(user_records))
+   716→        )
+   717→
+   718→        affected_clusters = set()
+   719→        corrupted_count = 0
+   720→
+   721→        for rec_num in records_to_corrupt:
+   722→            rec_offset = (mft_start * cluster_size) + (rec_num * record_size)
+   723→
+   724→            if rec_offset + record_size > len(image):
+   725→                continue
+   726→
+   727→            # Check if this is a valid MFT record
+   728→            if image[rec_offset:rec_offset + 4] != b'FILE':
+   729→                continue
+   730→
+   731→            # Find the $DATA attribute and corrupt the run list
+   732→            # by flipping bits in the run list area
+   733→            # This is subtle corruption — the MFT record still looks valid,
+   734→            # but the run list points to wrong clusters
+   735→            try:
+   736→                first_attr_offset = struct.unpack_from('<H', image, rec_offset + 20)[0]
+   737→                attr_offset = rec_offset + first_attr_offset
+   738→
+   739→                while attr_offset + 4 < rec_offset + record_size:
+   740→                    attr_type = struct.unpack_from('<I', image, attr_offset)[0]
+   741→                    if attr_type == 0xFFFFFFFF:
+   742→                        break
+   743→                    attr_length = struct.unpack_from('<I', image, attr_offset + 4)[0]
+   744→                    if attr_length == 0:
+   745→                        break
+   746→
+   747→                    if attr_type == 0x80:  # $DATA
+   748→                        non_resident = image[attr_offset + 8]
+   749→                        if non_resident:
+   750→                            # Corrupt run list by flipping bits in the run data
+   751→                            run_offset = struct.unpack_from('<H', image, attr_offset + 32)[0]
+   752→                            run_start = attr_offset + run_offset
+   753→                            run_end = attr_offset + attr_length
+   754→
+   755→                            # Flip 1-3 bits in the run list area
+   756→                            for _ in range(self.rng.randint(1, 3)):
+   757→                                byte_pos = self.rng.randint(run_start, min(run_end - 1, run_start + 50))
+   758→                                bit_pos = self.rng.randint(0, 7)
+   759→                                image[byte_pos] ^= (1 << bit_pos)
+   760→
+   761→                            corrupted_count += 1
+   762→                            cluster = mft_start + (rec_num * record_size) // cluster_size
+   763→                            affected_clusters.add(cluster)
+   764→                        break
+   765→
+   766→                    attr_offset += attr_length
+   767→            except (struct.error, IndexError):
+   768→                continue
+   769→
+   770→        log = [self._log_entry(
+   771→            CorruptionType.FRAGMENTATION_CHAOS,
+   772→            f"Fragmentation chaos: {corrupted_count} MFT run lists corrupted with bit flips",
+   773→            [], list(affected_clusters),
+   774→            (mft_start * cluster_size, mft_start * cluster_size + mft_record_count * record_size),
+   775→            severity,
+   776→            {"corrupted_run_lists": corrupted_count,
+   777→             "note": "Run lists point to wrong clusters — subtle, hard to detect"},
+   778→        )]
+   779→
+   780→        return CorruptionResult(
+   781→            corrupted_image=bytes(image),
+   782→            corruption_log=log,
+   783→            manifest_corruption={
+   784→                "type": "fragmentation_chaos",
+   785→                "severity": severity,
+   786→                "corrupted_run_lists": corrupted_count,
+   787→            },
+   788→        )
+   789→
+   790→
+   791→class TimestampInconsistencyModel(CorruptionModel):
+   792→    """
+   793→    Inconsistent timestamps in MFT records.
+   794→
+   795→    In real disks, timestamps can be inconsistent due to:
+   796→      - Clock drift
+   797→      - Timezone changes
+   798→      - Daylight saving time
+   799→      - File copied without preserving timestamps
+   800→      - Firmware bugs
+   801→
+   802→    This model modifies $STANDARD_INFORMATION and $FILE_NAME timestamps
+   803→    to be inconsistent, testing whether the motor relies on timestamps
+   804→    for ordering or validation.
+   805→    """
+   806→
+   807→    def apply(self, image: bytearray, manifest: Dict,
+   808→              severity: float = 0.20) -> CorruptionResult:
+   809→        mft_info = manifest["mft"]
+   810→        mft_start = mft_info["start_cluster"]
+   811→        cluster_size = manifest["cluster_size"]
+   812→        record_size = mft_info.get("record_size", 1024)
+   813→        mft_record_count = mft_info.get("record_count", 0)
+   814→
+   815→        user_records = [i for i in range(12, mft_record_count)]
+   816→        num_to_corrupt = max(1, int(len(user_records) * severity))
+   817→        records_to_corrupt = self.rng.sample(
+   818→            user_records, min(num_to_corrupt, len(user_records))
+   819→        )
+   820→
+   821→        affected_clusters = set()
+   822→        corrupted_count = 0
+   823→
+   824→        for rec_num in records_to_corrupt:
+   825→            rec_offset = (mft_start * cluster_size) + (rec_num * record_size)
+   826→
+   827→            if rec_offset + record_size > len(image):
+   828→                continue
+   829→
+   830→            if image[rec_offset:rec_offset + 4] != b'FILE':
+   831→                continue
+   832→
+   833→            # Find $STANDARD_INFORMATION (0x10) and modify timestamps
+   834→            try:
+   835→                first_attr_offset = struct.unpack_from('<H', image, rec_offset + 20)[0]
+   836→                attr_offset = rec_offset + first_attr_offset
+   837→
+   838→                while attr_offset + 4 < rec_offset + record_size:
+   839→                    attr_type = struct.unpack_from('<I', image, attr_offset)[0]
+   840→                    if attr_type == 0xFFFFFFFF:
+   841→                        break
+   842→                    attr_length = struct.unpack_from('<I', image, attr_offset + 4)[0]
+   843→                    if attr_length == 0:
+   844→                        break
+   845→
+   846→                    if attr_type == 0x10:  # $STANDARD_INFORMATION
+   847→                        # Timestamps are at offsets 24, 32, 40, 48 within the attribute
+   848→                        # (after the attribute header)
+   849→                        for ts_offset in [attr_offset + 24, attr_offset + 32,
+   850→                                         attr_offset + 40, attr_offset + 48]:
+   851→                            if ts_offset + 8 <= rec_offset + record_size:
+   852→                                # Write a random timestamp (could be future, past, or zero)
+   853→                                random_ts = self.rng.randint(0, 2**64 - 1)
+   854→                                struct.pack_into('<Q', image, ts_offset, random_ts)
+   855→
+   856→                        corrupted_count += 1
+   857→                        cluster = mft_start + (rec_num * record_size) // cluster_size
+   858→                        affected_clusters.add(cluster)
+   859→                        break  # Only modify first $STANDARD_INFORMATION
+   860→
+   861→                    attr_offset += attr_length
+   862→            except (struct.error, IndexError):
+   863→                continue
+   864→
+   865→        log = [self._log_entry(
+   866→            CorruptionType.TIMESTAMP_INCONSISTENCY,
+   867→            f"Timestamp inconsistency: {corrupted_count} records with random timestamps",
+   868→            [], list(affected_clusters),
+   869→            (mft_start * cluster_size, mft_start * cluster_size + mft_record_count * record_size),
+   870→            severity,
+   871→            {"corrupted_timestamps": corrupted_count,
+   872→             "note": "Random timestamps — tests if motor relies on temporal ordering"},
+   873→        )]
+   874→
+   875→        return CorruptionResult(
+   876→            corrupted_image=bytes(image),
+   877→            corruption_log=log,
+   878→            manifest_corruption={
+   879→                "type": "timestamp_inconsistency",
+   880→                "severity": severity,
+   881→                "corrupted_timestamps": corrupted_count,
+   882→            },
+   883→        )
+   884→
+   885→
+   886→# ─── Model Registry ──────────────────────────────────────────────────────────
+   887→
+   888→CORRUPTION_MODEL_REGISTRY = {
+   889→    CorruptionType.HEAD_CRASH_START: HeadCrashStartModel,
+   890→    CorruptionType.HEAD_CRASH_END: HeadCrashEndModel,
+   891→    CorruptionType.SCRATCH_CONTINUOUS: ScratchContinuousModel,
+   892→    CorruptionType.INTERMITTENT_SECTORS: IntermittentSectorsModel,
+   893→    CorruptionType.MFT_PARTIAL_DELETE: MFTPartialDeleteModel,
+   894→    CorruptionType.BITMAP_CORRUPTION: BitmapCorruptionModel,
+   895→    CorruptionType.JOURNAL_CORRUPTION: JournalCorruptionModel,
+   896→    CorruptionType.CRC_ERRORS: CRCErrorsModel,
+   897→    CorruptionType.SLOW_SECTORS: SlowSectorsModel,
+   898→    CorruptionType.TIMEOUT_PATTERN: TimeoutPatternModel,
+   899→    # ─── Noise models (Objeción 6) ─────────────────────────────────────
+   900→    CorruptionType.RANDOM_NOISE: RandomNoiseModel,
+   901→    CorruptionType.PARTIAL_OVERWRITE: PartialOverwriteModel,
+   902→    CorruptionType.FRAGMENTATION_CHAOS: FragmentationChaosModel,
+   903→    CorruptionType.TIMESTAMP_INCONSISTENCY: TimestampInconsistencyModel,
+   904→}
+   905→
+   906→
+   907→def get_model(corruption_type: CorruptionType, seed: int = 42) -> CorruptionModel:
+   908→    """Get a corruption model instance by type."""
+   909→    model_class = CORRUPTION_MODEL_REGISTRY.get(corruption_type)
+   910→    if model_class is None:
+   911→        raise ValueError(f"Unknown corruption type: {corruption_type}")
+   912→    return model_class(seed=seed)
+   913→

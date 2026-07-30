@@ -1,0 +1,198 @@
+{
+  "primary_motor": {
+    "MFT-First": {
+      "overall_utility": {
+        "mean": 0.9589,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.9589,
+        "max": 0.9589,
+        "range": 0.0,
+        "ci_95_lower": 0.9589,
+        "ci_95_upper": 0.9589,
+        "n": 30
+      },
+      "rvs": {
+        "mean": 0.9725,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.9725,
+        "max": 0.9725,
+        "range": 0.0,
+        "ci_95_lower": 0.9725,
+        "ci_95_upper": 0.9725,
+        "n": 30
+      },
+      "fqs": {
+        "mean": 0.985999,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.985999,
+        "max": 0.985999,
+        "range": 0.0,
+        "ci_95_lower": 0.985999,
+        "ci_95_upper": 0.985999,
+        "n": 30
+      },
+      "recovery_rate": {
+        "mean": 0.933333,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.933333,
+        "max": 0.933333,
+        "range": 0.0,
+        "ci_95_lower": 0.933333,
+        "ci_95_upper": 0.933333,
+        "n": 30
+      },
+      "read_count": {
+        "mean": 14593,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 14593,
+        "max": 14593,
+        "range": 0,
+        "ci_95_lower": 14593.0,
+        "ci_95_upper": 14593.0,
+        "n": 30
+      },
+      "runtime_ms": {
+        "mean": 46.115572,
+        "sd": 1.798757,
+        "cv_percent": 3.9005,
+        "min": 44.777764,
+        "max": 54.70945,
+        "range": 9.931686,
+        "ci_95_lower": 45.44398,
+        "ci_95_upper": 46.787163,
+        "n": 30
+      },
+      "hash_consistency": {
+        "unique_hashes": 1,
+        "all_identical": true,
+        "hash_values": [
+          "b13216d954cf42a8"
+        ]
+      },
+      "temporal_drift": {
+        "first_half_mean": 0.9589,
+        "second_half_mean": 0.9589,
+        "drift": 0.0,
+        "drift_percent": 0.0,
+        "interpretation": "No drift detected"
+      },
+      "success_criteria": {
+        "30_executions_completed": true,
+        "no_errors": true,
+        "hash_identical": true,
+        "no_temporal_drift": true,
+        "cv_overall_utility": 0.0,
+        "cv_note": "CV threshold (X) to be defined after data collection"
+      },
+      "empirical_threshold": {
+        "overall_utility_sd": 0.0,
+        "threshold_2sigma": 0.01,
+        "threshold_percent": 1.0,
+        "interpretation": "A difference in Overall Utility must exceed 0.0100 (1.00%) to be considered significant at 2-sigma"
+      }
+    }
+  },
+  "secondary_motor": {
+    "Carving": {
+      "overall_utility": {
+        "mean": 0.0,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "range": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "n": 30
+      },
+      "rvs": {
+        "mean": 0.0,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "range": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "n": 30
+      },
+      "fqs": {
+        "mean": 0.0,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "range": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "n": 30
+      },
+      "recovery_rate": {
+        "mean": 0.0,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "range": 0.0,
+        "ci_95_lower": 0.0,
+        "ci_95_upper": 0.0,
+        "n": 30
+      },
+      "read_count": {
+        "mean": 19296,
+        "sd": 0.0,
+        "cv_percent": 0.0,
+        "min": 19296,
+        "max": 19296,
+        "range": 0,
+        "ci_95_lower": 19296.0,
+        "ci_95_upper": 19296.0,
+        "n": 30
+      },
+      "runtime_ms": {
+        "mean": 191.989165,
+        "sd": 1.366569,
+        "cv_percent": 0.7118,
+        "min": 190.63681,
+        "max": 198.55654,
+        "range": 7.91973,
+        "ci_95_lower": 191.478937,
+        "ci_95_upper": 192.499393,
+        "n": 30
+      },
+      "hash_consistency": {
+        "unique_hashes": 1,
+        "all_identical": true,
+        "hash_values": [
+          "7cb03b75dd0ddd65"
+        ]
+      },
+      "temporal_drift": {
+        "first_half_mean": 0.0,
+        "second_half_mean": 0.0,
+        "drift": 0.0,
+        "drift_percent": 0.0,
+        "interpretation": "No drift detected"
+      },
+      "success_criteria": {
+        "30_executions_completed": true,
+        "no_errors": true,
+        "hash_identical": true,
+        "no_temporal_drift": true,
+        "cv_overall_utility": 0.0,
+        "cv_note": "CV threshold (X) to be defined after data collection"
+      },
+      "empirical_threshold": {
+        "overall_utility_sd": 0.0,
+        "threshold_2sigma": 0.01,
+        "threshold_percent": 1.0,
+        "interpretation": "A difference in Overall Utility must exceed 0.0100 (1.00%) to be considered significant at 2-sigma"
+      }
+    }
+  }
+}

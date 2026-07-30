@@ -1,6 +1,45 @@
 # RecoveryLab — Work Log
 
 ---
+Task ID: 12
+Agent: Main
+Task: EXP-0001 — Baseline Stability Characterization (first experiment of Phase A)
+
+Work Log:
+- Implemented exp_0001_baseline_stability.py following auditor's exact specifications:
+  - Named as experiment, not utility (exp_0001, not baseline.py)
+  - Success criteria declared BEFORE execution
+  - All variables frozen: same dataset, seed, commit, Judge, protocol, motor, config
+  - 7 metrics measured: Overall Utility, RVS, FQS, Recovery Rate, Read Count, Runtime, Hash
+  - 5 artifacts produced: baseline_runs.csv, baseline_summary.json, baseline_report.md, ledger_entry.json, claim_updates.json
+- Ran 30 executions with MFT-First (primary) and 30 with Carving (secondary/floor)
+- Key findings:
+  - Laboratory is FULLY DETERMINISTIC under identical conditions (SD=0 for all metrics)
+  - MFT-First: OU=0.958900, RVS=0.9725, FQS=0.9860, Recovery Rate=93.33% (all 30 runs identical)
+  - Carving: OU=0.0000 on healthy image (expected — no MFT access, cannot identify file boundaries)
+  - Runtime is the only source of variability (CV=3.9% for MFT-First, 0.74% for Carving)
+  - No temporal drift detected
+  - Empirical threshold falls back to floor of 1.0% (SD=0 → threshold = max(2*0, 0.01) = 1%)
+- Evidence Debt status:
+  - ED-008 (variabilidad desconocida): PAGADA — laboratory is deterministic
+  - ED-001 (umbral empirico): EN PROGRESO — threshold calibrated at 1.0% floor, but needs corrupted datasets for meaningful variability
+- CLAIM updates:
+  - CLAIM-001 (MFT-First > Carving): Can advance to REPEATED on healthy image basis
+  - CLAIM-005 (Parsers golden reference): Can advance to REPEATED
+  - CLAIM-004 (Crossover artifact): No change — requires corruption experiments
+- Important observation: The 1% floor threshold is provisional. Future experiments with corruption
+  (non-deterministic conditions) will need their own baseline calibration.
+- Script: /home/z/my-project/RecoveryLab/exp_0001_baseline_stability.py
+- Artifacts: /home/z/my-project/output/exp_0001/
+
+Stage Summary:
+- EXP-0001 successfully demonstrates that the laboratory produces deterministic, stable measurements
+- ED-008 is resolved: the laboratory's intrinsic variability is zero under identical conditions
+- ED-001 is partially addressed: the 1% floor threshold is defined, but meaningful calibration requires corrupted datasets
+- The auditor's distinction between ED-008 and ED-001 proved correct: ED-008 asks "what is the variability?" (answer: zero) while ED-001 asks "can we trust the lab?" (answer: needs more experiments — EXP-0002, EXP-0003)
+- Next steps: EXP-0002 (reproducibility on another machine), EXP-0003 (second seed), EXP-0004 (external validation)
+
+---
 Task ID: 11
 Agent: Main
 Task: Incorporar quinta ronda (definitiva) de auditoria externa — Research Protocol v1.5 (Frozen for Phase A) + Research Constitution

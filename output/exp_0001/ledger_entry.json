@@ -1,0 +1,68 @@
+{
+  "primary": {
+    "evidence_id": "EXP-0001",
+    "experiment_name": "Baseline Stability Characterization",
+    "date": "2026-07-30",
+    "dataset": "seed=42, 1 image, 30 files, 0% corruption",
+    "seed": 42,
+    "motor": "MFT-First",
+    "commit": "552e140",
+    "versions": {
+      "protocol": "v1.5",
+      "judge": "v1.0",
+      "builder": "v1.3",
+      "corruptor": "N/A (0% corruption)",
+      "motor": "v1.0"
+    },
+    "results": {
+      "overall_utility_mean": 0.9589,
+      "overall_utility_sd": 0.0,
+      "overall_utility_cv_percent": 0.0,
+      "hash_identical": true,
+      "empirical_threshold_2sigma": 0.01,
+      "num_runs": 30
+    },
+    "claims_affectedados": [
+      "CLAIM-001",
+      "CLAIM-005"
+    ],
+    "threats": "T03 (variabilidad desconocida)",
+    "evidence_debt_addressed": [
+      "ED-008",
+      "ED-001"
+    ]
+  },
+  "secondary": {
+    "evidence_id": "EXP-0001",
+    "experiment_name": "Baseline Stability Characterization",
+    "date": "2026-07-30",
+    "dataset": "seed=42, 1 image, 30 files, 0% corruption",
+    "seed": 42,
+    "motor": "Carving",
+    "commit": "552e140",
+    "versions": {
+      "protocol": "v1.5",
+      "judge": "v1.0",
+      "builder": "v1.3",
+      "corruptor": "N/A (0% corruption)",
+      "motor": "v1.0"
+    },
+    "results": {
+      "overall_utility_mean": 0.0,
+      "overall_utility_sd": 0.0,
+      "overall_utility_cv_percent": 0.0,
+      "hash_identical": true,
+      "empirical_threshold_2sigma": 0.01,
+      "num_runs": 30
+    },
+    "claims_affectedados": [
+      "CLAIM-001",
+      "CLAIM-005"
+    ],
+    "threats": "T03 (variabilidad desconocida)",
+    "evidence_debt_addressed": [
+      "ED-008",
+      "ED-001"
+    ]
+  }
+}
