@@ -54,3 +54,31 @@ Stage Summary:
 - Key insight: With MFT partial deletion, Motor B is always at least as good as Motor A. The problem is only with specific damage patterns (intermittent sectors)
 - This confirms H1.1 (metadata reduces cost when reliable) and validates the Motor C approach
 
+---
+Task ID: 1
+Agent: Main Agent
+Task: Address 6 objections to RecoveryLab, implement improvements
+
+Work Log:
+- Read and analyzed all RecoveryLab code (ntfs_image.py, motors, corruptor, metrics, runner)
+- Responded to 6 objections with honest analysis
+- Created hypothesis_registry.py with 7 hypotheses (H1.1-H1.7) and evidence tracking
+- Added 4 new corruption models: RandomNoise, PartialOverwrite, FragmentationChaos, TimestampInconsistency
+- Added 5 new attacks to ATTACK_MATRIX (A15-A19)
+- Created stability_test.py — verified ALL scenarios are deterministic (PASS)
+- Rewrote Motor C with DecisionTrace — every decision explained with signals and reasons
+- Added fragmentation support to NTFS image builder (fragmentation_rate parameter)
+- Fixed critical bug in run list encoding: offset must be relative to previous run's START, not END
+- Fixed _bytes_needed_signed for positive values where high bit would be set (e.g., 137 in 1 byte)
+- Fixed _write_user_data for fragmented files (data split across runs)
+- Created read_classification.py (SectorClassifier + ReadTracker) for formalizing "useful reads"
+- Built fragmented datasets (50% fragmentation rate) and ran full experiment (95 scenarios)
+
+Stage Summary:
+- Stability test: PASS (20/20 scenarios deterministic)
+- Fragmented dataset experiment: 95% H1 support, but A09 still STRONG_REFUTATION (-29.33% recovery)
+- A17 (FragmentationChaos): -8% recovery — new finding, run list corruption hurts Motor B
+- A06 (head crash): STRONG_REFUTATION (VBR destroyed, both motors fail)
+- Motor C DecisionTrace works: outputs human-readable decision reports
+- Hypothesis registry: H1.1 in_evaluation, H1.5 refuted (lab doesn't capture enough NTFS)
+- Key remaining: fallbacks are still stubs, ReadClassification not yet integrated into motors

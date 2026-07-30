@@ -131,6 +131,8 @@ class DatasetBuilder:
             volume_size=image_volume_size,
             cluster_size=self.cluster_size,
             serial_number=serial,
+            fragmentation_rate=self.fragmentation_rate,
+            fragmentation_seed=image_seed,
         )
 
         # Add files to builder

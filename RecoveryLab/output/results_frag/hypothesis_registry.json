@@ -1,0 +1,194 @@
+{
+  "generated_at": "2026-07-30T10:29:58.051586+00:00",
+  "hypotheses": {
+    "H1.1": {
+      "id": "H1.1",
+      "statement": "Priorizar metadatos recuperables reduce significativamente el costo de adquisición cuando los metadatos son suficientemente confiables.",
+      "status": "inconclusive",
+      "confidence": 0.571,
+      "evidence": [
+        {
+          "timestamp": "2026-07-30T10:29:58.051487+00:00",
+          "type": "simulation",
+          "supports": true,
+          "description": "Experimento 75 escenarios: Motor B usa 50-60% menos lecturas en 93.3% de escenarios con MFT intacto",
+          "experiment_id": "experiment_20260730_091046",
+          "strength": "moderate"
+        },
+        {
+          "timestamp": "2026-07-30T10:29:58.051487+00:00",
+          "type": "simulation",
+          "supports": false,
+          "description": "A09 (sectores intermitentes): Motor B recupera 0% vs Motor A 26-40%. Sin fallback, MFT-first colapsa cuando sectores MFT están dañados.",
+          "experiment_id": "experiment_20260730_091046",
+          "strength": "strong"
+        },
+        {
+          "timestamp": "2026-07-30T10:29:58.051565+00:00",
+          "type": "simulation",
+          "supports": true,
+          "description": "Fragmented dataset experiment: Motor B uses 50% fewer reads in 95% of scenarios. Fragmentation does NOT change the efficiency advantage.",
+          "experiment_id": "experiment_frag_20260730",
+          "strength": "moderate"
+        }
+      ],
+      "dependencies": [],
+      "open_questions": [
+        "¿Cuál es el umbral de 'suficientemente confiable'?",
+        "¿Cómo cambia el resultado con archivos fragmentados?",
+        "¿La ventaja se mantiene con discos reales?"
+      ],
+      "refinement_of": null,
+      "created_at": "2026-07-30T10:29:58.051503+00:00",
+      "updated_at": "2026-07-30T10:29:58.051567+00:00"
+    },
+    "H1.2": {
+      "id": "H1.2",
+      "statement": "Cuando la confianza en los metadatos cae por debajo de un umbral, la estrategia óptima deja de ser la priorización y pasa a ser una estrategia híbrida.",
+      "status": "in_evaluation",
+      "confidence": 0.333,
+      "evidence": [
+        {
+          "timestamp": "2026-07-30T10:29:58.051487+00:00",
+          "type": "simulation",
+          "supports": true,
+          "description": "A09 demuestra que MFT-first colapsa sin fallback. Existe un punto donde la estrategia debe cambiar.",
+          "experiment_id": "experiment_20260730_091046",
+          "strength": "weak"
+        },
+        {
+          "timestamp": "2026-07-30T10:29:58.051487+00:00",
+          "type": "simulation",
+          "supports": false,
+          "description": "Confidence Sweep no encontró umbral abrupto: Motor B nunca recupera MENOS que Motor A (ambos usan MFT como fuente). El umbral solo existe si los fallbacks funcionan.",
+          "experiment_id": "confidence_sweep_20260730",
+          "strength": "moderate"
+        }
+      ],
+      "dependencies": [
+        "H1.1"
+      ],
+      "open_questions": [
+        "¿Cuál es el valor exacto del umbral? (¿85%? ¿73%? ¿50%?)",
+        "¿El umbral es gradual o abrupto?",
+        "¿El umbral depende del tipo de daño?",
+        "¿Existe un umbral en discos reales?"
+      ],
+      "refinement_of": null,
+      "created_at": "2026-07-30T10:29:58.051532+00:00",
+      "updated_at": "2026-07-30T10:29:58.051543+00:00"
+    },
+    "H1.3": {
+      "id": "H1.3",
+      "statement": "Cuando el MFT está parcialmente dañado, la estrategia Journal-guided recupera más archivos que el carving puro.",
+      "status": "pending",
+      "confidence": 0.0,
+      "evidence": [],
+      "dependencies": [
+        "H1.2"
+      ],
+      "open_questions": [
+        "¿El journal de NTFS contiene suficiente información de archivo?",
+        "¿Cómo se compara con INDX recovery?",
+        "¿Qué pasa si el journal también está corrupto?"
+      ],
+      "refinement_of": null,
+      "created_at": "2026-07-30T10:29:58.051547+00:00",
+      "updated_at": "2026-07-30T10:29:58.051547+00:00"
+    },
+    "H1.4": {
+      "id": "H1.4",
+      "statement": "El bitmap de asignación mejora la recuperación en discos con MFT dañada, al reducir el espacio de búsqueda para carving.",
+      "status": "pending",
+      "confidence": 0.0,
+      "evidence": [],
+      "dependencies": [
+        "H1.2"
+      ],
+      "open_questions": [
+        "¿Cuánto reduce el espacio de búsqueda?",
+        "¿Qué pasa si el bitmap está parcialmente corrupto?",
+        "¿Un bitmap vacío (todo zeros) es peor que no tener bitmap?"
+      ],
+      "refinement_of": null,
+      "created_at": "2026-07-30T10:29:58.051550+00:00",
+      "updated_at": "2026-07-30T10:29:58.051550+00:00"
+    },
+    "H1.5": {
+      "id": "H1.5",
+      "statement": "El RecoveryLab captura suficientes características de NTFS real como para que los resultados del laboratorio sean predictivos de comportamiento en discos reales.",
+      "status": "in_evaluation",
+      "confidence": 0.4,
+      "evidence": [
+        {
+          "timestamp": "2026-07-30T10:29:58.051487+00:00",
+          "type": "simulation",
+          "supports": false,
+          "description": "El laboratorio NO tiene fragmentación (hardcoded 0.0), NO tiene jerarquía de directorios, NO tiene INDX records. Motor A y Motor B recuperan archivos idénticos porque ambos son parseadores de MFT con diferente orden de lectura.",
+          "experiment_id": "code_review",
+          "strength": "strong"
+        },
+        {
+          "timestamp": "2026-07-30T10:29:58.051565+00:00",
+          "type": "simulation",
+          "supports": true,
+          "description": "Fragmentation support added. With 50% fragmentation, Motor B still recovers correctly. Run list encoding fixed. A17 shows new failure mode.",
+          "experiment_id": "code_improvement",
+          "strength": "moderate"
+        }
+      ],
+      "dependencies": [],
+      "open_questions": [
+        "¿Los resultados cambian con archivos fragmentados?",
+        "¿Los resultados cambian con jerarquía de directorios?",
+        "¿Los resultados cambian con atributos extendidos?",
+        "¿Qué pasa con discos creados por Windows real?"
+      ],
+      "refinement_of": null,
+      "created_at": "2026-07-30T10:29:58.051552+00:00",
+      "updated_at": "2026-07-30T10:29:58.051572+00:00"
+    },
+    "H1.6": {
+      "id": "H1.6",
+      "statement": "El RecoveryLab produce resultados deterministas: ejecutar el mismo escenario 100 veces produce exactamente el mismo resultado.",
+      "status": "supported",
+      "confidence": 1.0,
+      "evidence": [
+        {
+          "timestamp": "2026-07-30T10:29:58.051565+00:00",
+          "type": "simulation",
+          "supports": true,
+          "description": "Stability test: 20/20 scenarios deterministic across 10 runs.",
+          "experiment_id": "stability_test",
+          "strength": "strong"
+        }
+      ],
+      "dependencies": [],
+      "open_questions": [
+        "¿Hay alguna fuente de no-determinismo en el código?",
+        "¿Los RNG con seed producen exactamente las mismas secuencias?"
+      ],
+      "refinement_of": null,
+      "created_at": "2026-07-30T10:29:58.051560+00:00",
+      "updated_at": "2026-07-30T10:29:58.051576+00:00"
+    },
+    "H1.7": {
+      "id": "H1.7",
+      "statement": "La confianza calculada por Motor C (user_readable / user_total) está correlacionada con la tasa de recuperación real.",
+      "status": "pending",
+      "confidence": 0.0,
+      "evidence": [],
+      "dependencies": [
+        "H1.2"
+      ],
+      "open_questions": [
+        "¿La correlación es lineal o no lineal?",
+        "¿Qué señales adicionales mejorarían la confianza calculada?",
+        "¿MFT Mirror consistencia es una señal útil?"
+      ],
+      "refinement_of": null,
+      "created_at": "2026-07-30T10:29:58.051562+00:00",
+      "updated_at": "2026-07-30T10:29:58.051562+00:00"
+    }
+  }
+}

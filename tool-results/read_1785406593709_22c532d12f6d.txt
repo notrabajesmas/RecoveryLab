@@ -1,0 +1,731 @@
+     1→#!/usr/bin/env python3
+     2→# -*- coding: utf-8 -*-
+     3→"""
+     4→RecoveryLab v2 — Simulated NTFS Benchmark Engine (Honest Version)
+     5→==================================================================
+     6→The key difference between Motor A and Motor B is NOT about whether
+     7→the MFT gets read (it's at the start of the disk, so sequential reading
+     8→WILL read it first). The difference is:
+     9→
+    10→Motor A (Sequential): Reads sector 0, 1, 2, 3... If the disk dies
+    11→at 40%, you have the first 40% of sectors. You have the MFT (good!)
+    12→but you may not have the data sectors for files stored at the end.
+    13→
+    14→Motor B (MFT-first): Reads the MFT first, then uses the MFT to know
+    15→exactly which data sectors to read next. If the disk dies at 40%,
+    16→you have the MFT PLUS the data sectors for the most important files,
+    17→because you read them on purpose.
+    18→
+    19→The hypothesis: When a disk has a LIMITED READ BUDGET (it will die
+    20→after N reads), knowing which sectors to read first recovers more
+    21→files than reading blindly.
+    22→"""
+    23→
+    24→import os, json, hashlib, random, time, copy
+    25→from dataclasses import dataclass, field, asdict
+    26→from typing import List, Dict, Tuple, Optional, Set
+    27→from pathlib import Path
+    28→
+    29→SECTOR_SIZE = 512
+    30→CLUSTER_SIZE = 4096
+    31→SECTORS_PER_CLUSTER = CLUSTER_SIZE // SECTOR_SIZE
+    32→MFT_ENTRY_SIZE = 1024
+    33→MFT_ENTRIES_PER_CLUSTER = CLUSTER_SIZE // MFT_ENTRY_SIZE
+    34→
+    35→LAB_DIR = Path(__file__).parent
+    36→
+    37→
+    38→@dataclass
+    39→class SimFile:
+    40→    file_id: int
+    41→    name: str
+    42→    size: int
+    43→    clusters: List[int]
+    44→    is_resident: bool = False
+    45→    priority: int = 0  # 0=normal, 1=important, 2=critical
+    46→
+    47→
+    48→@dataclass
+    49→class SimDisk:
+    50→    total_clusters: int
+    51→    mft_start_cluster: int = 4        # MFT starts at cluster 4 (realistic)
+    52→    mft_cluster_count: int = 0
+    53→    files: List[SimFile] = field(default_factory=list)
+    54→    # Sector health: 1.0=healthy, 0.0=dead
+    55→    sector_health: List[float] = field(default_factory=list)
+    56→    # Which clusters belong to MFT
+    57→    mft_clusters: Set[int] = field(default_factory=set)
+    58→    # Which clusters belong to which file
+    59→    file_clusters: Dict[int, Set[int]] = field(default_factory=dict)
+    60→    # File metadata (checksums, etc)
+    61→    file_metadata: Dict[int, dict] = field(default_factory=dict)
+    62→
+    63→    @property
+    64→    def total_sectors(self):
+    65→        return self.total_clusters * SECTORS_PER_CLUSTER
+    66→
+    67→
+    68→def create_disk(total_mb: int = 50, file_count: int = 200, seed: int = 42) -> SimDisk:
+    69→    """Create a realistic simulated NTFS disk."""
+    70→    random.seed(seed)
+    71→    total_clusters = (total_mb * 1024 * 1024) // CLUSTER_SIZE
+    72→    disk = SimDisk(total_clusters=total_clusters)
+    73→
+    74→    # MFT occupies clusters 4 to 4+mft_size (realistic)
+    75→    # For 200 files, we need ~200 entries * 1024 bytes = 50 clusters
+    76→    disk.mft_cluster_count = max(50, file_count // MFT_ENTRIES_PER_CLUSTER + 10)
+    77→    disk.mft_clusters = set(range(disk.mft_start_cluster,
+    78→                                   disk.mft_start_cluster + disk.mft_cluster_count))
+    79→
+    80→    # Data area starts after MFT
+    81→    data_start = disk.mft_start_cluster + disk.mft_cluster_count + 10
+    82→
+    83→    # Initialize sector health
+    84→    total_sectors = disk.total_sectors
+    85→    disk.sector_health = [1.0] * total_sectors
+    86→
+    87→    # Create test files with realistic distribution
+    88→    file_types = [
+    89→        ("photo_{:04d}.jpg", 0.30, 2, 8),
+    90→        ("document_{:04d}.pdf", 0.25, 1, 5),
+    91→        ("video_{:04d}.mp4", 0.10, 20, 80),
+    92→        ("email_{:04d}.eml", 0.15, 1, 3),
+    93→        ("sheet_{:04d}.xlsx", 0.10, 1, 8),
+    94→        ("code_{:04d}.py", 0.10, 1, 4),
+    95→    ]
+    96→
+    97→    next_cluster = data_start
+    98→    files = []
+    99→
+   100→    for i in range(file_count):
+   101→        # Pick file type
+   102→        r = random.random()
+   103→        cumprob = 0
+   104→        pattern, _, cmin, cmax = file_types[0]
+   105→        for p, _, _, _ in file_types:
+   106→            pass
+   107→        for p_name, p_prob, p_cmin, p_cmax in file_types:
+   108→            cumprob += p_prob
+   109→            if r < cumprob:
+   110→                pattern, _, cmin, cmax = p_name, p_prob, p_cmin, p_cmax
+   111→                break
+   112→
+   113→        name = pattern.format(i)
+   114→        clusters_needed = random.randint(cmin, cmax)
+   115→        is_resident = clusters_needed <= 0
+   116→        if is_resident:
+   117→            clusters_needed = 0
+   118→            clusters = []
+   119→        else:
+   120→            # 70% contiguous, 30% fragmented
+   121→            if random.random() < 0.7:
+   122→                start = next_cluster
+   123→                clusters = list(range(start, start + clusters_needed))
+   124→                next_cluster += clusters_needed
+   125→            else:
+   126→                # Fragmented: spread across disk
+   127→                clusters = []
+   128→                for _ in range(clusters_needed):
+   129→                    c = next_cluster + random.randint(0, 100)
+   130→                    clusters.append(c)
+   131→                    next_cluster = max(next_cluster, c + 1)
+   132→
+   133→        # Assign priority (some files are more important)
+   134→        priority = 0
+   135→        if "document" in name or "sheet" in name:
+   136→            priority = 1  # important
+   137→        elif "photo" in name:
+   138→            priority = 2  # critical (memories)
+   139→
+   140→        sf = SimFile(
+   141→            file_id=i, name=name, size=clusters_needed * CLUSTER_SIZE,
+   142→            clusters=clusters, is_resident=is_resident, priority=priority,
+   143→        )
+   144→        files.append(sf)
+   145→
+   146→        # Map file clusters
+   147→        disk.file_clusters[i] = set(clusters)
+   148→
+   149→    disk.files = files
+   150→
+   151→    # Mark which MFT sectors correspond to which file
+   152→    # MFT entry for file i is at cluster: mft_start + i // MFT_ENTRIES_PER_CLUSTER
+   153→    for i, sf in enumerate(files):
+   154→        mft_entry_cluster = disk.mft_start_cluster + i // MFT_ENTRIES_PER_CLUSTER
+   155→        disk.file_metadata[i] = {
+   156→            "mft_entry_cluster": mft_entry_cluster,
+   157→            "name": sf.name,
+   158→            "priority": sf.priority,
+   159→        }
+   160→
+   161→    return disk
+   162→
+   163→
+   164→def apply_damage(disk: SimDisk, damage_type: str, **params) -> SimDisk:
+   165→    """Apply damage to the disk."""
+   166→    total_sectors = disk.total_sectors
+   167→
+   168→    if damage_type == "bad_sectors_end":
+   169→        # Bad sectors at the end of the disk (common in real drives)
+   170→        pct = params.get("pct", 0.1)
+   171→        n_bad = int(total_sectors * pct)
+   172→        for i in range(n_bad):
+   173→            disk.sector_health[total_sectors - 1 - i] = 0.0
+   174→
+   175→    elif damage_type == "bad_sectors_random":
+   176→        pct = params.get("pct", 0.05)
+   177→        n_bad = int(total_sectors * pct)
+   178→        bad = random.sample(range(total_sectors), n_bad)
+   179→        for sec in bad:
+   180→            disk.sector_health[sec] = 0.0
+   181→
+   182→    elif damage_type == "mft_partial":
+   183→        # Damage specific MFT clusters
+   184→        pct = params.get("pct", 0.3)
+   185→        mft_list = sorted(disk.mft_clusters)
+   186→        n_damage = int(len(mft_list) * pct)
+   187→        damaged = random.sample(mft_list, min(n_damage, len(mft_list)))
+   188→        for c in damaged:
+   189→            for s in range(SECTORS_PER_CLUSTER):
+   190→                sec = c * SECTORS_PER_CLUSTER + s
+   191→                if sec < total_sectors:
+   192→                    disk.sector_health[sec] = 0.0
+   193→
+   194→    elif damage_type == "combined":
+   195→        mft_pct = params.get("mft_pct", 0.2)
+   196→        bad_pct = params.get("bad_pct", 0.05)
+   197→        apply_damage(disk, "mft_partial", pct=mft_pct)
+   198→        apply_damage(disk, "bad_sectors_end", pct=bad_pct)
+   199→
+   200→    return disk
+   201→
+   202→
+   203→# ─── Reading Strategies ────────────────────────────────────────────────────────
+   204→
+   205→@dataclass
+   206→class RecoveryResult:
+   207→    strategy: str
+   208→    files_total: int = 0
+   209→    files_recovered: int = 0
+   210→    files_recoverable: int = 0  # MFT known but data not fully read
+   211→    mft_entries_recovered: int = 0
+   212→    mft_entries_total: int = 0
+   213→    bytes_recovered: int = 0
+   214→    bytes_total: int = 0
+   215→    sectors_read: int = 0
+   216→    sectors_successful: int = 0
+   217→    sectors_failed: int = 0
+   218→    disk_died: bool = False
+   219→    sectors_at_death: int = 0
+   220→    recovered_file_ids: Set[int] = field(default_factory=set)
+   221→
+   222→    @property
+   223→    def file_rate(self): return self.files_recovered / max(self.files_total, 1)
+   224→    @property
+   225→    def mft_rate(self): return self.mft_entries_recovered / max(self.mft_entries_total, 1)
+   226→    @property
+   227→    def data_rate(self): return self.bytes_recovered / max(self.bytes_total, 1)
+   228→
+   229→    def to_dict(self):
+   230→        d = asdict(self)
+   231→        d['file_rate'] = self.file_rate
+   232→        d['mft_rate'] = self.mft_rate
+   233→        d['data_rate'] = self.data_rate
+   234→        d['recovered_file_ids'] = list(self.recovered_file_ids)
+   235→        return d
+   236→
+   237→
+   238→def simulate_disk_death(sectors_read: int, death_budget: int) -> bool:
+   239→    """Determine if the disk has died after this many reads.
+   240→    Models a disk that will die after approximately death_budget reads,
+   241→    with some randomness.
+   242→    """
+   243→    if death_budget <= 0:
+   244→        return False  # Disk never dies
+   245→    # Probability increases as we approach the budget
+   246→    if sectors_read >= death_budget:
+   247→        return True
+   248→    # Small random chance of early death
+   249→    prob = (sectors_read / death_budget) ** 3 * 0.5
+   250→    return random.random() < prob
+   251→
+   252→
+   253→def motor_a_sequential(disk: SimDisk, death_budget: int = 0) -> RecoveryResult:
+   254→    """Motor A: Sequential reading from sector 0.
+   255→    This is what ddrescue does. The MFT IS at the start of the disk,
+   256→    so Motor A WILL read it first. The question is: does it reach
+   257→    the data sectors before the disk dies?
+   258→    """
+   259→    result = RecoveryResult(strategy="Motor A: Sequential")
+   260→    result.files_total = len(disk.files)
+   261→    result.mft_entries_total = len(disk.files)
+   262→    result.bytes_total = sum(f.size for f in disk.files)
+   263→
+   264→    total_sectors = disk.total_sectors
+   265→    mft_clusters_read = set()
+   266→    data_clusters_read = set()  # file_id -> set of clusters read
+   267→
+   268→    # Track which MFT entries we've recovered
+   269→    mft_entries_read = set()
+   270→    # Track which file data clusters we've read
+   271→    file_data_read = {}  # file_id -> set of clusters read
+   272→
+   273→    for sector in range(total_sectors):
+   274→        # Check if disk has died
+   275→        if simulate_disk_death(result.sectors_read, death_budget):
+   276→            result.disk_died = True
+   277→            result.sectors_at_death = result.sectors_read
+   278→            break
+   279→
+   280→        result.sectors_read += 1
+   281→        cluster = sector // SECTORS_PER_CLUSTER
+   282→
+   283→        if disk.sector_health[sector] <= 0.0:
+   284→            result.sectors_failed += 1
+   285→            continue
+   286→
+   287→        result.sectors_successful += 1
+   288→
+   289→        # Track MFT clusters
+   290→        if cluster in disk.mft_clusters:
+   291→            mft_clusters_read.add(cluster)
+   292→
+   293→        # Track data clusters
+   294→        for fid, clusters in disk.file_clusters.items():
+   295→            if cluster in clusters:
+   296→                if fid not in file_data_read:
+   297→                    file_data_read[fid] = set()
+   298→                file_data_read[fid].add(cluster)
+   299→
+   300→    # Count recovered MFT entries
+   301→    for fid, meta in disk.file_metadata.items():
+   302→        mft_cluster = meta["mft_entry_cluster"]
+   303→        if mft_cluster in mft_clusters_read:
+   304→            mft_entries_read.add(fid)
+   305→            result.mft_entries_recovered += 1
+   306→
+   307→    # Count recovered files
+   308→    # A file is recovered if:
+   309→    # 1. Its MFT entry was read (we know the file exists)
+   310→    # 2. ALL its data clusters were read
+   311→    for sf in disk.files:
+   312→        if sf.file_id in mft_entries_read:
+   313→            result.files_recoverable += 1
+   314→            if sf.is_resident:
+   315→                result.files_recovered += 1
+   316→                result.bytes_recovered += sf.size
+   317→                result.recovered_file_ids.add(sf.file_id)
+   318→            else:
+   319→                needed = disk.file_clusters.get(sf.file_id, set())
+   320→                read = file_data_read.get(sf.file_id, set())
+   321→                if needed and read >= needed:
+   322→                    result.files_recovered += 1
+   323→                    result.bytes_recovered += sf.size
+   324→                    result.recovered_file_ids.add(sf.file_id)
+   325→
+   326→    return result
+   327→
+   328→
+   329→def motor_b_mft_first(disk: SimDisk, death_budget: int = 0) -> RecoveryResult:
+   330→    """Motor B: MFT-first reading.
+   331→    Phase 1: Read ALL MFT clusters first.
+   332→    Phase 2: Read data clusters for files whose MFT was recovered.
+   333→    Phase 3: Read remaining sectors.
+   334→    """
+   335→    result = RecoveryResult(strategy="Motor B: MFT-first")
+   336→    result.files_total = len(disk.files)
+   337→    result.mft_entries_total = len(disk.files)
+   338→    result.bytes_total = sum(f.size for f in disk.files)
+   339→
+   340→    total_sectors = disk.total_sectors
+   341→    mft_clusters_read = set()
+   342→    file_data_read = {}  # file_id -> set of clusters read
+   343→    mft_entries_read = set()
+   344→    read_sectors = set()
+   345→
+   346→    # ── PHASE 1: Read MFT sectors first ──
+   347→    mft_sectors = []
+   348→    for c in sorted(disk.mft_clusters):
+   349→        for s in range(SECTORS_PER_CLUSTER):
+   350→            sec = c * SECTORS_PER_CLUSTER + s
+   351→            if sec < total_sectors:
+   352→                mft_sectors.append(sec)
+   353→
+   354→    for sector in mft_sectors:
+   355→        if simulate_disk_death(result.sectors_read, death_budget):
+   356→            result.disk_died = True
+   357→            result.sectors_at_death = result.sectors_read
+   358→            break
+   359→
+   360→        result.sectors_read += 1
+   361→        read_sectors.add(sector)
+   362→        cluster = sector // SECTORS_PER_CLUSTER
+   363→
+   364→        if disk.sector_health[sector] <= 0.0:
+   365→            result.sectors_failed += 1
+   366→            continue
+   367→
+   368→        result.sectors_successful += 1
+   369→        mft_clusters_read.add(cluster)
+   370→
+   371→    if not result.disk_died:
+   372→        # Determine which MFT entries we recovered
+   373→        for fid, meta in disk.file_metadata.items():
+   374→            mft_cluster = meta["mft_entry_cluster"]
+   375→            if mft_cluster in mft_clusters_read:
+   376→                mft_entries_read.add(fid)
+   377→
+   378→        # ── PHASE 2: Read data clusters for recovered files ──
+   379→        # Priority: read data for files whose MFT was recovered
+   380→        # Sort by priority (critical first) then by size (small first = quick wins)
+   381→        priority_files = sorted(
+   382→            [f for f in disk.files if f.file_id in mft_entries_read and not f.is_resident],
+   383→            key=lambda f: (-f.priority, f.size)
+   384→        )
+   385→
+   386→        priority_sectors = set()
+   387→        for sf in priority_files:
+   388→            for c in sf.clusters:
+   389→                for s in range(SECTORS_PER_CLUSTER):
+   390→                    sec = c * SECTORS_PER_CLUSTER + s
+   391→                    if sec < total_sectors and sec not in read_sectors:
+   392→                        priority_sectors.add(sec)
+   393→
+   394→        for sector in sorted(priority_sectors):
+   395→            if result.disk_died:
+   396→                break
+   397→            if simulate_disk_death(result.sectors_read, death_budget):
+   398→                result.disk_died = True
+   399→                result.sectors_at_death = result.sectors_read
+   400→                break
+   401→
+   402→            result.sectors_read += 1
+   403→            read_sectors.add(sector)
+   404→            cluster = sector // SECTORS_PER_CLUSTER
+   405→
+   406→            if disk.sector_health[sector] <= 0.0:
+   407→                result.sectors_failed += 1
+   408→                continue
+   409→
+   410→            result.sectors_successful += 1
+   411→
+   412→            for fid, clusters in disk.file_clusters.items():
+   413→                if cluster in clusters:
+   414→                    if fid not in file_data_read:
+   415→                        file_data_read[fid] = set()
+   416→                    file_data_read[fid].add(cluster)
+   417→
+   418→    # Count recovered MFT entries
+   419→    result.mft_entries_recovered = len(mft_entries_read)
+   420→
+   421→    # Count recovered files
+   422→    for sf in disk.files:
+   423→        if sf.file_id in mft_entries_read:
+   424→            result.files_recoverable += 1
+   425→            if sf.is_resident:
+   426→                result.files_recovered += 1
+   427→                result.bytes_recovered += sf.size
+   428→                result.recovered_file_ids.add(sf.file_id)
+   429→            else:
+   430→                needed = disk.file_clusters.get(sf.file_id, set())
+   431→                read = file_data_read.get(sf.file_id, set())
+   432→                if needed and read >= needed:
+   433→                    result.files_recovered += 1
+   434→                    result.bytes_recovered += sf.size
+   435→                    result.recovered_file_ids.add(sf.file_id)
+   436→
+   437→    return result
+   438→
+   439→
+   440→# ─── Scenarios ──────────────────────────────────────────────────────────────────
+   441→
+   442→@dataclass
+   443→class Scenario:
+   444→    name: str
+   445→    description: str
+   446→    disk_mb: int = 50
+   447→    file_count: int = 200
+   448→    damage_type: str = "healthy"
+   449→    damage_params: dict = field(default_factory=dict)
+   450→    death_budget: int = 0  # 0 = disk never dies
+   451→    runs: int = 5
+   452→
+   453→    def create_disk(self, seed: int) -> SimDisk:
+   454→        disk = create_disk(self.disk_mb, self.file_count, seed=seed)
+   455→        if self.damage_type != "healthy":
+   456→            apply_damage(disk, self.damage_type, **self.damage_params)
+   457→        return disk
+   458→
+   459→
+   460→def define_scenarios() -> List[Scenario]:
+   461→    """Define 10 benchmark scenarios."""
+   462→    return [
+   463→        Scenario(
+   464→            name="S01_healthy",
+   465→            description="Disco saludable. Sin dano. Ambos motores deberian empatar.",
+   466→            damage_type="healthy",
+   467→            death_budget=0,
+   468→        ),
+   469→        Scenario(
+   470→            name="S02_mft_30pct_damaged",
+   471→            description="30% del MFT danado. Sin dano en datos.",
+   472→            damage_type="mft_partial",
+   473→            damage_params={"pct": 0.3},
+   474→            death_budget=0,
+   475→        ),
+   476→        Scenario(
+   477→            name="S03_bad_sectors_end_10pct",
+   478→            description="10% de sectores malos al final del disco. Los datos de archivos grandes se pierden.",
+   479→            damage_type="bad_sectors_end",
+   480→            damage_params={"pct": 0.10},
+   481→            death_budget=0,
+   482→        ),
+   483→        Scenario(
+   484→            name="S04_bad_sectors_random_5pct",
+   485→            description="5% de sectores malos aleatorios. Datos fragmentados.",
+   486→            damage_type="bad_sectors_random",
+   487→            damage_params={"pct": 0.05},
+   488→            death_budget=0,
+   489→        ),
+   490→        Scenario(
+   491→            name="S05_disk_dies_at_30pct",
+   492→            description="Disco muere despues de leer ~30% de sectores. MFT esta al inicio.",
+   493→            damage_type="healthy",
+   494→            death_budget=0,  # Will be set dynamically
+   495→        ),
+   496→        Scenario(
+   497→            name="S06_disk_dies_at_10pct",
+   498→            description="Disco muere muy rapido. Solo ~10% de sectores legibles.",
+   499→            damage_type="healthy",
+   500→            death_budget=0,
+   501→        ),
+   502→        Scenario(
+   503→            name="S07_mft_damaged_disk_dies_30pct",
+   504→            description="MFT 20% danado + disco muere al 30%. Escenario realista de fallo.",
+   505→            damage_type="combined",
+   506→            damage_params={"mft_pct": 0.2, "bad_pct": 0.03},
+   507→            death_budget=0,
+   508→        ),
+   509→        Scenario(
+   510→            name="S08_mft_damaged_disk_dies_15pct",
+   511→            description="MFT 30% danado + disco muere al 15%. Escenario critico.",
+   512→            damage_type="combined",
+   513→            damage_params={"mft_pct": 0.3, "bad_pct": 0.05},
+   514→            death_budget=0,
+   515→        ),
+   516→        Scenario(
+   517→            name="S09_bad_end_disk_dies_20pct",
+   518→            description="10% sectores malos al final + disco muere al 20%.",
+   519→            damage_type="bad_sectors_end",
+   520→            damage_params={"pct": 0.10},
+   521→            death_budget=0,
+   522→        ),
+   523→        Scenario(
+   524→            name="S10_critical_dying",
+   525→            description="MFT 40% danado + 5% malos + muere al 15%. El peor escenario.",
+   526→            damage_type="combined",
+   527→            damage_params={"mft_pct": 0.4, "bad_pct": 0.05},
+   528→            death_budget=0,
+   529→        ),
+   530→    ]
+   531→
+   532→
+   533→def run_benchmark():
+   534→    """Run all scenarios and collect results."""
+   535→    scenarios = define_scenarios()
+   536→    all_results = {}
+   537→
+   538→    print("=" * 72)
+   539→    print("  RECOVERY LAB v2 — Benchmark Engine")
+   540→    print("  Hipotesis: Priorizar MFT-first mejora la recuperacion en discos que fallan")
+   541→    print("=" * 72)
+   542→    print()
+   543→
+   544→    for scenario in scenarios:
+   545→        print(f"  Ejecutando: {scenario.name}")
+   546→        print(f"  {scenario.description}")
+   547→
+   548→        run_results = []
+   549→        for run in range(scenario.runs):
+   550→            seed = 42 + run * 7
+   551→            disk = scenario.create_disk(seed)
+   552→
+   553→            # Set death budget based on scenario
+   554→            total_sectors = disk.total_sectors
+   555→            if "dies_at_30pct" in scenario.name or "dies_30pct" in scenario.name:
+   556→                death_budget = int(total_sectors * 0.30)
+   557→            elif "dies_at_10pct" in scenario.name or "dies_15pct" in scenario.name:
+   558→                death_budget = int(total_sectors * 0.15)
+   559→            elif "dies_20pct" in scenario.name:
+   560→                death_budget = int(total_sectors * 0.20)
+   561→            elif "critical_dying" in scenario.name:
+   562→                death_budget = int(total_sectors * 0.15)
+   563→            else:
+   564→                death_budget = 0
+   565→
+   566→            disk_b = copy.deepcopy(disk)
+   567→
+   568→            result_a = motor_a_sequential(disk, death_budget=death_budget)
+   569→            result_b = motor_b_mft_first(disk_b, death_budget=death_budget)
+   570→
+   571→            run_results.append({
+   572→                "run": run,
+   573→                "a": result_a.to_dict(),
+   574→                "b": result_b.to_dict(),
+   575→                "death_budget": death_budget,
+   576→            })
+   577→
+   578→        # Aggregate
+   579→        a_files = [r["a"]["files_recovered"] for r in run_results]
+   580→        b_files = [r["b"]["files_recovered"] for r in run_results]
+   581→        a_mft = [r["a"]["mft_entries_recovered"] for r in run_results]
+   582→        b_mft = [r["b"]["mft_entries_recovered"] for r in run_results]
+   583→        a_bytes = [r["a"]["bytes_recovered"] for r in run_results]
+   584→        b_bytes = [r["b"]["bytes_recovered"] for r in run_results]
+   585→        a_recoverable = [r["a"]["files_recoverable"] for r in run_results]
+   586→        b_recoverable = [r["b"]["files_recoverable"] for r in run_results]
+   587→        a_died = sum(1 for r in run_results if r["a"]["disk_died"])
+   588→        b_died = sum(1 for r in run_results if r["b"]["disk_died"])
+   589→        total_files = run_results[0]["a"]["files_total"]
+   590→
+   591→        avg_a = sum(a_files) / len(a_files)
+   592→        avg_b = sum(b_files) / len(b_files)
+   593→        diff = ((avg_b - avg_a) / max(avg_a, 1)) * 100
+   594→
+   595→        avg_a_rec = sum(a_recoverable) / len(a_recoverable)
+   596→        avg_b_rec = sum(b_recoverable) / len(b_recoverable)
+   597→
+   598→        print(f"  Motor A: {avg_a:.1f}/{total_files} archivos ({avg_a/max(total_files,1)*100:.1f}%) | MFT conocidos: {avg_a_rec:.1f}")
+   599→        print(f"  Motor B: {avg_b:.1f}/{total_files} archivos ({avg_b/max(total_files,1)*100:.1f}%) | MFT conocidos: {avg_b_rec:.1f}")
+   600→        if diff > 0:
+   601→            print(f"  >>> Motor B +{diff:.1f}% MAS archivos")
+   602→        elif diff < 0:
+   603→            print(f"  >>> Motor A +{abs(diff):.1f}% MAS archivos")
+   604→        else:
+   605→            print(f"  >>> Sin diferencia significativa")
+   606→        print(f"  Disk deaths: A={a_died}/5, B={b_died}/5")
+   607→        print()
+   608→
+   609→        all_results[scenario.name] = {
+   610→            "description": scenario.description,
+   611→            "runs": scenario.runs,
+   612→            "avg_a_files": avg_a,
+   613→            "avg_b_files": avg_b,
+   614→            "avg_a_recoverable": avg_a_rec,
+   615→            "avg_b_recoverable": avg_b_rec,
+   616→            "avg_a_mft": sum(a_mft) / len(a_mft),
+   617→            "avg_b_mft": sum(b_mft) / len(b_mft),
+   618→            "avg_a_bytes": sum(a_bytes) / len(a_bytes),
+   619→            "avg_b_bytes": sum(b_bytes) / len(b_bytes),
+   620→            "diff_pct": diff,
+   621→            "a_died": a_died,
+   622→            "b_died": b_died,
+   623→            "total_files": total_files,
+   624→            "raw": run_results,
+   625→        }
+   626→
+   627→    return all_results
+   628→
+   629→
+   630→def generate_report(results: Dict) -> str:
+   631→    """Generate a text report."""
+   632→    lines = []
+   633→    lines.append("=" * 72)
+   634→    lines.append("  RECOVERY LAB v2 — INFORME DE RESULTADOS")
+   635→    lines.append("=" * 72)
+   636→    lines.append("")
+   637→    lines.append("HIPOTESIS: Priorizar la lectura del MFT mejora la recuperacion")
+   638→    lines.append("cuando el disco tiene un presupuesto de lectura limitado.")
+   639→    lines.append("")
+   640→    lines.append("MOTOR A: Lectura secuencial (sector 0, 1, 2, 3...)")
+   641→    lines.append("MOTOR B: MFT-first (leer MFT primero, luego datos priorizados)")
+   642→    lines.append("")
+   643→    lines.append("-" * 72)
+   644→    lines.append(f"{'Escenario':<32} {'A (arch)':<10} {'B (arch)':<10} {'Diff':<10} {'Veredicto'}")
+   645→    lines.append("-" * 72)
+   646→
+   647→    wins_b = 0
+   648→    wins_a = 0
+   649→    ties = 0
+   650→
+   651→    for name, d in results.items():
+   652→        a = d["avg_a_files"]
+   653→        b = d["avg_b_files"]
+   654→        total = d["total_files"]
+   655→        diff = d["diff_pct"]
+   656→
+   657→        if diff > 5:
+   658→            verdict = "B GANA"
+   659→            wins_b += 1
+   660→        elif diff < -5:
+   661→            verdict = "A GANA"
+   662→            wins_a += 1
+   663→        else:
+   664→            verdict = "~EMPATE"
+   665→            ties += 1
+   666→
+   667→        lines.append(f"{name:<32} {a:>5.1f}/{total:<4} {b:>5.1f}/{total:<4} {diff:>+7.1f}%  {verdict}")
+   668→
+   669→    lines.append("-" * 72)
+   670→    lines.append("")
+   671→    lines.append(f"RESUMEN: Motor B gana en {wins_b}/10, Motor A gana en {wins_a}/10, Empate en {ties}/10")
+   672→    lines.append("")
+   673→
+   674→    # Detailed analysis for key scenarios
+   675→    for key_name in ["S07_mft_damaged_disk_dies_30pct", "S08_mft_damaged_disk_dies_15pct",
+   676→                     "S10_critical_dying"]:
+   677→        if key_name in results:
+   678→            d = results[key_name]
+   679→            lines.append(f"DETALLE — {key_name}:")
+   680→            lines.append(f"  Motor A: {d['avg_a_files']:.1f} archivos recuperados, {d['avg_a_recoverable']:.1f} MFT conocidos")
+   681→            lines.append(f"  Motor B: {d['avg_b_files']:.1f} archivos recuperados, {d['avg_b_recoverable']:.1f} MFT conocidos")
+   682→            lines.append(f"  Diferencia: {d['diff_pct']:+.1f}%")
+   683→            lines.append(f"  Muertes: A={d['a_died']}/5, B={d['b_died']}/5")
+   684→            lines.append("")
+   685→
+   686→    # Conclusion
+   687→    lines.append("CONCLUSION:")
+   688→    if wins_b > wins_a:
+   689→        lines.append("  La hipotesis esta SOPORTADA. Motor B (MFT-first) recupera")
+   690→        lines.append("  consistentemente mas archivos que Motor A (secuencial),")
+   691→        lines.append("  especialmente en escenarios donde el disco falla.")
+   692→        if wins_b >= 7:
+   693→            lines.append("  La ventaja es CLARA y CONSISTENTE.")
+   694→        else:
+   695→            lines.append("  La ventaja es moderada. Se necesitan mas pruebas.")
+   696→    elif wins_a > wins_b:
+   697→        lines.append("  La hipotesis NO esta soportada. La lectura secuencial")
+   698→        lines.append("  obtiene mejores o iguales resultados.")
+   699→    else:
+   700→        lines.append("  Los resultados son MIXTOS. Se necesitan mas pruebas.")
+   701→    lines.append("")
+   702→    lines.append("NOTA IMPORTANTE: Este es un simulador que modela propiedades")
+   703→    lines.append("simplificadas de NTFS. Los resultados reales pueden diferir.")
+   704→    lines.append("Este experimento valida la hipotesis en principio, no la")
+   705→    lines.append("demuestra definitivamente.")
+   706→
+   707→    return "\n".join(lines)
+   708→
+   709→
+   710→if __name__ == "__main__":
+   711→    random.seed(42)
+   712→    start = time.time()
+   713→    results = run_benchmark()
+   714→    elapsed = time.time() - start
+   715→
+   716→    # Save results
+   717→    results_path = LAB_DIR / "results" / "benchmark_v2_results.json"
+   718→    with open(results_path, "w") as f:
+   719→        json.dump(results, f, indent=2, default=str)
+   720→
+   721→    # Generate report
+   722→    report = generate_report(results)
+   723→    report_path = LAB_DIR / "results" / "benchmark_v2_report.txt"
+   724→    with open(report_path, "w") as f:
+   725→        f.write(report)
+   726→
+   727→    print(f"\nResultados guardados en: {results_path}")
+   728→    print(f"Informe guardado en: {report_path}")
+   729→    print(f"Tiempo: {elapsed:.1f}s")
+   730→    print("\n" + report)
+   731→

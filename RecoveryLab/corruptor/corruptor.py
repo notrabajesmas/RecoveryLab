@@ -295,6 +295,49 @@ ATTACK_MATRIX = [
             {"type": "timeout_pattern", "severity": 0.01},
         ],
     },
+    # ─── Noise attacks (Objeción 6: Reality doesn't break things cleanly) ────
+    {
+        "id": "A15",
+        "name": "Ruido aleatorio",
+        "description": "Bytes aleatorios en sectores aleatorios — la realidad no zeroea",
+        "corruptions": [
+            {"type": "random_noise", "severity": 0.01},
+        ],
+    },
+    {
+        "id": "A16",
+        "name": "Sobrescritura parcial",
+        "description": "Archivos parcialmente sobrescritos con datos de otro archivo",
+        "corruptions": [
+            {"type": "partial_overwrite", "severity": 0.10},
+        ],
+    },
+    {
+        "id": "A17",
+        "name": "Run lists corruptos",
+        "description": "MFT run lists con bit flips — apuntan a clusters incorrectos",
+        "corruptions": [
+            {"type": "fragmentation_chaos", "severity": 0.20},
+        ],
+    },
+    {
+        "id": "A18",
+        "name": "Timestamps inconsistentes",
+        "description": "Timestamps aleatorios — ¿el motor depende del orden temporal?",
+        "corruptions": [
+            {"type": "timestamp_inconsistency", "severity": 0.20},
+        ],
+    },
+    {
+        "id": "A19",
+        "name": "Ruido + MFT parcial (combinado)",
+        "description": "Ruido real + MFT dañado — la combinación más realista",
+        "corruptions": [
+            {"type": "mft_partial_delete", "severity": 0.20},
+            {"type": "random_noise", "severity": 0.005},
+            {"type": "partial_overwrite", "severity": 0.05},
+        ],
+    },
 ]
 
 

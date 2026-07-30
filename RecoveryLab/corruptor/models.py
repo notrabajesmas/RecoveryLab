@@ -38,6 +38,11 @@ class CorruptionType(Enum):
     CRC_ERRORS = "crc_errors"
     SLOW_SECTORS = "slow_sectors"
     TIMEOUT_PATTERN = "timeout_pattern"
+    # ─── Noise models (Objeción 6) ─────────────────────────────────────
+    RANDOM_NOISE = "random_noise"              # Random bytes in random sectors
+    PARTIAL_OVERWRITE = "partial_overwrite"     # Partial file overwrite
+    FRAGMENTATION_CHAOS = "fragmentation_chaos" # Unpredictable fragmentation
+    TIMESTAMP_INCONSISTENCY = "timestamp_inconsistency"  # Inconsistent timestamps
 
 
 @dataclass
@@ -542,6 +547,342 @@ class TimeoutPatternModel(CorruptionModel):
         )
 
 
+# ─── Noise Models (Objeción 6: Reality doesn't break things cleanly) ─────────
+
+class RandomNoiseModel(CorruptionModel):
+    """
+    Random bytes written to random sectors.
+
+    Unlike CRC errors (1-4 bit flips), this writes ENTIRE random bytes
+    to random sectors. This simulates:
+      - Firmware bugs writing garbage
+      - Controller errors
+      - Electromagnetic interference
+      - Partial sector corruption
+
+    Reality rarely breaks things by zeroing them out.
+    """
+
+    def apply(self, image: bytearray, manifest: Dict,
+              severity: float = 0.01) -> CorruptionResult:
+        total_sectors = len(image) // 512
+        num_affected = int(total_sectors * severity)
+
+        # Choose random sectors to corrupt
+        affected_sectors = self.rng.sample(range(total_sectors), num_affected)
+
+        for s in affected_sectors:
+            offset = s * 512
+            # Write random bytes to the entire sector
+            # (Not just bit flips — full random garbage)
+            random_data = bytes(self.rng.getrandbits(8) for _ in range(512))
+            image[offset:offset + 512] = random_data
+
+        clusters = list(set(s // (manifest["cluster_size"] // 512)
+                          for s in affected_sectors))
+
+        log = [self._log_entry(
+            CorruptionType.RANDOM_NOISE,
+            f"Random noise: {num_affected} sectors overwritten with random data",
+            affected_sectors, clusters,
+            (0, len(image)),
+            severity,
+            {"pattern": "random_bytes", "affected_count": num_affected,
+             "note": "Full random bytes, not bit flips — simulates firmware/controller errors"},
+        )]
+
+        return CorruptionResult(
+            corrupted_image=bytes(image),
+            corruption_log=log,
+            manifest_corruption={
+                "type": "random_noise",
+                "severity": severity,
+                "affected_sectors": num_affected,
+            },
+        )
+
+
+class PartialOverwriteModel(CorruptionModel):
+    """
+    Partial file overwrite — simulates data being partially overwritten.
+
+    In real scenarios, files are often partially overwritten by new data:
+      - File partially overwritten by another file
+      - Log file rotating over old data
+      - Temporary file overwriting part of a document
+      - OS writing metadata over file data
+
+    This is DIFFERENT from zeroing: the overwritten part contains REAL data
+    from another file, making it harder to detect that corruption occurred.
+    """
+
+    def apply(self, image: bytearray, manifest: Dict,
+              severity: float = 0.10) -> CorruptionResult:
+        cluster_size = manifest["cluster_size"]
+        user_files = [f for f in manifest["files"] if f.get("id", 0) >= 12]
+
+        if not user_files:
+            return CorruptionResult(
+                corrupted_image=bytes(image),
+                corruption_log=[],
+                manifest_corruption={"type": "partial_overwrite", "skipped": True},
+            )
+
+        # Select random files to partially overwrite
+        num_files = max(1, int(len(user_files) * severity))
+        files_to_overwrite = self.rng.sample(user_files, min(num_files, len(user_files)))
+
+        affected_clusters = set()
+        overwritten_files = []
+
+        for file_info in files_to_overwrite:
+            clusters = file_info.get("clusters", [])
+            if not clusters:
+                continue
+
+            # Overwrite a random subset of the file's clusters
+            # (not all — that would be a full delete)
+            num_clusters_to_overwrite = max(1, len(clusters) // 2)
+            clusters_to_overwrite = self.rng.sample(
+                clusters, min(num_clusters_to_overwrite, len(clusters))
+            )
+
+            for c in clusters_to_overwrite:
+                offset = c * cluster_size
+                if offset + cluster_size <= len(image):
+                    # Write random data (simulating another file's content)
+                    random_data = bytes(self.rng.getrandbits(8)
+                                       for _ in range(cluster_size))
+                    image[offset:offset + cluster_size] = random_data
+                    affected_clusters.add(c)
+
+            overwritten_files.append({
+                "name": file_info.get("name", "unknown"),
+                "clusters_overwritten": len(clusters_to_overwrite),
+                "clusters_total": len(clusters),
+            })
+
+        log = [self._log_entry(
+            CorruptionType.PARTIAL_OVERWRITE,
+            f"Partial overwrite: {len(overwritten_files)} files partially overwritten",
+            [], list(affected_clusters),
+            (0, len(image)),
+            severity,
+            {"overwritten_files": overwritten_files,
+             "note": "Overwritten with random data, not zeros — harder to detect"},
+        )]
+
+        return CorruptionResult(
+            corrupted_image=bytes(image),
+            corruption_log=log,
+            manifest_corruption={
+                "type": "partial_overwrite",
+                "severity": severity,
+                "files_overwritten": len(overwritten_files),
+                "overwritten_file_details": overwritten_files,
+            },
+        )
+
+
+class FragmentationChaosModel(CorruptionModel):
+    """
+    Unpredictable fragmentation — simulates a heavily used disk.
+
+    On a real disk used for years, files are scattered across the disk
+    in unpredictable patterns. This model doesn't physically fragment
+    the files (that requires rebuilding the NTFS image), but it
+    corrupts the MFT run lists to make them inconsistent with the
+    actual data placement.
+
+    This specifically tests whether the motor can handle:
+      - Run lists that point to wrong clusters
+      - Run lists with impossible offsets
+      - Inconsistent VCN ranges
+    """
+
+    def apply(self, image: bytearray, manifest: Dict,
+              severity: float = 0.20) -> CorruptionResult:
+        mft_info = manifest["mft"]
+        mft_start = mft_info["start_cluster"]
+        cluster_size = manifest["cluster_size"]
+        record_size = mft_info.get("record_size", 1024)
+        mft_record_count = mft_info.get("record_count", 0)
+
+        # Select user MFT records to corrupt run lists
+        user_records = [i for i in range(12, mft_record_count)]
+        num_to_corrupt = max(1, int(len(user_records) * severity))
+        records_to_corrupt = self.rng.sample(
+            user_records, min(num_to_corrupt, len(user_records))
+        )
+
+        affected_clusters = set()
+        corrupted_count = 0
+
+        for rec_num in records_to_corrupt:
+            rec_offset = (mft_start * cluster_size) + (rec_num * record_size)
+
+            if rec_offset + record_size > len(image):
+                continue
+
+            # Check if this is a valid MFT record
+            if image[rec_offset:rec_offset + 4] != b'FILE':
+                continue
+
+            # Find the $DATA attribute and corrupt the run list
+            # by flipping bits in the run list area
+            # This is subtle corruption — the MFT record still looks valid,
+            # but the run list points to wrong clusters
+            try:
+                first_attr_offset = struct.unpack_from('<H', image, rec_offset + 20)[0]
+                attr_offset = rec_offset + first_attr_offset
+
+                while attr_offset + 4 < rec_offset + record_size:
+                    attr_type = struct.unpack_from('<I', image, attr_offset)[0]
+                    if attr_type == 0xFFFFFFFF:
+                        break
+                    attr_length = struct.unpack_from('<I', image, attr_offset + 4)[0]
+                    if attr_length == 0:
+                        break
+
+                    if attr_type == 0x80:  # $DATA
+                        non_resident = image[attr_offset + 8]
+                        if non_resident:
+                            # Corrupt run list by flipping bits in the run data
+                            run_offset = struct.unpack_from('<H', image, attr_offset + 32)[0]
+                            run_start = attr_offset + run_offset
+                            run_end = attr_offset + attr_length
+
+                            # Flip 1-3 bits in the run list area
+                            for _ in range(self.rng.randint(1, 3)):
+                                byte_pos = self.rng.randint(run_start, min(run_end - 1, run_start + 50))
+                                bit_pos = self.rng.randint(0, 7)
+                                image[byte_pos] ^= (1 << bit_pos)
+
+                            corrupted_count += 1
+                            cluster = mft_start + (rec_num * record_size) // cluster_size
+                            affected_clusters.add(cluster)
+                        break
+
+                    attr_offset += attr_length
+            except (struct.error, IndexError):
+                continue
+
+        log = [self._log_entry(
+            CorruptionType.FRAGMENTATION_CHAOS,
+            f"Fragmentation chaos: {corrupted_count} MFT run lists corrupted with bit flips",
+            [], list(affected_clusters),
+            (mft_start * cluster_size, mft_start * cluster_size + mft_record_count * record_size),
+            severity,
+            {"corrupted_run_lists": corrupted_count,
+             "note": "Run lists point to wrong clusters — subtle, hard to detect"},
+        )]
+
+        return CorruptionResult(
+            corrupted_image=bytes(image),
+            corruption_log=log,
+            manifest_corruption={
+                "type": "fragmentation_chaos",
+                "severity": severity,
+                "corrupted_run_lists": corrupted_count,
+            },
+        )
+
+
+class TimestampInconsistencyModel(CorruptionModel):
+    """
+    Inconsistent timestamps in MFT records.
+
+    In real disks, timestamps can be inconsistent due to:
+      - Clock drift
+      - Timezone changes
+      - Daylight saving time
+      - File copied without preserving timestamps
+      - Firmware bugs
+
+    This model modifies $STANDARD_INFORMATION and $FILE_NAME timestamps
+    to be inconsistent, testing whether the motor relies on timestamps
+    for ordering or validation.
+    """
+
+    def apply(self, image: bytearray, manifest: Dict,
+              severity: float = 0.20) -> CorruptionResult:
+        mft_info = manifest["mft"]
+        mft_start = mft_info["start_cluster"]
+        cluster_size = manifest["cluster_size"]
+        record_size = mft_info.get("record_size", 1024)
+        mft_record_count = mft_info.get("record_count", 0)
+
+        user_records = [i for i in range(12, mft_record_count)]
+        num_to_corrupt = max(1, int(len(user_records) * severity))
+        records_to_corrupt = self.rng.sample(
+            user_records, min(num_to_corrupt, len(user_records))
+        )
+
+        affected_clusters = set()
+        corrupted_count = 0
+
+        for rec_num in records_to_corrupt:
+            rec_offset = (mft_start * cluster_size) + (rec_num * record_size)
+
+            if rec_offset + record_size > len(image):
+                continue
+
+            if image[rec_offset:rec_offset + 4] != b'FILE':
+                continue
+
+            # Find $STANDARD_INFORMATION (0x10) and modify timestamps
+            try:
+                first_attr_offset = struct.unpack_from('<H', image, rec_offset + 20)[0]
+                attr_offset = rec_offset + first_attr_offset
+
+                while attr_offset + 4 < rec_offset + record_size:
+                    attr_type = struct.unpack_from('<I', image, attr_offset)[0]
+                    if attr_type == 0xFFFFFFFF:
+                        break
+                    attr_length = struct.unpack_from('<I', image, attr_offset + 4)[0]
+                    if attr_length == 0:
+                        break
+
+                    if attr_type == 0x10:  # $STANDARD_INFORMATION
+                        # Timestamps are at offsets 24, 32, 40, 48 within the attribute
+                        # (after the attribute header)
+                        for ts_offset in [attr_offset + 24, attr_offset + 32,
+                                         attr_offset + 40, attr_offset + 48]:
+                            if ts_offset + 8 <= rec_offset + record_size:
+                                # Write a random timestamp (could be future, past, or zero)
+                                random_ts = self.rng.randint(0, 2**64 - 1)
+                                struct.pack_into('<Q', image, ts_offset, random_ts)
+
+                        corrupted_count += 1
+                        cluster = mft_start + (rec_num * record_size) // cluster_size
+                        affected_clusters.add(cluster)
+                        break  # Only modify first $STANDARD_INFORMATION
+
+                    attr_offset += attr_length
+            except (struct.error, IndexError):
+                continue
+
+        log = [self._log_entry(
+            CorruptionType.TIMESTAMP_INCONSISTENCY,
+            f"Timestamp inconsistency: {corrupted_count} records with random timestamps",
+            [], list(affected_clusters),
+            (mft_start * cluster_size, mft_start * cluster_size + mft_record_count * record_size),
+            severity,
+            {"corrupted_timestamps": corrupted_count,
+             "note": "Random timestamps — tests if motor relies on temporal ordering"},
+        )]
+
+        return CorruptionResult(
+            corrupted_image=bytes(image),
+            corruption_log=log,
+            manifest_corruption={
+                "type": "timestamp_inconsistency",
+                "severity": severity,
+                "corrupted_timestamps": corrupted_count,
+            },
+        )
+
+
 # ─── Model Registry ──────────────────────────────────────────────────────────
 
 CORRUPTION_MODEL_REGISTRY = {
@@ -555,6 +896,11 @@ CORRUPTION_MODEL_REGISTRY = {
     CorruptionType.CRC_ERRORS: CRCErrorsModel,
     CorruptionType.SLOW_SECTORS: SlowSectorsModel,
     CorruptionType.TIMEOUT_PATTERN: TimeoutPatternModel,
+    # ─── Noise models (Objeción 6) ─────────────────────────────────────
+    CorruptionType.RANDOM_NOISE: RandomNoiseModel,
+    CorruptionType.PARTIAL_OVERWRITE: PartialOverwriteModel,
+    CorruptionType.FRAGMENTATION_CHAOS: FragmentationChaosModel,
+    CorruptionType.TIMESTAMP_INCONSISTENCY: TimestampInconsistencyModel,
 }
 
 

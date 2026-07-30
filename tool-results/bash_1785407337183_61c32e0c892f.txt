@@ -1,0 +1,535 @@
+
+======================================================================
+RECOVERYLAB — Experiment Runner
+======================================================================
+  Datasets: 5
+  Attacks: 19
+  Total scenarios: 95
+  Read budget: unlimited
+======================================================================
+
+
+────────────────────────────────────────────────────────────
+Dataset 1/5: dataset_001.img
+────────────────────────────────────────────────────────────
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 30688 (81.5% useful) | First file: 20928 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: MODERATE_SUPPORT
+
+  Attack A01: MFT 20% destruido
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 28864 (80.3% useful) | First file: 20928 reads | Integrity: 0.81
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 10713 (100.0% useful) | First file: 2777 reads | Integrity: 0.87
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: MODERATE_SUPPORT
+
+  Attack A02: MFT 40% destruido
+    Motor A: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 24168 (76.5% useful) | First file: 19024 reads | Integrity: 0.71
+    Motor B: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 6017 (100.0% useful) | First file: 873 reads | Integrity: 0.78
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: STRONG_SUPPORT
+
+  Attack A03: MFT 60% destruido
+    Motor A: Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 19624 (71.1% useful) | First file: 19024 reads | Integrity: 0.67
+    Motor B: Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 1473 (99.9% useful) | First file: 873 reads | Integrity: 0.76
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: STRONG_SUPPORT
+
+  Attack A04: Bitmap eliminado
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 30688 (81.5% useful) | First file: 20928 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: MODERATE_SUPPORT
+
+  Attack A05: Journal corrupto
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 30688 (81.5% useful) | First file: 20928 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: MODERATE_SUPPORT
+
+  Attack A06: Head crash inicio
+    Motor A: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18208 (68.8% useful) | First file: 0 reads | Integrity: 0.51
+    Motor B: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18212 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Δ Recovery: +0.00% | Δ Reads: -4 | H1: STRONG_REFUTATION
+
+  Attack A07: Head crash final
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 30688 (81.5% useful) | First file: 20928 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: MODERATE_SUPPORT
+
+  Attack A08: Scratch continuo
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 4 | Reads: 30688 (81.5% useful) | First file: 20928 reads | Integrity: 0.76
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 4 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.81
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: MODERATE_SUPPORT
+
+  Attack A09: Sectores intermitentes
+    Motor A: Recovery: 4/15 (26.7%) | Corrupt: 10 | Reads: 30152 (81.2% useful) | First file: 20928 reads | Integrity: 0.44
+    Motor B: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18212 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Δ Recovery: -26.67% | Δ Reads: +11940 | H1: STRONG_REFUTATION
+
+  Attack A10: CRC errors
+    Motor A: Recovery: 6/15 (40.0%) | Corrupt: 9 | Reads: 30688 (81.5% useful) | First file: 20928 reads | Integrity: 0.52
+    Motor B: Recovery: 6/15 (40.0%) | Corrupt: 9 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.58
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: MODERATE_SUPPORT
+
+  Attack A11: MFT + Bitmap destruidos
+    Motor A: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 25544 (77.8% useful) | First file: 20928 reads | Integrity: 0.71
+    Motor B: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 7393 (100.0% useful) | First file: 2777 reads | Integrity: 0.78
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: STRONG_SUPPORT
+
+  Attack A12: MFT + Journal + Bitmap
+    Motor A: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 24368 (76.7% useful) | First file: 19024 reads | Integrity: 0.77
+    Motor B: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 6217 (100.0% useful) | First file: 873 reads | Integrity: 0.84
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: STRONG_SUPPORT
+
+  Attack A13: Sectores lentos + MFT parcial
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 27672 (79.5% useful) | First file: 20928 reads | Integrity: 0.81
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 9521 (100.0% useful) | First file: 2777 reads | Integrity: 0.87
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: STRONG_SUPPORT
+
+  Attack A14: Timeout + MFT parcial
+    Motor A: Recovery: 12/15 (80.0%) | Corrupt: 0 | Reads: 29696 (80.9% useful) | First file: 20928 reads | Integrity: 0.86
+    Motor B: Recovery: 12/15 (80.0%) | Corrupt: 0 | Reads: 11545 (100.0% useful) | First file: 2777 reads | Integrity: 0.92
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: MODERATE_SUPPORT
+
+  Attack A15: Ruido aleatorio
+    Motor A: Recovery: 4/15 (26.7%) | Corrupt: 11 | Reads: 30688 (81.5% useful) | First file: 20928 reads | Integrity: 0.43
+    Motor B: Recovery: 4/15 (26.7%) | Corrupt: 11 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.49
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: MODERATE_SUPPORT
+
+  Attack A16: Sobrescritura parcial
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 30688 (81.5% useful) | First file: 20928 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: MODERATE_SUPPORT
+
+  Attack A17: Run lists corruptos
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 3 | Reads: 30920 (81.7% useful) | First file: 20928 reads | Integrity: 0.77
+    Motor B: Recovery: 9/15 (60.0%) | Corrupt: 5 | Reads: 11793 (100.0% useful) | First file: 2777 reads | Integrity: 0.73
+    Δ Recovery: -13.33% | Δ Reads: +19127 | H1: MODERATE_SUPPORT
+
+  Attack A18: Timestamps inconsistentes
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 30688 (81.5% useful) | First file: 20928 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: MODERATE_SUPPORT
+
+  Attack A19: Ruido + MFT parcial (combinado)
+    Motor A: Recovery: 5/15 (33.3%) | Corrupt: 7 | Reads: 27960 (79.7% useful) | First file: 19024 reads | Integrity: 0.50
+    Motor B: Recovery: 5/15 (33.3%) | Corrupt: 7 | Reads: 9809 (100.0% useful) | First file: 873 reads | Integrity: 0.56
+    Δ Recovery: +0.00% | Δ Reads: +18151 | H1: STRONG_SUPPORT
+
+────────────────────────────────────────────────────────────
+Dataset 2/5: dataset_002.img
+────────────────────────────────────────────────────────────
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 28872 (85.0% useful) | First file: 16736 reads | Integrity: 0.91
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A01: MFT 20% destruido
+    Motor A: Recovery: 12/15 (80.0%) | Corrupt: 0 | Reads: 28760 (85.0% useful) | First file: 16736 reads | Integrity: 0.87
+    Motor B: Recovery: 12/15 (80.0%) | Corrupt: 0 | Reads: 12193 (100.0% useful) | First file: 169 reads | Integrity: 0.92
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A02: MFT 40% destruido
+    Motor A: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 24320 (82.2% useful) | First file: 16632 reads | Integrity: 0.79
+    Motor B: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 7753 (100.0% useful) | First file: 65 reads | Integrity: 0.84
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A03: MFT 60% destruido
+    Motor A: Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 26728 (83.8% useful) | First file: 16736 reads | Integrity: 0.71
+    Motor B: Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 10161 (100.0% useful) | First file: 169 reads | Integrity: 0.76
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A04: Bitmap eliminado
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 28872 (85.0% useful) | First file: 16736 reads | Integrity: 0.91
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A05: Journal corrupto
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 28872 (85.0% useful) | First file: 16736 reads | Integrity: 0.91
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A06: Head crash inicio
+    Motor A: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 16624 (74.0% useful) | First file: 0 reads | Integrity: 0.52
+    Motor B: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 16628 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Δ Recovery: +0.00% | Δ Reads: -4 | H1: STRONG_REFUTATION
+
+  Attack A07: Head crash final
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 28872 (85.0% useful) | First file: 16736 reads | Integrity: 0.91
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A08: Scratch continuo
+    Motor A: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 28872 (85.0% useful) | First file: 16736 reads | Integrity: 0.86
+    Motor B: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.91
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A09: Sectores intermitentes
+    Motor A: Recovery: 5/15 (33.3%) | Corrupt: 9 | Reads: 28848 (85.0% useful) | First file: 16736 reads | Integrity: 0.50
+    Motor B: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 16628 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Δ Recovery: -33.33% | Δ Reads: +12220 | H1: STRONG_REFUTATION
+
+  Attack A10: CRC errors
+    Motor A: Recovery: 8/15 (53.3%) | Corrupt: 7 | Reads: 28872 (85.0% useful) | First file: 16736 reads | Integrity: 0.63
+    Motor B: Recovery: 8/15 (53.3%) | Corrupt: 7 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.67
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A11: MFT + Bitmap destruidos
+    Motor A: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 20472 (78.9% useful) | First file: 16736 reads | Integrity: 0.72
+    Motor B: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 3905 (100.0% useful) | First file: 169 reads | Integrity: 0.78
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: STRONG_SUPPORT
+
+  Attack A12: MFT + Journal + Bitmap
+    Motor A: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 25280 (82.9% useful) | First file: 17608 reads | Integrity: 0.79
+    Motor B: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 8713 (100.0% useful) | First file: 1041 reads | Integrity: 0.84
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A13: Sectores lentos + MFT parcial
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 28832 (85.0% useful) | First file: 16736 reads | Integrity: 0.82
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 12265 (100.0% useful) | First file: 169 reads | Integrity: 0.87
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A14: Timeout + MFT parcial
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 21560 (80.0% useful) | First file: 17608 reads | Integrity: 0.81
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 4993 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: STRONG_SUPPORT
+
+  Attack A15: Ruido aleatorio
+    Motor A: Recovery: 6/15 (40.0%) | Corrupt: 7 | Reads: 27880 (84.5% useful) | First file: 16736 reads | Integrity: 0.55
+    Motor B: Recovery: 6/15 (40.0%) | Corrupt: 7 | Reads: 11313 (100.0% useful) | First file: 169 reads | Integrity: 0.60
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A16: Sobrescritura parcial
+    Motor A: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 28872 (85.0% useful) | First file: 16736 reads | Integrity: 0.86
+    Motor B: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.91
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A17: Run lists corruptos
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 3 | Reads: 29856 (85.5% useful) | First file: 16736 reads | Integrity: 0.79
+    Motor B: Recovery: 9/15 (60.0%) | Corrupt: 4 | Reads: 12297 (100.0% useful) | First file: 169 reads | Integrity: 0.75
+    Δ Recovery: -13.33% | Δ Reads: +17559 | H1: MODERATE_SUPPORT
+
+  Attack A18: Timestamps inconsistentes
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 28872 (85.0% useful) | First file: 16736 reads | Integrity: 0.91
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+  Attack A19: Ruido + MFT parcial (combinado)
+    Motor A: Recovery: 5/15 (33.3%) | Corrupt: 7 | Reads: 27768 (84.4% useful) | First file: 16632 reads | Integrity: 0.51
+    Motor B: Recovery: 5/15 (33.3%) | Corrupt: 7 | Reads: 11201 (100.0% useful) | First file: 65 reads | Integrity: 0.56
+    Δ Recovery: +0.00% | Δ Reads: +16567 | H1: MODERATE_SUPPORT
+
+────────────────────────────────────────────────────────────
+Dataset 3/5: dataset_003.img
+────────────────────────────────────────────────────────────
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 29632 (77.5% useful) | First file: 23184 reads | Integrity: 0.89
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A01: MFT 20% destruido
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 26736 (75.0% useful) | First file: 23184 reads | Integrity: 0.79
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 8609 (100.0% useful) | First file: 5057 reads | Integrity: 0.87
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A02: MFT 40% destruido
+    Motor A: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 23392 (71.4% useful) | First file: 18280 reads | Integrity: 0.75
+    Motor B: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 5265 (100.0% useful) | First file: 153 reads | Integrity: 0.84
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A03: MFT 60% destruido
+    Motor A: Recovery: 5/15 (33.3%) | Corrupt: 1 | Reads: 20904 (68.0% useful) | First file: 18192 reads | Integrity: 0.59
+    Motor B: Recovery: 5/15 (33.3%) | Corrupt: 1 | Reads: 2777 (100.0% useful) | First file: 65 reads | Integrity: 0.68
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A04: Bitmap eliminado
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 29632 (77.5% useful) | First file: 23184 reads | Integrity: 0.89
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A05: Journal corrupto
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 29632 (77.5% useful) | First file: 23184 reads | Integrity: 0.89
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A06: Head crash inicio
+    Motor A: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18184 (63.3% useful) | First file: 0 reads | Integrity: 0.49
+    Motor B: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18189 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Δ Recovery: +0.00% | Δ Reads: -5 | H1: STRONG_REFUTATION
+
+  Attack A07: Head crash final
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 29632 (77.5% useful) | First file: 23184 reads | Integrity: 0.89
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A08: Scratch continuo
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 4 | Reads: 29632 (77.5% useful) | First file: 23184 reads | Integrity: 0.75
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 4 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.81
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A09: Sectores intermitentes
+    Motor A: Recovery: 3/15 (20.0%) | Corrupt: 11 | Reads: 29632 (77.5% useful) | First file: 23184 reads | Integrity: 0.38
+    Motor B: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18189 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Δ Recovery: -20.00% | Δ Reads: +11443 | H1: STRONG_REFUTATION
+
+  Attack A10: CRC errors
+    Motor A: Recovery: 4/15 (26.7%) | Corrupt: 11 | Reads: 29632 (77.5% useful) | First file: 23184 reads | Integrity: 0.42
+    Motor B: Recovery: 4/15 (26.7%) | Corrupt: 11 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.49
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A11: MFT + Bitmap destruidos
+    Motor A: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 25624 (73.9% useful) | First file: 23184 reads | Integrity: 0.70
+    Motor B: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 7497 (100.0% useful) | First file: 5057 reads | Integrity: 0.78
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A12: MFT + Journal + Bitmap
+    Motor A: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 25816 (74.1% useful) | First file: 23184 reads | Integrity: 0.70
+    Motor B: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 7689 (100.0% useful) | First file: 5057 reads | Integrity: 0.78
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A13: Sectores lentos + MFT parcial
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 28360 (76.4% useful) | First file: 23184 reads | Integrity: 0.80
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 10233 (100.0% useful) | First file: 5057 reads | Integrity: 0.87
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A14: Timeout + MFT parcial
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 27752 (75.9% useful) | First file: 23184 reads | Integrity: 0.80
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 9625 (100.0% useful) | First file: 5057 reads | Integrity: 0.87
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A15: Ruido aleatorio
+    Motor A: Recovery: 4/15 (26.7%) | Corrupt: 11 | Reads: 29632 (77.5% useful) | First file: 23184 reads | Integrity: 0.42
+    Motor B: Recovery: 4/15 (26.7%) | Corrupt: 11 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.49
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A16: Sobrescritura parcial
+    Motor A: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 29632 (77.5% useful) | First file: 23184 reads | Integrity: 0.84
+    Motor B: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.91
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A17: Run lists corruptos
+    Motor A: Recovery: 12/15 (80.0%) | Corrupt: 2 | Reads: 29128 (77.1% useful) | First file: 23184 reads | Integrity: 0.81
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 2 | Reads: 10777 (100.0% useful) | First file: 5057 reads | Integrity: 0.85
+    Δ Recovery: -6.67% | Δ Reads: +18351 | H1: STRONG_SUPPORT
+
+  Attack A18: Timestamps inconsistentes
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 29632 (77.5% useful) | First file: 23184 reads | Integrity: 0.89
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+  Attack A19: Ruido + MFT parcial (combinado)
+    Motor A: Recovery: 5/15 (33.3%) | Corrupt: 7 | Reads: 28808 (76.8% useful) | First file: 23184 reads | Integrity: 0.49
+    Motor B: Recovery: 5/15 (33.3%) | Corrupt: 7 | Reads: 10681 (100.0% useful) | First file: 5057 reads | Integrity: 0.56
+    Δ Recovery: +0.00% | Δ Reads: +18127 | H1: STRONG_SUPPORT
+
+────────────────────────────────────────────────────────────
+Dataset 4/5: dataset_004.img
+────────────────────────────────────────────────────────────
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 37728 (83.0% useful) | First file: 31152 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A01: MFT 20% destruido
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 37424 (82.9% useful) | First file: 31152 reads | Integrity: 0.82
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 15385 (100.0% useful) | First file: 9113 reads | Integrity: 0.87
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A02: MFT 40% destruido
+    Motor A: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 37384 (82.9% useful) | First file: 31152 reads | Integrity: 0.79
+    Motor B: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 15345 (100.0% useful) | First file: 9113 reads | Integrity: 0.84
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A03: MFT 60% destruido
+    Motor A: Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 26384 (75.7% useful) | First file: 22104 reads | Integrity: 0.69
+    Motor B: Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 4345 (100.0% useful) | First file: 65 reads | Integrity: 0.76
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: STRONG_SUPPORT
+
+  Attack A04: Bitmap eliminado
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 37728 (83.0% useful) | First file: 31152 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A05: Journal corrupto
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 37728 (83.0% useful) | First file: 31152 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A06: Head crash inicio
+    Motor A: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 22096 (71.0% useful) | First file: 0 reads | Integrity: 0.51
+    Motor B: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 22103 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Δ Recovery: +0.00% | Δ Reads: -7 | H1: STRONG_REFUTATION
+
+  Attack A07: Head crash final
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 37728 (83.0% useful) | First file: 31152 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A08: Scratch continuo
+    Motor A: Recovery: 12/15 (80.0%) | Corrupt: 3 | Reads: 37728 (83.0% useful) | First file: 31152 reads | Integrity: 0.81
+    Motor B: Recovery: 12/15 (80.0%) | Corrupt: 3 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.86
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A09: Sectores intermitentes
+    Motor A: Recovery: 6/15 (40.0%) | Corrupt: 8 | Reads: 37624 (83.0% useful) | First file: 31152 reads | Integrity: 0.54
+    Motor B: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 22103 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Δ Recovery: -40.00% | Δ Reads: +15521 | H1: STRONG_REFUTATION
+
+  Attack A10: CRC errors
+    Motor A: Recovery: 7/15 (46.7%) | Corrupt: 8 | Reads: 37728 (83.0% useful) | First file: 31152 reads | Integrity: 0.58
+    Motor B: Recovery: 7/15 (46.7%) | Corrupt: 8 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.63
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A11: MFT + Bitmap destruidos
+    Motor A: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 36496 (82.4% useful) | First file: 31152 reads | Integrity: 0.73
+    Motor B: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 14457 (100.0% useful) | First file: 9113 reads | Integrity: 0.78
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A12: MFT + Journal + Bitmap
+    Motor A: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 24488 (73.8% useful) | First file: 23080 reads | Integrity: 0.70
+    Motor B: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 2449 (100.0% useful) | First file: 1041 reads | Integrity: 0.78
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: STRONG_SUPPORT
+
+  Attack A13: Sectores lentos + MFT parcial
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 32528 (80.3% useful) | First file: 31152 reads | Integrity: 0.81
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 10489 (100.0% useful) | First file: 9113 reads | Integrity: 0.87
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A14: Timeout + MFT parcial
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 28656 (77.6% useful) | First file: 23080 reads | Integrity: 0.80
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 6617 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: STRONG_SUPPORT
+
+  Attack A15: Ruido aleatorio
+    Motor A: Recovery: 7/15 (46.7%) | Corrupt: 8 | Reads: 37728 (83.0% useful) | First file: 31152 reads | Integrity: 0.58
+    Motor B: Recovery: 7/15 (46.7%) | Corrupt: 8 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.63
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A16: Sobrescritura parcial
+    Motor A: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 37728 (83.0% useful) | First file: 31152 reads | Integrity: 0.86
+    Motor B: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.91
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A17: Run lists corruptos
+    Motor A: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 37472 (82.9% useful) | First file: 30896 reads | Integrity: 0.86
+    Motor B: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 15433 (100.0% useful) | First file: 8857 reads | Integrity: 0.91
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A18: Timestamps inconsistentes
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 37728 (83.0% useful) | First file: 31152 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+  Attack A19: Ruido + MFT parcial (combinado)
+    Motor A: Recovery: 6/15 (40.0%) | Corrupt: 6 | Reads: 36632 (82.5% useful) | First file: 31152 reads | Integrity: 0.56
+    Motor B: Recovery: 6/15 (40.0%) | Corrupt: 6 | Reads: 14593 (100.0% useful) | First file: 9113 reads | Integrity: 0.61
+    Δ Recovery: +0.00% | Δ Reads: +22039 | H1: MODERATE_SUPPORT
+
+────────────────────────────────────────────────────────────
+Dataset 5/5: dataset_005.img
+────────────────────────────────────────────────────────────
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 41032 (82.1% useful) | First file: 25208 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A01: MFT 20% destruido
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 40912 (82.0% useful) | First file: 25208 reads | Integrity: 0.81
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 16745 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A02: MFT 40% destruido
+    Motor A: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 36040 (79.6% useful) | First file: 25208 reads | Integrity: 0.78
+    Motor B: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 11873 (100.0% useful) | First file: 1041 reads | Integrity: 0.84
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: STRONG_SUPPORT
+
+  Attack A03: MFT 60% destruido
+    Motor A: Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 28104 (73.8% useful) | First file: 25208 reads | Integrity: 0.68
+    Motor B: Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 3937 (100.0% useful) | First file: 1041 reads | Integrity: 0.76
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: STRONG_SUPPORT
+
+  Attack A04: Bitmap eliminado
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 41032 (82.1% useful) | First file: 25208 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A05: Journal corrupto
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 41032 (82.1% useful) | First file: 25208 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A06: Head crash inicio
+    Motor A: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 24224 (69.6% useful) | First file: 0 reads | Integrity: 0.51
+    Motor B: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 24225 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Δ Recovery: +0.00% | Δ Reads: -1 | H1: STRONG_REFUTATION
+
+  Attack A07: Head crash final
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 41032 (82.1% useful) | First file: 25208 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A08: Scratch continuo
+    Motor A: Recovery: 10/15 (66.7%) | Corrupt: 5 | Reads: 41032 (82.1% useful) | First file: 25208 reads | Integrity: 0.71
+    Motor B: Recovery: 10/15 (66.7%) | Corrupt: 5 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.77
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A09: Sectores intermitentes
+    Motor A: Recovery: 4/15 (26.7%) | Corrupt: 10 | Reads: 41008 (82.1% useful) | First file: 25208 reads | Integrity: 0.44
+    Motor B: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 24225 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Δ Recovery: -26.67% | Δ Reads: +16783 | H1: STRONG_REFUTATION
+
+  Attack A10: CRC errors
+    Motor A: Recovery: 6/15 (40.0%) | Corrupt: 9 | Reads: 41032 (82.1% useful) | First file: 25208 reads | Integrity: 0.53
+    Motor B: Recovery: 6/15 (40.0%) | Corrupt: 9 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.58
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A11: MFT + Bitmap destruidos
+    Motor A: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 36888 (80.0% useful) | First file: 24224 reads | Integrity: 0.72
+    Motor B: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 12721 (100.0% useful) | First file: 57 reads | Integrity: 0.78
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A12: MFT + Journal + Bitmap
+    Motor A: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 38032 (80.6% useful) | First file: 24224 reads | Integrity: 0.72
+    Motor B: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 13865 (100.0% useful) | First file: 57 reads | Integrity: 0.78
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A13: Sectores lentos + MFT parcial
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 37032 (80.1% useful) | First file: 25208 reads | Integrity: 0.81
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 12865 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A14: Timeout + MFT parcial
+    Motor A: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 39936 (81.6% useful) | First file: 25208 reads | Integrity: 0.81
+    Motor B: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 15769 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A15: Ruido aleatorio
+    Motor A: Recovery: 7/15 (46.7%) | Corrupt: 8 | Reads: 41032 (82.1% useful) | First file: 25208 reads | Integrity: 0.57
+    Motor B: Recovery: 7/15 (46.7%) | Corrupt: 8 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.63
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A16: Sobrescritura parcial
+    Motor A: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 41032 (82.1% useful) | First file: 25208 reads | Integrity: 0.85
+    Motor B: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.91
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A17: Run lists corruptos
+    Motor A: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 41032 (82.1% useful) | First file: 25208 reads | Integrity: 0.85
+    Motor B: Recovery: 12/15 (80.0%) | Corrupt: 3 | Reads: 16849 (100.0% useful) | First file: 1041 reads | Integrity: 0.86
+    Δ Recovery: -6.67% | Δ Reads: +24183 | H1: MODERATE_SUPPORT
+
+  Attack A18: Timestamps inconsistentes
+    Motor A: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 41032 (82.1% useful) | First file: 25208 reads | Integrity: 0.90
+    Motor B: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Attack A19: Ruido + MFT parcial (combinado)
+    Motor A: Recovery: 6/15 (40.0%) | Corrupt: 6 | Reads: 37648 (80.5% useful) | First file: 25208 reads | Integrity: 0.55
+    Motor B: Recovery: 6/15 (40.0%) | Corrupt: 6 | Reads: 13481 (100.0% useful) | First file: 1041 reads | Integrity: 0.61
+    Δ Recovery: +0.00% | Δ Reads: +24167 | H1: MODERATE_SUPPORT
+
+  Results saved: output/results_frag/experiment_20260730_102857_results.json
+  Summary saved: output/results_frag/experiment_20260730_102857_summary.json
+
+======================================================================
+EXPERIMENT SUMMARY
+======================================================================
+  Total scenarios: 100
+  H1 supported: 95/100 (95.0%)
+  Avg Δ recovery rate: -1.87%
+  Avg Δ reads saved: +18530
+  Strength distribution: {'MODERATE_SUPPORT': 59, 'STRONG_SUPPORT': 31, 'STRONG_REFUTATION': 10}
+
+  VERDICT: REFUTED — H1 not supported (Motor B is worse)
+======================================================================

@@ -131,12 +131,16 @@ class NTFSImageBuilder:
     def __init__(self, volume_size: int = 10*1024*1024,
                  cluster_size: int = 4096,
                  serial_number: int = 0,
-                 mft_zone_fraction: float = 0.25):
+                 mft_zone_fraction: float = 0.25,
+                 fragmentation_rate: float = 0.0,
+                 fragmentation_seed: int = 0):
         self.volume_size = volume_size
         self.cluster_size = cluster_size
         self.sector_size = SECTOR_SIZE
         self.serial_number = serial_number
         self.mft_zone_fraction = mft_zone_fraction
+        self.fragmentation_rate = fragmentation_rate
+        self.fragmentation_seed = fragmentation_seed
 
         self.total_clusters = volume_size // cluster_size
         self.sectors_per_cluster = cluster_size // SECTOR_SIZE
@@ -554,29 +558,39 @@ class NTFSImageBuilder:
         return bytes(attr)
 
     def _encode_run_list(self, runs: List[DataRun]) -> bytes:
-        """Encode data runs into NTFS run list format."""
+        """
+        Encode data runs into NTFS run list format.
+
+        NTFS run list encoding:
+          - First run: absolute offset
+          - Subsequent runs: offset RELATIVE to the previous run's START position
+        """
         result = bytearray()
-        current_offset = 0
+        prev_start = 0
 
         for i, run in enumerate(runs):
             if i == 0:
+                # First run: absolute offset
                 current_offset = run.offset
             else:
-                current_offset = run.offset  # Already absolute
+                # Subsequent runs: offset relative to previous run's START
+                current_offset = run.offset - prev_start
+
+            prev_start = run.offset  # Track this run's start for next iteration
 
             # Determine how many bytes needed for length and offset
             length_bytes = self._bytes_needed(run.length)
-            offset_bytes = self._bytes_needed(abs(current_offset))
+            offset_bytes = self._bytes_needed_signed(current_offset)
 
             # Header byte: low nibble = length size, high nibble = offset size
             header = (length_bytes & 0x0F) | ((offset_bytes & 0x0F) << 4)
             result.append(header)
 
-            # Length (little-endian)
+            # Length (little-endian, unsigned)
             result.extend(run.length.to_bytes(length_bytes, 'little'))
 
-            # Offset (little-endian, signed)
-            if current_offset >= 0:
+            # Offset (little-endian, signed for relative offsets after first)
+            if i == 0:
                 result.extend(current_offset.to_bytes(offset_bytes, 'little'))
             else:
                 result.extend(current_offset.to_bytes(offset_bytes, 'little', signed=True))
@@ -589,6 +603,26 @@ class NTFSImageBuilder:
         if value == 0:
             return 1
         return (value.bit_length() + 7) // 8
+
+    @staticmethod
+    def _bytes_needed_signed(value: int) -> int:
+        """Return minimum bytes needed to represent a signed value in NTFS run list."""
+        if value == 0:
+            return 1
+        if value > 0:
+            # For positive values, we need enough bytes so the high bit
+            # is NOT set (otherwise it would be interpreted as negative)
+            # E.g., 137 needs 2 bytes because 0x89 has high bit set in 1 byte
+            bytes_needed = (value.bit_length() + 7) // 8
+            # Check if high bit of last byte would be set
+            if (value >> ((bytes_needed - 1) * 8)) & 0x80:
+                bytes_needed += 1
+            return max(1, bytes_needed)
+        else:
+            # Negative: need enough bytes for two's complement
+            abs_val = abs(value)
+            bytes_needed = (abs_val.bit_length() + 7) // 8 + 1
+            return max(1, bytes_needed)
 
     def _make_attr_index_root(self, children: List[int]) -> bytes:
         """Build $INDEX_ROOT attribute (0x90) for a directory."""
@@ -884,46 +918,133 @@ class NTFSImageBuilder:
     # ─── User Data Allocation ─────────────────────────────────────────────
 
     def _allocate_user_data(self):
-        """Allocate clusters for user files and assign data runs."""
+        """
+        Allocate clusters for user files and assign data runs.
+
+        With fragmentation_rate > 0, files are split across
+        non-contiguous clusters, simulating a real disk that has
+        been used for months or years.
+
+        Fragmentation strategy:
+          - fragmentation_rate = 0.0: All files contiguous (original behavior)
+          - fragmentation_rate = 0.3: 30% of files are fragmented
+          - fragmentation_rate = 0.7: 70% of files are fragmented
+
+        Fragmented files are split into 2-5 runs, with gaps between
+        runs that simulate other files having been written and deleted
+        in between.
+        """
+        import random as _rng
+
         L = self._layout
         next_cluster = L.data_start_cluster
 
+        # Use fragmentation_seed for deterministic fragmentation
+        frag_rng = _rng.Random(self.fragmentation_seed) if self.fragmentation_seed else _rng.Random(self.serial_number)
+
+        # First pass: allocate all files contiguously to get the base layout
+        # Then selectively fragment some files
+        contiguous_allocations = []
         for f in self._files:
             if len(f.data) == 0:
-                continue
-
-            # Decide: resident or non-resident?
-            # Files > 700 bytes go non-resident
-            if len(f.data) <= 700:
-                # Resident — data stored in MFT record itself
                 f.cluster_runs = []
                 continue
 
-            # Non-resident: allocate clusters
+            if len(f.data) <= 700:
+                f.cluster_runs = []
+                continue
+
             clusters_needed = (len(f.data) + self.cluster_size - 1) // self.cluster_size
-            start_cluster = next_cluster
+            contiguous_allocations.append((f, clusters_needed, next_cluster))
+            next_cluster += clusters_needed
 
-            # For now, contiguous allocation (no fragmentation)
-            # Fragmentation can be added by the Corruptor or dataset profiles
-            f.cluster_runs = [DataRun(length=clusters_needed, offset=start_cluster)]
+        # Check we have enough space
+        if next_cluster > self.total_clusters:
+            # Not enough space — reduce fragmentation or skip
+            for f, clusters_needed, start in contiguous_allocations:
+                f.cluster_runs = [DataRun(length=clusters_needed, offset=start)]
+                for c in range(start, start + clusters_needed):
+                    self._allocated_clusters.add(c)
+            return
 
-            # Mark clusters as allocated
-            for c in range(start_cluster, start_cluster + clusters_needed):
-                self._allocated_clusters.add(c)
+        # Second pass: decide which files to fragment
+        non_resident_files = [(f, cn, sc) for f, cn, sc in contiguous_allocations
+                              if cn >= 2]  # Only fragment files with 2+ clusters
 
-            next_cluster = start_cluster + clusters_needed
+        num_to_fragment = int(len(non_resident_files) * self.fragmentation_rate)
+        files_to_fragment = set()
+        if num_to_fragment > 0 and non_resident_files:
+            files_to_fragment = set(id(item[0]) for item in frag_rng.sample(
+                non_resident_files, min(num_to_fragment, len(non_resident_files))
+            ))
+
+        # Third pass: allocate with fragmentation
+        # We need to allocate all files in order, but fragmented files
+        # get split into multiple runs with gaps
+        next_cluster = L.data_start_cluster
+
+        for f, clusters_needed, _ in contiguous_allocations:
+            if id(f) in files_to_fragment and clusters_needed >= 2:
+                # Fragment this file into 2-5 runs
+                num_runs = frag_rng.randint(2, min(5, clusters_needed))
+
+                # Split clusters into runs
+                # Distribute clusters across runs (not evenly — more realistic)
+                remaining = clusters_needed
+                run_sizes = []
+                for i in range(num_runs - 1):
+                    # Each run gets between 1 and remaining-(num_runs-i-1) clusters
+                    max_for_this = remaining - (num_runs - i - 1)
+                    if max_for_this <= 1:
+                        run_size = 1
+                    else:
+                        run_size = frag_rng.randint(1, max_for_this)
+                    run_sizes.append(run_size)
+                    remaining -= run_size
+                run_sizes.append(remaining)  # Last run gets the rest
+
+                # Allocate runs with gaps between them
+                runs = []
+                for run_size in run_sizes:
+                    # Skip some clusters to simulate gaps (1-3 clusters)
+                    if runs:
+                        gap = frag_rng.randint(1, 3)
+                        next_cluster += gap
+
+                    run = DataRun(length=run_size, offset=next_cluster)
+                    runs.append(run)
+
+                    for c in range(next_cluster, next_cluster + run_size):
+                        self._allocated_clusters.add(c)
+                    next_cluster += run_size
+
+                f.cluster_runs = runs
+            else:
+                # Contiguous allocation
+                f.cluster_runs = [DataRun(length=clusters_needed, offset=next_cluster)]
+                for c in range(next_cluster, next_cluster + clusters_needed):
+                    self._allocated_clusters.add(c)
+                next_cluster += clusters_needed
 
     def _write_user_data(self):
         """Write actual file data to the image."""
         for f in self._files:
             if f.cluster_runs:
                 # Non-resident: write to clusters
+                # For fragmented files, data must be split across runs
+                data_offset = 0
                 for run in f.cluster_runs:
                     offset = run.offset * self.cluster_size
-                    end = offset + run.length * self.cluster_size
-                    # Write data (padded to cluster boundary)
-                    data_padded = f.data + b'\x00' * (run.length * self.cluster_size - len(f.data))
-                    self._image[offset:end] = data_padded[:run.length * self.cluster_size]
+                    run_data_size = run.length * self.cluster_size
+                    
+                    # Write data for this run
+                    chunk = f.data[data_offset:data_offset + run_data_size]
+                    # Pad to cluster boundary if needed
+                    if len(chunk) < run_data_size:
+                        chunk = chunk + b'\x00' * (run_data_size - len(chunk))
+                    
+                    self._image[offset:offset + run_data_size] = chunk[:run_data_size]
+                    data_offset += run_data_size
             # Resident data is written inside the MFT record itself
 
     # ─── Bootstrap Code ───────────────────────────────────────────────────

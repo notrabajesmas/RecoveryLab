@@ -1,0 +1,1014 @@
+     1→"""
+     2→RecoveryLab — NTFS Image Creator
+     3→==================================
+     4→Creates structurally valid NTFS disk images from scratch in pure Python.
+     5→
+     6→This is NOT a full NTFS driver — it creates minimal but valid NTFS structures
+     7→that our recovery motors can parse. The key advantage: we know every byte,
+     8→so the manifest.json ground truth is perfect.
+     9→
+    10→NTFS Layout (for a 10MB image, 4096-byte clusters):
+    11→  Cluster 0:       VBR (Volume Boot Record)
+    12→  Cluster 1:       VBR continuation / bootstrap
+    13→  Cluster 2+:      MFT Zone
+    14→    Records 0-11:  System files ($MFT, $MFTMirr, $LogFile, etc.)
+    15→    Records 12+:   User files
+    16→  After MFT:       MFT Mirror data
+    17→  After Mirror:    $Bitmap data
+    18→  After Bitmap:    $LogFile data
+    19→  After LogFile:   $UpCase table data
+    20→  After UpCase:    User file data area
+    21→
+    22→References:
+    23→  - NTFS Documentation by Richard Russon & Yuval Fledel
+    24→  - Windows NTFS documentation (Microsoft)
+    25→"""
+    26→
+    27→import struct
+    28→import hashlib
+    29→import os
+    30→from pathlib import Path
+    31→from dataclasses import dataclass, field
+    32→from typing import List, Optional, Tuple, Dict
+    33→from enum import IntEnum
+    34→
+    35→# ─── Constants ─────────────────────────────────────────────────────────────────
+    36→
+    37→SECTOR_SIZE = 512
+    38→MFT_RECORD_SIZE = 1024
+    39→INDEX_RECORD_SIZE = 4096
+    40→
+    41→# MFT Attribute Types
+    42→class AttrType(IntEnum):
+    43→    STANDARD_INFORMATION = 0x10
+    44→    ATTRIBUTE_LIST       = 0x20
+    45→    FILE_NAME            = 0x30
+    46→    OBJECT_ID            = 0x40
+    47→    SECURITY_DESCRIPTOR  = 0x50
+    48→    VOLUME_NAME          = 0x60
+    49→    VOLUME_INFORMATION   = 0x70
+    50→    DATA                 = 0x80
+    51→    INDEX_ROOT           = 0x90
+    52→    INDEX_ALLOCATION     = 0xA0
+    53→    BITMAP               = 0xB0
+    54→    REPARSE_POINT        = 0xC0
+    55→    EA_INFORMATION       = 0xD0
+    56→    EA                   = 0xE0
+    57→    LOGGED_UTILITY_STREAM = 0x100
+    58→
+    59→# MFT Record Flags
+    60→MFT_RECORD_IN_USE    = 0x0001
+    61→MFT_RECORD_DIRECTORY = 0x0002
+    62→
+    63→# Attribute Flags
+    64→ATTR_COMPRESSED = 0x0001
+    65→ATTR_ENCRYPTED  = 0x4000
+    66→ATTR_SPARSE     = 0x8000
+    67→
+    68→# NTFS File Name Flags
+    69→FILE_NAME_NTFS   = 0x01  # POSIX
+    70→FILE_NAME_DOS    = 0x02
+    71→FILE_NAME_WIN32  = 0x03
+    72→FILE_NAME_WIN32_DOS = 0x04
+    73→
+    74→# ─── Data Structures ──────────────────────────────────────────────────────────
+    75→
+    76→@dataclass
+    77→class DataRun:
+    78→    """Represents a single data run (extent) in an NTFS run list."""
+    79→    length: int        # Number of clusters
+    80→    offset: int        # Starting cluster (absolute for first run, relative after)
+    81→
+    82→@dataclass
+    83→class FileInfo:
+    84→    """Information about a user file to be placed in the image."""
+    85→    name: str
+    86→    data: bytes
+    87→    is_directory: bool = False
+    88→    parent_record: int = 5          # Root directory by default
+    89→    created: float = 0.0
+    90→    modified: float = 0.0
+    91→    # Filled by the builder
+    92→    record_number: int = -1
+    93→    cluster_runs: List[DataRun] = field(default_factory=list)
+    94→    sha256: str = ""
+    95→
+    96→@dataclass
+    97→class NTFSLayout:
+    98→    """Computed layout of the NTFS image."""
+    99→    volume_size: int
+   100→    cluster_size: int
+   101→    sector_size: int
+   102→    total_clusters: int
+   103→    mft_start_cluster: int
+   104→    mft_record_count: int
+   105→    mft_clusters: int
+   106→    mftmirr_start_cluster: int
+   107→    mftmirr_clusters: int
+   108→    bitmap_start_cluster: int
+   109→    bitmap_clusters: int
+   110→    logfile_start_cluster: int
+   111→    logfile_clusters: int
+   112→    upcase_start_cluster: int
+   113→    upcase_clusters: int
+   114→    data_start_cluster: int
+   115→    serial_number: int
+   116→
+   117→
+   118→# ─── NTFS Image Builder ───────────────────────────────────────────────────────
+   119→
+   120→class NTFSImageBuilder:
+   121→    """
+   122→    Builds a complete NTFS disk image from scratch.
+   123→
+   124→    Usage:
+   125→        builder = NTFSImageBuilder(volume_size=10*1024*1024, cluster_size=4096, serial=12345)
+   126→        builder.add_file("foto001.jpg", b"...", is_directory=False)
+   127→        builder.add_directory("Documents", parent_record=5)
+   128→        image_bytes = builder.build()
+   129→    """
+   130→
+   131→    def __init__(self, volume_size: int = 10*1024*1024,
+   132→                 cluster_size: int = 4096,
+   133→                 serial_number: int = 0,
+   134→                 mft_zone_fraction: float = 0.25):
+   135→        self.volume_size = volume_size
+   136→        self.cluster_size = cluster_size
+   137→        self.sector_size = SECTOR_SIZE
+   138→        self.serial_number = serial_number
+   139→        self.mft_zone_fraction = mft_zone_fraction
+   140→
+   141→        self.total_clusters = volume_size // cluster_size
+   142→        self.sectors_per_cluster = cluster_size // SECTOR_SIZE
+   143→
+   144→        self._files: List[FileInfo] = []
+   145→        self._directories: List[FileInfo] = []
+   146→        self._layout: Optional[NTFSLayout] = None
+   147→        self._image: bytearray = bytearray(volume_size)
+   148→        self._allocated_clusters: set = set()
+   149→
+   150→    def add_file(self, name: str, data: bytes,
+   151→                 parent_record: int = 5,
+   152→                 created: float = 0.0,
+   153→                 modified: float = 0.0) -> FileInfo:
+   154→        """Add a file to the image. Returns FileInfo for manifest tracking."""
+   155→        sha256 = hashlib.sha256(data).hexdigest()
+   156→        info = FileInfo(
+   157→            name=name, data=data,
+   158→            is_directory=False,
+   159→            parent_record=parent_record,
+   160→            created=created, modified=modified,
+   161→            sha256=sha256,
+   162→        )
+   163→        self._files.append(info)
+   164→        return info
+   165→
+   166→    def add_directory(self, name: str, parent_record: int = 5,
+   167→                      created: float = 0.0, modified: float = 0.0) -> FileInfo:
+   168→        """Add a directory. Returns FileInfo for manifest tracking."""
+   169→        info = FileInfo(
+   170→            name=name, data=b"",
+   171→            is_directory=True,
+   172→            parent_record=parent_record,
+   173→            created=created, modified=modified,
+   174→        )
+   175→        self._directories.append(info)
+   176→        return info
+   177→
+   178→    def build(self) -> Tuple[bytearray, NTFSLayout, List[FileInfo]]:
+   179→        """
+   180→        Build the complete NTFS image.
+   181→
+   182→        Returns:
+   183→            (image_bytes, layout, all_files_with_cluster_info)
+   184→        """
+   185→        # 1. Compute layout
+   186→        self._compute_layout()
+   187→
+   188→        # 2. Write VBR
+   189→        self._write_vbr()
+   190→
+   191→        # 3. Allocate clusters for user data
+   192→        self._allocate_user_data()
+   193→
+   194→        # 4. Write MFT records
+   195→        self._write_mft()
+   196→
+   197→        # 5. Write MFT Mirror
+   198→        self._write_mftmirr()
+   199→
+   200→        # 6. Write Bitmap
+   201→        self._write_bitmap()
+   202→
+   203→        # 7. Write LogFile
+   204→        self._write_logfile()
+   205→
+   206→        # 8. Write UpCase table
+   207→        self._write_upcase()
+   208→
+   209→        # 9. Write user file data
+   210→        self._write_user_data()
+   211→
+   212→        # 10. Write bootstrap code
+   213→        self._write_bootstrap()
+   214→
+   215→        return bytes(self._image), self._layout, self._files + self._directories
+   216→
+   217→    # ─── Layout Computation ───────────────────────────────────────────────
+   218→
+   219→    def _compute_layout(self):
+   220→        """Compute where each structure lives on disk."""
+   221→        total = self.total_clusters
+   222→        cs = self.cluster_size
+   223→        records_per_cluster = cs // MFT_RECORD_SIZE
+   224→
+   225→        # MFT starts at cluster 2 (after VBR)
+   226→        mft_start = 2
+   227→
+   228→        # We need system records (0-11) + user files + user directories
+   229→        total_user_items = len(self._files) + len(self._directories)
+   230→        total_records = 12 + total_user_items   # 12 system + user items
+   231→        mft_clusters = (total_records * MFT_RECORD_SIZE + cs - 1) // cs
+   232→
+   233→        # MFT Mirror: first 4 MFT records (4 * 1024 = 4096 = 1 cluster)
+   234→        mftmirr_start = mft_start + mft_clusters
+   235→        mftmirr_clusters = 1
+   236→
+   237→        # Bitmap: 1 bit per cluster
+   238→        bitmap_bytes = (total + 7) // 8
+   239→        bitmap_clusters = (bitmap_bytes + cs - 1) // cs
+   240→
+   241→        bitmap_start = mftmirr_start + mftmirr_clusters
+   242→
+   243→        # LogFile: 2 clusters (minimal)
+   244→        logfile_start = bitmap_start + bitmap_clusters
+   245→        logfile_clusters = 2
+   246→
+   247→        # UpCase table: 128KB (65536 entries * 2 bytes)
+   248→        upcase_bytes = 65536 * 2
+   249→        upcase_clusters = (upcase_bytes + cs - 1) // cs
+   250→        upcase_start = logfile_start + logfile_clusters
+   251→
+   252→        # Data area starts after UpCase
+   253→        data_start = upcase_start + upcase_clusters
+   254→
+   255→        # Assign record numbers
+   256→        # Directories first (so files can reference them), then files
+   257→        record_num = 12  # After system files
+   258→        for d in self._directories:
+   259→            d.record_number = record_num
+   260→            record_num += 1
+   261→        for f in self._files:
+   262→            f.record_number = record_num
+   263→            record_num += 1
+   264→
+   265→        self._layout = NTFSLayout(
+   266→            volume_size=self.volume_size,
+   267→            cluster_size=self.cluster_size,
+   268→            sector_size=self.sector_size,
+   269→            total_clusters=total,
+   270→            mft_start_cluster=mft_start,
+   271→            mft_record_count=total_records,
+   272→            mft_clusters=mft_clusters,
+   273→            mftmirr_start_cluster=mftmirr_start,
+   274→            mftmirr_clusters=mftmirr_clusters,
+   275→            bitmap_start_cluster=bitmap_start,
+   276→            bitmap_clusters=bitmap_clusters,
+   277→            logfile_start_cluster=logfile_start,
+   278→            logfile_clusters=logfile_clusters,
+   279→            upcase_start_cluster=upcase_start,
+   280→            upcase_clusters=upcase_clusters,
+   281→            data_start_cluster=data_start,
+   282→            serial_number=self.serial_number,
+   283→        )
+   284→
+   285→    # ─── VBR (Volume Boot Record) ─────────────────────────────────────────
+   286→
+   287→    def _write_vbr(self):
+   288→        """Write the Volume Boot Record (sector 0)."""
+   289→        L = self._layout
+   290→        vbr = bytearray(SECTOR_SIZE)
+   291→
+   292→        # Jump instruction
+   293→        vbr[0:3] = b'\xEB\x52\x90'
+   294→
+   295→        # OEM ID
+   296→        vbr[3:11] = b'NTFS    '
+   297→
+   298→        # BPB (BIOS Parameter Block)
+   299→        struct.pack_into('<H', vbr, 11, self.sector_size)       # Bytes per sector
+   300→        vbr[13] = self.sectors_per_cluster                        # Sectors per cluster
+   301→        struct.pack_into('<H', vbr, 14, 0)                       # Reserved sectors
+   302→        vbr[16] = 0                                               # Always 0 for NTFS
+   303→        vbr[17] = 0                                               # Always 0 for NTFS
+   304→        vbr[18] = 0                                               # Always 0 for NTFS
+   305→        struct.pack_into('<H', vbr, 19, 0)                       # Not used (0)
+   306→        vbr[21] = 0xF8                                            # Media descriptor (hard disk)
+   307→        struct.pack_into('<H', vbr, 22, 0)                       # Always 0 for NTFS
+   308→        struct.pack_into('<H', vbr, 24, self.sectors_per_cluster)# Sectors per track (fake)
+   309→        struct.pack_into('<H', vbr, 26, 255)                     # Number of heads (fake)
+   310→        struct.pack_into('<I', vbr, 28, 0)                       # Hidden sectors
+   311→        struct.pack_into('<I', vbr, 32, 0)                       # Always 0 for NTFS
+   312→
+   313→        # Extended BPB
+   314→        struct.pack_into('<Q', vbr, 40, L.total_clusters * self.sectors_per_cluster)  # Total sectors
+   315→        struct.pack_into('<Q', vbr, 48, L.mft_start_cluster)     # MFT start cluster
+   316→        struct.pack_into('<Q', vbr, 56, L.mftmirr_start_cluster) # MFT mirror cluster
+   317→        vbr[64] = 0xF6   # Clusters per MFT record: -10 → 2^10 = 1024
+   318→        # Actually: signed byte, 0xF6 = -10, meaning 2^10 = 1024 bytes
+   319→        vbr[65] = 0      # Reserved
+   320→        vbr[66] = 0x00   # Clusters per Index Record (0 means default)
+   321→        vbr[67] = 0      # Reserved
+   322→
+   323→        # Volume serial number
+   324→        struct.pack_into('<I', vbr, 72, L.serial_number & 0xFFFFFFFF)
+   325→
+   326→        # Checksum
+   327→        struct.pack_into('<I', vbr, 76, 0)  # Placeholder
+   328→
+   329→        # Boot signature
+   330→        vbr[510] = 0x55
+   331→        vbr[511] = 0xAA
+   332→
+   333→        self._image[0:SECTOR_SIZE] = vbr
+   334→
+   335→    # ─── MFT Record Construction ──────────────────────────────────────────
+   336→
+   337→    def _make_mft_record(self, record_number: int, in_use: bool = True,
+   338→                         is_directory: bool = False,
+   339→                         attrs: Optional[List[bytes]] = None) -> bytes:
+   340→        """Build a single MFT file record (1024 bytes)."""
+   341→        rec = bytearray(MFT_RECORD_SIZE)
+   342→
+   343→        # ─── Header ───
+   344→        rec[0:4] = b'FILE'                                 # Signature
+   345→        struct.pack_into('<H', rec, 4, 48)                  # Fixup offset
+   346→        struct.pack_into('<H', rec, 6, 3)                   # Fixup count (1 + 2 entries)
+   347→        struct.pack_into('<Q', rec, 8, 0)                   # LSN
+   348→        struct.pack_into('<H', rec, 16, 1)                  # Sequence number
+   349→        struct.pack_into('<H', rec, 18, 1)                  # Hard link count
+   350→        struct.pack_into('<H', rec, 20, 56)                 # First attribute offset
+   351→        flags = 0
+   352→        if in_use:
+   353→            flags |= MFT_RECORD_IN_USE
+   354→        if is_directory:
+   355→            flags |= MFT_RECORD_DIRECTORY
+   356→        struct.pack_into('<H', rec, 22, flags)              # Flags
+   357→
+   358→        # Write attributes
+   359→        offset = 56  # After header
+   360→        if attrs:
+   361→            for attr_data in attrs:
+   362→                rec[offset:offset+len(attr_data)] = attr_data
+   363→                offset += len(attr_data)
+   364→
+   365→        # End marker
+   366→        struct.pack_into('<I', rec, offset, 0xFFFFFFFF)
+   367→
+   368→        # Used size
+   369→        struct.pack_into('<I', rec, 24, offset + 4)         # Used size of record
+   370→        struct.pack_into('<I', rec, 28, MFT_RECORD_SIZE)    # Allocated size
+   371→
+   372→        # Fixup values (simple: just use 0x0001 as the update sequence)
+   373→        fixup_value = 0x0001
+   374→        struct.pack_into('<H', rec, 48, fixup_value)         # Fixup value at offset 48
+   375→
+   376→        # Apply fixup to last 2 bytes of each sector
+   377→        # Sector 0: bytes 510-511
+   378→        original_510 = struct.unpack_from('<H', rec, 510)[0]
+   379→        struct.pack_into('<H', rec, 510, fixup_value)
+   380→        # Sector 1: bytes 1022-1023
+   381→        original_1022 = struct.unpack_from('<H', rec, 1022)[0]
+   382→        struct.pack_into('<H', rec, 1022, fixup_value)
+   383→
+   384→        # Store originals at fixup area (offset 50, 52)
+   385→        struct.pack_into('<H', rec, 50, original_510)
+   386→        struct.pack_into('<H', rec, 52, original_1022)
+   387→
+   388→        return bytes(rec)
+   389→
+   390→    # ─── Attribute Builders ────────────────────────────────────────────────
+   391→
+   392→    def _make_attr_standard_information(self, created: float = 0.0,
+   393→                                         modified: float = 0.0) -> bytes:
+   394→        """Build $STANDARD_INFORMATION attribute (0x10)."""
+   395→        attr = bytearray(72 + 24)  # header (resident) + 72 bytes data
+   396→        # Actually: resident header is 24 bytes, then data follows
+   397→
+   398→        # Resident attribute header
+   399→        struct.pack_into('<I', attr, 0, AttrType.STANDARD_INFORMATION)  # Type
+   400→        struct.pack_into('<I', attr, 4, 96)                              # Total length
+   401→        attr[8] = 0                                                      # Non-resident = 0
+   402→        attr[9] = 0                                                      # Name length
+   403→        struct.pack_into('<H', attr, 10, 24)                             # Offset to name
+   404→        struct.pack_into('<H', attr, 12, 0)                              # Flags
+   405→        struct.pack_into('<H', attr, 14, 0)                              # Attribute ID
+   406→        struct.pack_into('<I', attr, 16, 72)                             # Data length
+   407→        struct.pack_into('<H', attr, 20, 24)                             # Offset to data
+   408→        attr[22] = 0                                                     # Indexed flag
+   409→        attr[23] = 0                                                     # Padding
+   410→
+   411→        # $STANDARD_INFORMATION data (72 bytes)
+   412→        # NTFS timestamps are 100-nanosecond intervals since 1601-01-01
+   413→        # For simplicity, use a fixed base timestamp
+   414→        base_ts = 132485760000000000  # ~2020-01-01
+   415→        created_ts = base_ts + int(created * 10000000)
+   416→        modified_ts = base_ts + int(modified * 10000000)
+   417→
+   418→        struct.pack_into('<Q', attr, 24, created_ts)        # Creation time
+   419→        struct.pack_into('<Q', attr, 32, modified_ts)        # Modification time
+   420→        struct.pack_into('<Q', attr, 40, modified_ts)        # MFT change time
+   421→        struct.pack_into('<Q', attr, 48, created_ts)         # Access time
+   422→        struct.pack_into('<I', attr, 56, 0x00000020)         # File attributes (Archive)
+   423→        struct.pack_into('<I', attr, 60, 0)                  # Max versions
+   424→        struct.pack_into('<I', attr, 64, 0)                  # Version number
+   425→        struct.pack_into('<I', attr, 68, 0)                  # Class ID
+   426→        struct.pack_into('<I', attr, 72, 0)                  # Owner ID
+   427→        struct.pack_into('<I', attr, 76, 0)                  # Security ID
+   428→        struct.pack_into('<Q', attr, 80, 0)                  # Quota charged
+   429→        struct.pack_into('<Q', attr, 88, 0)                  # USN
+   430→
+   431→        return bytes(attr[:96])
+   432→
+   433→    def _make_attr_file_name(self, name: str, parent_record: int = 5,
+   434→                              is_directory: bool = False,
+   435→                              created: float = 0.0,
+   436→                              modified: float = 0.0,
+   437→                              file_size: int = 0) -> bytes:
+   438→        """Build $FILE_NAME attribute (0x30)."""
+   439→        # Encode name as UTF-16LE
+   440→        name_bytes = name.encode('utf-16-le')
+   441→        name_len = len(name_bytes)
+   442→        data_size = 66 + name_len
+   443→        total_size = 24 + data_size  # resident header + data
+   444→
+   445→        attr = bytearray(total_size + 7)  # +7 for alignment
+   446→        # Round up to 8-byte boundary
+   447→        total_size = ((total_size + 7) // 8) * 8
+   448→
+   449→        # Resident attribute header
+   450→        struct.pack_into('<I', attr, 0, AttrType.FILE_NAME)
+   451→        struct.pack_into('<I', attr, 4, total_size)
+   452→        attr[8] = 0                                  # Non-resident = 0
+   453→        attr[9] = 0                                  # Name length
+   454→        struct.pack_into('<H', attr, 10, 24)         # Offset to name
+   455→        struct.pack_into('<H', attr, 12, 0)          # Flags
+   456→        struct.pack_into('<H', attr, 14, 1)          # Attribute ID
+   457→        struct.pack_into('<I', attr, 16, data_size)   # Data length
+   458→        struct.pack_into('<H', attr, 20, 24)         # Offset to data
+   459→        attr[22] = 1                                 # Indexed flag
+   460→        attr[23] = 0                                 # Padding
+   461→
+   462→        # $FILE_NAME data
+   463→        # Parent directory reference (8 bytes: record_number + sequence)
+   464→        struct.pack_into('<I', attr, 24, parent_record)   # Parent MFT record number
+   465→        struct.pack_into('<H', attr, 28, 1)               # Parent sequence number
+   466→        struct.pack_into('<H', attr, 30, 0)               # Padding
+   467→
+   468→        base_ts = 132485760000000000
+   469→        created_ts = base_ts + int(created * 10000000)
+   470→        modified_ts = base_ts + int(modified * 10000000)
+   471→
+   472→        struct.pack_into('<Q', attr, 32, created_ts)       # Creation time
+   473→        struct.pack_into('<Q', attr, 40, modified_ts)      # Modification time
+   474→        struct.pack_into('<Q', attr, 48, modified_ts)      # MFT change time
+   475→        struct.pack_into('<Q', attr, 56, created_ts)       # Access time
+   476→
+   477→        struct.pack_into('<Q', attr, 64, file_size)        # Allocated size
+   478→        struct.pack_into('<Q', attr, 72, file_size)        # Real size
+   479→
+   480→        flags = 0x10000000 if is_directory else 0x00000020  # DIRECTORY or ARCHIVE
+   481→        struct.pack_into('<I', attr, 80, flags)            # File attributes
+   482→
+   483→        struct.pack_into('<I', attr, 84, 0)               # Reparse / EA
+   484→        attr[88] = len(name) // 2 + (len(name) % 2)       # Name length in UTF-16 chars
+   485→        # Actually, name length in characters
+   486→        name_chars = len(name)
+   487→        attr[88] = name_chars                               # Name length in characters
+   488→        attr[89] = FILE_NAME_WIN32                          # Name type
+   489→
+   490→        # Name (UTF-16LE)
+   491→        attr[90:90+name_len] = name_bytes
+   492→
+   493→        return bytes(attr[:total_size])
+   494→
+   495→    def _make_attr_data_resident(self, data: bytes) -> bytes:
+   496→        """Build a resident $DATA attribute (0x80) for small files."""
+   497→        data_len = len(data)
+   498→        total_size = 24 + data_len
+   499→        total_size = ((total_size + 7) // 8) * 8  # 8-byte alignment
+   500→
+   501→        attr = bytearray(total_size)
+   502→
+   503→        struct.pack_into('<I', attr, 0, AttrType.DATA)
+   504→        struct.pack_into('<I', attr, 4, total_size)
+   505→        attr[8] = 0                                  # Non-resident = 0
+   506→        attr[9] = 0                                  # Name length
+   507→        struct.pack_into('<H', attr, 10, 24)         # Offset to name
+   508→        struct.pack_into('<H', attr, 12, 0)          # Flags
+   509→        struct.pack_into('<H', attr, 14, 2)          # Attribute ID
+   510→        struct.pack_into('<I', attr, 16, data_len)    # Data length
+   511→        struct.pack_into('<H', attr, 20, 24)         # Offset to data
+   512→        attr[22] = 0                                 # Indexed flag
+   513→        attr[23] = 0                                 # Padding
+   514→
+   515→        attr[24:24+data_len] = data
+   516→
+   517→        return bytes(attr)
+   518→
+   519→    def _make_attr_data_nonresident(self, runs: List[DataRun],
+   520→                                     data_size: int) -> bytes:
+   521→        """Build a non-resident $DATA attribute (0x80) with run list."""
+   522→        # Encode data runs
+   523→        run_list = self._encode_run_list(runs)
+   524→        run_list += b'\x00'  # End marker
+   525→
+   526→        # Non-resident header: 64 bytes + run list
+   527→        total_size = 64 + len(run_list)
+   528→        total_size = ((total_size + 7) // 8) * 8  # 8-byte alignment
+   529→
+   530→        attr = bytearray(total_size)
+   531→
+   532→        struct.pack_into('<I', attr, 0, AttrType.DATA)
+   533→        struct.pack_into('<I', attr, 4, total_size)
+   534→        attr[8] = 1                                  # Non-resident = 1
+   535→        attr[9] = 0                                  # Name length
+   536→        struct.pack_into('<H', attr, 10, 64)         # Offset to name
+   537→        struct.pack_into('<H', attr, 12, 0)          # Flags
+   538→        struct.pack_into('<H', attr, 14, 2)          # Attribute ID
+   539→
+   540→        # Non-resident specific fields
+   541→        struct.pack_into('<Q', attr, 16, 0)          # Starting VCN
+   542→        last_vcn = sum(r.length for r in runs) - 1
+   543→        struct.pack_into('<Q', attr, 24, last_vcn)   # Last VCN
+   544→        struct.pack_into('<H', attr, 32, 64)         # Offset to data runs
+   545→        struct.pack_into('<H', attr, 34, 0)          # Compression unit size
+   546→        struct.pack_into('<I', attr, 36, 0)          # Padding
+   547→        struct.pack_into('<Q', attr, 40, data_size)   # Allocated size (in bytes)
+   548→        struct.pack_into('<Q', attr, 48, data_size)   # Real size
+   549→        struct.pack_into('<Q', attr, 56, data_size)   # Initialized size
+   550→
+   551→        # Run list
+   552→        attr[64:64+len(run_list)] = run_list
+   553→
+   554→        return bytes(attr)
+   555→
+   556→    def _encode_run_list(self, runs: List[DataRun]) -> bytes:
+   557→        """Encode data runs into NTFS run list format."""
+   558→        result = bytearray()
+   559→        current_offset = 0
+   560→
+   561→        for i, run in enumerate(runs):
+   562→            if i == 0:
+   563→                current_offset = run.offset
+   564→            else:
+   565→                current_offset = run.offset  # Already absolute
+   566→
+   567→            # Determine how many bytes needed for length and offset
+   568→            length_bytes = self._bytes_needed(run.length)
+   569→            offset_bytes = self._bytes_needed(abs(current_offset))
+   570→
+   571→            # Header byte: low nibble = length size, high nibble = offset size
+   572→            header = (length_bytes & 0x0F) | ((offset_bytes & 0x0F) << 4)
+   573→            result.append(header)
+   574→
+   575→            # Length (little-endian)
+   576→            result.extend(run.length.to_bytes(length_bytes, 'little'))
+   577→
+   578→            # Offset (little-endian, signed)
+   579→            if current_offset >= 0:
+   580→                result.extend(current_offset.to_bytes(offset_bytes, 'little'))
+   581→            else:
+   582→                result.extend(current_offset.to_bytes(offset_bytes, 'little', signed=True))
+   583→
+   584→        return bytes(result)
+   585→
+   586→    @staticmethod
+   587→    def _bytes_needed(value: int) -> int:
+   588→        """Return minimum bytes needed to represent a value."""
+   589→        if value == 0:
+   590→            return 1
+   591→        return (value.bit_length() + 7) // 8
+   592→
+   593→    def _make_attr_index_root(self, children: List[int]) -> bytes:
+   594→        """Build $INDEX_ROOT attribute (0x90) for a directory."""
+   595→        # Index root header + entry
+   596→        # Minimal: just the header with no entries
+   597→        entry_size = 0
+   598→        for child_rec in children:
+   599→            # Each index entry: 16 bytes minimum + filename
+   600→            entry_size += 16 + 4  # minimal entry
+   601→
+   602→        data_size = 16 + 16 + entry_size  # INDEX_ROOT header + node header + entries
+   603→        total_size = 24 + data_size
+   604→        total_size = ((total_size + 7) // 8) * 8
+   605→
+   606→        attr = bytearray(total_size)
+   607→
+   608→        struct.pack_into('<I', attr, 0, AttrType.INDEX_ROOT)
+   609→        struct.pack_into('<I', attr, 4, total_size)
+   610→        attr[8] = 0
+   611→        attr[9] = 4   # $I30 name
+   612→        struct.pack_into('<H', attr, 10, 24)
+   613→        struct.pack_into('<H', attr, 12, 0)
+   614→        struct.pack_into('<H', attr, 14, 3)  # Attribute ID
+   615→        struct.pack_into('<I', attr, 16, data_size)
+   616→        struct.pack_into('<H', attr, 20, 24)
+   617→        attr[22] = 0
+   618→        attr[23] = 0
+   619→
+   620→        # INDEX_ROOT header
+   621→        struct.pack_into('<I', attr, 24, AttrType.INDEX_ROOT)  # Attribute type
+   622→        struct.pack_into('<I', attr, 28, 16)                    # Collation rule (filename)
+   623→        struct.pack_into('<I', attr, 32, MFT_RECORD_SIZE)       # Index entry size
+   624→        attr[36] = 1                                              # Clusters per index record
+   625→
+   626→        # Index node header (starts at offset 40 from attr start)
+   627→        struct.pack_into('<I', attr, 40, 16)                    # Offset to first entry
+   628→        struct.pack_into('<I', attr, 44, 16 + entry_size)       # Total size of entries
+   629→        struct.pack_into('<I', attr, 48, 16 + entry_size)       # Allocated size
+   630→        struct.pack_into('<I', attr, 52, 0)                      # Flags (leaf node)
+   631→
+   632→        return bytes(attr[:total_size])
+   633→
+   634→    # ─── MFT Writing ──────────────────────────────────────────────────────
+   635→
+   636→    def _write_mft(self):
+   637→        """Write all MFT records."""
+   638→        L = self._layout
+   639→        mft_offset = L.mft_start_cluster * self.cluster_size
+   640→
+   641→        # System file records
+   642→        system_records = self._build_system_records()
+   643→
+   644→        # User directory records
+   645→        dir_records = []
+   646→        for d in self._directories:
+   647→            children = [f.record_number for f in self._files
+   648→                       if f.parent_record == d.record_number]
+   649→            attrs = [
+   650→                self._make_attr_standard_information(d.created, d.modified),
+   651→                self._make_attr_file_name(d.name, d.parent_record, True,
+   652→                                          d.created, d.modified, 0),
+   653→                self._make_attr_index_root(children),
+   654→            ]
+   655→            rec = self._make_mft_record(d.record_number, True, True, attrs)
+   656→            dir_records.append(rec)
+   657→
+   658→        # User file records
+   659→        file_records = []
+   660→        for f in self._files:
+   661→            if f.cluster_runs:
+   662→                data_attr = self._make_attr_data_nonresident(
+   663→                    f.cluster_runs, len(f.data))
+   664→            else:
+   665→                data_attr = self._make_attr_data_resident(f.data)
+   666→
+   667→            attrs = [
+   668→                self._make_attr_standard_information(f.created, f.modified),
+   669→                self._make_attr_file_name(f.name, f.parent_record, False,
+   670→                                          f.created, f.modified, len(f.data)),
+   671→                data_attr,
+   672→            ]
+   673→            rec = self._make_mft_record(f.record_number, True, False, attrs)
+   674→            file_records.append(rec)
+   675→
+   676→        # Write $MFT entry (record 0) — must reference itself
+   677→        mft_attrs = [
+   678→            self._make_attr_standard_information(),
+   679→            self._make_attr_file_name("$MFT", 5, False, 0, 0, 0),
+   680→            self._make_attr_data_nonresident(
+   681→                [DataRun(length=L.mft_clusters, offset=L.mft_start_cluster)],
+   682→                L.mft_clusters * self.cluster_size
+   683→            ),
+   684→        ]
+   685→        mft_rec = self._make_mft_record(0, True, False, mft_attrs)
+   686→
+   687→        # Write all records
+   688→        all_records = [mft_rec] + system_records[1:] + dir_records + file_records
+   689→        for i, rec in enumerate(all_records):
+   690→            offset = mft_offset + i * MFT_RECORD_SIZE
+   691→            self._image[offset:offset+MFT_RECORD_SIZE] = rec
+   692→
+   693→    def _build_system_records(self) -> List[bytes]:
+   694→        """Build MFT records for system files (0-11)."""
+   695→        L = self._layout
+   696→        records = [b''] * 12  # Placeholder, will fill
+   697→
+   698→        # Record 0: $MFT — will be written separately
+   699→        # Record 1: $MFTMirr
+   700→        records[1] = self._make_mft_record(1, True, False, [
+   701→            self._make_attr_standard_information(),
+   702→            self._make_attr_file_name("$MFTMirr", 5, False, 0, 0, 0),
+   703→            self._make_attr_data_nonresident(
+   704→                [DataRun(length=L.mftmirr_clusters, offset=L.mftmirr_start_cluster)],
+   705→                L.mftmirr_clusters * self.cluster_size
+   706→            ),
+   707→        ])
+   708→
+   709→        # Record 2: $LogFile
+   710→        records[2] = self._make_mft_record(2, True, False, [
+   711→            self._make_attr_standard_information(),
+   712→            self._make_attr_file_name("$LogFile", 5, False, 0, 0, 0),
+   713→            self._make_attr_data_nonresident(
+   714→                [DataRun(length=L.logfile_clusters, offset=L.logfile_start_cluster)],
+   715→                L.logfile_clusters * self.cluster_size
+   716→            ),
+   717→        ])
+   718→
+   719→        # Record 3: $Volume
+   720→        records[3] = self._make_mft_record(3, True, False, [
+   721→            self._make_attr_standard_information(),
+   722→            self._make_attr_file_name("$Volume", 5, False, 0, 0, 0),
+   723→            # VOLUME_INFORMATION attribute
+   724→            self._make_attr_volume_info(),
+   725→        ])
+   726→
+   727→        # Record 4: $AttrDef
+   728→        records[4] = self._make_mft_record(4, True, False, [
+   729→            self._make_attr_standard_information(),
+   730→            self._make_attr_file_name("$AttrDef", 5, False, 0, 0, 0),
+   731→        ])
+   732→
+   733→        # Record 5: Root directory (.)
+   734→        records[5] = self._make_mft_record(5, True, True, [
+   735→            self._make_attr_standard_information(),
+   736→            self._make_attr_file_name(".", 5, True, 0, 0, 0),
+   737→            self._make_attr_index_root([]),
+   738→        ])
+   739→
+   740→        # Record 6: $Bitmap
+   741→        records[6] = self._make_mft_record(6, True, False, [
+   742→            self._make_attr_standard_information(),
+   743→            self._make_attr_file_name("$Bitmap", 5, False, 0, 0, 0),
+   744→            self._make_attr_data_nonresident(
+   745→                [DataRun(length=L.bitmap_clusters, offset=L.bitmap_start_cluster)],
+   746→                L.bitmap_clusters * self.cluster_size
+   747→            ),
+   748→        ])
+   749→
+   750→        # Record 7: $Boot
+   751→        records[7] = self._make_mft_record(7, True, False, [
+   752→            self._make_attr_standard_information(),
+   753→            self._make_attr_file_name("$Boot", 5, False, 0, 0, 0),
+   754→            self._make_attr_data_nonresident(
+   755→                [DataRun(length=2, offset=0)],  # First 2 clusters
+   756→                2 * self.cluster_size
+   757→            ),
+   758→        ])
+   759→
+   760→        # Record 8: $BadClus
+   761→        records[8] = self._make_mft_record(8, True, False, [
+   762→            self._make_attr_standard_information(),
+   763→            self._make_attr_file_name("$BadClus", 5, False, 0, 0, 0),
+   764→        ])
+   765→
+   766→        # Record 9: $Secure
+   767→        records[9] = self._make_mft_record(9, True, False, [
+   768→            self._make_attr_standard_information(),
+   769→            self._make_attr_file_name("$Secure", 5, False, 0, 0, 0),
+   770→        ])
+   771→
+   772→        # Record 10: $UpCase
+   773→        records[10] = self._make_mft_record(10, True, False, [
+   774→            self._make_attr_standard_information(),
+   775→            self._make_attr_file_name("$UpCase", 5, False, 0, 0, 0),
+   776→            self._make_attr_data_nonresident(
+   777→                [DataRun(length=L.upcase_clusters, offset=L.upcase_start_cluster)],
+   778→                L.upcase_clusters * self.cluster_size
+   779→            ),
+   780→        ])
+   781→
+   782→        # Record 11: $Extend
+   783→        records[11] = self._make_mft_record(11, True, True, [
+   784→            self._make_attr_standard_information(),
+   785→            self._make_attr_file_name("$Extend", 5, True, 0, 0, 0),
+   786→            self._make_attr_index_root([]),
+   787→        ])
+   788→
+   789→        return records
+   790→
+   791→    def _make_attr_volume_info(self) -> bytes:
+   792→        """Build VOLUME_INFORMATION attribute (0x70)."""
+   793→        total_size = 32  # 24 header + 8 data
+   794→        attr = bytearray(total_size)
+   795→
+   796→        struct.pack_into('<I', attr, 0, AttrType.VOLUME_INFORMATION)
+   797→        struct.pack_into('<I', attr, 4, total_size)
+   798→        attr[8] = 0
+   799→        attr[9] = 0
+   800→        struct.pack_into('<H', attr, 10, 24)
+   801→        struct.pack_into('<H', attr, 12, 0)
+   802→        struct.pack_into('<H', attr, 14, 4)
+   803→        struct.pack_into('<I', attr, 16, 8)   # Data length
+   804→        struct.pack_into('<H', attr, 20, 24)  # Offset to data
+   805→        attr[22] = 0
+   806→        attr[23] = 0
+   807→
+   808→        # Volume info data
+   809→        struct.pack_into('<Q', attr, 24, 0x00030001)  # NTFS 3.1
+   810→
+   811→        return bytes(attr)
+   812→
+   813→    # ─── MFT Mirror ───────────────────────────────────────────────────────
+   814→
+   815→    def _write_mftmirr(self):
+   816→        """Write MFT Mirror (first 4 MFT records)."""
+   817→        L = self._layout
+   818→        mirr_offset = L.mftmirr_start_cluster * self.cluster_size
+   819→        mft_offset = L.mft_start_cluster * self.cluster_size
+   820→
+   821→        # Copy first 4 MFT records
+   822→        for i in range(4):
+   823→            src = mft_offset + i * MFT_RECORD_SIZE
+   824→            dst = mirr_offset + i * MFT_RECORD_SIZE
+   825→            self._image[dst:dst+MFT_RECORD_SIZE] = self._image[src:src+MFT_RECORD_SIZE]
+   826→
+   827→    # ─── Bitmap ───────────────────────────────────────────────────────────
+   828→
+   829→    def _write_bitmap(self):
+   830→        """Write the cluster allocation bitmap."""
+   831→        L = self._layout
+   832→        bitmap_offset = L.bitmap_start_cluster * self.cluster_size
+   833→        bitmap_bytes = (L.total_clusters + 7) // 8
+   834→
+   835→        bitmap = bytearray(bitmap_bytes)
+   836→
+   837→        # Mark allocated clusters
+   838→        for cluster in self._allocated_clusters:
+   839→            byte_idx = cluster // 8
+   840→            bit_idx = cluster % 8
+   841→            bitmap[byte_idx] |= (1 << bit_idx)
+   842→
+   843→        # Also mark system clusters
+   844→        for cluster in range(L.data_start_cluster):
+   845→            byte_idx = cluster // 8
+   846→            bit_idx = cluster % 8
+   847→            bitmap[byte_idx] |= (1 << bit_idx)
+   848→
+   849→        self._image[bitmap_offset:bitmap_offset+bitmap_bytes] = bitmap
+   850→
+   851→    # ─── LogFile ──────────────────────────────────────────────────────────
+   852→
+   853→    def _write_logfile(self):
+   854→        """Write a minimal $LogFile."""
+   855→        L = self._layout
+   856→        log_offset = L.logfile_start_cluster * self.cluster_size
+   857→        log_size = L.logfile_clusters * self.cluster_size
+   858→
+   859→        # Minimal restart page header
+   860→        log = bytearray(log_size)
+   861→        # Restart page signature
+   862→        log[0:4] = b'NTFS'
+   863→        # Fill with zeros (empty journal)
+   864→        self._image[log_offset:log_offset+log_size] = log
+   865→
+   866→    # ─── UpCase Table ─────────────────────────────────────────────────────
+   867→
+   868→    def _write_upcase(self):
+   869→        """Write the $UpCase table (uppercase conversion table)."""
+   870→        L = self._layout
+   871→        upcase_offset = L.upcase_start_cluster * self.cluster_size
+   872→        upcase_size = 65536 * 2  # 65536 entries, 2 bytes each
+   873→
+   874→        upcase = bytearray(upcase_size)
+   875→        for i in range(65536):
+   876→            # Simple: uppercase mapping (identity for most, swap for a-z)
+   877→            if 0x61 <= i <= 0x7A:  # a-z
+   878→                struct.pack_into('<H', upcase, i * 2, i - 32)
+   879→            else:
+   880→                struct.pack_into('<H', upcase, i * 2, i)
+   881→
+   882→        self._image[upcase_offset:upcase_offset+upcase_size] = upcase
+   883→
+   884→    # ─── User Data Allocation ─────────────────────────────────────────────
+   885→
+   886→    def _allocate_user_data(self):
+   887→        """Allocate clusters for user files and assign data runs."""
+   888→        L = self._layout
+   889→        next_cluster = L.data_start_cluster
+   890→
+   891→        for f in self._files:
+   892→            if len(f.data) == 0:
+   893→                continue
+   894→
+   895→            # Decide: resident or non-resident?
+   896→            # Files > 700 bytes go non-resident
+   897→            if len(f.data) <= 700:
+   898→                # Resident — data stored in MFT record itself
+   899→                f.cluster_runs = []
+   900→                continue
+   901→
+   902→            # Non-resident: allocate clusters
+   903→            clusters_needed = (len(f.data) + self.cluster_size - 1) // self.cluster_size
+   904→            start_cluster = next_cluster
+   905→
+   906→            # For now, contiguous allocation (no fragmentation)
+   907→            # Fragmentation can be added by the Corruptor or dataset profiles
+   908→            f.cluster_runs = [DataRun(length=clusters_needed, offset=start_cluster)]
+   909→
+   910→            # Mark clusters as allocated
+   911→            for c in range(start_cluster, start_cluster + clusters_needed):
+   912→                self._allocated_clusters.add(c)
+   913→
+   914→            next_cluster = start_cluster + clusters_needed
+   915→
+   916→    def _write_user_data(self):
+   917→        """Write actual file data to the image."""
+   918→        for f in self._files:
+   919→            if f.cluster_runs:
+   920→                # Non-resident: write to clusters
+   921→                for run in f.cluster_runs:
+   922→                    offset = run.offset * self.cluster_size
+   923→                    end = offset + run.length * self.cluster_size
+   924→                    # Write data (padded to cluster boundary)
+   925→                    data_padded = f.data + b'\x00' * (run.length * self.cluster_size - len(f.data))
+   926→                    self._image[offset:end] = data_padded[:run.length * self.cluster_size]
+   927→            # Resident data is written inside the MFT record itself
+   928→
+   929→    # ─── Bootstrap Code ───────────────────────────────────────────────────
+   930→
+   931→    def _write_bootstrap(self):
+   932→        """Write minimal bootstrap code in sectors 1-7."""
+   933→        # Just zeros — the bootstrap is not needed for recovery testing
+   934→        pass
+   935→
+   936→    # ─── Utility ──────────────────────────────────────────────────────────
+   937→
+   938→    def get_manifest_data(self) -> Dict:
+   939→        """Return manifest data for the built image."""
+   940→        L = self._layout
+   941→        files = []
+   942→
+   943→        for f in self._files:
+   944→            cluster_list = []
+   945→            for run in f.cluster_runs:
+   946→                cluster_list.extend(range(run.offset, run.offset + run.length))
+   947→
+   948→            fragment_count = len(f.cluster_runs)
+   949→            is_fragmented = fragment_count > 1
+   950→
+   951→            files.append({
+   952→                "id": f.record_number,
+   953→                "name": f.name,
+   954→                "sha256": f.sha256,
+   955→                "size": len(f.data),
+   956→                "clusters": cluster_list,
+   957→                "fragment_count": fragment_count,
+   958→                "is_fragmented": is_fragmented,
+   959→                "is_resident": len(f.cluster_runs) == 0 and len(f.data) > 0,
+   960→                "created": f.created,
+   961→                "modified": f.modified,
+   962→                "parent_record": f.parent_record,
+   963→            })
+   964→
+   965→        for d in self._directories:
+   966→            files.append({
+   967→                "id": d.record_number,
+   968→                "name": d.name,
+   969→                "sha256": "",
+   970→                "size": 0,
+   971→                "clusters": [],
+   972→                "fragment_count": 0,
+   973→                "is_fragmented": False,
+   974→                "is_resident": False,
+   975→                "is_directory": True,
+   976→                "created": d.created,
+   977→                "modified": d.modified,
+   978→                "parent_record": d.parent_record,
+   979→            })
+   980→
+   981→        return {
+   982→            "seed": self.serial_number,  # Using serial as seed identifier
+   983→            "filesystem": "NTFS",
+   984→            "cluster_size": self.cluster_size,
+   985→            "sector_size": self.sector_size,
+   986→            "serial": hex(self.serial_number),
+   987→            "volume_size": self.volume_size,
+   988→            "total_clusters": L.total_clusters,
+   989→            "files": files,
+   990→            "mft": {
+   991→                "start_cluster": L.mft_start_cluster,
+   992→                "clusters": list(range(L.mft_start_cluster,
+   993→                                       L.mft_start_cluster + L.mft_clusters)),
+   994→                "record_count": L.mft_record_count,
+   995→                "record_size": MFT_RECORD_SIZE,
+   996→            },
+   997→            "bitmap": {
+   998→                "start_cluster": L.bitmap_start_cluster,
+   999→                "clusters": list(range(L.bitmap_start_cluster,
+  1000→                                       L.bitmap_start_cluster + L.bitmap_clusters)),
+  1001→            },
+  1002→            "mftmirr": {
+  1003→                "start_cluster": L.mftmirr_start_cluster,
+  1004→                "clusters": list(range(L.mftmirr_start_cluster,
+  1005→                                       L.mftmirr_start_cluster + L.mftmirr_clusters)),
+  1006→            },
+  1007→            "logfile": {
+  1008→                "start_cluster": L.logfile_start_cluster,
+  1009→                "clusters": list(range(L.logfile_start_cluster,
+  1010→                                       L.logfile_start_cluster + L.logfile_clusters)),
+  1011→            },
+  1012→            "data_area_start": L.data_start_cluster,
+  1013→        }
+  1014→

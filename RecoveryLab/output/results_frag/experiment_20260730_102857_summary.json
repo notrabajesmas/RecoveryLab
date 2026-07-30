@@ -1,0 +1,17 @@
+{
+  "timestamp": "20260730_102857",
+  "seed": 42,
+  "aggregated": {
+    "total_scenarios": 100,
+    "h1_supported_count": 95,
+    "h1_supported_pct": 0.95,
+    "strength_distribution": {
+      "MODERATE_SUPPORT": 59,
+      "STRONG_SUPPORT": 31,
+      "STRONG_REFUTATION": 10
+    },
+    "avg_delta_recovery_rate": -0.0187,
+    "avg_delta_reads_saved": 18530.1,
+    "overall_h1_verdict": "REFUTED \u2014 H1 not supported (Motor B is worse)"
+  }
+}
