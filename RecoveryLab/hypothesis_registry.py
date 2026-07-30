@@ -316,6 +316,73 @@ class HypothesisRegistry:
             dependencies=["H1.1"],
         )
 
+        # ─── H6: Functional recovery is not binary ────────────────────────
+        # "What does 'recovered' mean?" A JPEG with 2 bad pixels is NOT "failed".
+        # An MP4 that plays is NOT "lost". A DOCX that opens but lost an image
+        # is NOT "worth zero". Recovery is functional, not binary.
+        self.register(
+            "H6",
+            "La recuperación de archivos no es binaria (SHA-256 coincide/no). "
+            "Existe un espectro de recuperación funcional: un archivo puede "
+            "ser FULL (bit-perfect), FUNCTIONAL (funciona con daño menor), "
+            "PARTIAL (funciona parcialmente), DEGRADED (contenido accesible "
+            "pero dañado), o FAILED (inutilizable). La métrica de recuperación "
+            "funcional es más representativa del mundo real que el checksum binario.",
+            open_questions=[
+                "¿Cómo se correlaciona la recuperación funcional con la satisfacción del usuario?",
+                "¿Un JPEG con 2 píxeles corruptos tiene el mismo valor que uno perfecto?",
+                "¿Un MP4 que se reproduce pero tiene checksum distinto está 'recuperado'?",
+                "¿Un DOCX que abre pero perdió una imagen vale cero?",
+                "¿Cómo se integra la recuperación funcional con el RVS?",
+            ],
+            dependencies=["H5"],
+        )
+
+        # ─── H7: Recovery Value Score predicts user satisfaction ───────────
+        # Not all files have the same value. A motor that recovers 200 thumbnails
+        # but loses the thesis has objectively done a worse job. RVS captures
+        # this by weighting: Value × Replacement Probability × Recreation Time ×
+        # Emotional Impact.
+        self.register(
+            "H7",
+            "El Recovery Value Score (RVS) es un mejor predictor de la utilidad "
+            "de una recuperación que el conteo bruto de archivos. El RVS incorpora "
+            "cuatro dimensiones: valor intrínseco del archivo, probabilidad de "
+            "reemplazo, tiempo de recreación, e impacto emocional de la pérdida. "
+            "Un motor que recupera la tesis pero pierde 200 thumbnails tiene mayor "
+            "RVS que uno que recupera 200 thumbnails pero pierde la tesis.",
+            open_questions=[
+                "¿El RVS se correlaciona con la satisfacción del usuario?",
+                "¿Son los pesos del RVS correctos? ¿Cómo se calibran?",
+                "¿El RVS debería incluir el formato del archivo como factor?",
+                "¿Cómo se integra el RVS con la recuperación funcional (H6)?",
+                "¿El WFS (Weighted Functional Score = RVS × funcionalidad) "
+                "es la métrica definitiva?",
+            ],
+            dependencies=["H5", "H6"],
+        )
+
+        # ─── H8: The 95% crossover is an artifact ─────────────────────────
+        # The crossover point at 95% MFT degradation is NOT a discovery.
+        # It's a property of the current carving motor's low ceiling.
+        # If carving supported more formats, the curve would change completely.
+        self.register(
+            "H8",
+            "El punto de crossover observado en los experimentos es una propiedad "
+            "del motor de carving actual, no una propiedad del espacio de "
+            "estrategias. El carving básico tiene un techo bajo porque solo "
+            "soporta firmas de header+footer y no distingue formatos ambiguos. "
+            "Un motor de carving con soporte completo de formatos y parsers "
+            "funcionales cambiaría la curva de crossover significativamente.",
+            open_questions=[
+                "¿Dónde está el crossover real con un carving completo?",
+                "¿El crossover depende del dataset (tipos de archivos)?",
+                "¿Existe un crossover para cada formato individual?",
+                "¿Se puede eliminar el crossover con un motor adaptativo?",
+            ],
+            dependencies=["H3", "H5"],
+        )
+
         # H1.5: The lab represents NTFS well enough
         self.register(
             "H1.5",
@@ -593,6 +660,38 @@ class HypothesisRegistry:
                 "strategies_missing": ["journal-first", "bitmap-guided", "USN-guided",
                                        "MFT Mirror recovery", "tolerant parser",
                                        "probabilistic carving", "advanced carving"],
+            },
+        ))
+
+        # ─── Critical review: 95% crossover is NOT a discovery ─────────
+        # The user's key insight: the 95% crossover point is an artifact of the
+        # current carving motor's low ceiling, not a scientific finding.
+        # If carving supported more formats, the curve would change completely.
+        self.add_evidence("H3", Evidence(
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            type=EvidenceType.SIMULATION,
+            supports=True,
+            description="REVISIÓN CRÍTICA: El punto de crossover al 95% NO es un "
+                        "descubrimiento. Es una propiedad del carving actual, que solo "
+                        "recupera 1/15 archivos. El carving básico tiene un techo bajo "
+                        "porque: (1) solo soporta firmas de header+footer, (2) no puede "
+                        "distinguir ZIP/DOCX/XLSX, (3) no tiene parsers funcionales. "
+                        "Si el carving soportara más formatos (JPEG, PNG, TIFF, CR2, NEF, "
+                        "MP4, MOV, ZIP, DOCX, XLSX, SQLite, PDF), la curva cambiaría "
+                        "completamente. El 95% no es una propiedad del espacio de "
+                        "estrategias — es una propiedad del motor de carving actual. "
+                        "H3 sigue siendo consistente con la evidencia (las estrategias "
+                        "fallan de maneras distintas), pero el espacio evaluado es "
+                        "demasiado reducido para considerarla demostrada.",
+            experiment_id="critical_review_20260730",
+            strength="moderate",
+            details={
+                "crossover_artifact": True,
+                "crossover_pct": 0.95,
+                "carving_ceiling": "1/15 archivos",
+                "reason": "Carving básico con soporte limitado de formatos",
+                "missing_strategies": 7,
+                "h3_status": "consistente pero no demostrada",
             },
         ))
 

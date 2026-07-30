@@ -156,6 +156,15 @@ class RecoveryMetrics:
     rvs: float = 0.0                  # 0.0-1.0 Recovery Value Score (user perspective)
     rvs_breakdown: Dict = field(default_factory=dict)  # Detailed RVS breakdown
 
+    # ─── Functional Recovery Metrics (v2) ────────────────────────────────
+    # The paradigm shift: "recovered" is not binary.
+    # A JPEG with 2 bad pixels is NOT "failed". An MP4 that plays is NOT "lost".
+    functional_recovery_rate: float = 0.0  # % of files with functional+ recovery
+    full_recovery_rate: float = 0.0        # % of files with SHA-256 match
+    functional_details: Dict = field(default_factory=dict)  # Per-file functional validation
+    level_distribution: Dict = field(default_factory=dict)  # Count by RecoveryLevel
+    weighted_functional_score: float = 0.0  # RVS-weighted functional score
+
     def recovery_rate(self) -> float:
         """Fraction of ground truth files recovered (correct checksum only)."""
         total = self.files_correct_checksum + self.files_corrupt + self.files_missing
@@ -205,6 +214,28 @@ class RecoveryMetrics:
             return 0.0
         return self.files_corrupt / total
 
+    def functional_recovery_rate(self) -> float:
+        """
+        Fraction of files with FUNCTIONAL or better recovery.
+
+        This is the REAL metric: can the user USE the recovered file?
+        A JPEG with 2 bad pixels counts as recovered.
+        An MP4 that plays counts as recovered.
+        """
+        return self.functional_recovery_rate
+
+    def weighted_functional_score(self) -> float:
+        """
+        RVS-weighted functional score.
+
+        This combines: "how much VALUE was recovered?" with "how FUNCTIONAL is it?"
+
+        Score = SUM(file_value × functional_score) / SUM(file_value)
+
+        This is the most important single metric in the system.
+        """
+        return self.weighted_functional_score
+
     def to_dict(self) -> Dict:
         """Convert to dictionary for JSON serialization."""
         return {
@@ -240,6 +271,11 @@ class RecoveryMetrics:
             "corruption_rate": round(self.corruption_rate(), 4),
             "rvs": round(self.rvs, 4),
             "rvs_breakdown": self.rvs_breakdown,
+            # Functional recovery metrics (v2)
+            "functional_recovery_rate": round(self.functional_recovery_rate, 4),
+            "full_recovery_rate": round(self.full_recovery_rate, 4),
+            "weighted_functional_score": round(self.weighted_functional_score, 4),
+            "level_distribution": self.level_distribution,
         }
 
     def summary(self) -> str:
@@ -247,9 +283,11 @@ class RecoveryMetrics:
         return (
             f"Recovery: {self.files_correct_checksum}/{self.files_correct_checksum + self.files_corrupt + self.files_missing} "
             f"({self.recovery_rate():.1%}) | "
+            f"Functional: {self.functional_recovery_rate:.1%} | "
+            f"RVS: {self.rvs:.1%} | "
+            f"WFS: {self.weighted_functional_score:.2f} | "
             f"Corrupt: {self.files_corrupt} | "
             f"Reads: {self.read_count} ({self.read_efficiency():.1%} useful) | "
-            f"First file: {self.time_to_first_file} reads | "
             f"Integrity: {self.integrity_score:.2f}"
         )
 

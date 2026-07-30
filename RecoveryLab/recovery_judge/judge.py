@@ -1,14 +1,24 @@
 """
-RecoveryLab — Recovery Judge
-==============================
+RecoveryLab — Recovery Judge v2
+=================================
 The impartial judge that compares recovery results against ground truth.
+
+v2 Architecture: Four independent components, one orchestrator.
+
+  1. Identity Matcher (SHA-256) — Is this the same file?
+  2. Functional Validator — Does the file serve its purpose?
+  3. Ground Truth Comparator — What's missing?
+  4. RVS Calculator — How much VALUE was recovered?
+
+The Judge orchestrates these four components and produces a comprehensive
+RecoveryMetrics with both binary (SHA-256) and functional recovery assessment.
+
+Key insight: "Recovered" is not binary. A JPEG with 2 bad pixels is NOT
+"failed". An MP4 that plays is NOT "lost". A DOCX that opens but lost an
+image is NOT "worth zero".
 
 Motor A → Result → Judge → Compare → Ground Truth → Score
 Motor B → Result → Judge → Compare → Ground Truth → Score
-
-The Judge measures EVERYTHING. Not just "files recovered".
-Because a motor that recovers 100 files but 12 are corrupt
-is NOT the same as one that recovers 88 correct files.
 """
 
 import hashlib
@@ -20,11 +30,18 @@ from dataclasses import dataclass
 
 from .metrics import RecoveryMetrics, ComparisonResult
 from .rvs import RecoveryValueScore
+from .functional_validator import FunctionalValidator, RecoveryLevel
 
 
 class RecoveryJudge:
     """
     Impartial judge that scores recovery results against ground truth.
+
+    v2: Integrates four independent components:
+      1. Identity Matcher — SHA-256 matching (name-first, then content)
+      2. Functional Validator — Does the file work?
+      3. Ground Truth Comparator — What's missing?
+      4. RVS Calculator — How much VALUE was recovered?
 
     Usage:
         judge = RecoveryJudge(manifest)
@@ -40,6 +57,10 @@ class RecoveryJudge:
         """
         self.manifest = manifest
         self.ground_truth = self._build_ground_truth()
+
+        # Initialize the four components
+        self.rvs_calculator = RecoveryValueScore()
+        self.functional_validator = FunctionalValidator()
 
     def _build_ground_truth(self) -> Dict:
         """Build lookup structures from the manifest."""
@@ -86,9 +107,12 @@ class RecoveryJudge:
               read_budget: int = 0,
               directories_rebuilt: int = 0,
               false_positive_files: Optional[List[str]] = None,
-              duplicate_files: Optional[List[str]] = None) -> RecoveryMetrics:
+              duplicate_files: Optional[List[str]] = None,
+              recovered_data: Optional[Dict[str, bytes]] = None) -> RecoveryMetrics:
         """
         Judge a set of recovered files against ground truth.
+
+        v2: Now includes functional recovery assessment.
 
         Args:
             recovered_files: List of dicts with:
@@ -106,14 +130,17 @@ class RecoveryJudge:
             directories_rebuilt: Directory structures reconstructed
             false_positive_files: Files claimed but not in ground truth
             duplicate_files: Files recovered multiple times
+            recovered_data: Optional dict of filename → bytes for functional validation
 
         Returns:
-            RecoveryMetrics with all measurements
+            RecoveryMetrics with all measurements (binary + functional)
         """
         gt = self.ground_truth
         metrics = RecoveryMetrics()
 
-        # ─── Classify each recovered file ─────────────────────────────
+        # ─── Component 1: Identity Matcher (SHA-256) ─────────────────
+        # Match recovered files against ground truth by name first,
+        # then by SHA-256 content (critical for carving).
         recovered_names = set()
         matched_shas = set()  # Track which ground truth files were matched by SHA
         correct_checksums = 0
@@ -122,11 +149,16 @@ class RecoveryJudge:
         bytes_correct = 0
         missing_details = []
 
+        # Track functional validation results
+        functional_results = {}
+        level_counts = {level.value: 0 for level in RecoveryLevel}
+
         for rf in recovered_files:
             name = rf.get("name", "")
             sha256 = rf.get("sha256", "")
             size = rf.get("size", 0)
             is_dir = rf.get("is_directory", False)
+            data = rf.get("data", None)
 
             if is_dir:
                 metrics.directories_rebuilt += 1
@@ -148,11 +180,19 @@ class RecoveryJudge:
                 elif gt_file:
                     matched_shas.add(gt_file["sha256"])
 
+            # ─── Component 2: Functional Validator ────────────────────
+            functional_level = RecoveryLevel.FAILED
+            functional_score = 0.0
+
             if gt_file:
-                if sha256 == gt_file.get("sha256", ""):
-                    # Correct recovery!
+                gt_sha = gt_file.get("sha256", "")
+
+                if sha256 == gt_sha:
+                    # SHA-256 matches — FULL recovery (bit-perfect)
                     correct_checksums += 1
                     bytes_correct += size
+                    functional_level = RecoveryLevel.FULL
+                    functional_score = 1.0
                     metrics.recovered_file_details.append({
                         "name": name,
                         "matched_ground_truth": gt_file.get("name", name),
@@ -160,10 +200,27 @@ class RecoveryJudge:
                         "sha256": sha256,
                         "size": size,
                         "match_method": "name" if gt["files_by_name"].get(name) else "sha256",
+                        "functional_level": functional_level.value,
+                        "functional_score": functional_score,
                     })
                 else:
-                    # Corrupt recovery
+                    # SHA-256 doesn't match — is it FUNCTIONALLY recovered?
                     corrupt_count += 1
+
+                    # Try functional validation if we have the data
+                    if data is not None:
+                        # Get original data if available
+                        orig_data = recovered_data.get(gt_file.get("name", name)) if recovered_data else None
+                        val_result = self.functional_validator.validate(
+                            data, name, orig_data)
+                        functional_level = val_result["level"]
+                        functional_score = val_result["functional_score"]
+                        functional_results[name] = val_result
+                    else:
+                        # No data available — assume degraded based on corruption
+                        functional_level = RecoveryLevel.DEGRADED
+                        functional_score = 0.2
+
                     metrics.corrupt_file_details.append({
                         "name": name,
                         "matched_ground_truth": gt_file.get("name", name),
@@ -171,15 +228,20 @@ class RecoveryJudge:
                         "expected_sha256": gt_file.get("sha256", ""),
                         "actual_sha256": sha256,
                         "size": size,
+                        "functional_level": functional_level.value,
+                        "functional_score": functional_score,
                     })
             else:
                 # False positive — not in ground truth
                 metrics.false_positives += 1
 
+            # Track level distribution
+            level_counts[functional_level.value] += 1
+
             bytes_recovered += size
 
-        # ─── Find missing files ───────────────────────────────────────
-        # A file is "missing" if it wasn't matched by name OR by SHA-256
+        # ─── Component 3: Ground Truth Comparator ────────────────────
+        # Find missing files
         matched_gt_names = set()
         for detail in metrics.recovered_file_details:
             matched_gt_names.add(detail.get("matched_ground_truth", detail["name"]))
@@ -194,8 +256,9 @@ class RecoveryJudge:
                     "sha256": gt_file.get("sha256", ""),
                     "size": gt_file.get("size", 0),
                 })
+                level_counts[RecoveryLevel.FAILED.value] += 1
 
-        # ─── Compute metrics ──────────────────────────────────────────
+        # ─── Compute core metrics ──────────────────────────────────────
         metrics.files_recovered = len(recovered_names)
         metrics.files_correct_checksum = correct_checksums
         metrics.files_corrupt = corrupt_count
@@ -236,23 +299,71 @@ class RecoveryJudge:
             quality_weight * quality_score
         )
 
-        # ─── Compute Recovery Value Score (RVS) ────────────────────────
+        # ─── Component 4: RVS Calculator ──────────────────────────────
         # Not all files have the same value. A thesis is worth more than
         # 10 thumbnails. RVS captures this from the user's perspective.
-        rvs_calculator = RecoveryValueScore()
-        recovered_names = set()
+        recovered_names_rvs = set()
         for detail in metrics.recovered_file_details:
-            recovered_names.add(detail.get("matched_ground_truth", detail["name"]))
+            recovered_names_rvs.add(detail.get("matched_ground_truth", detail["name"]))
+
         gt_names = set(gt["files_by_name"].keys())
         gt_sizes = {name: f.get("size", 0) for name, f in gt["files_by_name"].items()}
 
-        rvs_result = rvs_calculator.compute_score(
-            recovered_names=recovered_names,
+        rvs_result = self.rvs_calculator.compute_score(
+            recovered_names=recovered_names_rvs,
             ground_truth_names=gt_names,
             file_sizes=gt_sizes,
         )
         metrics.rvs = rvs_result["rvs"]
         metrics.rvs_breakdown = rvs_result
+
+        # ─── Compute Functional Recovery Metrics (v2) ─────────────────
+        total_gt_files = len(gt_names)
+        if total_gt_files > 0:
+            # Full recovery rate: SHA-256 matches
+            metrics.full_recovery_rate = correct_checksums / total_gt_files
+
+            # Functional recovery rate: files with functional+ recovery
+            functional_plus = sum(
+                1 for level in [RecoveryLevel.FULL, RecoveryLevel.FUNCTIONAL]
+                if level.value in level_counts
+                for _ in range(level_counts.get(level.value, 0))
+            )
+            # Also count PARTIAL files as "functionally recovered" (score >= 0.5)
+            partial_count = level_counts.get(RecoveryLevel.PARTIAL.value, 0)
+            metrics.functional_recovery_rate = (functional_plus + partial_count) / total_gt_files
+
+            # Weighted Functional Score: RVS × functional_score
+            # This is the MOST IMPORTANT single metric: it combines
+            # "how much VALUE was recovered" with "how FUNCTIONAL is it"
+            total_weighted = 0.0
+            total_value = 0.0
+
+            for detail in metrics.recovered_file_details:
+                gt_name = detail.get("matched_ground_truth", detail["name"])
+                file_value = self.rvs_calculator.file_value(gt_name)
+                fs = detail.get("functional_score", 1.0)
+                total_weighted += file_value * fs
+                total_value += file_value
+
+            for detail in metrics.corrupt_file_details:
+                gt_name = detail.get("matched_ground_truth", detail["name"])
+                file_value = self.rvs_calculator.file_value(gt_name)
+                fs = detail.get("functional_score", 0.2)
+                total_weighted += file_value * fs
+                total_value += file_value
+
+            # Missing files contribute 0 to weighted score
+            for detail in missing_details:
+                file_value = self.rvs_calculator.file_value(detail["name"])
+                total_value += file_value
+
+            metrics.weighted_functional_score = (
+                total_weighted / total_value if total_value > 0 else 0.0
+            )
+
+        metrics.functional_details = functional_results
+        metrics.level_distribution = level_counts
 
         return metrics
 

@@ -1,6 +1,51 @@
 # RecoveryLab — Work Log
 
 ---
+Task ID: 4
+Agent: Main
+Task: Quality over quantity — RVS enriquecido, recuperación funcional, Judge refactor, parsers impecables
+
+Work Log:
+- Implemented RVS enriquecido (rvs.py v2):
+  - Formula: composite = intrinsic_value × (1 - replacement_prob × recreation_time × (1 - emotional_impact))
+  - 14 FileCategory values: THESIS (score≈1.0) → THUMBNAIL (score≈0.01)
+  - Filename pattern overrides: tesis.docx → THESIS, foto_familia_navidad.jpg → PHOTO_FAMILY
+  - Size bonus: logarithmic, 0-10% bonus
+  - value_comparison_report(): Motor A vs Motor B with "most valuable lost" file
+  - Key result: Motor with thesis+DB = RVS 79.8%, Motor with 3 thumbnails = RVS 0.0%
+- Implemented Functional Recovery Validator (functional_validator.py):
+  - RecoveryLevel enum: FULL (1.0), FUNCTIONAL (0.8), PARTIAL (0.5), DEGRADED (0.2), FAILED (0.0)
+  - Format-specific validators: JPEGValidator, MP4Validator, DOCXValidator, SQLiteValidator, ZIPValidator, PDFValidator, PNGValidator
+  - Each validator checks format-specific structure (JPEG: SOI+SOS+EOI, MP4: ftyp+moov+mdat, etc.)
+  - FunctionalValidator: unified dispatcher
+  - Key insight: JPEG with 2 corrupted bytes → FUNCTIONAL (0.85), not FAILED
+- Refactored Judge (judge.py v2):
+  - Four independent components: Identity Matcher (SHA-256), Functional Validator, Ground Truth Comparator, RVS Calculator
+  - New metrics: functional_recovery_rate, full_recovery_rate, weighted_functional_score, level_distribution
+  - RecoveryMetrics now includes: Functional Recovery Rate, Full Recovery Rate, Weighted Functional Score
+- Audited carving motor: created test_carving_impeccable.py (19 tests, all passing)
+  - JPEG: basic detection, EXIF, multiple files, no false positives, functional validation
+  - PNG: basic detection, functional validation, no false positives
+  - PDF: basic detection, functional validation, no false positives
+  - Signature database: consistency, header specificity, mask consistency
+  - Carving purity: never reads MFT
+  - RVS integration: thesis vs thumbnail value comparison
+- Updated hypothesis_registry.py:
+  - Added critical review evidence for H3: "95% crossover is NOT a discovery"
+  - Added H6: Functional recovery is not binary
+  - Added H7: RVS predicts user satisfaction
+  - Added H8: 95% crossover is an artifact
+
+Stage Summary:
+- The paradigm shift is complete: "recovered" is no longer binary
+- RVS enriquecido: thesis = score 1.0, thumbnail = score 0.01
+- Functional validation: JPEG with 2 bad pixels = FUNCTIONAL (0.85), not FAILED
+- Weighted Functional Score (WFS) = RVS × functionality — the most important single metric
+- 19 tests passing for the three core parsers (JPEG, PNG, PDF)
+- 4 new hypotheses registered (H6, H7, H8)
+- The 1:1 rule is in effect: 500 lines of recovery code → 500 lines of validation
+
+---
 Task ID: 3
 Agent: Main
 Task: Strategic pivot — caveats, matrix, RVS, per-format experiments
