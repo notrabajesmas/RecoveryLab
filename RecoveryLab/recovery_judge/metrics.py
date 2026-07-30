@@ -152,6 +152,10 @@ class RecoveryMetrics:
     mft_confidence: float = 0.0       # 0.0-1.0 estimated confidence in MFT
     strategy_used: str = ""           # Which strategy was selected
 
+    # ─── Recovery Value Score ──────────────────────────────────────────
+    rvs: float = 0.0                  # 0.0-1.0 Recovery Value Score (user perspective)
+    rvs_breakdown: Dict = field(default_factory=dict)  # Detailed RVS breakdown
+
     def recovery_rate(self) -> float:
         """Fraction of ground truth files recovered (correct checksum only)."""
         total = self.files_correct_checksum + self.files_corrupt + self.files_missing
@@ -234,6 +238,8 @@ class RecoveryMetrics:
             "read_efficiency": round(self.read_efficiency(), 4),
             "read_efficiency_broad": round(self.read_efficiency_broad(), 4),
             "corruption_rate": round(self.corruption_rate(), 4),
+            "rvs": round(self.rvs, 4),
+            "rvs_breakdown": self.rvs_breakdown,
         }
 
     def summary(self) -> str:

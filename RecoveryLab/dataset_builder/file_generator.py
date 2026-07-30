@@ -49,6 +49,18 @@ FILE_FOOTERS = {
     ".zip":  b'PK\x05\x06',            # ZIP End of Central Directory
     ".docx": b'PK\x05\x06',            # DOCX (same as ZIP)
     ".xlsx": b'PK\x05\x06',            # XLSX (same as ZIP)
+    ".gif":  b';',                      # GIF trailer (semicolon)
+    ".tiff": b'',                       # TIFF — no reliable footer
+    ".cr2":  b'',                       # CR2 — no reliable footer (TIFF-based)
+    ".nef":  b'',                       # NEF — no reliable footer (TIFF-based)
+    ".mp4":  b'',                       # MP4 — no reliable footer
+    ".mov":  b'',                       # MOV — no reliable footer
+    ".avi":  b'',                       # AVI — no reliable footer
+    ".sqlite": b'',                     # SQLite — no reliable footer
+    ".bmp":  b'',                       # BMP — no reliable footer
+    ".rar":  b'',                       # RAR — no reliable footer
+    ".7z":   b'',                       # 7Z — no reliable footer
+    ".psd":  b'',                       # PSD — no reliable footer
 }
 
 

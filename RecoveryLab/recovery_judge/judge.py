@@ -19,6 +19,7 @@ from typing import Dict, List, Optional, Set, Tuple
 from dataclasses import dataclass
 
 from .metrics import RecoveryMetrics, ComparisonResult
+from .rvs import RecoveryValueScore
 
 
 class RecoveryJudge:
@@ -234,6 +235,24 @@ class RecoveryJudge:
             efficiency_weight * efficiency_score +
             quality_weight * quality_score
         )
+
+        # ─── Compute Recovery Value Score (RVS) ────────────────────────
+        # Not all files have the same value. A thesis is worth more than
+        # 10 thumbnails. RVS captures this from the user's perspective.
+        rvs_calculator = RecoveryValueScore()
+        recovered_names = set()
+        for detail in metrics.recovered_file_details:
+            recovered_names.add(detail.get("matched_ground_truth", detail["name"]))
+        gt_names = set(gt["files_by_name"].keys())
+        gt_sizes = {name: f.get("size", 0) for name, f in gt["files_by_name"].items()}
+
+        rvs_result = rvs_calculator.compute_score(
+            recovered_names=recovered_names,
+            ground_truth_names=gt_names,
+            file_sizes=gt_sizes,
+        )
+        metrics.rvs = rvs_result["rvs"]
+        metrics.rvs_breakdown = rvs_result
 
         return metrics
 

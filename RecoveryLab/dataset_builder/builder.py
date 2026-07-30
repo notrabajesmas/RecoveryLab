@@ -206,6 +206,117 @@ class DatasetBuilder:
 
         return manifest_path
 
+    def build_single_format_dataset(self, extension: str,
+                                     n_files: int = 15,
+                                     volume_size: Optional[int] = None) -> Tuple[bytes, Dict]:
+        """
+        Build a single NTFS image with files predominantly of one format.
+
+        This is used for per-format experiments where we want to test
+        recovery of a specific file type (JPEG, MP4, DOCX, etc.).
+
+        Args:
+            extension: File extension (e.g., ".jpg", ".mp4")
+            n_files: Number of files of the target format
+            volume_size: Volume size in bytes (default: self.volume_size)
+
+        Returns:
+            Tuple of (image_bytes, manifest_dict)
+        """
+        volume_size = volume_size or self.volume_size
+        image_seed = self.master_rng.randint(0, 2**32 - 1)
+        serial = self.master_rng.randint(0, 2**32 - 1)
+
+        # Generate files — mostly the target format
+        gen = FileGenerator(seed=image_seed, volume_size=volume_size,
+                           cluster_size=self.cluster_size)
+
+        # Generate target format files
+        target_files = []
+        for i in range(n_files):
+            size_rng = random.Random(image_seed + i)
+            # Determine size based on format
+            if extension in (".jpg", ".png", ".cr2", ".nef", ".tiff"):
+                size = size_rng.randint(50_000, 3_000_000)
+            elif extension in (".mp4", ".mov", ".avi"):
+                size = size_rng.randint(500_000, 8_000_000)
+            elif extension in (".docx", ".xlsx", ".pdf"):
+                size = size_rng.randint(1_000, 500_000)
+            elif extension == ".sqlite":
+                size = size_rng.randint(10_000, 2_000_000)
+            else:
+                size = size_rng.randint(1_000, 500_000)
+
+            data = gen._generate_content(extension, size)
+            sha256 = hashlib.sha256(data).hexdigest()
+            name = f"{extension[1:]}_{i+1:04d}{extension}"
+
+            target_files.append(GeneratedFile(
+                name=name,
+                data=data,
+                extension=extension,
+                category="target",
+                size=len(data),
+                sha256=sha256,
+                created_offset=i * 3600,
+                modified_offset=i * 3600 + 1800,
+            ))
+
+        # Build NTFS image
+        builder = NTFSImageBuilder(
+            volume_size=volume_size,
+            cluster_size=self.cluster_size,
+            serial_number=serial,
+            fragmentation_rate=0.0,
+            fragmentation_seed=image_seed,
+        )
+
+        for f in target_files:
+            builder.add_file(
+                name=f.name,
+                data=f.data,
+                parent_record=5,
+                created=f.created_offset,
+                modified=f.modified_offset,
+            )
+
+        # Build the image
+        image_bytes, layout, built_files = builder.build()
+
+        # Get manifest data
+        manifest_data = builder.get_manifest_data()
+
+        # Add file SHA-256
+        for i, f in enumerate(target_files):
+            if i < len(manifest_data["files"]):
+                manifest_data["files"][i]["sha256"] = f.sha256
+
+        # Generate full manifest
+        manifest = generate_manifest(
+            seed=image_seed,
+            filesystem=manifest_data["filesystem"],
+            cluster_size=manifest_data["cluster_size"],
+            sector_size=manifest_data["sector_size"],
+            serial=manifest_data["serial"],
+            volume_size=manifest_data["volume_size"],
+            total_clusters=manifest_data["total_clusters"],
+            files=manifest_data["files"],
+            mft_info=manifest_data["mft"],
+            bitmap_info=manifest_data["bitmap"],
+            mftmirr_info=manifest_data["mftmirr"],
+            logfile_info=manifest_data["logfile"],
+            data_area_start=manifest_data["data_area_start"],
+            metadata={
+                "image_type": "single_format",
+                "target_extension": extension,
+                "generator": "RecoveryLab DatasetBuilder v1.0",
+            },
+        )
+
+        manifest["_integrity_hash"] = compute_integrity_hash(manifest)
+
+        return image_bytes, manifest
+
     def _save_dataset_index(self, manifest_paths: List[Path]):
         """Save a dataset index file listing all images and their seeds."""
         index = {

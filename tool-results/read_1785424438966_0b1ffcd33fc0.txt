@@ -1,0 +1,692 @@
+    50→
+    51→
+    52→@dataclass
+    53→class CrossoverPoint:
+    54→    """A single data point on the crossover curve."""
+    55→    mft_damage_pct: float
+    56→    mft_confidence: float
+    57→
+    58→    # Carving metrics
+    59→    carving_recovery: float
+    60→    carving_correct: int
+    61→    carving_corrupt: int
+    62→    carving_false_positives: int
+    63→    carving_reads: int
+    64→    carving_efficiency: float
+    65→    carving_integrity: float
+    66→
+    67→    # MFT-First metrics
+    68→    mft_recovery: float
+    69→    mft_correct: int
+    70→    mft_corrupt: int
+    71→    mft_false_positives: int
+    72→    mft_reads: int
+    73→    mft_efficiency: float
+    74→    mft_integrity: float
+    75→
+    76→    # Motor C metrics
+    77→    motor_c_recovery: float
+    78→    motor_c_correct: int
+    79→    motor_c_corrupt: int
+    80→    motor_c_false_positives: int
+    81→    motor_c_reads: int
+    82→    motor_c_efficiency: float
+    83→    motor_c_integrity: float
+    84→
+    85→    # Statistical analysis (if N > 1)
+    86→    n_repetitions: int = 1
+    87→    carving_recovery_ci_lower: float = 0.0
+    88→    carving_recovery_ci_upper: float = 0.0
+    89→    mft_recovery_ci_lower: float = 0.0
+    90→    mft_recovery_ci_upper: float = 0.0
+    91→    p_value: float = 1.0
+    92→    effect_size: float = 0.0
+    93→
+    94→    # Which strategy wins
+    95→    optimal_strategy: str = "mft_first"
+    96→    delta_recovery: float = 0.0  # MFT - Carving (positive = MFT wins)
+    97→
+    98→    def to_dict(self) -> Dict:
+    99→        return {
+   100→            "mft_damage_pct": self.mft_damage_pct,
+   101→            "mft_confidence": round(self.mft_confidence, 4),
+   102→            "carving": {
+   103→                "recovery": round(self.carving_recovery, 4),
+   104→                "correct": self.carving_correct,
+   105→                "corrupt": self.carving_corrupt,
+   106→                "false_positives": self.carving_false_positives,
+   107→                "reads": self.carving_reads,
+   108→                "efficiency": round(self.carving_efficiency, 4),
+   109→                "integrity": round(self.carving_integrity, 4),
+   110→            },
+   111→            "mft_first": {
+   112→                "recovery": round(self.mft_recovery, 4),
+   113→                "correct": self.mft_correct,
+   114→                "corrupt": self.mft_corrupt,
+   115→                "false_positives": self.mft_false_positives,
+   116→                "reads": self.mft_reads,
+   117→                "efficiency": round(self.mft_efficiency, 4),
+   118→                "integrity": round(self.mft_integrity, 4),
+   119→            },
+   120→            "motor_c": {
+   121→                "recovery": round(self.motor_c_recovery, 4),
+   122→                "correct": self.motor_c_correct,
+   123→                "corrupt": self.motor_c_corrupt,
+   124→                "false_positives": self.motor_c_false_positives,
+   125→                "reads": self.motor_c_reads,
+   126→                "efficiency": round(self.motor_c_efficiency, 4),
+   127→                "integrity": round(self.motor_c_integrity, 4),
+   128→            },
+   129→            "statistics": {
+   130→                "n_repetitions": self.n_repetitions,
+   131→                "carving_recovery_ci": [round(self.carving_recovery_ci_lower, 4),
+   132→                                        round(self.carving_recovery_ci_upper, 4)],
+   133→                "mft_recovery_ci": [round(self.mft_recovery_ci_lower, 4),
+   134→                                    round(self.mft_recovery_ci_upper, 4)],
+   135→                "p_value": round(self.p_value, 4),
+   136→                "effect_size_cohens_d": round(self.effect_size, 4),
+   137→            },
+   138→            "optimal_strategy": self.optimal_strategy,
+   139→            "delta_recovery_mft_minus_carving": round(self.delta_recovery, 4),
+   140→        }
+   141→
+   142→
+   143→@dataclass
+   144→class CrossoverResult:
+   145→    """Complete crossover curve result."""
+   146→    dataset: str
+   147→    timestamp: str
+   148→    points: List[CrossoverPoint] = field(default_factory=list)
+   149→    crossover_point: Optional[float] = None
+   150→    crossover_type: str = ""  # "gradual" or "abrupt"
+   151→
+   152→    def find_crossover(self) -> Optional[float]:
+   153→        """Find the MFT damage % where Carving overtakes MFT-First."""
+   154→        for i in range(1, len(self.points)):
+   155→            prev = self.points[i - 1]
+   156→            curr = self.points[i]
+   157→
+   158→            # Crossover: MFT was winning, now Carving is winning (or equal)
+   159→            if prev.delta_recovery > 0 and curr.delta_recovery <= 0:
+   160→                # Linear interpolation
+   161→                if prev.delta_recovery - curr.delta_recovery != 0:
+   162→                    frac = prev.delta_recovery / (prev.delta_recovery - curr.delta_recovery)
+   163→                    self.crossover_point = prev.mft_damage_pct + frac * (curr.mft_damage_pct - prev.mft_damage_pct)
+   164→                else:
+   165→                    self.crossover_point = curr.mft_damage_pct
+   166→
+   167→                # Determine if abrupt or gradual
+   168→                if i > 0 and abs(prev.delta_recovery - curr.delta_recovery) > 0.3:
+   169→                    self.crossover_type = "abrupt"
+   170→                else:
+   171→                    self.crossover_type = "gradual"
+   172→
+   173→                return self.crossover_point
+   174→
+   175→        return None
+   176→
+   177→    def to_dict(self) -> Dict:
+   178→        return {
+   179→            "dataset": self.dataset,
+   180→            "timestamp": self.timestamp,
+   181→            "crossover_point": round(self.crossover_point, 4) if self.crossover_point else None,
+   182→            "crossover_type": self.crossover_type,
+   183→            "points": [p.to_dict() for p in self.points],
+   184→        }
+   185→
+   186→
+   187→def compute_statistics(carving_recoveries: List[float],
+   188→                        mft_recoveries: List[float]) -> Dict:
+   189→    """
+   190→    Compute statistical analysis for a single crossover point.
+   191→
+   192→    Returns:
+   193→      - 95% CI for each strategy
+   194→      - p-value (two-tailed t-test)
+   195→      - Effect size (Cohen's d)
+   196→    """
+   197→    import math
+   198→
+   199→    n = len(carving_recoveries)
+   200→    if n < 2:
+   201→        return {
+   202→            "ci_lower_carving": 0.0, "ci_upper_carving": 0.0,
+   203→            "ci_lower_mft": 0.0, "ci_upper_mft": 0.0,
+   204→            "p_value": 1.0, "effect_size": 0.0,
+   205→        }
+   206→
+   207→    # Mean and std for each
+   208→    mean_c = sum(carving_recoveries) / n
+   209→    mean_m = sum(mft_recoveries) / n
+   210→
+   211→    var_c = sum((x - mean_c) ** 2 for x in carving_recoveries) / (n - 1) if n > 1 else 0
+   212→    var_m = sum((x - mean_m) ** 2 for x in mft_recoveries) / (n - 1) if n > 1 else 0
+   213→
+   214→    std_c = math.sqrt(var_c)
+   215→    std_m = math.sqrt(var_m)
+   216→
+   217→    # 95% CI (using t-distribution approximation for small n)
+   218→    # For n >= 30, use 1.96; for small n, use t-value
+   219→    t_values = {2: 12.706, 3: 4.303, 4: 3.182, 5: 2.776, 10: 2.262,
+   220→                20: 2.093, 30: 2.042, 50: 2.009, 100: 1.984}
+   221→    if n in t_values:
+   222→        t = t_values[n]
+   223→    elif n < 2:
+   224→        t = 12.706
+   225→    elif n < 30:
+   226→        t = 2.776  # Conservative
+   227→    else:
+   228→        t = 1.96
+   229→
+   230→    se_c = std_c / math.sqrt(n) if n > 0 else 0
+   231→    se_m = std_m / math.sqrt(n) if n > 0 else 0
+   232→
+   233→    # Paired t-test
+   234→    diffs = [c - m for c, m in zip(carving_recoveries, mft_recoveries)]
+   235→    mean_diff = sum(diffs) / n
+   236→    var_diff = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1) if n > 1 else 0
+   237→    se_diff = math.sqrt(var_diff / n) if n > 0 else 0
+   238→
+   239→    if se_diff > 0:
+   240→        t_stat = mean_diff / se_diff
+   241→        # Approximate p-value (two-tailed)
+   242→        # For large |t|, p is very small
+   243→        p_value = 2.0 * (1.0 - _t_cdf_approx(abs(t_stat), n - 1))
+   244→        p_value = max(0.0, min(1.0, p_value))
+   245→    else:
+   246→        p_value = 1.0 if abs(mean_diff) < 0.001 else 0.0
+   247→
+   248→    # Cohen's d
+   249→    pooled_std = math.sqrt((var_c + var_m) / 2) if (var_c + var_m) > 0 else 1.0
+   250→    cohens_d = (mean_m - mean_c) / pooled_std if pooled_std > 0 else 0.0
+   251→
+   252→    return {
+   253→        "ci_lower_carving": mean_c - t * se_c,
+   254→        "ci_upper_carving": mean_c + t * se_c,
+   255→        "ci_lower_mft": mean_m - t * se_m,
+   256→        "ci_upper_mft": mean_m + t * se_m,
+   257→        "p_value": p_value,
+   258→        "effect_size": cohens_d,
+   259→    }
+   260→
+   261→
+   262→def _t_cdf_approx(t: float, df: int) -> float:
+   263→    """Approximate CDF of t-distribution using normal approximation."""
+   264→    import math
+   265→    if df >= 30:
+   266→        # Normal approximation
+   267→        return 0.5 * (1 + math.erf(t / math.sqrt(2)))
+   268→    else:
+   269→        # Simple approximation
+   270→        x = (t + 0.044715 * t**3) / math.sqrt(1 + t**2 / df)
+   271→        return 0.5 * (1 + math.erf(x / math.sqrt(2)))
+   272→
+   273→
+   274→def run_crossover_curve(
+   275→    image: bytes,
+   276→    manifest: Dict,
+   277→    seed: int = 42,
+   278→    step: float = 0.05,
+   279→    max_damage: float = 1.0,
+   280→    n_repetitions: int = 1,
+   281→    read_budget: int = 0,
+   282→) -> CrossoverResult:
+   283→    """
+   284→    Run the crossover curve experiment.
+   285→
+   286→    For each damage level (0%, 5%, 10%, ..., 100%):
+   287→      1. Apply MFT partial deletion
+   288→      2. Run Carving, MFT-First, Motor C
+   289→      3. Judge results
+   290→      4. Record data point
+   291→      5. If n_repetitions > 1, repeat and compute statistics
+   292→
+   293→    Returns a CrossoverResult with all data points.
+   294→    """
+   295→    dataset_id = manifest.get("serial", "unknown")
+   296→    result = CrossoverResult(
+   297→        dataset=dataset_id,
+   298→        timestamp=datetime.now(timezone.utc).isoformat(),
+   299→    )
+   300→
+   301→    motor_carving = MotorCarving()
+   302→    motor_mft = MotorBMFTFirst()
+   303→    motor_c = MotorCOrchestrator()
+   304→    judge = RecoveryJudge(manifest)
+   305→
+   306→    # Generate damage levels
+   307→    damage_levels = []
+   308→    d = 0.0
+   309→    while d <= max_damage + 0.001:
+   310→        damage_levels.append(round(d, 2))
+   311→        d += step
+   312→
+   313→    print(f"\n{'='*90}")
+   314→    print(f"STRATEGY CROSSOVER CURVE — {dataset_id}")
+   315→    print(f"{'='*90}")
+   316→    print(f"  Damage levels: {len(damage_levels)}")
+   317→    print(f"  Step: {step:.0%}")
+   318→    print(f"  Repetitions per point: {n_repetitions}")
+   319→    print(f"{'─'*90}")
+   320→    print(f"  {'Damage':>8s} │ {'Conf':>6s} │ {'Carving':>10s} │ {'MFT-1st':>10s} │ "
+   321→          f"{'Motor C':>10s} │ {'Δ Rec':>8s} │ {'Winner':>10s} │ {'p-val':>8s} │ {'d':>6s}")
+   322→    print(f"{'─'*90}")
+   323→
+   324→    for damage_pct in damage_levels:
+   325→        carving_recoveries = []
+   326→        mft_recoveries = []
+   327→        motor_c_recoveries = []
+   328→
+   329→        # Aggregated metrics (averaged over repetitions)
+   330→        sum_carving = None
+   331→        sum_mft = None
+   332→        sum_motor_c = None
+   333→
+   334→        for rep in range(n_repetitions):
+   335→            # Apply corruption
+   336→            rep_seed = seed + rep * 1000  # Different seed per repetition
+   337→            if damage_pct == 0.0:
+   338→                corrupted_image = image
+   339→                corruption_meta = {}
+   340→            else:
+   341→                model = MFTPartialDeleteModel(seed=rep_seed)
+   342→                image_copy = bytearray(image)
+   343→                corr_result = model.apply(image_copy, manifest, severity=damage_pct)
+   344→                corrupted_image = corr_result.corrupted_image
+   345→                corruption_meta = corr_result.manifest_corruption
+   346→
+   347→            # Calculate MFT confidence
+   348→            confidence = motor_c.compute_mft_confidence(corrupted_image, manifest)
+   349→
+   350→            # ─── Carving ──────────────────────────────────────────────
+   351→            result_carving = motor_carving.recover(
+   352→                corrupted_image, manifest,
+   353→                read_budget=read_budget,
+   354→                corruption_metadata=corruption_meta,
+   355→            )
+   356→            metrics_carving = judge.judge(
+   357→                recovered_files=[{"name": f.name, "sha256": f.sha256,
+   358→                                  "size": f.size, "is_directory": f.is_directory}
+   359→                                 for f in result_carving.recovered_files],
+   360→                read_count=result_carving.read_count,
+   361→                sectors_wasted=result_carving.sectors_wasted,
+   362→                time_to_first_file=result_carving.time_to_first_file,
+   363→                mft_entries_parsed=result_carving.mft_entries_parsed,
+   364→            )
+   365→
+   366→            # ─── MFT-First ───────────────────────────────────────────
+   367→            result_mft = motor_mft.recover(
+   368→                corrupted_image, manifest,
+   369→                read_budget=read_budget,
+   370→                corruption_metadata=corruption_meta,
+   371→            )
+   372→            metrics_mft = judge.judge(
+   373→                recovered_files=[{"name": f.name, "sha256": f.sha256,
+   374→                                  "size": f.size, "is_directory": f.is_directory}
+   375→                                 for f in result_mft.recovered_files],
+   376→                read_count=result_mft.read_count,
+   377→                sectors_wasted=result_mft.sectors_wasted,
+   378→                time_to_first_file=result_mft.time_to_first_file,
+   379→                mft_entries_parsed=result_mft.mft_entries_parsed,
+   380→            )
+   381→
+   382→            # ─── Motor C ─────────────────────────────────────────────
+   383→            result_motor_c = motor_c.recover(
+   384→                corrupted_image, manifest,
+   385→                read_budget=read_budget,
+   386→                corruption_metadata=corruption_meta,
+   387→            )
+   388→            metrics_motor_c = judge.judge(
+   389→                recovered_files=[{"name": f.name, "sha256": f.sha256,
+   390→                                  "size": f.size, "is_directory": f.is_directory}
+   391→                                 for f in result_motor_c.recovered_files],
+   392→                read_count=result_motor_c.read_count,
+   393→                sectors_wasted=result_motor_c.sectors_wasted,
+   394→                time_to_first_file=result_motor_c.time_to_first_file,
+   395→                mft_entries_parsed=result_motor_c.mft_entries_parsed,
+   396→            )
+   397→
+   398→            # Collect recovery rates
+   399→            carving_recoveries.append(metrics_carving.recovery_rate())
+   400→            mft_recoveries.append(metrics_mft.recovery_rate())
+   401→            motor_c_recoveries.append(metrics_motor_c.recovery_rate())
+   402→
+   403→            # Accumulate metrics (use last repetition for details)
+   404→            if rep == n_repetitions - 1:
+   405→                sum_carving = metrics_carving
+   406→                sum_mft = metrics_mft
+   407→                sum_motor_c = metrics_motor_c
+   408→
+   409→        # Compute statistics
+   410→        stats = compute_statistics(carving_recoveries, mft_recoveries)
+   411→
+   412→        # Determine winner
+   413→        avg_carving = sum(carving_recoveries) / len(carving_recoveries)
+   414→        avg_mft = sum(mft_recoveries) / len(mft_recoveries)
+   415→        avg_motor_c = sum(motor_c_recoveries) / len(motor_c_recoveries)
+   416→
+   417→        delta = avg_mft - avg_carving
+   418→
+   419→        if delta > 0.05:
+   420→            winner = "MFT-First"
+   421→        elif delta < -0.05:
+   422→            winner = "Carving"
+   423→        else:
+   424→            winner = "Tie"
+   425→
+   426→        # Create data point
+   427→        point = CrossoverPoint(
+   428→            mft_damage_pct=damage_pct,
+   429→            mft_confidence=confidence,
+   430→            carving_recovery=avg_carving,
+   431→            carving_correct=sum_carving.files_correct_checksum,
+   432→            carving_corrupt=sum_carving.files_corrupt,
+   433→            carving_false_positives=sum_carving.false_positives,
+   434→            carving_reads=sum_carving.read_count,
+   435→            carving_efficiency=sum_carving.read_efficiency(),
+   436→            carving_integrity=sum_carving.integrity_score,
+   437→            mft_recovery=avg_mft,
+   438→            mft_correct=sum_mft.files_correct_checksum,
+   439→            mft_corrupt=sum_mft.files_corrupt,
+   440→            mft_false_positives=sum_mft.false_positives,
+   441→            mft_reads=sum_mft.read_count,
+   442→            mft_efficiency=sum_mft.read_efficiency(),
+   443→            mft_integrity=sum_mft.integrity_score,
+   444→            motor_c_recovery=avg_motor_c,
+   445→            motor_c_correct=sum_motor_c.files_correct_checksum,
+   446→            motor_c_corrupt=sum_motor_c.files_corrupt,
+   447→            motor_c_false_positives=sum_motor_c.false_positives,
+   448→            motor_c_reads=sum_motor_c.read_count,
+   449→            motor_c_efficiency=sum_motor_c.read_efficiency(),
+   450→            motor_c_integrity=sum_motor_c.integrity_score,
+   451→            n_repetitions=n_repetitions,
+   452→            carving_recovery_ci_lower=stats["ci_lower_carving"],
+   453→            carving_recovery_ci_upper=stats["ci_upper_carving"],
+   454→            mft_recovery_ci_lower=stats["ci_lower_mft"],
+   455→            mft_recovery_ci_upper=stats["ci_upper_mft"],
+   456→            p_value=stats["p_value"],
+   457→            effect_size=stats["effect_size"],
+   458→            optimal_strategy="mft_first" if delta > 0 else "carving",
+   459→            delta_recovery=delta,
+   460→        )
+   461→        result.points.append(point)
+   462→
+   463→        # Print row
+   464→        print(f"  {damage_pct:>7.0%} │ {confidence:>5.1%} │ "
+   465→              f"{avg_carving:>9.1%} │ {avg_mft:>9.1%} │ "
+   466→              f"{avg_motor_c:>9.1%} │ "
+   467→              f"{delta:>+7.1%} │ {winner:>10s} │ "
+   468→              f"{stats['p_value']:>7.3f} │ {stats['effect_size']:>+5.2f}")
+   469→
+   470→    # Find crossover
+   471→    crossover = result.find_crossover()
+   472→    print(f"{'─'*90}")
+   473→    if crossover is not None:
+   474→        print(f"  ★ CROSSOVER POINT: {crossover:.1%} MFT damage")
+   475→        print(f"    Type: {result.crossover_type}")
+   476→        print(f"    Below this point: MFT-First wins")
+   477→        print(f"    Above this point: Carving wins")
+   478→    else:
+   479→        # Check if one strategy always wins
+   480→        if all(p.delta_recovery > 0 for p in result.points):
+   481→            print(f"  No crossover found — MFT-First wins at ALL damage levels")
+   482→        elif all(p.delta_recovery < 0 for p in result.points):
+   483→            print(f"  No crossover found — Carving wins at ALL damage levels")
+   484→        else:
+   485→            print(f"  Mixed results — no clear crossover point")
+   486→
+   487→    print(f"{'='*90}")
+   488→
+   489→    return result
+   490→
+   491→
+   492→def visualize_crossover(result: CrossoverResult,
+   493→                         output_path: Optional[Path] = None):
+   494→    """Generate the crossover curve visualization."""
+   495→    try:
+   496→        import matplotlib
+   497→        matplotlib.use('Agg')
+   498→        import matplotlib.pyplot as plt
+   499→        import matplotlib.font_manager as fm
+   500→        import numpy as np
+   501→    except ImportError:
+   502→        print("matplotlib not available for visualization")
+   503→        return
+   504→
+   505→    # Font setup
+   506→    fm.fontManager.addfont('/usr/share/fonts/truetype/chinese/SarasaMonoSC-Regular.ttf')
+   507→    fm.fontManager.addfont('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf')
+   508→    plt.rcParams['font.sans-serif'] = ['Sarasa Mono SC', 'DejaVu Sans']
+   509→    plt.rcParams['axes.unicode_minus'] = False
+   510→
+   511→    points = result.points
+   512→    if not points:
+   513→        return
+   514→
+   515→    damage = [p.mft_damage_pct * 100 for p in points]
+   516→    carving_rec = [p.carving_recovery * 100 for p in points]
+   517→    mft_rec = [p.mft_recovery * 100 for p in points]
+   518→    motor_c_rec = [p.motor_c_recovery * 100 for p in points]
+   519→    delta = [p.delta_recovery * 100 for p in points]
+   520→    p_values = [p.p_value for p in points]
+   521→    effect_sizes = [p.effect_size for p in points]
+   522→
+   523→    fig, axes = plt.subplots(2, 2, figsize=(16, 12), constrained_layout=True)
+   524→    fig.patch.set_facecolor('#1a1a2e')
+   525→    fig.suptitle('Strategy Crossover Curve — H2 Test', fontsize=16,
+   526→                 color='white', fontweight='bold', y=0.98)
+   527→
+   528→    # ─── Plot 1: Recovery Rate vs MFT Damage (THE MAIN PLOT) ──────────
+   529→    ax1 = axes[0, 0]
+   530→    ax1.set_facecolor('#16213e')
+   531→    ax1.plot(damage, carving_rec, 'o-', color='#e74c3c',
+   532→             label='Carving (Signature-Only)', linewidth=2.5, markersize=5)
+   533→    ax1.plot(damage, mft_rec, 's-', color='#2ecc71',
+   534→             label='MFT-First', linewidth=2.5, markersize=5)
+   535→    ax1.plot(damage, motor_c_rec, '^-', color='#3498db',
+   536→             label='Motor C (Adaptive)', linewidth=2.5, markersize=5)
+   537→
+   538→    # Mark crossover point
+   539→    if result.crossover_point is not None:
+   540→        ax1.axvline(x=result.crossover_point * 100, color='#f39c12',
+   541→                    linestyle='--', linewidth=2.5, alpha=0.9,
+   542→                    label=f'Crossover ({result.crossover_point:.0%})')
+   543→
+   544→        # Shade regions
+   545→        ax1.axvspan(0, result.crossover_point * 100, alpha=0.08, color='#2ecc71')
+   546→        ax1.axvspan(result.crossover_point * 100, 100, alpha=0.08, color='#e74c3c')
+   547→
+   548→        # Add labels
+   549→        ax1.text(result.crossover_point * 50, 85, 'MFT-First\nwins',
+   550→                ha='center', fontsize=11, color='#2ecc71', alpha=0.7, fontweight='bold')
+   551→        ax1.text((result.crossover_point * 100 + 100) / 2, 85, 'Carving\nwins',
+   552→                ha='center', fontsize=11, color='#e74c3c', alpha=0.7, fontweight='bold')
+   553→
+   554→    ax1.set_xlabel('MFT Damage (%)', fontsize=11, color='white')
+   555→    ax1.set_ylabel('Recovery Rate (%)', fontsize=11, color='white')
+   556→    ax1.set_title('Recovery Rate vs MFT Damage', fontsize=13, color='white', fontweight='bold')
+   557→    ax1.legend(fontsize=9, facecolor='#1a1a2e', edgecolor='#444', labelcolor='white')
+   558→    ax1.tick_params(colors='white')
+   559→    ax1.grid(True, alpha=0.2, color='white')
+   560→    ax1.set_ylim(-5, 105)
+   561→
+   562→    # ─── Plot 2: Delta Recovery (MFT - Carving) ───────────────────────
+   563→    ax2 = axes[0, 1]
+   564→    ax2.set_facecolor('#16213e')
+   565→    bar_width = (damage[1] - damage[0]) * 0.8 if len(damage) > 1 else 4.0
+   566→    colors = ['#2ecc71' if d > 0 else '#e74c3c' for d in delta]
+   567→    ax2.bar(damage, delta, color=colors, width=bar_width, alpha=0.8)
+   568→    ax2.axhline(y=0, color='white', linewidth=1, alpha=0.5)
+   569→
+   570→    if result.crossover_point is not None:
+   571→        ax2.axvline(x=result.crossover_point * 100, color='#f39c12',
+   572→                    linestyle='--', linewidth=2, alpha=0.9)
+   573→
+   574→    ax2.set_xlabel('MFT Damage (%)', fontsize=11, color='white')
+   575→    ax2.set_ylabel('Δ Recovery (MFT - Carving) %', fontsize=11, color='white')
+   576→    ax2.set_title('Strategy Advantage by Damage Level', fontsize=13, color='white', fontweight='bold')
+   577→    ax2.tick_params(colors='white')
+   578→    ax2.grid(True, alpha=0.2, color='white')
+   579→
+   580→    # ─── Plot 3: Statistical Significance ─────────────────────────────
+   581→    ax3 = axes[1, 0]
+   582→    ax3.set_facecolor('#16213e')
+   583→
+   584→    # Color by significance
+   585→    sig_colors = ['#e74c3c' if p < 0.05 else '#95a5a6' for p in p_values]
+   586→    ax3.bar(damage, [-np.log10(p + 1e-10) for p in p_values],
+   587→            color=sig_colors, width=bar_width, alpha=0.8)
+   588→    ax3.axhline(y=-np.log10(0.05), color='#f39c12', linestyle='--',
+   589→                linewidth=2, alpha=0.8, label='p = 0.05')
+   590→    ax3.axhline(y=-np.log10(0.01), color='#e74c3c', linestyle='--',
+   591→                linewidth=1.5, alpha=0.6, label='p = 0.01')
+   592→
+   593→    ax3.set_xlabel('MFT Damage (%)', fontsize=11, color='white')
+   594→    ax3.set_ylabel('-log₁₀(p-value)', fontsize=11, color='white')
+   595→    ax3.set_title('Statistical Significance (Carving vs MFT-First)', fontsize=13,
+   596→                  color='white', fontweight='bold')
+   597→    ax3.legend(fontsize=9, facecolor='#1a1a2e', edgecolor='#444', labelcolor='white')
+   598→    ax3.tick_params(colors='white')
+   599→    ax3.grid(True, alpha=0.2, color='white')
+   600→
+   601→    # ─── Plot 4: Effect Size ──────────────────────────────────────────
+   602→    ax4 = axes[1, 1]
+   603→    ax4.set_facecolor('#16213e')
+   604→
+   605→    # Color by magnitude
+   606→    es_colors = []
+   607→    for d in effect_sizes:
+   608→        if abs(d) > 0.8:
+   609→            es_colors.append('#e74c3c' if d < 0 else '#2ecc71')
+   610→        elif abs(d) > 0.5:
+   611→            es_colors.append('#f39c12')
+   612→        else:
+   613→            es_colors.append('#95a5a6')
+   614→
+   615→    ax4.bar(damage, effect_sizes, color=es_colors, width=bar_width, alpha=0.8)
+   616→    ax4.axhline(y=0, color='white', linewidth=1, alpha=0.5)
+   617→    ax4.axhline(y=0.8, color='#2ecc71', linestyle='--', alpha=0.5, label='Large (d=0.8)')
+   618→    ax4.axhline(y=-0.8, color='#e74c3c', linestyle='--', alpha=0.5)
+   619→    ax4.axhline(y=0.5, color='#f39c12', linestyle='--', alpha=0.5, label='Medium (d=0.5)')
+   620→    ax4.axhline(y=-0.5, color='#f39c12', linestyle='--', alpha=0.5)
+   621→
+   622→    if result.crossover_point is not None:
+   623→        ax4.axvline(x=result.crossover_point * 100, color='#f39c12',
+   624→                    linestyle='--', linewidth=2, alpha=0.9)
+   625→
+   626→    ax4.set_xlabel('MFT Damage (%)', fontsize=11, color='white')
+   627→    ax4.set_ylabel("Cohen's d (MFT - Carving)", fontsize=11, color='white')
+   628→    ax4.set_title("Effect Size (Cohen's d)", fontsize=13, color='white', fontweight='bold')
+   629→    ax4.legend(fontsize=9, facecolor='#1a1a2e', edgecolor='#444', labelcolor='white')
+   630→    ax4.tick_params(colors='white')
+   631→    ax4.grid(True, alpha=0.2, color='white')
+   632→
+   633→    # ─── Save ─────────────────────────────────────────────────────────
+   634→    if output_path is None:
+   635→        output_path = PROJECT_ROOT / "output" / "results" / "crossover_curve.png"
+   636→
+   637→    output_path.parent.mkdir(parents=True, exist_ok=True)
+   638→    plt.savefig(output_path, dpi=150, facecolor='#1a1a2e', edgecolor='none')
+   639→    plt.close()
+   640→
+   641→    print(f"\n  Crossover curve visualization: {output_path}")
+   642→    return output_path
+   643→
+   644→
+   645→def main():
+   646→    import argparse
+   647→
+   648→    parser = argparse.ArgumentParser(description="RecoveryLab Strategy Crossover Curve")
+   649→    parser.add_argument("--dataset-dir", type=str, default="output/datasets",
+   650→                       help="Directory containing dataset images")
+   651→    parser.add_argument("--step", type=float, default=0.05,
+   652→                       help="Damage step (default 0.05 = 5%%)")
+   653→    parser.add_argument("--max-damage", type=float, default=1.0,
+   654→                       help="Max damage (default 1.0)")
+   655→    parser.add_argument("--seed", type=int, default=42)
+   656→    parser.add_argument("--repetitions", type=int, default=5,
+   657→                       help="Number of repetitions per point (for statistics)")
+   658→    parser.add_argument("--output-dir", type=str, default=None)
+   659→
+   660→    args = parser.parse_args()
+   661→
+   662→    # Find first dataset
+   663→    dataset_dir = PROJECT_ROOT / args.dataset_dir
+   664→    img_path = None
+   665→    manifest_path = None
+   666→
+   667→    for f in sorted(dataset_dir.glob("dataset_*.img")):
+   668→        m = f.parent / f.name.replace(".img", "_manifest.json")
+   669→        if m.exists():
+   670→            img_path = f
+   671→            manifest_path = m
+   672→            break
+   673→
+   674→    if not img_path:
+   675→        print(f"No datasets found in {dataset_dir}")
+   676→        sys.exit(1)
+   677→
+   678→    print(f"Dataset: {img_path.name}")
+   679→
+   680→    with open(img_path, 'rb') as f:
+   681→        image = f.read()
+   682→    manifest = load_manifest(manifest_path)
+   683→
+   684→    # Run crossover curve
+   685→    result = run_crossover_curve(
+   686→        image, manifest,
+   687→        seed=args.seed,
+   688→        step=args.step,
+   689→        max_damage=args.max_damage,
+   690→        n_repetitions=args.repetitions,
+   691→    )
+   692→
+   693→    # Save results
+   694→    output_dir = Path(args.output_dir) if args.output_dir else PROJECT_ROOT / "output" / "results"
+   695→    output_dir.mkdir(parents=True, exist_ok=True)
+   696→
+   697→    json_path = output_dir / "crossover_curve.json"
+   698→    with open(json_path, 'w') as f:
+   699→        json.dump(result.to_dict(), f, indent=2)
+   700→    print(f"\n  Results saved: {json_path}")
+   701→
+   702→    # Visualize
+   703→    png_path = output_dir / "crossover_curve.png"
+   704→    visualize_crossover(result, png_path)
+   705→
+   706→    # Print summary
+   707→    print(f"\n{'='*90}")
+   708→    print(f"CROSSOVER CURVE SUMMARY")
+   709→    print(f"{'='*90}")
+   710→    if result.crossover_point is not None:
+   711→        print(f"  ★ Crossover point: {result.crossover_point:.1%} MFT damage")
+   712→        print(f"    Type: {result.crossover_type}")
+   713→        print(f"    Below: MFT-First is optimal")
+   714→        print(f"    Above: Carving is optimal")
+   715→    else:
+   716→        all_mft = all(p.delta_recovery > 0 for p in result.points)
+   717→        all_carving = all(p.delta_recovery < 0 for p in result.points)
+   718→        if all_mft:
+   719→            print(f"  No crossover — MFT-First wins at ALL damage levels")
+   720→        elif all_carving:
+   721→            print(f"  No crossover — Carving wins at ALL damage levels")
+   722→        else:
+   723→            print(f"  Mixed results — no clear crossover")
+   724→
+   725→    # Find the crossover point details
+   726→    for p in result.points:
+   727→        if abs(p.delta_recovery) < 0.05:
+   728→            print(f"\n  Near-crossover at {p.mft_damage_pct:.0%} damage:")
+   729→            print(f"    Carving: {p.carving_recovery:.1%}")
+   730→            print(f"    MFT-First: {p.mft_recovery:.1%}")
+   731→            print(f"    Motor C: {p.motor_c_recovery:.1%}")
+   732→            print(f"    Δ: {p.delta_recovery:+.1%}")
+   733→            print(f"    p-value: {p.p_value:.3f}")
+   734→            print(f"    Cohen's d: {p.effect_size:+.2f}")
+   735→
+   736→    print(f"{'='*90}")
+   737→
+   738→
+   739→if __name__ == "__main__":
+   740→    main()
+   741→

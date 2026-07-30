@@ -21,6 +21,20 @@ Supported formats:
   - ZIP:   50 4B 03 04
   - MP4:   ....ftyp
   - DOCX:  50 4B 03 04 (same as ZIP — distinguished by internal structure)
+  - TIFF:  49 49 2A 00 (little-endian) or 4D 4D 00 2A (big-endian)
+  - CR2:   49 49 2A 00 (Canon RAW — same as TIFF, distinguished by internal markers)
+  - NEF:   4D 4D 00 2A (Nikon RAW — same as TIFF big-endian)
+  - MOV:   ....ftypqt (QuickTime)
+  - XLSX:  50 4B 03 04 (same as ZIP — distinguished by xl/ internal path)
+  - SQLite: 53 51 4C 69 74 65 20 66 6F 72 6D 20 31 00
+  - GIF:   47 49 46 38
+  - BMP:   42 4D
+  - RAR:   52 61 72 21 1A 07
+  - 7Z:    37 7A BC AF 27 1C
+  - PSD:   38 42 50 53 (Photoshop)
+  - DNG:   49 49 2A 00 (same as TIFF — distinguished by DNG markers)
+  - HEIC:  ....ftypheic (same container as MP4)
+  - AVI:   52 49 46 46....415649
 
 Limitations of carving (by design):
   - No filenames (we assign generic names like "carved_0001.jpg")
@@ -140,6 +154,144 @@ SIGNATURES: List[FileSignature] = [
         footer=b'PK\x05\x06',
         max_size=100 * 1024 * 1024,
         min_size=100,
+    ),
+
+    # TIFF — Tagged Image File Format (little-endian)
+    # Header: 49 49 2A 00 (II + 0x002A)
+    # Also matches CR2 (Canon RAW) which uses TIFF structure
+    # Footer: No reliable footer — use max-size heuristic
+    FileSignature(
+        name="TIFF",
+        extension=".tiff",
+        header=b'II\x2a\x00',
+        header_mask=b'\xFF\xFF\xFF\xFF',
+        footer=b'',
+        max_size=100 * 1024 * 1024,
+        min_size=1000,
+    ),
+
+    # TIFF big-endian — also matches NEF (Nikon RAW)
+    # Header: 4D 4D 00 2A (MM + 0x002A)
+    FileSignature(
+        name="TIFF_BE",
+        extension=".tiff",
+        header=b'MM\x00\x2a',
+        header_mask=b'\xFF\xFF\xFF\xFF',
+        footer=b'',
+        max_size=100 * 1024 * 1024,
+        min_size=1000,
+    ),
+
+    # MOV — QuickTime video
+    # Header: [4 bytes size]ftypqt
+    # Similar to MP4 but with 'qt' brand
+    FileSignature(
+        name="MOV",
+        extension=".mov",
+        header=b'ftypqt',
+        header_mask=b'\xFF\xFF\xFF\xFF\xFF\xFF',
+        footer=b'',
+        max_size=500 * 1024 * 1024,
+        min_size=1000,
+    ),
+
+    # XLSX — Microsoft Excel (ZIP-based)
+    # Same header as ZIP/DOCX — distinguished by xl/ internal path
+    FileSignature(
+        name="XLSX",
+        extension=".xlsx",
+        header=b'PK\x03\x04',
+        header_mask=b'\xFF\xFF\xFF\xFF',
+        footer=b'PK\x05\x06',
+        max_size=100 * 1024 * 1024,
+        min_size=100,
+    ),
+
+    # SQLite — Database file
+    # Header: "SQLite format 3\000"
+    # Footer: No reliable footer — use max-size heuristic
+    FileSignature(
+        name="SQLite",
+        extension=".sqlite",
+        header=b'SQLite format 3\x00',
+        header_mask=b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
+        footer=b'',
+        max_size=500 * 1024 * 1024,
+        min_size=512,
+    ),
+
+    # GIF — Graphics Interchange Format
+    # Header: GIF87a or GIF89a
+    # Footer: 3B (semicolon)
+    FileSignature(
+        name="GIF",
+        extension=".gif",
+        header=b'GIF8',
+        header_mask=b'\xFF\xFF\xFF\xFF',
+        footer=b';',
+        max_size=50 * 1024 * 1024,
+        min_size=100,
+    ),
+
+    # BMP — Bitmap image
+    # Header: BM
+    # Footer: No reliable footer
+    FileSignature(
+        name="BMP",
+        extension=".bmp",
+        header=b'BM',
+        header_mask=b'\xFF\xFF',
+        footer=b'',
+        max_size=50 * 1024 * 1024,
+        min_size=100,
+    ),
+
+    # RAR — RAR archive
+    # Header: Rar!\x1A\x07
+    FileSignature(
+        name="RAR",
+        extension=".rar",
+        header=b'Rar!\x1a\x07',
+        header_mask=b'\xFF\xFF\xFF\xFF\xFF\xFF',
+        footer=b'',
+        max_size=500 * 1024 * 1024,
+        min_size=100,
+    ),
+
+    # 7Z — 7-Zip archive
+    # Header: 37 7A BC AF 27 1C
+    FileSignature(
+        name="7Z",
+        extension=".7z",
+        header=b'7z\xBC\xAF\x27\x1C',
+        header_mask=b'\xFF\xFF\xFF\xFF\xFF\xFF',
+        footer=b'',
+        max_size=500 * 1024 * 1024,
+        min_size=100,
+    ),
+
+    # PSD — Adobe Photoshop
+    # Header: 8BPS
+    FileSignature(
+        name="PSD",
+        extension=".psd",
+        header=b'8BPS',
+        header_mask=b'\xFF\xFF\xFF\xFF',
+        footer=b'',
+        max_size=500 * 1024 * 1024,
+        min_size=1000,
+    ),
+
+    # AVI — Audio Video Interleave
+    # Header: RIFF....AVI
+    FileSignature(
+        name="AVI",
+        extension=".avi",
+        header=b'RIFF',
+        header_mask=b'\xFF\xFF\xFF\xFF',
+        footer=b'',
+        max_size=500 * 1024 * 1024,
+        min_size=1000,
     ),
 ]
 
@@ -511,15 +663,16 @@ class MotorCarving(BaseMotor):
 
     def _resolve_zip_docx(self, carved_files: List[Dict]) -> List[Dict]:
         """
-        Resolve ZIP/DOCX ambiguity.
+        Resolve ZIP/DOCX/XLSX ambiguity.
 
-        Both share the PK\x03\x04 header. We try to distinguish them
+        All three share the PK\x03\x04 header. We try to distinguish them
         by looking for internal structure markers:
           - DOCX contains "word/" or "word/document.xml"
+          - XLSX contains "xl/" or "xl/workbook.xml"
           - ZIP contains other content
 
-        If we find two carves at the same offset (one ZIP, one DOCX),
-        we keep the one that matches better.
+        If we find multiple carves at the same offset (ZIP/DOCX/XLSX),
+        we keep the one that matches best.
         """
         # Group by start offset
         by_offset: Dict[int, List[Dict]] = {}
@@ -535,8 +688,8 @@ class MotorCarving(BaseMotor):
                 resolved.append(files[0])
                 continue
 
-            # Multiple carves at same offset — likely ZIP/DOCX overlap
-            # Check internal content for DOCX markers
+            # Multiple carves at same offset — likely ZIP/DOCX/XLSX overlap
+            # Check internal content for format-specific markers
             data = files[0]["data"]
 
             has_docx_markers = (
@@ -545,7 +698,24 @@ class MotorCarving(BaseMotor):
                 b'Content_Types.xml' in data
             )
 
-            if has_docx_markers:
+            has_xlsx_markers = (
+                b'xl/' in data or
+                b'xl/workbook.xml' in data or
+                b'xl/worksheets/' in data
+            )
+
+            if has_xlsx_markers:
+                # Keep the XLSX version
+                for f in files:
+                    if f["format_name"] == "XLSX":
+                        resolved.append(f)
+                        break
+                else:
+                    # No XLSX entry found — convert the first ZIP to XLSX
+                    files[0]["extension"] = ".xlsx"
+                    files[0]["format_name"] = "XLSX"
+                    resolved.append(files[0])
+            elif has_docx_markers:
                 # Keep the DOCX version
                 for f in files:
                     if f["format_name"] == "DOCX":

@@ -1,0 +1,649 @@
+     1→"""
+     2→RecoveryLab — Hypothesis Registry
+     3→====================================
+     4→Formal tracking of hypotheses, evidence, and status.
+     5→
+     6→The goal is NOT "add features" — it's "close hypotheses with evidence."
+     7→
+     8→Each hypothesis has:
+     9→  - ID: Unique identifier (H1.1, H1.2, H1.3, ...)
+    10→  - Statement: What we're testing
+    11→  - Status: pending | in_evaluation | supported | refuted | refined
+    12→  - Evidence: What experiments support or refute this
+    13→  - Confidence: How confident we are (0.0-1.0)
+    14→  - Dependencies: What hypotheses must be resolved first
+    15→  - Open questions: What we still don't know
+    16→
+    17→The registry is append-only. Once a hypothesis is supported or refuted,
+    18→it stays that way. If it's refined, the refinement becomes a new hypothesis.
+    19→
+    20→This is the single source of truth for the project's scientific direction.
+    21→"""
+    22→
+    23→import json
+    24→from datetime import datetime, timezone
+    25→from pathlib import Path
+    26→from typing import List, Dict, Optional
+    27→from dataclasses import dataclass, field
+    28→from enum import Enum
+    29→
+    30→
+    31→class HypothesisStatus(Enum):
+    32→    PENDING = "pending"
+    33→    IN_EVALUATION = "in_evaluation"
+    34→    SUPPORTED = "supported"
+    35→    REFUTED = "refuted"
+    36→    REFINED = "refined"       # Original was too broad; split into sub-hypotheses
+    37→    INCONCLUSIVE = "inconclusive"
+    38→
+    39→
+    40→class EvidenceType(Enum):
+    41→    SIMULATION = "simulation"       # From RecoveryLab experiments
+    42→    EXTERNAL_TOOL = "external_tool" # From TestDisk, PhotoRec, etc.
+    43→    REAL_DISK = "real_disk"         # From actual hardware
+    44→    LITERATURE = "literature"       # From published research
+    45→    FORMAL = "formal"               # From mathematical proof
+    46→
+    47→
+    48→@dataclass
+    49→class Evidence:
+    50→    """A piece of evidence supporting or refuting a hypothesis."""
+    51→    timestamp: str
+    52→    type: EvidenceType
+    53→    supports: bool                  # True = supports, False = refutes
+    54→    description: str
+    55→    experiment_id: str = ""         # Link to experiment results
+    56→    strength: str = "moderate"      # weak | moderate | strong
+    57→    details: Dict = field(default_factory=dict)
+    58→
+    59→
+    60→@dataclass
+    61→class Hypothesis:
+    62→    """A single hypothesis with full tracking."""
+    63→    id: str
+    64→    statement: str
+    65→    status: HypothesisStatus = HypothesisStatus.PENDING
+    66→    confidence: float = 0.0
+    67→    evidence: List[Evidence] = field(default_factory=list)
+    68→    dependencies: List[str] = field(default_factory=list)
+    69→    open_questions: List[str] = field(default_factory=list)
+    70→    refinement_of: Optional[str] = None   # If this refines a previous hypothesis
+    71→    created_at: str = ""
+    72→    updated_at: str = ""
+    73→
+    74→    def add_evidence(self, evidence: Evidence):
+    75→        """Add evidence and update status/confidence."""
+    76→        self.evidence.append(evidence)
+    77→        self.updated_at = datetime.now(timezone.utc).isoformat()
+    78→        self._recompute_status()
+    79→
+    80→    def _recompute_status(self):
+    81→        """Recompute status based on accumulated evidence."""
+    82→        if not self.evidence:
+    83→            self.status = HypothesisStatus.PENDING
+    84→            return
+    85→
+    86→        supports = [e for e in self.evidence if e.supports]
+    87→        refutes = [e for e in self.evidence if not e.supports]
+    88→
+    89→        support_strength = sum(
+    90→            {"weak": 1, "moderate": 2, "strong": 3}[e.strength]
+    91→            for e in supports
+    92→        )
+    93→        refute_strength = sum(
+    94→            {"weak": 1, "moderate": 2, "strong": 3}[e.strength]
+    95→            for e in refutes
+    96→        )
+    97→
+    98→        total = support_strength + refute_strength
+    99→        if total == 0:
+   100→            self.confidence = 0.5
+   101→            self.status = HypothesisStatus.INCONCLUSIVE
+   102→            return
+   103→
+   104→        self.confidence = support_strength / total
+   105→
+   106→        if self.confidence >= 0.8:
+   107→            self.status = HypothesisStatus.SUPPORTED
+   108→        elif self.confidence <= 0.2:
+   109→            self.status = HypothesisStatus.REFUTED
+   110→        elif len(self.evidence) < 3:
+   111→            self.status = HypothesisStatus.IN_EVALUATION
+   112→        else:
+   113→            self.status = HypothesisStatus.INCONCLUSIVE
+   114→
+   115→    def to_dict(self) -> Dict:
+   116→        return {
+   117→            "id": self.id,
+   118→            "statement": self.statement,
+   119→            "status": self.status.value,
+   120→            "confidence": round(self.confidence, 3),
+   121→            "evidence": [
+   122→                {
+   123→                    "timestamp": e.timestamp,
+   124→                    "type": e.type.value,
+   125→                    "supports": e.supports,
+   126→                    "description": e.description,
+   127→                    "experiment_id": e.experiment_id,
+   128→                    "strength": e.strength,
+   129→                }
+   130→                for e in self.evidence
+   131→            ],
+   132→            "dependencies": self.dependencies,
+   133→            "open_questions": self.open_questions,
+   134→            "refinement_of": self.refinement_of,
+   135→            "created_at": self.created_at,
+   136→            "updated_at": self.updated_at,
+   137→        }
+   138→
+   139→
+   140→class HypothesisRegistry:
+   141→    """
+   142→    The single source of truth for project hypotheses.
+   143→
+   144→    Append-only: once a hypothesis is registered, it stays.
+   145→    Evidence accumulates over time. Status updates automatically.
+   146→    """
+   147→
+   148→    def __init__(self):
+   149→        self.hypotheses: Dict[str, Hypothesis] = {}
+   150→        self._init_core_hypotheses()
+   151→
+   152→    def _init_core_hypotheses(self):
+   153→        """Initialize the core hypotheses from the project's evolution."""
+   154→
+   155→        now = datetime.now(timezone.utc).isoformat()
+   156→
+   157→        # H1.1: Metadata prioritization reduces acquisition cost (REFINED)
+   158→        # Original: "Priorizar metadatos reduce lecturas"
+   159→        # Refined: Precise statement about acquisition cost, not just "lecturas"
+   160→        self.register(
+   161→            "H1.1",
+   162→            "Cuando los metadatos son confiables, una estrategia guiada por metadatos "
+   163→            "reduce el costo de adquisición sin disminuir la recuperación, "
+   164→            "comparada con una estrategia de carving puro.",
+   165→            open_questions=[
+   166→                "¿Cuál es el umbral de 'confiables'? (¿85%? ¿73%? ¿50%?)",
+   167→                "¿Cómo cambia el resultado con archivos fragmentados?",
+   168→                "¿La ventaja se mantiene con discos reales?",
+   169→                "BLOCKER-001: Las comparaciones previas A vs B NO son válidas — "
+   170→                "ambos usan MFT como fuente primaria. Necesitamos comparar "
+   171→            "contra Carving real (sin MFT).",
+   172→            ],
+   173→        )
+   174→        # Add existing evidence from first experiment
+   175→        self.add_evidence("H1.1", Evidence(
+   176→            timestamp=now,
+   177→            type=EvidenceType.SIMULATION,
+   178→            supports=True,
+   179→            description="Experimento 75 escenarios: Motor B usa 50-60% menos lecturas "
+   180→                        "en 93.3% de escenarios con MFT intacto",
+   181→            experiment_id="experiment_20260730_091046",
+   182→            strength="moderate",
+   183→            details={"avg_reads_saved": 9354, "support_pct": 0.933},
+   184→        ))
+   185→        self.add_evidence("H1.1", Evidence(
+   186→            timestamp=now,
+   187→            type=EvidenceType.SIMULATION,
+   188→            supports=False,
+   189→            description="A09 (sectores intermitentes): Motor B recupera 0% vs Motor A 26-40%. "
+   190→                        "Sin fallback, MFT-first colapsa cuando sectores MFT están dañados.",
+   191→            experiment_id="experiment_20260730_091046",
+   192→            strength="strong",
+   193→            details={"attack": "A09", "motor_a_recovery": 0.33, "motor_b_recovery": 0.0},
+   194→        ))
+   195→
+   196→        # H1.2: There exists a threshold for switching strategy
+   197→        self.register(
+   198→            "H1.2",
+   199→            "Cuando la confianza en los metadatos cae por debajo de un umbral, "
+   200→            "la estrategia óptima deja de ser la priorización y pasa a ser "
+   201→            "una estrategia híbrida.",
+   202→            open_questions=[
+   203→                "¿Cuál es el valor exacto del umbral? (¿85%? ¿73%? ¿50%?)",
+   204→                "¿El umbral es gradual o abrupto?",
+   205→                "¿El umbral depende del tipo de daño?",
+   206→                "¿Existe un umbral en discos reales?",
+   207→            ],
+   208→            dependencies=["H1.1"],
+   209→        )
+   210→        self.add_evidence("H1.2", Evidence(
+   211→            timestamp=now,
+   212→            type=EvidenceType.SIMULATION,
+   213→            supports=True,
+   214→            description="A09 demuestra que MFT-first colapsa sin fallback. "
+   215→                        "Existe un punto donde la estrategia debe cambiar.",
+   216→            experiment_id="experiment_20260730_091046",
+   217→            strength="weak",
+   218→            details={"note": "Demuestra necesidad, no valor del umbral"},
+   219→        ))
+   220→        self.add_evidence("H1.2", Evidence(
+   221→            timestamp=now,
+   222→            type=EvidenceType.SIMULATION,
+   223→            supports=False,
+   224→            description="Confidence Sweep no encontró umbral abrupto: "
+   225→                        "Motor B nunca recupera MENOS que Motor A (ambos usan MFT como fuente). "
+   226→                        "El umbral solo existe si los fallbacks funcionan.",
+   227→            experiment_id="confidence_sweep_20260730",
+   228→            strength="moderate",
+   229→        ))
+   230→
+   231→        # H1.3: Journal outperforms carving when MFT is partial
+   232→        self.register(
+   233→            "H1.3",
+   234→            "Cuando el MFT está parcialmente dañado, la estrategia Journal-guided "
+   235→            "recupera más archivos que el carving puro.",
+   236→            open_questions=[
+   237→                "¿El journal de NTFS contiene suficiente información de archivo?",
+   238→                "¿Cómo se compara con INDX recovery?",
+   239→                "¿Qué pasa si el journal también está corrupto?",
+   240→            ],
+   241→            dependencies=["H1.2"],
+   242→        )
+   243→
+   244→        # H1.4: Bitmap improves recovery when MFT is damaged
+   245→        self.register(
+   246→            "H1.4",
+   247→            "El bitmap de asignación mejora la recuperación en discos con MFT dañada, "
+   248→            "al reducir el espacio de búsqueda para carving.",
+   249→            open_questions=[
+   250→                "¿Cuánto reduce el espacio de búsqueda?",
+   251→                "¿Qué pasa si el bitmap está parcialmente corrupto?",
+   252→                "¿Un bitmap vacío (todo zeros) es peor que no tener bitmap?",
+   253→            ],
+   254→            dependencies=["H1.2"],
+   255→        )
+   256→
+   257→        # H1.5: The lab represents NTFS well enough
+   258→        self.register(
+   259→            "H1.5",
+   260→            "El RecoveryLab captura suficientes características de NTFS real "
+   261→            "como para que los resultados del laboratorio sean predictivos "
+   262→            "de comportamiento en discos reales.",
+   263→            open_questions=[
+   264→                "¿Los resultados cambian con archivos fragmentados?",
+   265→                "¿Los resultados cambian con jerarquía de directorios?",
+   266→                "¿Los resultados cambian con atributos extendidos?",
+   267→                "¿Qué pasa con discos creados por Windows real?",
+   268→            ],
+   269→        )
+   270→        self.add_evidence("H1.5", Evidence(
+   271→            timestamp=now,
+   272→            type=EvidenceType.SIMULATION,
+   273→            supports=False,
+   274→            description="El laboratorio NO tiene fragmentación (hardcoded 0.0), "
+   275→                        "NO tiene jerarquía de directorios, NO tiene INDX records. "
+   276→                        "Motor A y Motor B recuperan archivos idénticos porque ambos "
+   277→                        "son parseadores de MFT con diferente orden de lectura.",
+   278→            experiment_id="code_review",
+   279→            strength="strong",
+   280→        ))
+   281→
+   282→        # H1.6: Determinism — same scenario produces same result
+   283→        self.register(
+   284→            "H1.6",
+   285→            "El RecoveryLab produce resultados deterministas: "
+   286→            "ejecutar el mismo escenario 100 veces produce exactamente el mismo resultado.",
+   287→            open_questions=[
+   288→                "¿Hay alguna fuente de no-determinismo en el código?",
+   289→                "¿Los RNG con seed producen exactamente las mismas secuencias?",
+   290→            ],
+   291→        )
+   292→
+   293→        # H1.7: Motor C's confidence calculation correlates with real recovery
+   294→        self.register(
+   295→            "H1.7",
+   296→            "La confianza calculada por Motor C (user_readable / user_total) "
+   297→            "está correlacionada con la tasa de recuperación real.",
+   298→            open_questions=[
+   299→                "¿La correlación es lineal o no lineal?",
+   300→                "¿Qué señales adicionales mejorarían la confianza calculada?",
+   301→                "¿MFT Mirror consistencia es una señal útil?",
+   302→            ],
+   303→            dependencies=["H1.2"],
+   304→        )
+   305→
+   306→        # H2: Strategy Crossover — the most important hypothesis
+   307→        # Original: "Motor C supera estrategias fijas"
+   308→        # Refined: The observable frontier where optimal strategy changes
+   309→        # This is FALSIFIABLE — we can find the exact crossover point
+   310→        # H1 asks: "Is MFT useful?"
+   311→        # H2 asks: "When does the optimal strategy change?"
+   312→        # These are DIFFERENT questions. H2 is the more valuable one.
+   313→        self.register(
+   314→            "H2",
+   315→            "Existe una frontera observable donde la estrategia óptima cambia "
+   316→            "según el estado del medio. Específicamente, existe un punto de "
+   317→            "degradación del MFT a partir del cual una estrategia de carving "
+   318→            "supera a una estrategia basada en metadatos.",
+   319→            open_questions=[
+   320→                "¿Cuál es el porcentaje exacto de degradación del MFT donde ocurre el crossover?",
+   321→                "¿El crossover es gradual o abrupto?",
+   322→                "¿El crossover depende del tipo de daño (intermitente vs destrucción total)?",
+   323→                "¿El crossover cambia con el tipo de archivo (JPEG vs PDF vs TXT)?",
+   324→                "¿El crossover se mantiene con discos reales?",
+   325→            ],
+   326→            dependencies=["H1.1"],
+   327→        )
+   328→
+   329→        # BLOCKER-001: All previous A vs B comparisons are invalid
+   330→        self.register(
+   331→            "BLOCKER-001",
+   332→            "Las comparaciones previas Motor A vs Motor B NO son científicamente válidas "
+   333→            "porque ambas estrategias comparten la misma fuente de datos primaria (MFT). "
+   334→            "Motor A no es carving — es 'MFT-last'. Necesitamos un Motor Carving "
+   335→            "real (solo firmas, nunca MFT) para validar H1.1.",
+   336→            open_questions=[
+   337→                "¿Motor Carving recupera menos archivos que MFT-first cuando MFT está intacto?",
+   338→                "¿Motor Carving recupera MÁS archivos que MFT-first cuando MFT está destruido?",
+   339→                "¿Cuál es el punto de crossover?",
+   340→            ],
+   341→        )
+   342→        now_blocker = datetime.now(timezone.utc).isoformat()
+   343→        self.add_evidence("BLOCKER-001", Evidence(
+   344→            timestamp=now_blocker,
+   345→            type=EvidenceType.SIMULATION,
+   346→            supports=True,
+   347→            description="Análisis de código: Motor A tiene FILE_SIGNATURES pero nunca lo usa. "
+   348→                        "Ambos motores llaman a _parse_mft_record(). Motor A lee todo "
+   349→                        "secuencialmente y DESPUÉS parsea MFT. Motor B lee MFT primero. "
+   350→                        "Ambos dependen del MFT como fuente de verdad.",
+   351→            experiment_id="code_review_20260730",
+   352→            strength="strong",
+   353→        ))
+   354→        self.add_evidence("BLOCKER-001", Evidence(
+   355→            timestamp=now_blocker,
+   356→            type=EvidenceType.SIMULATION,
+   357→            supports=True,
+   358→            description="RESUELTO: Motor Carving implementado. Recupera 3-4/15 archivos "
+   359→                        "con firmas (JPEG, PNG, PDF) vs MFT-First 14/15. "
+   360→                        "MFT entries parsed = 0 (verificado: NUNCA lee MFT). "
+   361→                        "Comparación Carving vs MFT-First VALIDADA por strategy_profiles.py.",
+   362→            experiment_id="experiment_v2_20260730_142442",
+   363→            strength="strong",
+   364→        ))
+   365→
+   366→        # ─── H1.1: New evidence from 3-strategy experiment ─────────────
+   367→        self.add_evidence("H1.1", Evidence(
+   368→            timestamp=now_blocker,
+   369→            type=EvidenceType.SIMULATION,
+   370→            supports=True,
+   371→            description="Experimento v2 (100 escenarios, 3 estrategias): "
+   372→                        "MFT-First supera a Carving en 100/100 escenarios. "
+   373→                        "Avg Δ recovery rate: +43.87%. MFT-First recupera "
+   374→                        "significativamente más archivos que Carving puro. "
+   375→                        "STRONG_SUPPORT en 90/100 escenarios.",
+   376→            experiment_id="experiment_v2_20260730_142442",
+   377→            strength="strong",
+   378→            details={
+   379→                "support_pct": 1.0,
+   380→                "avg_delta_recovery": 0.4387,
+   381→                "strong_support_count": 90,
+   382→                "strong_refutation_count": 9,
+   383→            },
+   384→        ))
+   385→        self.add_evidence("H1.1", Evidence(
+   386→            timestamp=now_blocker,
+   387→            type=EvidenceType.SIMULATION,
+   388→            supports=False,
+   389→            description="A09 (sectores intermitentes): Carving recupera 2/15 archivos, "
+   390→                        "MFT-First recupera 0/15. Cuando el MFT es inaccesible, "
+   391→                        "Carving supera a MFT-First. 9 escenarios de STRONG_REFUTATION.",
+   392→            experiment_id="experiment_v2_20260730_142442",
+   393→            strength="strong",
+   394→            details={"attack": "A09", "carving_recovery": 0.133, "mft_recovery": 0.0},
+   395→        ))
+   396→
+   397→        # ─── H2: First evidence — Motor C recovers when both fail ──────
+   398→        self.add_evidence("H2", Evidence(
+   399→            timestamp=now_blocker,
+   400→            type=EvidenceType.SIMULATION,
+   401→            supports=True,
+   402→            description="A09 (sectores intermitentes): Carving=2/15, MFT-First=0/15, "
+   403→                        "Motor C=4/15. Motor C es el ÚNICO que recupera archivos "
+   404→                        "cuando MFT es inaccesible y Carving tiene baja cobertura. "
+   405→                        "Motor C usa diagnóstico (DecisionTrace) para decidir estrategia híbrida.",
+   406→            experiment_id="experiment_v2_20260730_142442",
+   407→            strength="moderate",
+   408→            details={"attack": "A09", "carving": 0.133, "mft": 0.0, "motor_c": 0.267},
+   409→        ))
+   410→        self.add_evidence("H2", Evidence(
+   411→            timestamp=now_blocker,
+   412→            type=EvidenceType.SIMULATION,
+   413→            supports=False,
+   414→            description="MFT-First vs Motor C: Motor C apenas supera a MFT-First "
+   415→                        "(5% supported, avg Δ recovery +1.40%). Motor C gasta más "
+   416→                        "lecturas (-1737 avg). En la mayoría de escenarios, Motor C "
+   417→                        "no mejora sobre MFT-First porque el diagnóstico tiene costo "
+   418→                        "y el fallback no está implementado (Journal/Bitmap/INDX = stubs).",
+   419→            experiment_id="experiment_v2_20260730_142442",
+   420→            strength="moderate",
+   421→            details={"support_pct": 0.05, "avg_delta_recovery": 0.014},
+   422→        ))
+   423→
+   424→        # ─── H2: Crossover Curve evidence ──────────────────────────────
+   425→        now_crossover = datetime.now(timezone.utc).isoformat()
+   426→        self.add_evidence("H2", Evidence(
+   427→            timestamp=now_crossover,
+   428→            type=EvidenceType.SIMULATION,
+   429→            supports=True,
+   430→            description="Crossover Curve (21 puntos, 5 repeticiones): "
+   431→                        "La frontera observable EXISTE. MFT-First supera a Carving "
+   432→                        "desde 0% hasta 95% de daño del MFT. Carving solo supera "
+   433→                        "a MFT-First cuando el MFT está 100% destruido. "
+   434→                        "Crossover en 95% de daño. Carving es constante (6.7% "
+   435→                        "recovery) sin importar el daño del MFT. MFT-First decae "
+   436→                        "linealmente. La frontera es gradual, no abrupta.",
+   437→            experiment_id="crossover_curve_20260730",
+   438→            strength="strong",
+   439→            details={
+   440→                "crossover_point": 0.95,
+   441→                "crossover_type": "gradual",
+   442→                "carving_constant_recovery": 0.067,
+   443→                "mft_at_0_pct": 0.933,
+   444→                "mft_at_100_pct": 0.0,
+   445→            },
+   446→        ))
+   447→
+   448→        # ─── H3: No universally optimal strategy ─────────────────────────
+   449→        # If H2 is true (there's a crossover frontier), then H3 follows:
+   450→        # No single strategy wins everywhere. The value is in the SELECTOR.
+   451→        # This is the real product: not "the best algorithm" but
+   452→        # "the best system for choosing algorithms."
+   453→        self.register(
+   454→            "H3",
+   455→            "No existe una estrategia de recuperación universalmente óptima. "
+   456→            "Para cualquier estrategia fija, existe al menos un estado del medio "
+   457→            "donde otra estrategia fija produce mejores resultados.",
+   458→            open_questions=[
+   459→                "¿Es H3 una consecuencia de H2, o una hipótesis independiente?",
+   460→                "¿Se puede demostrar H3 con un contraejemplo para cada estrategia?",
+   461→                "¿H3 implica que Motor C siempre es mejor que cualquier estrategia fija?",
+   462→                "¿Existen estrategias que son 'casi universalmente óptimas'?",
+   463→            ],
+   464→            dependencies=["H2"],
+   465→        )
+   466→        self.add_evidence("H3", Evidence(
+   467→            timestamp=now_blocker,
+   468→            type=EvidenceType.SIMULATION,
+   469→            supports=True,
+   470→            description="MFT-First supera a Carving en 90/100 escenarios, pero Carving "
+   471→                        "supera a MFT-First en A09 (intermitente). Ninguna estrategia "
+   472→                        "gana en todos los escenarios. Esto es evidencia preliminar "
+   473→                        "de que no existe una estrategia universalmente óptima.",
+   474→            experiment_id="experiment_v2_20260730_142442",
+   475→            strength="moderate",
+   476→            details={
+   477→                "mft_wins": 90, "carving_wins": 9, "neutral": 1,
+   478→                "note": "A09 es el contraejemplo para MFT-First",
+   479→            },
+   480→        ))
+   481→
+   482→    def register(self, hypothesis_id: str, statement: str,
+   483→                 status: HypothesisStatus = HypothesisStatus.PENDING,
+   484→                 dependencies: List[str] = None,
+   485→                 open_questions: List[str] = None,
+   486→                 refinement_of: str = None) -> Hypothesis:
+   487→        """Register a new hypothesis."""
+   488→        if hypothesis_id in self.hypotheses:
+   489→            return self.hypotheses[hypothesis_id]
+   490→
+   491→        now = datetime.now(timezone.utc).isoformat()
+   492→        h = Hypothesis(
+   493→            id=hypothesis_id,
+   494→            statement=statement,
+   495→            status=status,
+   496→            dependencies=dependencies or [],
+   497→            open_questions=open_questions or [],
+   498→            refinement_of=refinement_of,
+   499→            created_at=now,
+   500→            updated_at=now,
+   501→        )
+   502→        self.hypotheses[hypothesis_id] = h
+   503→        return h
+   504→
+   505→    def add_evidence(self, hypothesis_id: str, evidence: Evidence):
+   506→        """Add evidence to a hypothesis."""
+   507→        if hypothesis_id not in self.hypotheses:
+   508→            raise ValueError(f"Unknown hypothesis: {hypothesis_id}")
+   509→        self.hypotheses[hypothesis_id].add_evidence(evidence)
+   510→
+   511→    def get(self, hypothesis_id: str) -> Optional[Hypothesis]:
+   512→        """Get a hypothesis by ID."""
+   513→        return self.hypotheses.get(hypothesis_id)
+   514→
+   515→    def all_hypotheses(self) -> List[Hypothesis]:
+   516→        """Get all hypotheses sorted by ID."""
+   517→        return sorted(self.hypotheses.values(), key=lambda h: h.id)
+   518→
+   519→    def summary_table(self) -> str:
+   520→        """Generate a markdown summary table of all hypotheses."""
+   521→        lines = [
+   522→            "# RecoveryLab — Hypothesis Registry",
+   523→            "",
+   524→            "| ID | Hypothesis | Status | Confidence | Evidence | Open Questions |",
+   525→            "|----|-----------|--------|------------|----------|----------------|",
+   526→        ]
+   527→        for h in self.all_hypotheses():
+   528→            supports = sum(1 for e in h.evidence if e.supports)
+   529→            refutes = sum(1 for e in h.evidence if not e.supports)
+   530→            evidence_str = f"{supports}S / {refutes}R"
+   531→            questions = len(h.open_questions)
+   532→            lines.append(
+   533→                f"| {h.id} | {h.statement[:60]}... | {h.status.value} | "
+   534→                f"{h.confidence:.0%} | {evidence_str} | {questions} |"
+   535→            )
+   536→        return "\n".join(lines)
+   537→
+   538→    def detailed_report(self) -> str:
+   539→        """Generate a detailed report of all hypotheses."""
+   540→        lines = ["# RecoveryLab — Detailed Hypothesis Report", ""]
+   541→
+   542→        for h in self.all_hypotheses():
+   543→            lines.append(f"## {h.id}: {h.statement}")
+   544→            lines.append(f"**Status:** {h.status.value}")
+   545→            lines.append(f"**Confidence:** {h.confidence:.0%}")
+   546→            if h.refinement_of:
+   547→                lines.append(f"**Refinement of:** {h.refinement_of}")
+   548→            if h.dependencies:
+   549→                lines.append(f"**Dependencies:** {', '.join(h.dependencies)}")
+   550→            lines.append("")
+   551→
+   552→            if h.evidence:
+   553→                lines.append("### Evidence")
+   554→                for i, e in enumerate(h.evidence, 1):
+   555→                    symbol = "✓" if e.supports else "✗"
+   556→                    lines.append(
+   557→                        f"{i}. {symbol} [{e.type.value}] {e.description} "
+   558→                        f"(strength: {e.strength})"
+   559→                    )
+   560→                lines.append("")
+   561→
+   562→            if h.open_questions:
+   563→                lines.append("### Open Questions")
+   564→                for q in h.open_questions:
+   565→                    lines.append(f"- {q}")
+   566→                lines.append("")
+   567→
+   568→            lines.append("---")
+   569→            lines.append("")
+   570→
+   571→        return "\n".join(lines)
+   572→
+   573→    def save(self, path: Path):
+   574→        """Save the registry to a JSON file."""
+   575→        data = {
+   576→            "generated_at": datetime.now(timezone.utc).isoformat(),
+   577→            "hypotheses": {h_id: h.to_dict() for h_id, h in self.hypotheses.items()},
+   578→        }
+   579→        path.parent.mkdir(parents=True, exist_ok=True)
+   580→        with open(path, 'w') as f:
+   581→            json.dump(data, f, indent=2, ensure_ascii=False)
+   582→
+   583→    def load(self, path: Path):
+   584→        """Load the registry from a JSON file."""
+   585→        with open(path, 'r') as f:
+   586→            data = json.load(f)
+   587→
+   588→        for h_id, h_data in data.get("hypotheses", {}).items():
+   589→            if h_id in self.hypotheses:
+   590→                # Update existing hypothesis with loaded evidence
+   591→                h = self.hypotheses[h_id]
+   592→                for e_data in h_data.get("evidence", []):
+   593→                    # Check if we already have this evidence
+   594→                    already_exists = any(
+   595→                        e.description == e_data["description"]
+   596→                        for e in h.evidence
+   597→                    )
+   598→                    if not already_exists:
+   599→                        h.add_evidence(Evidence(
+   600→                            timestamp=e_data["timestamp"],
+   601→                            type=EvidenceType(e_data["type"]),
+   602→                            supports=e_data["supports"],
+   603→                            description=e_data["description"],
+   604→                            experiment_id=e_data.get("experiment_id", ""),
+   605→                            strength=e_data.get("strength", "moderate"),
+   606→                        ))
+   607→
+   608→    def next_steps(self) -> List[str]:
+   609→        """What experiments should we run next to close open hypotheses?"""
+   610→        steps = []
+   611→
+   612→        # Check what's most needed
+   613→        for h in self.all_hypotheses():
+   614→            if h.status == HypothesisStatus.PENDING:
+   615→                steps.append(
+   616→                    f"[{h.id}] PENDING — needs first experiment: {h.open_questions[0] if h.open_questions else 'design experiment'}"
+   617→                )
+   618→            elif h.status == HypothesisStatus.IN_EVALUATION:
+   619→                steps.append(
+   620→                    f"[{h.id}] IN EVALUATION — needs more evidence: {h.open_questions[0] if h.open_questions else 'gather more data'}"
+   621→                )
+   622→            elif h.status == HypothesisStatus.INCONCLUSIVE:
+   623→                steps.append(
+   624→                    f"[{h.id}] INCONCLUSIVE — conflicting evidence, need decisive experiment"
+   625→                )
+   626→
+   627→        return steps
+   628→
+   629→
+   630→# ─── Singleton for convenience ────────────────────────────────────────────────
+   631→
+   632→_registry = None
+   633→
+   634→def get_registry() -> HypothesisRegistry:
+   635→    """Get the global hypothesis registry."""
+   636→    global _registry
+   637→    if _registry is None:
+   638→        _registry = HypothesisRegistry()
+   639→    return _registry
+   640→
+   641→
+   642→if __name__ == "__main__":
+   643→    registry = get_registry()
+   644→    print(registry.summary_table())
+   645→    print()
+   646→    print("Next steps:")
+   647→    for step in registry.next_steps():
+   648→        print(f"  {step}")
+   649→

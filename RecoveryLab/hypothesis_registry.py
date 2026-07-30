@@ -254,6 +254,68 @@ class HypothesisRegistry:
             dependencies=["H1.2"],
         )
 
+        # ─── H4: The Damage × Strategy Matrix ────────────────────────────
+        # The most useful artifact is not a single curve, but a MATRIX:
+        # damage_type × strategy → expected outcome. This maps the problem
+        # space and tells us which strategy to use for each damage pattern.
+        # The matrix is the LAB's real product — not a single motor.
+        self.register(
+            "H4",
+            "Para cada tipo de daño, existe una estrategia que produce "
+            "los mejores resultados. La combinación de estas relaciones "
+            "forma una matriz daño×estrategia que predice la estrategia "
+            "óptima para cada estado del medio.",
+            open_questions=[
+                "¿Cuántos tipos de daño distintos existen en la práctica?",
+                "¿La matriz tiene dimensiones finitas o es un espacio continuo?",
+                "¿Se puede construir la matriz empíricamente con el laboratorio?",
+                "¿La matriz es universal (independiente del disco) o específica?",
+                "¿Cómo se generaliza la matriz a filesystems no-NTFS?",
+            ],
+            dependencies=["H2"],
+        )
+        self.add_evidence("H4", Evidence(
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            type=EvidenceType.SIMULATION,
+            supports=True,
+            description="Evidencia preliminar de la matriz: "
+                        "MFT parcial → MFT-First gana (90/100). "
+                        "Head crash inicio → Carving gana (MFT en primeros sectores). "
+                        "Sectores intermitentes → Carving parcialmente gana (2/15 vs 0/15). "
+                        "Runlists corruptos → sin datos aún. "
+                        "Bitmap roto → sin datos aún. "
+                        "La matriz es más útil que una sola curva porque mapea "
+                        "el espacio de problemas completo.",
+            experiment_id="experiment_v2_20260730_142442",
+            strength="weak",
+            details={
+                "matrix_rows": ["MFT parcial", "Head crash inicio", "Sectores intermitentes"],
+                "matrix_cols": ["MFT-First", "Carving", "Motor C"],
+                "filled_cells": 3,
+                "total_cells": 9,
+            },
+        ))
+
+        # ─── H5: Per-format recovery differs ─────────────────────────────
+        # The user loses FILES, not sectors. Each format has different
+        # properties that affect recovery strategy effectiveness.
+        # JPEG (footer FF D9) is easier to carve than TXT (no signature).
+        # The experiment axis should be per-format, not per-MFT-degradation.
+        self.register(
+            "H5",
+            "La efectividad de cada estrategia de recuperación depende "
+            "del formato de archivo. Archivos con firmas fuertes y footers "
+            "confiables (JPEG, PNG) son más recuperables por carving que "
+            "archivos sin firmas (TXT, LOG) o con firmas ambiguas (ZIP/DOCX).",
+            open_questions=[
+                "¿Cuál es la tasa de recuperación por formato para cada estrategia?",
+                "¿Existe un formato donde carving siempre supera a MFT-First?",
+                "¿La fragmentación afecta más a unos formatos que a otros?",
+                "¿Cómo se compara la recuperación de RAW (CR2, NEF) vs JPEG?",
+            ],
+            dependencies=["H1.1"],
+        )
+
         # H1.5: The lab represents NTFS well enough
         self.register(
             "H1.5",
@@ -422,26 +484,57 @@ class HypothesisRegistry:
         ))
 
         # ─── H2: Crossover Curve evidence ──────────────────────────────
+        # IMPORTANT CAVEAT: The crossover at 95% is NOT a discovery.
+        # It is an artifact of the current carving motor's limited format support.
+        # Carving only recovers 1/15 files (6.7%) because it only supports
+        # JPEG, PNG, PDF, ZIP, MP4, DOCX signatures. If carving supported
+        # TIFF, CR2, NEF, MOV, SQLite, XLSX, etc., the curve would shift.
+        # The 95% crossover point is a property of the current carving motor,
+        # not a property of the strategy space.
         now_crossover = datetime.now(timezone.utc).isoformat()
         self.add_evidence("H2", Evidence(
             timestamp=now_crossover,
             type=EvidenceType.SIMULATION,
             supports=True,
             description="Crossover Curve (21 puntos, 5 repeticiones): "
-                        "La frontera observable EXISTE. MFT-First supera a Carving "
-                        "desde 0% hasta 95% de daño del MFT. Carving solo supera "
-                        "a MFT-First cuando el MFT está 100% destruido. "
-                        "Crossover en 95% de daño. Carving es constante (6.7% "
-                        "recovery) sin importar el daño del MFT. MFT-First decae "
-                        "linealmente. La frontera es gradual, no abrupta.",
+                        "MFT-First supera a Carving desde 0% hasta 95% de daño del MFT. "
+                        "CAVEAT: El crossover al 95% NO es un descubrimiento — es una "
+                        "propiedad del carving actual (solo 6.7% recovery, 1/15 archivos). "
+                        "Si el carving soportara más formatos, la curva cambiaría. "
+                        "Lo que SÍ es sólido: las curvas se cruzan, confirmando que "
+                        "los modos de falla son distintos.",
             experiment_id="crossover_curve_20260730",
-            strength="strong",
+            strength="moderate",  # Downgraded from "strong" — ceiling artifact
             details={
                 "crossover_point": 0.95,
                 "crossover_type": "gradual",
                 "carving_constant_recovery": 0.067,
                 "mft_at_0_pct": 0.933,
                 "mft_at_100_pct": 0.0,
+                "caveat": "Crossover point is artifact of limited carving format support. "
+                          "Not a discovery. Need expanded carving + per-format experiments.",
+            },
+        ))
+
+        # ─── H2: The REAL insight — different failure modes ─────────────
+        # The one conclusion that IS solid even with current limitations:
+        # metadata-based and signature-based strategies fail differently.
+        self.add_evidence("H2", Evidence(
+            timestamp=now_crossover,
+            type=EvidenceType.SIMULATION,
+            supports=True,
+            description="CONCLUSIÓN SÓLIDA: Una estrategia basada en metadatos y una "
+                        "estrategia basada en firmas no fallan de la misma manera. "
+                        "MFT-First falla cuando el MFT es inaccesible (A09: 0/15). "
+                        "Carving falla cuando los archivos no tienen firmas conocidas "
+                        "o están fragmentados. Sus modos de falla son DISTINTOS. "
+                        "Eso es exactamente el tipo de evidencia que justifica un orquestador.",
+            experiment_id="crossover_curve_20260730",
+            strength="strong",
+            details={
+                "insight": "different_failure_modes",
+                "mft_fails_when": "MFT inaccessible (sectores intermitentes, head crash inicio)",
+                "carving_fails_when": "No signatures, fragmented files, no footers",
             },
         ))
 
@@ -450,6 +543,16 @@ class HypothesisRegistry:
         # No single strategy wins everywhere. The value is in the SELECTOR.
         # This is the real product: not "the best algorithm" but
         # "the best system for choosing algorithms."
+        #
+        # CAVEAT: H3 is NOT yet demonstrated. The current evidence is consistent
+        # with H3, but the strategy space evaluated is still too small:
+        #   - Only basic MFT parser vs basic carving (6 signatures)
+        #   - Missing: advanced carving, journal-first, bitmap-guided,
+        #     USN-guided, MFT Mirror recovery, tolerant parser,
+        #     probabilistic carving
+        # We should write: "La evidencia preliminar es consistente con H3,
+        # pero el espacio de estrategias evaluadas aún es reducido
+        # para considerarla demostrada."
         self.register(
             "H3",
             "No existe una estrategia de recuperación universalmente óptima. "
@@ -460,6 +563,10 @@ class HypothesisRegistry:
                 "¿Se puede demostrar H3 con un contraejemplo para cada estrategia?",
                 "¿H3 implica que Motor C siempre es mejor que cualquier estrategia fija?",
                 "¿Existen estrategias que son 'casi universalmente óptimas'?",
+                "¿El espacio de estrategias evaluadas es suficiente para demostrar H3? "
+                "Actualmente solo tenemos MFT parser básico + carving básico (6 firmas).",
+                "¿Qué pasa con journal-first, bitmap-guided, USN-guided, MFT Mirror, "
+                "parser tolerante, carving probabilístico?",
             ],
             dependencies=["H2"],
         )
@@ -467,15 +574,25 @@ class HypothesisRegistry:
             timestamp=now_blocker,
             type=EvidenceType.SIMULATION,
             supports=True,
-            description="MFT-First supera a Carving en 90/100 escenarios, pero Carving "
-                        "supera a MFT-First en A09 (intermitente). Ninguna estrategia "
-                        "gana en todos los escenarios. Esto es evidencia preliminar "
-                        "de que no existe una estrategia universalmente óptima.",
+            description="La evidencia preliminar es CONSISTENTE con H3, pero el espacio "
+                        "de estrategias evaluadas aún es reducido para considerarla "
+                        "demostrada. MFT-First supera a Carving en 90/100 escenarios, "
+                        "pero Carving supera a MFT-First en A09 (intermitente). "
+                        "Ninguna estrategia gana en todos los escenarios. "
+                        "Sin embargo, solo comparamos un parser MFT básico contra un "
+                        "carving muy básico (6 firmas). Faltan: carving avanzado, "
+                        "journal-first, bitmap-guided, USN-guided, MFT Mirror, "
+                        "parser tolerante a corrupción, carving probabilístico.",
             experiment_id="experiment_v2_20260730_142442",
-            strength="moderate",
+            strength="weak",  # Downgraded from "moderate" — strategy space too small
             details={
                 "mft_wins": 90, "carving_wins": 9, "neutral": 1,
-                "note": "A09 es el contraejemplo para MFT-First",
+                "note": "A09 es el contraejemplo para MFT-First, pero "
+                        "el espacio de estrategias es demasiado reducido",
+                "strategies_evaluated": ["MFT parser básico", "carving básico (6 firmas)"],
+                "strategies_missing": ["journal-first", "bitmap-guided", "USN-guided",
+                                       "MFT Mirror recovery", "tolerant parser",
+                                       "probabilistic carving", "advanced carving"],
             },
         ))
 
