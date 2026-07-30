@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://patents.google.com/patent/CN112379839A/en",
+    "name": "Data recovery method and device, computer equipment",
+    "snippet": "The invention relates to a data recovery method, a data recovery device, computer equipment and a storage medium; the method comprises the following steps: ...",
+    "host_name": "patents.google.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://patents.justia.com/patent/11537478",
+    "name": "Automation and optimization of data recovery after a",
+    "snippet": "Dec 27, 2022 — Embodiments perform a restore operation that include automatically identifying the most recent healthy backup, from which data should be Claims",
+    "host_name": "patents.justia.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://glossary.7datarecovery.com/file-carving",
+    "name": "What is File Carving - 7 Data Recovery Glossary",
+    "snippet": "Learn what file carving is and how it works . Explore carving methods, tools, use cases, and limitations in this detailed data recovery guide.\nThe simplest file carving definition is this: File carving is the process of recovering files from raw storage data without using the file system's metadata. Read more",
+    "host_name": "glossary.7datarecovery.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=4LgWh7HmlyM",
+    "name": "MODULE 4 - File Carving",
+    "snippet": "This video is a tutorial about file carving presented by Governance Intelligence. Recover Deleted Files & Uncover Hidden Data !",
+    "host_name": "www.youtube.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://eureka.patsnap.com/patent/CN122332178A",
+    "name": "File recovery method and device, electronic equipment",
+    "snippet": "Jul 3, 2026 — This application provides a file recovery method, apparatus, electronic device, storage medium, and product to improve the efficiency of file ...",
+    "host_name": "eureka.patsnap.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://belkasoft.com/carving-and-its-implementations",
+    "name": "Carving and its Implementations in Digital Forensics",
+    "snippet": "Carving is an irreplaceable technique widely used in data recovery and digital forensics. By using carving, we essentially perform a low-level scan of the ...\nCarving is an irreplaceable technique widely used in data recovery and digital forensics. By using carving, we essentially perform a low-level scan of the media ... Read more",
+    "host_name": "belkasoft.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.klennet.com/carver/carving-methods.aspx",
+    "name": "File carving methods in data recovery",
+    "snippet": "File carving is a process of searching for files in a data stream. Carving is useful when filesystem metadata is damaged or otherwise unusable.\nFile carving is a process of searching for files in a data stream based on knowledge of file formats rather than any other metadata. Read more",
+    "host_name": "www.klennet.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://datarecovery.com/rd/data-carving-data-recovery-techniques-explained",
+    "name": "Data Carving: Data Recovery Techniques Explained",
+    "snippet": "Oct 6, 2025 — Data carving is an advanced data recovery technique that extracts files directly from the raw bits and bytes on a storage device. Read more",
+    "host_name": "datarecovery.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://medium.com/@mail2mohan.ch/file-carving-and-data-fragmentation-analysis-366363cd02ba",
+    "name": "File Carving and Data Fragmentation Analysis",
+    "snippet": "File carving (also called data carving ) is a content-based recovery technique that extracts and reconstructs files directly from raw disk data",
+    "host_name": "medium.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.cybertriage.com/glossary-term/data-carving",
+    "name": "Data Carving",
+    "snippet": "Data carving is typically used when the simplest file recovery methods are not successful . This can be the case when files have been deleted, overwritten, or ...",
+    "host_name": "www.cybertriage.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

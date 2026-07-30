@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/s567lj/whats_the_difference_between_quality_data",
+    "name": "What's the difference between quality data recovery",
+    "snippet": "I read every day here that certain data recovery programs perform terribly, and others come highly recommended, but what's the difference? I just did some ...",
+    "host_name": "www.reddit.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/i6676x/easeus_diskdrill_etc_vs_rstudio_getdataback_etc",
+    "name": "EaseUs, DiskDrill, etc. vs R-Studio, GetDataBack, etc.",
+    "snippet": "Drill Disk was just tested to be better at recovering NEF files over R - Studio . Everything else points to R - Studio (which I use ) as superior. Read more",
+    "host_name": "www.reddit.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/datarecoverysoftware",
+    "name": "r/datarecoverysoftware",
+    "snippet": "Use Data recovery software to recover lost or inaccessible data. A place to ask questions about logical data and file recovery software. Deleted files?",
+    "host_name": "www.reddit.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/1l3dfxw/do_not_buy_disk_drill_buy_rstudio",
+    "name": "Do NOT buy Disk Drill, buy R-Studio : r/datarecovery",
+    "snippet": "I reformated the wrong disl by accident and lost 14 TB of data . I freaked out. I googled. Google and youtubers all promoted Disk Drill . Read more",
+    "host_name": "www.reddit.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/156aq5d/recovery_with_disk_drill_what_are_my_chances_this",
+    "name": "Recovery with Disk Drill- what are my chances this will work?",
+    "snippet": "If the file itself is corrupt then recovering it will not uncorrupt it probably. IF the file system were corrupt, recovery may work though.",
+    "host_name": "www.reddit.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=eMQDat2lpag",
+    "name": "Best Data Recovery Software (What Actually Works)",
+    "snippet": "Disk Drill : Recovered 97% of recently deleted files in our tests EaseUS : Recovered 93% with slightly longer scan times. Every tool in this ...",
+    "host_name": "www.youtube.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/1kh9dp3/usb_got_corrupted_for_unclear_reason_data",
+    "name": "USB got corrupted for unclear reason, Data Recovery APP",
+    "snippet": "While Disk Drill wasn't able to recover my files it did rebuilt the majority of images and audio files , so I recovered about half the work.  ...",
+    "host_name": "www.reddit.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.cleverfiles.com/howto/rstudio-alternative.html",
+    "name": "Best 5 Alternatives to R-Studio Data Recovery",
+    "snippet": "Jun 3, 2025 — Reddit user complains: EaseUS lacks disk imaging support , so you can't create a byte-for-byte backup of a failing drive before scanning it, ...",
+    "host_name": "www.cleverfiles.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://pixenate.com/t/disk-drill-or-easeus-for-data-recovery-which-is-better-value/2290",
+    "name": "Disk Drill or EaseUS for data recovery — which is better value?",
+    "snippet": "Feb 7, 2026 — I just lost a big batch of work files on my external hard drive and I'm trying to pick the best data recovery software without wasting money ...",
+    "host_name": "pixenate.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://community.spiceworks.com/t/after-data-recovery-my-recovered-files-are-damaged/726046",
+    "name": "After Data recovery, my recovered files are damaged",
+    "snippet": "Aug 18, 2019 — Hello! First time poster here, but I wanted to know if you could help me out. I have an external Hard drive that was corrupted because the computer was ...",
+    "host_name": "community.spiceworks.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.facebook.com/groups/894658577271076/posts/30487128597597349",
+    "name": "Can I clone a damaged hard drive from 2012 to recover",
+    "snippet": "So I am trying to retrieve deleted data from old hard drives that i have reformatted by using EaseUS Recovery. If anyone here has used EaseUS Recovery then ...",
+    "host_name": "www.facebook.com",
+    "rank": 0,
+    "date": "Aug 4, 2025",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=QtFN334vcmk",
+    "name": "How to Get Data Off Damaged, Crashed or Old Hard Drive",
+    "snippet": "Hard drive clicking, failed, or just too old to read? Learn how to recover files from a damaged, failed, or legacy hard drive - internal or ...",
+    "host_name": "www.youtube.com",
+    "rank": 1,
+    "date": "Jul 30, 2025",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/AskADataRecoveryPro/comments/13l5mzh/why_always_clone_first",
+    "name": "Why Always Clone First? : r/AskADataRecoveryPro",
+    "snippet": "And, when recovering, it is best to save to a different drive than the clone; but is safe if saving to the same drive as the disk image, ...",
+    "host_name": "www.reddit.com",
+    "rank": 2,
+    "date": "Jul 31, 2023",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.r-studio.com/Clone_Disks_Before_File_Recovery.shtml",
+    "name": "Clone Disks Before File Recovery",
+    "snippet": "Your first step when attempting to recover data from a damaged disk is to use the Imaging module of R-Studio to clone the disk.",
+    "host_name": "www.r-studio.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://forums.tomshardware.com/threads/what-software-to-image-corrupted-hard-drive.1294109",
+    "name": "What software to image corrupted hard drive",
+    "snippet": "Clone your drive sector-by-sector using a tool (eg ddrescue) that knows how to work around bad sectors, and then use data recovery software on the clone.",
+    "host_name": "forums.tomshardware.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.300dollardatarecovery.com/data-recovery-process",
+    "name": "Data Recovery Process: How do we recover your",
+    "snippet": "The most crucial step is cloning as much data as possible from the bad device to one of our good drives. This process may take several hours, days, or even ...\n2) We inventory your device · 3) Diagnostic analysis · 4) Revive the device · 5) Pre-configuration · 6) Clone the device · 7) Logically inspect ... Read more",
+    "host_name": "www.300dollardatarecovery.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.photo.net/forums/topic/276296-file-recovery-after-accidentally-cloning-hard-drive",
+    "name": "File recovery after accidentally cloning hard drive",
+    "snippet": "I suggest to try recover the small disk first, using Final Data. It may take long time, but you could get your pictures back from the 30 GB disk ...",
+    "host_name": "www.photo.net",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.datarecoveryprofessionals.org/post/imaging-cloning-a-hard-drive-for-data-recovery-process",
+    "name": "Imaging/cloning a hard drive for data recovery process",
+    "snippet": "When we receive a faulty drive, first we assess the level of damage and its cause and provide a quote to the customer. Once the customer ...",
+    "host_name": "www.datarecoveryprofessionals.org",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://pixenate.com/t/trying-to-recover-data-from-bad-sectors-but-copy-speed-is-0/3031",
+    "name": "Trying To Recover Data From Bad Sectors But Copy Speed Is 0",
+    "snippet": "Scan the image, not the original, for recoverable files. Once the image is done, leave the bad drive powered off. Save recovered files onto a ...",
+    "host_name": "pixenate.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.r-studio.com/file-recovery-basics.html",
+    "name": "File Recovery Basics: How Data Recovery Works",
+    "snippet": "If the first method fails to produce satisfactory results, a raw file search is performed. This second data recovery method can recover file data with greater ... Read more",
+    "host_name": "www.r-studio.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

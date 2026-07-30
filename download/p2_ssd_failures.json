@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/16a42rs/help_apfs_encrypted_usb_drive_erased_accidentally",
+    "name": "HELP - APFS Encrypted USB Drive Erased Accidentally",
+    "snippet": "Using Disk Utility, I accidentally erased the wrong USB to format. I noticed after a couple of seconds and removed my USB drive before it could be completely ...",
+    "host_name": "www.reddit.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/1gm7g4y/does_encryption_method_limit_my_options_for_data",
+    "name": "Does encryption method limit my options for data recovery",
+    "snippet": "In case of hardware failure , full disk encryption increases the complexity of recovery or may make it impossible . BUT I would recommend using an ...",
+    "host_name": "www.reddit.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/1jqag1v/ssd_disconnected_in_the_middle_of_transfer_now",
+    "name": "Now Can't Be Unlocked (APFS Encrypted) : r/datarecovery",
+    "snippet": "I really need help recovering data from my Samsung T5/T7 SSD (2TB) that was disconnected during a file transfer. The drive is formatted as APFS (Encrypted) and ...",
+    "host_name": "www.reddit.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/DataRecoveryHelp/comments/1jqatch/ssd_disconnected_in_the_middle_of_transfer_now",
+    "name": "SSD Disconnected in the Middle of Transfer — Now Can't",
+    "snippet": "Has anyone successfully recovered an APFS - encrypted volume with corrupted crypto metadata (no keybag, no user entry)?. Does UFS Explorer ...",
+    "host_name": "www.reddit.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/gn3s7k/recovering_data_in_trimenabled_ssd",
+    "name": "Recovering Data in Trim-Enabled SSD : r/datarecovery",
+    "snippet": "TL,DR: After TRIM chances of recovering purposely deleted data are practically zero using end user software . Disabling TRIM AFTER data deletion ...",
+    "host_name": "www.reddit.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/1lwnkfi/erased_ssd_by_mistake_stopped_using_immediately",
+    "name": "Erased SSD by mistake - Stopped using immediately - Disk",
+    "snippet": "Unfortunately erased partition on an encrypted drive is not recoverable. You have the password but it is not sufficient, you need APFS metadata ...",
+    "host_name": "www.reddit.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.ufsexplorer.com/articles/how-to/recover-data-apfs-encryption/?srsltid=AfmBOorOgHSTXa86GpRUJmVXb7KLqUlP3Pnr0rJhPS2QaiMEzbDrdmIx",
+    "name": "How to recover data from an encrypted Apple APFS volume",
+    "snippet": "Dec 17, 2024 — This guide demonstrates how files can be restored from encrypted APFS volumes with the help of UFS Explorer Professional Recovery .",
+    "host_name": "www.ufsexplorer.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://aaronbeckley.medium.com/my-experience-with-data-loss-1e5f2af39b73",
+    "name": "My Experience With Data Loss - Aaron Beckley - Medium",
+    "snippet": "The first step to any good data recovery is creating a backup of the disk . the drive is physically failing , because running for so long on a  ...",
+    "host_name": "aaronbeckley.medium.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/sysadmin/comments/18kxeaf/recover_wiped_drive_which_had_bitlocker_enabled",
+    "name": "Recover wiped drive which had Bitlocker enabled",
+    "snippet": "I have a NVME which had bitlocker enabled but was completely wiped, although I have the recovery key, the system isn't recognizing the fact that bitlocker was ...",
+    "host_name": "www.reddit.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/1s1w59j/recover_files_from_samsung_ssd_in_apfs_format",
+    "name": "Recover files from samsung ssd in APFS format.",
+    "snippet": "Another issue is that on many older Mac setups, TRIM was never enabled for aftermarket SSDs with sudo trimforce enable . Without TRIM , long-term ...",
+    "host_name": "www.reddit.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

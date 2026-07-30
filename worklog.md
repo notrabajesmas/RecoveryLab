@@ -20,3 +20,24 @@ Stage Summary:
 - Conclusión: Sí existe una oportunidad real, con condiciones (motor de recuperación potente + UX moderna)
 - Inversión estimada: $240K-$510K primer año
 - MVP recomendado: diagnóstico inteligente + checkpoints + interfaz honesta
+---
+Task ID: 2
+Agent: Main Agent
+Task: Fase 2 - Investigación profunda de viabilidad (intento de refutación)
+
+Work Log:
+- Ejecuté 18+ búsquedas web adicionales para la Fase 2
+- Investigé workflows de laboratorios profesionales (DriveSavers, Ontrack)
+- Analicé decisiones de técnicos: clonar antes de tocar, cuándo detener escaneo, priorización
+- Identifiqué 3 categorías de limitaciones: física genuina, hardware bajo falla, nunca automatizada
+- Mapeé 5 áreas donde IA puede automatizar sin inventar datos
+- Analicé patentes específicas y espacio libre para innovar
+- Identifiqué 3 ventajas competitivas difíciles de copiar: motor de recuperación, base de datos de diagnóstico, modelo de decisión adaptativo
+- Recopilé patrones de fracaso reales: JPEG con mitad gris, MP4 con moov dañado, SSD con TRIM, MFT parcialmente destruida
+- Generé documento PDF de 12 páginas con portada
+
+Stage Summary:
+- PDF generado: /home/z/my-project/download/Fase2_Investigacion_Profunda_Recuperacion_Datos.pdf (12 páginas, 121 KB)
+- Conclusión: La hipótesis sobrevive al intento de refutación
+- Oportunidad más concreta: motor de decisión adaptativo que analiza el disco antes de tocarlo
+- Recomendación: proceder con MVP enfocado en diagnóstico inteligente + checkpoints + priorización

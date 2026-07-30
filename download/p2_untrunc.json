@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://untrunc.com",
+    "name": "Untrunc - Free MP4 Video Repair Tool Download",
+    "snippet": "Recover corrupted or truncated MP4, MOV, and M4V files using a healthy reference video. Free, open-source, and trusted by videographers worldwide. Download ...\nUntrunc rebuilds the missing or corrupt moov atom by reading codec parameters, track layout, and sample table data from a healthy reference video.\nFix Broken Videos with Untrunc Recover corrupted or truncated MP4, MOV, and M4V files using a healthy reference video. Free, open-source, and trusted by videographers worldwide.",
+    "host_name": "untrunc.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/anthwlock/untrunc",
+    "name": "anthwlock/untrunc: Restore a truncated mp4/mov.",
+    "snippet": "Restore a damaged (truncated) mp4, m4v, mov, 3gp video . You need both the broken video and an example working. Run this command in the folder where you have ...\nRestore a damaged (truncated) mp4, m4v, mov, 3gp video. Provided you have a similar not broken video. And some luck.",
+    "host_name": "github.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://superuser.com/questions/417100/how-to-open-and-repair-an-m4v-or-mp4-video-file",
+    "name": "How to open and repair an m4v or mp4 video file?",
+    "snippet": "Apr 26, 2012 — It is possible to repair the broken mp4 or m4v file using Untrunc . For this method you need another video file from the same device which isn't broken.\nApr 26, 2012 — It is possible to repair the broken mp4 or m4v file using Untrunc . For this method you need another video file from the same device which isn't broken. Read more",
+    "host_name": "superuser.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/VideoEditing/comments/15f30ez/i_cant_recover_a_corrupted_mp4_file_using",
+    "name": "i cant recover a corrupted MP4 file using untrunc-gui, at the",
+    "snippet": "Untrunc only fixes one particular type of issue (missing MOOV atom) - it won't work for other types of corruption. If you use 7-zip or similar ...",
+    "host_name": "www.reddit.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.videohelp.com/software/MP4-Repair-untrunc-GUI",
+    "name": "Untrunc GUI 2026-06-05 Download Free",
+    "snippet": "Untrunc is designed to recover damaged/ truncated / broken / deleted / unfinished files mp4, m4v, mov, 3gp inside of which was h264 video. Provided you have a ...",
+    "host_name": "www.videohelp.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://repair.cleverfiles.com",
+    "name": "Video Repair Online Service: Fix Corrupted MP4, MOV Files",
+    "snippet": "To repair a corrupted video file online, you need to upload it to Clever Online Video Repair . The analysis and repair process will start automatically as ...",
+    "host_name": "repair.cleverfiles.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://medium.com/@inlinecoder/free-and-easy-repair-of-damaged-or-corrupted-video-files-m4v-a6eed1dd6070",
+    "name": "Free and easy repair of damaged or corrupted video files",
+    "snippet": "Free and easy repair of damaged or corrupted video files (.m4v, .mov, .mp4, etc.) with untrunc and Docker. Download and install Docker. Restore ...\nFree and easy repair of damaged or corrupted video files (.m4v, .mov, .mp4, etc.) with untrunc and Docker Restoring damaged and corrupted video",
+    "host_name": "medium.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/VIDEOENGINEERING/comments/un53yj/solution_for_mp4_video_error_missing_moov_atom",
+    "name": "Solution for MP4 Video error missing MOOV atom",
+    "snippet": "Its use a functional file from the same recorder as reference and fix the broken file. This tool saved a record from a unique contract and i ... Read more",
+    "host_name": "www.reddit.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/ponchio/untrunc/issues/294",
+    "name": "MP4 moov Reconstruction After Abrupt Camera Shutdown",
+    "snippet": "Jan 23, 2025 — untrunc *:** This tool specifically designed for repairing truncated MP4/MOV files, recovered only about 1.2 minutes after a long processing ...",
+    "host_name": "github.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://forum.videohelp.com/threads/401718-Video-damaged-Does-not-open-Can-I-repair-it-somehow",
+    "name": "Video damaged ? Does not open. Can I repair it somehow",
+    "snippet": "May 5, 2021 — untrunc is usually used to fix camera files . reconstruct the damaged file. It's a command line tool. You need to extract valid metadata from a ...",
+    "host_name": "forum.videohelp.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

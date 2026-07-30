@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/1nsw8w4/trying_to_repair_external_hdd_using_chkdsk_but",
+    "name": "Trying to repair external HDD using chkdsk but unable",
+    "snippet": "A corrupt MFT means the NTFS metadata that lists all files/folders is damaged. If you have already run chkdsk, the files may not be recoverable ...\nA corrupt MFT means the NTFS metadata that lists all files/folders is damaged . Often the data itself is still there. If you have already run ... Read more",
+    "host_name": "www.reddit.com",
+    "rank": 0,
+    "date": "Oct 3, 2025",
+    "favicon": ""
+  },
+  {
+    "url": "https://help.7datarecovery.com/corrupt-master-file-table",
+    "name": "How to Fix a Corrupt Master File Table: 4 Working Methods",
+    "snippet": "Method 1: Use CHKDSK from Recovery Mode · Method 2: Repair File System Errors Through Windows Tools · Method 3: Repair the MFT Using TestDisk ...\nMethod 2: Repair File System Errors Through Windows Tools · Method 3: Repair the MFT Using TestDisk ... Read more",
+    "host_name": "help.7datarecovery.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://forums.tomshardware.com/threads/corrupt-master-file-table-bad-sectors.1578147",
+    "name": "Corrupt Master File Table / Bad Sectors.",
+    "snippet": "The best approach is to clone your drive, sector by sector, using a tool (eg ddrescue) that understands how to work around bad media.",
+    "host_name": "forums.tomshardware.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.gillware.com/hard-drive-data-recovery/hitachi-hard-disk-repair-corrupt-mft",
+    "name": "Hitachi Hard Disk Repair: Corrupt MFT",
+    "snippet": "Filesystem corruption can result in a corrupt MFT. This is a logical data loss issue, meaning it involves the logical underpinnings of your hard disk drive.\nApr 20, 2017 — Filesystem corruption can result in a corrupt MFT . This is a logical data loss issue, meaning it involves the logical underpinnings of your hard disk drive. Read more",
+    "host_name": "www.gillware.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://forums.anandtech.com/threads/how-do-i-repair-a-corrupted-mft-on-an-ntfs-partition.1554795",
+    "name": "How do I repair a corrupted MFT on an NTFS partition?",
+    "snippet": "I used a program called testdisk to successfuly repair a messed up MFT on an NTFS partition, it's free, so it can't hurt to give it a try.\nMar 19, 2005 — I used a program called testdisk to successfuly repair a messed up MFT on an NTFS partition , it's free, so it can't hurt to give it a try. Read more",
+    "host_name": "forums.anandtech.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://learn.microsoft.com/en-us/answers/questions/3915994/the-master-file-table-(mft)-contains-a-corrupted-f",
+    "name": "The Master File Table (MFT) contains a corrupted file record",
+    "snippet": "The Master File Table (MFT) contains a corrupted file record. The file reference number is 0x200000001695e. The name of the file is \"<unable to ...\nJan 21, 2025 — The Master File Table ( MFT ) contains a corrupted file record. The file reference number is 0x200000001695e. The name of the file is \"< unable to ... Read more",
+    "host_name": "learn.microsoft.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.cgsecurity.org/wiki/Advanced_NTFS_Boot_and_MFT_Repair",
+    "name": "Advanced NTFS Boot and MFT Repair",
+    "snippet": "If both MFT and MFTMirr are damaged and thus cannot be repaired using TestDisk, you might want to try commercial software like Zero Assumption ...\nMay 4, 2019 — The MFT ( Master File Table) is sometimes corrupted . If Microsoft's Checkdisk (chkdsk) failed to repair the MFT , run TestDisk. In the Advanced ...",
+    "host_name": "www.cgsecurity.org",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.experts-exchange.com/questions/21240502/Corrupt-MFT-Master-File-Table.html",
+    "name": "Solved: Corrupt MFT (Master File Table)",
+    "snippet": "I got the backup MFT and copied over the corrupted one. Rebooted the Windows XP machine and got it to scan the corrupted partition. It started ...\nDec 13, 2004 — I got the backup MFT and copied over the corrupted one. Rebooted the Windows XP machine and got it to scan the corrupted partition . It ... Read more\nDec 13, 2004 — I got the backup MFT and copied over the corrupted one. Rebooted the Windows XP machine and got it to scan the corrupted partition. It started ... Read more",
+    "host_name": "www.experts-exchange.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.justanswer.com/computer/49ne9-need-information-fixing-corrupt-master-file-table.html",
+    "name": "I need information on fixing a corrupt master file table",
+    "snippet": "Since chkdsk /r failed, try using specialized recovery tools like TestDisk to rebuild the MFT. Avoid writing new data to the drive to prevent further corruption ...",
+    "host_name": "www.justanswer.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://forums.tomshardware.com/threads/please-help-me-to-fix-a-corrupt-master-file-table.3715547",
+    "name": "[SOLVED] - Please help me to fix a corrupt Master File Table",
+    "snippet": "Jul 26, 2021 — My 3TB Seagate MFT has collapsed . No software I tried is able to fix it, neither chkdsk, neither FixMBR. Any suggestion how it can repaired? Read more",
+    "host_name": "forums.tomshardware.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

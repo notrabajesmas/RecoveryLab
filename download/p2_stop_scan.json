@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/zertut/want_to_recover_data_from_a_clicking_drive_what",
+    "name": "Want to recover data from a clicking drive, what are my",
+    "snippet": "My dad's pc hard drive died, and I want to try and recover his data for him. It is not detected in windows or BIOS and makes the dreadful clicking noise. ...",
+    "host_name": "www.reddit.com",
+    "rank": 0,
+    "date": "Jul 31, 2023",
+    "favicon": ""
+  },
+  {
+    "url": "https://eyefi.com/t/how-can-i-recover-data-from-bad-sectors-before-my-drive-dies/3175",
+    "name": "How can I recover data from bad sectors before my drive dies?",
+    "snippet": "One tool people keep using for this is Disk Drill. The useful part here is its byte-to-byte backup feature. It's meant for unstable drives and ...",
+    "host_name": "eyefi.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://mdrepairs.com/blog/how-to-fix-corrupt-hdd",
+    "name": "How to Fix a Corrupt HDD: Professional Guide",
+    "snippet": "The single most important first step is to power down the device immediately. Every diagnostic step is designed to prevent further like ...",
+    "host_name": "mdrepairs.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.facebook.com/groups/youmightbeaprogrammer/posts/3033903623299174",
+    "name": "Can I trust data recovered from a bad sector drive?",
+    "snippet": "The damage is irreversible, fatal and making the data 100% unrecoverable. If you have important data to be recovered, get the drive in the hands ...",
+    "host_name": "www.facebook.com",
+    "rank": 3,
+    "date": "Jul 31, 2020",
+    "favicon": ""
+  },
+  {
+    "url": "https://superuser.com/questions/1803850/if-a-hard-drive-has-sectors-that-are-corrupt-or-physically-damaged-can-those-se",
+    "name": "If a hard drive has sectors that are corrupt or physically",
+    "snippet": "I have a bootable FreeBSD drive that I'm using to wipe the contents of a hard drive before donating the PC to my local thrift store. I'm using the following ...",
+    "host_name": "superuser.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://glossary.7datarecovery.com/bad-sectors-hard-drive",
+    "name": "Bad Sectors (Hard Drive) - Glossary of Data Recovery Terms",
+    "snippet": "While CHKDSK can help stabilize a drive with minor issues, it does not physically repair bad sectors. Instead, it flags them as unusable. This can reduce ...",
+    "host_name": "glossary.7datarecovery.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://pjirc.com/t/need-help-recovering-data-from-a-hard-drive-with-bad-sectors/2927",
+    "name": "Need Help Recovering Data From a Hard Drive With Bad",
+    "snippet": "My hard drive started freezing during file transfers, and a scan showed bad sectors. I have important photos and work files on it, ...",
+    "host_name": "pjirc.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.fivestardatarecovery.com/data-recovery/bad-sectors",
+    "name": "Bad Sectors Data Recovery",
+    "snippet": "If your hard drive has bad sectors then it's time to bring it in to Five Star Data Recovery to receive a free diagnosis and price quote.",
+    "host_name": "www.fivestardatarecovery.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=QtFN334vcmk",
+    "name": "How to Get Data Off Damaged, Crashed or Old Hard Drive",
+    "snippet": "Hard drive clicking , failed, or just too old to read? Learn how to recover files from a damaged, failed, or legacy hard drive",
+    "host_name": "www.youtube.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.desertdatarecovery.com/symptoms/clicking",
+    "name": "Hard Drive Clicking — What It Means and What to Do",
+    "snippet": "A clicking hard drive usually signals a mechanical fault. Learn what the clicking means, what to avoid, and how a cleanroom lab recovers the data .",
+    "host_name": "www.desertdatarecovery.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

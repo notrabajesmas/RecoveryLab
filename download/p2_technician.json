@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.technibble.com/guide-using-ddrescue-recover-data",
+    "name": "Guide to Using DDRescue to Recover Data",
+    "snippet": "Nov 14, 2013 — This guide is intended for people who are looking to do quality data recovery using free tools. Part 1: Creating an image from a failing disk ...",
+    "host_name": "www.technibble.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://dannng.github.io/disk-imaging-decision-factors.html",
+    "name": "Disk Imaging Decision Factors",
+    "snippet": "The purpose of this document is to demystify disk imaging and the factors that influence decision -making on whether to create a disk image or conduct a logical",
+    "host_name": "dannng.github.io",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.desertdatarecovery.com/the-process",
+    "name": "The Process of Data Recovery | Different Reasons for Hard",
+    "snippet": "The process of data recovery starts with diagnosis. Desert Data Recovery offers a FREE evaluation before providing a quote and recovery timeline.",
+    "host_name": "www.desertdatarecovery.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.yugabyte.com/key-concepts/what-are-the-four-types-of-data-recovery",
+    "name": "What Are The Four Types Of Data Recovery?",
+    "snippet": "The 4 types of data recovery are: logical, physical, cloud-based, and disaster recovery—each suited to different causes of data loss.",
+    "host_name": "www.yugabyte.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.ibm.com/docs/en/i/7.6.0?topic=system-selecting-appropriate-recovery-strategy",
+    "name": "Selecting the appropriate recovery strategy",
+    "snippet": "Understanding the cause helps you choose the correct recovery steps. Plan your recovery . Use Table 1 in the Choosing the recovery procedure for a disk failure ...",
+    "host_name": "www.ibm.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://users.informatik.uni-halle.de/~brass/db2/db2_doc/db2reco.pdf",
+    "name": "Data Recovery and High Availability Guide and Reference",
+    "snippet": "During the first access, only initial data is read from the image ; none of the user data is read . The complete image is read and processed only during the ... 405 pages",
+    "host_name": "users.informatik.uni-halle.de",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.securedatarecovery.com/blog/beginners-guide-data-recovery",
+    "name": "Data Recovery 101: Beginner's Guide To",
+    "snippet": "Jun 20, 2024 — The ultimate intro to data recovery . Featuring common causes of data loss, a step-by-step guide for immediate triage, and details on how the ...",
+    "host_name": "www.securedatarecovery.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.disktuna.com/complete-guide-to-disk-drill-6-scan-modes-for-data-recovery",
+    "name": "Complete Guide to Disk Drill 6 Scan Modes for Data",
+    "snippet": "Aug 10, 2025 — Disk Drill 6 — Scan Modes Explained. A practical, no-fluff guide to how Disk Drill finds files and which scan mode to pick .",
+    "host_name": "www.disktuna.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.r-studio.com/Data_Recovery_Guide.shtml",
+    "name": "Data recovery guide - R-Studio",
+    "snippet": "Rating 4.8 (373) Step-by-step instructions on how to recover deleted files from formatted disks, damaged RAIDs, and in other cases of data loss.",
+    "host_name": "www.r-studio.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.ufsexplorer.com/articles/what-is-data-recovery/?srsltid=AfmBOopFjhTwR-x7a-65jjvx9GspBxFwXQd78l1fQoHfY7sjOGkeVez7",
+    "name": "What is data recovery and how does it work? - UFS Explorer",
+    "snippet": "Data recovery can be defined as a process of obtaining the information located on a storage device that cannot be accessed by the standard means.",
+    "host_name": "www.ufsexplorer.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

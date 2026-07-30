@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://belkasoft.com/carving-and-its-implementations",
+    "name": "Carving and its Implementations in Digital Forensics - Belkasoft",
+    "snippet": "Carving is an irreplaceable technique widely used in data recovery and digital forensics. By using carving, we essentially perform a low-level scan of the media ...",
+    "host_name": "belkasoft.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.instagram.com/reel/DODy9rvEhQz",
+    "name": "File Carving is a digital forensic technique used to recover files from",
+    "snippet": "... file carving looks for file signatures (unique patterns such as headers and footers) within the raw data. Using these patterns, forensic ...",
+    "host_name": "www.instagram.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://ijcit.com/index.php/ijcit/article/view/420/109",
+    "name": "[PDF] File Carving: Analyzing Data Retrieval in Digital Forensics - ijcit",
+    "snippet": "File caving is a technique used for data recovery from the file without the any contextual information when the storage media is formatted or file system got ...",
+    "host_name": "ijcit.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://adeolaodunlade.medium.com/how-i-practiced-file-carving-and-data-recovery-using-a-virtual-hard-drive-f6920d55414c",
+    "name": "How I Practiced File Carving and Data Recovery Using a Virtual",
+    "snippet": "File carving is a forensic data recovery technique used to extract files from raw disk images",
+    "host_name": "adeolaodunlade.medium.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=4LgWh7HmlyM",
+    "name": "MODULE 4 - File Carving - YouTube",
+    "snippet": "This video is a tutorial about file carving presented by Governance Intelligence. #filecarving #digitalforensics #governanceintelligence ...",
+    "host_name": "www.youtube.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://glossary.7datarecovery.com/file-carving",
+    "name": "What is File Carving - 7 Data Recovery Glossary",
+    "snippet": "File carving is the process of recovering files from raw storage data without using the file system's metadata. data recovery software can scan from the header ...",
+    "host_name": "glossary.7datarecovery.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.lenovo.com/us/en/glossary/data-carving/?srsltid=AfmBOorItc3cHZUML2xbI2m28h9900PC5gsu-eL8o5QADuXuD1ICXl2c",
+    "name": "Exploring the Intricacies of Data Carving | Lenovo US",
+    "snippet": "By scanning raw data and identifying unique file signatures, data carving can reconstruct lost or deleted files, contributing to effective digital ...",
+    "host_name": "www.lenovo.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://hawkeyeforensic.com/file-carving-in-data-recovery-how-experts-retrieve-lost-data",
+    "name": "File Carving in Data Recovery: How Experts Retrieve Lost Data",
+    "snippet": "File carving is a data recovery technique used to reconstruct files from unallocated, fragmented, or corrupted storage space—without relying on file system ...",
+    "host_name": "hawkeyeforensic.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.starusrecovery.com/articles/data-carving-signature-based-data-recovery.html",
+    "name": "Data Carving: Signature-Based Data Recovery",
+    "snippet": "Free · Windows A data recovery tool actually does is analyzing the file system looking for those “deleted” labels, figuring out where exactly on the disk the content of the ...",
+    "host_name": "www.starusrecovery.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.researchgate.net/publication/381203350_FILE_CARVING_ANALYZING_DATA_RETRIEVAL_IN_DIGITAL_FORENSICS",
+    "name": "(PDF) File Carving: Analyzing Data Retrieval in Digital Forensics",
+    "snippet": "File caving is a technique used for data recovery from the file without the any contextual information when the storage media is formatted or file system got ...",
+    "host_name": "www.researchgate.net",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]
