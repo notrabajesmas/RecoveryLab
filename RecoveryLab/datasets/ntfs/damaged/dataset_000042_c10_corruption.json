@@ -1,0 +1,65 @@
+{
+  "version": "1.0",
+  "source_dataset": "dataset_000042",
+  "corruption_suffix": "c10",
+  "seed": 1007,
+  "timestamp": "2026-07-30T08:39:05",
+  "source_manifest": "/home/z/my-project/RecoveryLab/datasets/ntfs/healthy/dataset_000042_manifest.json",
+  "corruption_log": [
+    {
+      "pattern": "C02",
+      "description": "MFT 40% deleted",
+      "mft_entries_deleted": [
+        33,
+        37,
+        39,
+        41,
+        48,
+        51,
+        54,
+        56,
+        57,
+        58,
+        59,
+        60
+      ],
+      "count": 12
+    },
+    {
+      "pattern": "C06",
+      "description": "Journal corrupt",
+      "clusters_corrupted": [
+        47,
+        48,
+        49,
+        50
+      ]
+    },
+    {
+      "pattern": "C08",
+      "description": "Data sectors damaged",
+      "clusters_damaged": [
+        72,
+        88,
+        91,
+        104,
+        106,
+        111,
+        114,
+        115
+      ],
+      "files_affected": [
+        "file_0008.bin",
+        "file_0019.pdf",
+        "file_0012.bin",
+        "file_0017.bin",
+        "file_0020.bin"
+      ]
+    },
+    {
+      "pattern": "C10",
+      "description": "Combined: everything"
+    }
+  ],
+  "image_sha256": "3b24944ed53dd7fb4a7963029db6d667500766da3dc46599a9713f3f62afea5f"
+}

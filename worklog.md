@@ -41,3 +41,41 @@ Stage Summary:
 - Conclusión: La hipótesis sobrevive al intento de refutación
 - Oportunidad más concreta: motor de decisión adaptativo que analiza el disco antes de tocarlo
 - Recomendación: proceder con MVP enfocado en diagnóstico inteligente + checkpoints + priorización
+
+---
+Task ID: 3.5-benchmark-lab
+Agent: Main
+Task: Build RecoveryLab — Dataset Builder, Corruptor, and Visualizer
+
+Work Log:
+- Created RecoveryLab directory structure (tools/, datasets/ntfs/{healthy,damaged}/, benchmarks/, results/)
+- Wrote GOLDEN_RULE.txt with the project's philosophical foundation
+- Implemented NTFSImageBuilder in pure Python (no system dependencies)
+  - Boot sector with correct BPB fields
+  - MFT entries with attributes ($STANDARD_INFORMATION, $FILE_NAME, $DATA)
+  - Data runs encoding (NTFS format)
+  - Resident and non-resident file support
+  - Deterministic: same seed → same image, bit by bit
+- Implemented NTFSImageCorruptor with 8 corruption patterns (C01-C10)
+  - MFT deletion (20%/40%/60%)
+  - MFT partial unreadability
+  - Journal corruption
+  - Data sector damage
+  - Combined patterns
+  - Every corruption is recorded in a JSON log
+- Implemented Visualizer (both PNG and ASCII)
+  - Cluster map showing MFT, data, journal, bitmap, free space
+  - Corruption overlay
+  - Legend and statistics
+- Generated 20 healthy NTFS images (10MB each, 50 files each)
+- Verified determinism: same seed produces identical images
+- Verified manifest integrity: all files have valid cluster references and SHA-256
+- Applied all 8 corruption patterns to dataset_000042
+
+Stage Summary:
+- RecoveryLab is operational with 3 tools
+- 20 images × 10MB = 200MB of test data
+- Each image has a manifest.json (ground truth) with SHA-256 per file
+- All corruption is deterministic and recorded
+- Visualizer produces both PNG and ASCII layouts
+- Next step: implement Motor A (sequential) and Motor B (MFT-first)

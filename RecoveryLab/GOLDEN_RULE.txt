@@ -1,0 +1,14 @@
+Ningún resultado positivo será considerado válido hasta que haya
+sobrevivido a al menos un intento serio de refutación.
+
+— RecoveryLab, Regla de Oro
+
+Este laboratorio no está diseñado para demostrar que nuestro motor
+es bueno. Está diseñado para demostrar que nuestro motor está
+equivocado.
+
+Cada módulo debe preguntarse:
+  "¿Cómo puedo hacer que H1 falle?"
+
+NO:
+  "¿Cómo puedo hacer que H1 gane?"

@@ -1,0 +1,21 @@
+{
+  "version": "1.0",
+  "source_dataset": "dataset_000042",
+  "corruption_suffix": "c06",
+  "seed": 1004,
+  "timestamp": "2026-07-30T08:39:05",
+  "source_manifest": "/home/z/my-project/RecoveryLab/datasets/ntfs/healthy/dataset_000042_manifest.json",
+  "corruption_log": [
+    {
+      "pattern": "C06",
+      "description": "Journal corrupt",
+      "clusters_corrupted": [
+        47,
+        48,
+        49,
+        50
+      ]
+    }
+  ],
+  "image_sha256": "eb7b7f8c04f5846c209e0c7961cd860f86e5442b54f58d154e3ed2dae938b3e0"
+}

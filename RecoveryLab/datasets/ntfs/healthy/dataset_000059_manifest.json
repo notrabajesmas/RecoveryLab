@@ -1,0 +1,761 @@
+{
+  "version": "1.0",
+  "seed": 59,
+  "filesystem": "NTFS",
+  "image_size_bytes": 10485760,
+  "cluster_size": 4096,
+  "total_clusters": 2560,
+  "total_sectors": 20480,
+  "bytes_per_sector": 512,
+  "sectors_per_cluster": 8,
+  "mft_start_cluster": 2,
+  "mft_clusters": 46,
+  "mft_mirror_cluster": 48,
+  "bitmap_cluster": 50,
+  "logfile_cluster": 52,
+  "data_start_cluster": 56,
+  "serial_number": 1560766166864246821,
+  "num_files": 50,
+  "files": [
+    {
+      "name": "file_0000.pdf",
+      "type": "pdf",
+      "size": 19897,
+      "sha256": "dc0f278ed58f66481e30724909e6a2d177374f853df572ce787997726b22805f",
+      "mft_index": 32,
+      "resident": false,
+      "clusters": [
+        56,
+        57,
+        58,
+        59,
+        60
+      ],
+      "data_offset": 229376
+    },
+    {
+      "name": "file_0001.bin",
+      "type": "binary",
+      "size": 19586,
+      "sha256": "eb5085043b263a242c94d48a44e82523f686d34c772c712d8646aa6d68490468",
+      "mft_index": 33,
+      "resident": false,
+      "clusters": [
+        61,
+        62,
+        63,
+        64,
+        65
+      ],
+      "data_offset": 249856
+    },
+    {
+      "name": "file_0002.bin",
+      "type": "binary",
+      "size": 20471,
+      "sha256": "c607f636cc0c5f50afb29443980fb068c6dff640df573caa8f8d7afb35cdf713",
+      "mft_index": 34,
+      "resident": false,
+      "clusters": [
+        66,
+        67,
+        68,
+        69,
+        70
+      ],
+      "data_offset": 270336
+    },
+    {
+      "name": "file_0003.jpg",
+      "type": "jpeg",
+      "size": 4898,
+      "sha256": "6109201b0ae8dcec32b678281c9b23895bd3b57ccae956f95ba1b9d184ced27d",
+      "mft_index": 35,
+      "resident": false,
+      "clusters": [
+        71,
+        72
+      ],
+      "data_offset": 290816
+    },
+    {
+      "name": "file_0004.bin",
+      "type": "binary",
+      "size": 4029,
+      "sha256": "7a262390df803087816d9410ba8bafdb34e80bd3118ff8a99501b71eff738dbc",
+      "mft_index": 36,
+      "resident": false,
+      "clusters": [
+        73
+      ],
+      "data_offset": 299008
+    },
+    {
+      "name": "file_0005.bin",
+      "type": "binary",
+      "size": 8025,
+      "sha256": "f4acca6726d3c84719a114619dcf7ba20a33ced50cd7cc50c5a8b1dc4bf4efdc",
+      "mft_index": 37,
+      "resident": false,
+      "clusters": [
+        74,
+        75
+      ],
+      "data_offset": 303104
+    },
+    {
+      "name": "file_0006.jpg",
+      "type": "jpeg",
+      "size": 13100,
+      "sha256": "619f968937d0a63f09ef3b2e2c107d5f4f02c6fedc281e7d6f96f78ec73dbfb6",
+      "mft_index": 38,
+      "resident": false,
+      "clusters": [
+        76,
+        77,
+        78,
+        79
+      ],
+      "data_offset": 311296
+    },
+    {
+      "name": "file_0007.txt",
+      "type": "text",
+      "size": 3619,
+      "sha256": "d4ac0fce1210aedfe398b38b57daccd6c5c831d0d35be7ffcae0a37365f6ee91",
+      "mft_index": 39,
+      "resident": false,
+      "clusters": [
+        80
+      ],
+      "data_offset": 327680
+    },
+    {
+      "name": "file_0008.jpg",
+      "type": "jpeg",
+      "size": 3404,
+      "sha256": "482b8c2d3d90f61a94eedf689d7790cc9e1c42b5a2d1597e2e329da2ada21e51",
+      "mft_index": 40,
+      "resident": false,
+      "clusters": [
+        81
+      ],
+      "data_offset": 331776
+    },
+    {
+      "name": "file_0009.txt",
+      "type": "text",
+      "size": 9393,
+      "sha256": "aeec09d01d1f07824d8f17c6eabeea1dc77182c778e5ffb3c10927d7d5ba8473",
+      "mft_index": 41,
+      "resident": false,
+      "clusters": [
+        82,
+        83,
+        84
+      ],
+      "data_offset": 335872
+    },
+    {
+      "name": "file_0010.pdf",
+      "type": "pdf",
+      "size": 1506,
+      "sha256": "64e1bfc7ab497e2ef935d345efea0740969f66d8d21f11c73ad3ce28d1aa0f92",
+      "mft_index": 42,
+      "resident": false,
+      "clusters": [
+        85
+      ],
+      "data_offset": 348160
+    },
+    {
+      "name": "file_0011.pdf",
+      "type": "pdf",
+      "size": 2955,
+      "sha256": "fe89d446107e38dbe11d697874addc86b4cb74d0c12dd51e77fd31089e31a0c9",
+      "mft_index": 43,
+      "resident": false,
+      "clusters": [
+        86
+      ],
+      "data_offset": 352256
+    },
+    {
+      "name": "file_0012.bin",
+      "type": "binary",
+      "size": 16436,
+      "sha256": "54dd6d361cd867ecf255913316425182cdfe4d029842f47c862e4f44ffad2e27",
+      "mft_index": 44,
+      "resident": false,
+      "clusters": [
+        87,
+        88,
+        89,
+        90,
+        91
+      ],
+      "data_offset": 356352
+    },
+    {
+      "name": "file_0013.pdf",
+      "type": "pdf",
+      "size": 20221,
+      "sha256": "4a0651c33059f413ad9546bddb6ee69d5856d9d1cabd48ad672b4f6b18318676",
+      "mft_index": 45,
+      "resident": false,
+      "clusters": [
+        92,
+        93,
+        94,
+        95,
+        96
+      ],
+      "data_offset": 376832
+    },
+    {
+      "name": "file_0014.jpg",
+      "type": "jpeg",
+      "size": 19227,
+      "sha256": "b546998e8f3da9b59fbbfd86a3840a80694531928a64d761e4549a30cbb0074e",
+      "mft_index": 46,
+      "resident": false,
+      "clusters": [
+        97,
+        98,
+        99,
+        100,
+        101
+      ],
+      "data_offset": 397312
+    },
+    {
+      "name": "file_0015.pdf",
+      "type": "pdf",
+      "size": 20309,
+      "sha256": "ac499433f82583f49830d54c675d6d54c47d0c6bd4c1fd9764e5d377bd49ce01",
+      "mft_index": 47,
+      "resident": false,
+      "clusters": [
+        102,
+        103,
+        104,
+        105,
+        106
+      ],
+      "data_offset": 417792
+    },
+    {
+      "name": "file_0016.txt",
+      "type": "text",
+      "size": 16734,
+      "sha256": "caca16e6a98473ec202491392366f8274a3335aab2a7bce21c96884483aef1cd",
+      "mft_index": 48,
+      "resident": false,
+      "clusters": [
+        107,
+        108,
+        109,
+        110,
+        111
+      ],
+      "data_offset": 438272
+    },
+    {
+      "name": "file_0017.pdf",
+      "type": "pdf",
+      "size": 2799,
+      "sha256": "9d7f77c18cefa8a37a03d316bf5b33de7658da8bbf5650266f36cd07fd516cf0",
+      "mft_index": 49,
+      "resident": false,
+      "clusters": [
+        112
+      ],
+      "data_offset": 458752
+    },
+    {
+      "name": "file_0018.txt",
+      "type": "text",
+      "size": 15784,
+      "sha256": "9267e1e9bb6b954bf602cfb33a9aec9352191427a0646b61e871258b3475acfb",
+      "mft_index": 50,
+      "resident": false,
+      "clusters": [
+        113,
+        114,
+        115,
+        116
+      ],
+      "data_offset": 462848
+    },
+    {
+      "name": "file_0019.jpg",
+      "type": "jpeg",
+      "size": 18203,
+      "sha256": "9eecd6451e35316397b7d36e78794866a0e0d57645de5603bcf44d783d2cdc93",
+      "mft_index": 51,
+      "resident": false,
+      "clusters": [
+        117,
+        118,
+        119,
+        120,
+        121
+      ],
+      "data_offset": 479232
+    },
+    {
+      "name": "file_0020.jpg",
+      "type": "jpeg",
+      "size": 16124,
+      "sha256": "6f858a576aa6f1e0245fae35303396693a198aeb34967568e19cbe4014d0c55a",
+      "mft_index": 52,
+      "resident": false,
+      "clusters": [
+        122,
+        123,
+        124,
+        125
+      ],
+      "data_offset": 499712
+    },
+    {
+      "name": "file_0021.txt",
+      "type": "text",
+      "size": 12105,
+      "sha256": "0b98ae6315ffa509f413afe0d1640f24b14235ccdf0e6e532955238d5bb81ade",
+      "mft_index": 53,
+      "resident": false,
+      "clusters": [
+        126,
+        127,
+        128
+      ],
+      "data_offset": 516096
+    },
+    {
+      "name": "file_0022.jpg",
+      "type": "jpeg",
+      "size": 18996,
+      "sha256": "8e5e0938fc623b7ab2d60efefcaa89179760cd29c9aa8f911497a9ed3627a2d9",
+      "mft_index": 54,
+      "resident": false,
+      "clusters": [
+        129,
+        130,
+        131,
+        132,
+        133
+      ],
+      "data_offset": 528384
+    },
+    {
+      "name": "file_0023.bin",
+      "type": "binary",
+      "size": 2517,
+      "sha256": "fd15aa5e7c3244061a0204dd093b9585a0af857b3dbdf3f0a9bfedcb5aa371b5",
+      "mft_index": 55,
+      "resident": false,
+      "clusters": [
+        134
+      ],
+      "data_offset": 548864
+    },
+    {
+      "name": "file_0024.pdf",
+      "type": "pdf",
+      "size": 15408,
+      "sha256": "542a135922029fa498f03f88ea45ec26245986d75e40ebc74c6c7540233c8e3b",
+      "mft_index": 56,
+      "resident": false,
+      "clusters": [
+        135,
+        136,
+        137,
+        138
+      ],
+      "data_offset": 552960
+    },
+    {
+      "name": "file_0025.pdf",
+      "type": "pdf",
+      "size": 3395,
+      "sha256": "e94b06d7f0706ca4c5c1bd9eb61f0169f7c61d36ec021ef5e1df2895a1940e1f",
+      "mft_index": 57,
+      "resident": false,
+      "clusters": [
+        139
+      ],
+      "data_offset": 569344
+    },
+    {
+      "name": "file_0026.txt",
+      "type": "text",
+      "size": 2928,
+      "sha256": "70fab0b4dfde289623dc26d9aa7652a6080676fc32b5603e13fdba10cb730158",
+      "mft_index": 58,
+      "resident": false,
+      "clusters": [
+        140
+      ],
+      "data_offset": 573440
+    },
+    {
+      "name": "file_0027.jpg",
+      "type": "jpeg",
+      "size": 13738,
+      "sha256": "8dfb23d462130e99634005394b9e67c0ac7bf466eb4c2cb8e270e33b87afcd62",
+      "mft_index": 59,
+      "resident": false,
+      "clusters": [
+        141,
+        142,
+        143,
+        144
+      ],
+      "data_offset": 577536
+    },
+    {
+      "name": "file_0028.bin",
+      "type": "binary",
+      "size": 19411,
+      "sha256": "6d4f0ae20c7389b24157b099edd7cfc00d2f092b4c9d4040fb6148249a819f71",
+      "mft_index": 60,
+      "resident": false,
+      "clusters": [
+        145,
+        146,
+        147,
+        148,
+        149
+      ],
+      "data_offset": 593920
+    },
+    {
+      "name": "file_0029.pdf",
+      "type": "pdf",
+      "size": 9885,
+      "sha256": "47972abfefa30c527a8407c9ffe418a8ca1172ada579a4923ab12b166836663d",
+      "mft_index": 61,
+      "resident": false,
+      "clusters": [
+        150,
+        151,
+        152
+      ],
+      "data_offset": 614400
+    },
+    {
+      "name": "file_0030.bin",
+      "type": "binary",
+      "size": 12206,
+      "sha256": "57c2c833a301c0310fedbf907fe8baa8ce2f69c83dce5c0604ad2185540a4f52",
+      "mft_index": 62,
+      "resident": false,
+      "clusters": [
+        153,
+        154,
+        155
+      ],
+      "data_offset": 626688
+    },
+    {
+      "name": "file_0031.jpg",
+      "type": "jpeg",
+      "size": 971,
+      "sha256": "b317f680cf4707562cec95f61c5fe13cde942c9d432471e3d4aeec08dfcfbe4b",
+      "mft_index": 63,
+      "resident": false,
+      "clusters": [
+        156
+      ],
+      "data_offset": 638976
+    },
+    {
+      "name": "file_0032.pdf",
+      "type": "pdf",
+      "size": 8654,
+      "sha256": "c5b0e5f02a355ed93d09b3a58a1ca938745e7cf1374ce2c2ddf92c01805d993b",
+      "mft_index": 64,
+      "resident": false,
+      "clusters": [
+        157,
+        158,
+        159
+      ],
+      "data_offset": 643072
+    },
+    {
+      "name": "file_0033.txt",
+      "type": "text",
+      "size": 3920,
+      "sha256": "6f30a50fb5aa39634b4c7eef3ad8e9acbe12b4132731dad7acfecb655058cb4c",
+      "mft_index": 65,
+      "resident": false,
+      "clusters": [
+        160
+      ],
+      "data_offset": 655360
+    },
+    {
+      "name": "file_0034.bin",
+      "type": "binary",
+      "size": 12215,
+      "sha256": "830b12ff28755f78beea4a6734347f1b2a35a4f44a029eacf1a73b99a60a22d0",
+      "mft_index": 66,
+      "resident": false,
+      "clusters": [
+        161,
+        162,
+        163
+      ],
+      "data_offset": 659456
+    },
+    {
+      "name": "file_0035.bin",
+      "type": "binary",
+      "size": 1049,
+      "sha256": "cd4c03b08ec20f65efe3738d323a0dd7e38abf855ae326416aeb64b36d42dbc5",
+      "mft_index": 67,
+      "resident": false,
+      "clusters": [
+        164
+      ],
+      "data_offset": 671744
+    },
+    {
+      "name": "file_0036.jpg",
+      "type": "jpeg",
+      "size": 16481,
+      "sha256": "80ad112567475fde9c1076b6b768841baa3ec4eedde739b97081afe281058dd8",
+      "mft_index": 68,
+      "resident": false,
+      "clusters": [
+        165,
+        166,
+        167,
+        168,
+        169
+      ],
+      "data_offset": 675840
+    },
+    {
+      "name": "file_0037.jpg",
+      "type": "jpeg",
+      "size": 14237,
+      "sha256": "d20e4c9957b0cec458f4d94bd3329c9596993707e8602a39199624d63446d62c",
+      "mft_index": 69,
+      "resident": false,
+      "clusters": [
+        170,
+        171,
+        172,
+        173
+      ],
+      "data_offset": 696320
+    },
+    {
+      "name": "file_0038.txt",
+      "type": "text",
+      "size": 6981,
+      "sha256": "e22726a6e0bca6b91dc96788b14661949fc583841f9e39db53f8a47968ea444c",
+      "mft_index": 70,
+      "resident": false,
+      "clusters": [
+        174,
+        175
+      ],
+      "data_offset": 712704
+    },
+    {
+      "name": "file_0039.bin",
+      "type": "binary",
+      "size": 16543,
+      "sha256": "8bb54c92e303a2d9e085aea5160111f7f208b5145207bfa43fc51aad33b11014",
+      "mft_index": 71,
+      "resident": false,
+      "clusters": [
+        176,
+        177,
+        178,
+        179,
+        180
+      ],
+      "data_offset": 720896
+    },
+    {
+      "name": "file_0040.bin",
+      "type": "binary",
+      "size": 3504,
+      "sha256": "1e4545a39df6c8693941480a73d84dea2bf89a0c7f3a70d3abf1d9c666d426ef",
+      "mft_index": 72,
+      "resident": false,
+      "clusters": [
+        181
+      ],
+      "data_offset": 741376
+    },
+    {
+      "name": "file_0041.txt",
+      "type": "text",
+      "size": 17778,
+      "sha256": "024f4fa3fd776528b82b3f4c51193c8b7731a4059a46ed09c35e0d944fd2dc6c",
+      "mft_index": 73,
+      "resident": false,
+      "clusters": [
+        182,
+        183,
+        184,
+        185,
+        186
+      ],
+      "data_offset": 745472
+    },
+    {
+      "name": "file_0042.txt",
+      "type": "text",
+      "size": 8286,
+      "sha256": "93ed9a9cf55a633a49baf9b0086a2cba6c6c8d6ed438a33525129d27a84d42c0",
+      "mft_index": 74,
+      "resident": false,
+      "clusters": [
+        187,
+        188,
+        189
+      ],
+      "data_offset": 765952
+    },
+    {
+      "name": "file_0043.bin",
+      "type": "binary",
+      "size": 14467,
+      "sha256": "3c1cfd92ce8e0df172f3084deb5c11440e77bcb278e550564f1e5e781d1d535f",
+      "mft_index": 75,
+      "resident": false,
+      "clusters": [
+        190,
+        191,
+        192,
+        193
+      ],
+      "data_offset": 778240
+    },
+    {
+      "name": "file_0044.pdf",
+      "type": "pdf",
+      "size": 15225,
+      "sha256": "590ca8242dd72462957ac59cb6ba5ab469e561ec320d68dffa33f585538f77be",
+      "mft_index": 76,
+      "resident": false,
+      "clusters": [
+        194,
+        195,
+        196,
+        197
+      ],
+      "data_offset": 794624
+    },
+    {
+      "name": "file_0045.jpg",
+      "type": "jpeg",
+      "size": 8391,
+      "sha256": "76c83cbcf33b7167a016903bed22b33b74345289a95c5fa5a5ab93d4997fa6d0",
+      "mft_index": 77,
+      "resident": false,
+      "clusters": [
+        198,
+        199,
+        200
+      ],
+      "data_offset": 811008
+    },
+    {
+      "name": "file_0046.bin",
+      "type": "binary",
+      "size": 17460,
+      "sha256": "17cf18fb3a62d9a347af42bdb8cc234c1e55b111a96dc204191683fa69b92ca3",
+      "mft_index": 78,
+      "resident": false,
+      "clusters": [
+        201,
+        202,
+        203,
+        204,
+        205
+      ],
+      "data_offset": 823296
+    },
+    {
+      "name": "file_0047.jpg",
+      "type": "jpeg",
+      "size": 12436,
+      "sha256": "5b8d1613c4be2f645487a9876213380057940d2918adb30ffdaec5eb2df60960",
+      "mft_index": 79,
+      "resident": false,
+      "clusters": [
+        206,
+        207,
+        208,
+        209
+      ],
+      "data_offset": 843776
+    },
+    {
+      "name": "file_0048.pdf",
+      "type": "pdf",
+      "size": 6126,
+      "sha256": "b0aa9b5526c99f6317c584823d30ea91ee560e60c25d4c596e09367eeecd9d4d",
+      "mft_index": 80,
+      "resident": false,
+      "clusters": [
+        210,
+        211
+      ],
+      "data_offset": 860160
+    },
+    {
+      "name": "file_0049.bin",
+      "type": "binary",
+      "size": 18208,
+      "sha256": "ceb56f99ac489b9e927ff304231ada8becc0c83e61e89884d54837718ef317cb",
+      "mft_index": 81,
+      "resident": false,
+      "clusters": [
+        212,
+        213,
+        214,
+        215,
+        216
+      ],
+      "data_offset": 868352
+    }
+  ],
+  "layout": {
+    "boot_sector": {
+      "offset": 0,
+      "size": 512
+    },
+    "mft": {
+      "offset": 8192,
+      "size": 188416,
+      "cluster_start": 2,
+      "cluster_count": 46
+    },
+    "mft_mirror": {
+      "offset": 196608,
+      "size": 8192,
+      "cluster_start": 48
+    },
+    "bitmap": {
+      "offset": 204800,
+      "cluster_start": 50
+    },
+    "logfile": {
+      "offset": 212992,
+      "cluster_start": 52
+    },
+    "data_area": {
+      "offset": 229376,
+      "cluster_start": 56
+    }
+  }
+}

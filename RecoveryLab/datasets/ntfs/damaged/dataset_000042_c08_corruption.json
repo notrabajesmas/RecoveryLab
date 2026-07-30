@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "source_dataset": "dataset_000042",
+  "corruption_suffix": "c08",
+  "seed": 1005,
+  "timestamp": "2026-07-30T08:39:05",
+  "source_manifest": "/home/z/my-project/RecoveryLab/datasets/ntfs/healthy/dataset_000042_manifest.json",
+  "corruption_log": [
+    {
+      "pattern": "C08",
+      "description": "Data sectors damaged",
+      "clusters_damaged": [
+        88,
+        90,
+        97,
+        98,
+        106,
+        126,
+        135
+      ],
+      "files_affected": [
+        "file_0015.jpg",
+        "file_0026.bin",
+        "file_0029.bin",
+        "file_0012.bin",
+        "file_0017.bin"
+      ]
+    }
+  ],
+  "image_sha256": "f906f64301229cf438846b16a1f53fd985aede826b87cea290ea045b9ada0fce"
+}

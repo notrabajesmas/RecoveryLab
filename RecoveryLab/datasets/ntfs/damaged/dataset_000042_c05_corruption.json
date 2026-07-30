@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "source_dataset": "dataset_000042",
+  "corruption_suffix": "c05",
+  "seed": 1003,
+  "timestamp": "2026-07-30T08:39:05",
+  "source_manifest": "/home/z/my-project/RecoveryLab/datasets/ntfs/healthy/dataset_000042_manifest.json",
+  "corruption_log": [
+    {
+      "pattern": "C05",
+      "description": "MFT partially unreadable",
+      "clusters_corrupted": [
+        3,
+        12,
+        16,
+        24,
+        25,
+        27,
+        30,
+        31,
+        33,
+        36,
+        37,
+        38
+      ],
+      "count": 12
+    }
+  ],
+  "image_sha256": "a4cd0dbbe2736571953bb70b3c876eadb7ad006d1621f33085c791f8da79e456"
+}

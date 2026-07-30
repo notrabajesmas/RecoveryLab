@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "source_dataset": "dataset_000042",
+  "corruption_suffix": "c01",
+  "seed": 1000,
+  "timestamp": "2026-07-30T08:39:05",
+  "source_manifest": "/home/z/my-project/RecoveryLab/datasets/ntfs/healthy/dataset_000042_manifest.json",
+  "corruption_log": [
+    {
+      "pattern": "C01",
+      "description": "MFT 20% deleted",
+      "mft_entries_deleted": [
+        35,
+        44,
+        45,
+        53,
+        56,
+        61
+      ],
+      "count": 6
+    }
+  ],
+  "image_sha256": "d5a7feb74ff433a628c2c52dfa646e2c71634ea57955dda93ea8c61f1717d4d8"
+}
