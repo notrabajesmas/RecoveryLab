@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<style>
+  @page { size: 794px 1123px; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 794px; height: 1123px; overflow: hidden; }
+  .cover {
+    position: relative;
+    width: 794px;
+    height: 1123px;
+    background: linear-gradient(165deg, #1a1710 0%, #2d2820 35%, #3d3528 65%, #1a1710 100%);
+    font-family: 'Noto Serif SC', 'Noto Serif', Georgia, serif;
+    color: #f0ece4;
+    margin: 0;
+    padding: 0;
+  }
+  /* Layer 1: Background decorative */
+  .cover-bg-layer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 1;
+  }
+  .geo-line {
+    position: absolute;
+    border: 1px solid rgba(142, 115, 36, 0.15);
+  }
+  .geo-line-1 { top: 180px; left: 0; right: 0; }
+  .geo-line-2 { top: 420px; left: 0; right: 0; }
+  .geo-line-3 { top: 750px; left: 0; right: 0; }
+  .geo-circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(142, 115, 36, 0.1);
+  }
+  .geo-circle-1 { width: 300px; height: 300px; top: 100px; right: -80px; }
+  .geo-circle-2 { width: 200px; height: 200px; bottom: 200px; left: -60px; }
+  /* Layer 2: Structure */
+  .cover-layer-2 {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+  }
+  .accent-line {
+    position: absolute;
+    left: 60px;
+    width: 4px;
+    background: rgba(142, 115, 36, 0.6);
+  }
+  .accent-line-1 { top: 260px; height: 80px; }
+  .accent-line-2 { top: 400px; height: 40px; }
+  /* Layer 3: Content */
+  .cover-layer-3 {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    padding: 60px;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: rgba(142, 115, 36, 0.7);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-weight: 300;
+  }
+  .phase-num {
+    position: absolute;
+    top: 60px;
+    right: 60px;
+    font-size: 120px;
+    font-weight: 100;
+    color: rgba(142, 115, 36, 0.08);
+    line-height: 1;
+  }
+  .title {
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1.15;
+    margin-top: 220px;
+    color: #f0ece4;
+    max-width: 600px;
+  }
+  .subtitle {
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1.6;
+    margin-top: 24px;
+    color: rgba(240, 236, 228, 0.7);
+    max-width: 480px;
+  }
+  .hypothesis-box {
+    margin-top: 40px;
+    padding: 20px 24px;
+    border-left: 3px solid rgba(142, 115, 36, 0.6);
+    background: rgba(142, 115, 36, 0.06);
+    max-width: 520px;
+  }
+  .hypothesis-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(142, 115, 36, 0.8);
+    margin-bottom: 8px;
+  }
+  .hypothesis-text {
+    font-size: 13px;
+    font-style: italic;
+    line-height: 1.6;
+    color: rgba(240, 236, 228, 0.85);
+  }
+  .meta-block {
+    position: absolute;
+    bottom: 60px;
+    left: 60px;
+    right: 60px;
+  }
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-top: 1px solid rgba(240, 236, 228, 0.08);
+  }
+  .meta-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(240, 236, 228, 0.4);
+  }
+  .meta-value {
+    font-size: 13px;
+    color: rgba(240, 236, 228, 0.7);
+  }
+</style>
+</head>
+<body>
+<div class="cover">
+  <div class="cover-bg-layer">
+    <div class="geo-line geo-line-1"></div>
+    <div class="geo-line geo-line-2"></div>
+    <div class="geo-line geo-line-3"></div>
+    <div class="geo-circle geo-circle-1"></div>
+    <div class="geo-circle geo-circle-2"></div>
+  </div>
+  <div class="cover-layer-2">
+    <div class="accent-line accent-line-1"></div>
+    <div class="accent-line accent-line-2"></div>
+  </div>
+  <div class="cover-layer-3">
+    <div class="phase-num">3.5</div>
+    <div class="badge">Benchmark Lab</div>
+    <div class="title">Validacion Experimental de H1</div>
+    <div class="subtitle">
+      De la intuicion a la hipotesis. De la hipotesis al experimento.
+      Del experimento a la evidencia.
+    </div>
+    <div class="hypothesis-box">
+      <div class="hypothesis-label">Hipotesis Central</div>
+      <div class="hypothesis-text">
+        En discos con presupuesto de lectura limitado por degradacion fisica,
+        una estrategia de adquisicion basada en metadatos recuperables incrementa
+        la cantidad de archivos recuperados y/o reduce el numero de lecturas
+        necesarias respecto a una estrategia secuencial.
+      </div>
+    </div>
+    <div class="meta-block">
+      <div class="meta-row">
+        <span class="meta-label">Proyecto</span>
+        <span class="meta-value">Motor de Recuperacion de Datos</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Fase</span>
+        <span class="meta-value">3.5 — Benchmark Lab</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Fecha</span>
+        <span class="meta-value">Julio 2026</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
