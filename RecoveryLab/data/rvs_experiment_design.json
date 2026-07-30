@@ -1,0 +1,194 @@
+{
+  "experiment_id": "EXP-RVS-CAL",
+  "type": "HUMAN",
+  "title": "RVS Calibration Experiment — Bradley-Terry Pairwise Comparison",
+  "purpose": "Validate whether the RVS value weights reflect real user preferences",
+  "method": "Bradley-Terry pairwise comparison",
+  "pairs": [
+    {
+      "id": "P01",
+      "pair": [
+        "tesis_final.docx",
+        "thumbnail_cache.db"
+      ],
+      "tests": "RVS core assumption: thesis >> thumbnail",
+      "expected_winner": "A",
+      "rvs_weight_A": 100,
+      "rvs_weight_B": 1
+    },
+    {
+      "id": "P02",
+      "pair": [
+        "familia_navidad.jpg",
+        "thumbnail_001.jpg"
+      ],
+      "tests": "Family photo vs thumbnail (same format, different value)",
+      "expected_winner": "A",
+      "rvs_weight_A": 90,
+      "rvs_weight_B": 1
+    },
+    {
+      "id": "P03",
+      "pair": [
+        "tesis_final.docx",
+        "ubuntu-22.04.iso"
+      ],
+      "tests": "Irreplaceable vs downloadable (high value, low replaceability)",
+      "expected_winner": "A",
+      "rvs_weight_A": 100,
+      "rvs_weight_B": 2
+    },
+    {
+      "id": "P04",
+      "pair": [
+        "pelicula_descargada.mp4",
+        "video_vacaciones.mov"
+      ],
+      "tests": "Downloadable vs irreplaceable video (same format, different replaceability)",
+      "expected_winner": "B",
+      "rvs_weight_A": 20,
+      "rvs_weight_B": 70
+    },
+    {
+      "id": "P05",
+      "pair": [
+        "foto_RAW.cr2",
+        "foto_editada.jpg"
+      ],
+      "tests": "RAW source vs processed version (photographers may differ)",
+      "expected_winner": "A",
+      "rvs_weight_A": 60,
+      "rvs_weight_B": 90,
+      "note": "This is a critical test: if photographers choose RAW but non-photographers choose JPG, RVS needs population-specific weights."
+    },
+    {
+      "id": "P06",
+      "pair": [
+        "clientes.sqlite",
+        "contrato_firmado.pdf"
+      ],
+      "tests": "Database vs legal document (businesses may differ from home users)",
+      "expected_winner": "A",
+      "rvs_weight_A": 95,
+      "rvs_weight_B": 65,
+      "note": "Population-dependent: businesses value databases, home users value documents."
+    },
+    {
+      "id": "P07",
+      "pair": [
+        "foto_familia.jpg",
+        "proyecto_psd.psd"
+      ],
+      "tests": "Emotional value vs economic value",
+      "expected_winner": "A",
+      "rvs_weight_A": 90,
+      "rvs_weight_B": 65,
+      "note": "This tests whether emotional impact (family photo) outweighs economic value (work project)."
+    },
+    {
+      "id": "P08",
+      "pair": [
+        "base_datos_grande.sqlite",
+        "tesis_final.docx"
+      ],
+      "tests": "Large file vs small but irreplaceable file",
+      "expected_winner": "B",
+      "rvs_weight_A": 95,
+      "rvs_weight_B": 100,
+      "note": "Both high value. Tests whether size matters when value is similar."
+    },
+    {
+      "id": "P09",
+      "pair": [
+        "video_importante.mp4",
+        "informe_anual.docx"
+      ],
+      "tests": "Video vs document (different media, different value systems)",
+      "expected_winner": "B",
+      "rvs_weight_A": 70,
+      "rvs_weight_B": 65,
+      "note": "Close call. This tests the boundary between medium-value categories."
+    },
+    {
+      "id": "P10",
+      "pair": [
+        "clientes.sqlite",
+        "tesis_final.docx"
+      ],
+      "tests": "Database vs thesis (both high value, different type)",
+      "expected_winner": "B",
+      "rvs_weight_A": 95,
+      "rvs_weight_B": 100,
+      "note": "Near-tie. This tests the top of the value hierarchy."
+    },
+    {
+      "id": "P11",
+      "pair": [
+        "200_thumbnails/",
+        "contrato_firmado.pdf"
+      ],
+      "tests": "Many low-value files vs one high-value file",
+      "expected_winner": "B",
+      "rvs_weight_A": 1,
+      "rvs_weight_B": 65,
+      "note": "Quantity vs quality. Tests whether the RVS model correctly discounts quantity."
+    },
+    {
+      "id": "P12",
+      "pair": [
+        "foto_familia.jpg",
+        "pelicula_descargada.mp4"
+      ],
+      "tests": "Irreplaceable photo vs downloadable movie",
+      "expected_winner": "A",
+      "rvs_weight_A": 90,
+      "rvs_weight_B": 20
+    }
+  ],
+  "populations": {
+    "photographers": {
+      "name": "Fotografos profesionales",
+      "description": "Valoran RAW y fotos familiares, desprecian ISO y thumbnails",
+      "expected_bias": "Will choose RAW over processed, family photos over everything else",
+      "min_responses": 30
+    },
+    "legal": {
+      "name": "Estudios juridicos",
+      "description": "Valoran documentos y bases de datos, desprecian thumbnails",
+      "expected_bias": "Will choose contracts and databases over photos and videos",
+      "min_responses": 30
+    },
+    "tech": {
+      "name": "Empresas de tecnologia",
+      "description": "Valoran bases de datos y codigo, desprecian ISO",
+      "expected_bias": "Will choose databases over documents, code over photos",
+      "min_responses": 30
+    },
+    "home": {
+      "name": "Usuarios domesticos",
+      "description": "Valoran fotos y videos familiares, desprecian archivos de sistema",
+      "expected_bias": "Will choose family photos and videos over everything else",
+      "min_responses": 30
+    },
+    "students": {
+      "name": "Estudiantes",
+      "description": "Valoran tesis y documentos, desprecian thumbnails",
+      "expected_bias": "Will choose thesis and documents over everything else",
+      "min_responses": 30
+    }
+  },
+  "min_total_responses": 150,
+  "current_rvs_weights": {
+    "tesis_final.docx": 100,
+    "clientes.sqlite": 95,
+    "familia_navidad.jpg": 90,
+    "video_vacaciones.mov": 70,
+    "proyecto_psd.psd": 65,
+    "foto_RAW.cr2": 60,
+    "pelicula_descargada.mp4": 20,
+    "ubuntu-22.04.iso": 2,
+    "thumbnail_001.jpg": 1
+  },
+  "status": "DESIGNED",
+  "next_step": "Distribute survey to 5 target populations"
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "claim_id": "CLAIM-001",
+    "title": "MFT-First supera a Carving en Overall Utility cuando los metadatos son confiables",
+    "status": "ACTIVE",
+    "evidence_level": "OBSERVED",
+    "evidence_count": 1,
+    "datasets_count": 1
+  },
+  {
+    "claim_id": "CLAIM-002",
+    "title": "La recuperacion funcional no es binaria: existe un espectro de calidad funcional",
+    "status": "ACTIVE",
+    "evidence_level": "OBSERVED",
+    "evidence_count": 1,
+    "datasets_count": 1
+  },
+  {
+    "claim_id": "CLAIM-003",
+    "title": "Recuperar la tesis vale mas que recuperar 200 thumbnails (RVS)",
+    "status": "ACTIVE",
+    "evidence_level": "OBSERVED",
+    "evidence_count": 1,
+    "datasets_count": 1
+  },
+  {
+    "claim_id": "CLAIM-004",
+    "title": "El crossover al 95% MFT damage es un artefacto del carving limitado",
+    "status": "ACTIVE",
+    "evidence_level": "OBSERVED",
+    "evidence_count": 1,
+    "datasets_count": 1
+  },
+  {
+    "claim_id": "CLAIM-005",
+    "title": "JPEG, PNG y PDF son parsers de referencia dorada (19/19 tests)",
+    "status": "ACTIVE",
+    "evidence_level": "OBSERVED",
+    "evidence_count": 1,
+    "datasets_count": 1
+  }
+]

@@ -1,6 +1,40 @@
 # RecoveryLab — Work Log
 
 ---
+Task ID: 8
+Agent: Main
+Task: Implementar Evidence Gate, tres niveles, experimento RVS, y meta-regla
+
+Work Log:
+- Created three-level directory structure: /data, /analysis, /claims
+- Implemented evidence_gate.py (core module):
+  - 5 EvidenceLevel: OBSERVED → HARDWARE_VALIDATED
+  - Language enforcement: "demuestra" forbidden at levels 1-3
+  - Claim system with evidence entries, threat links, gate status
+  - KPI dashboard (research-based, not code-based)
+  - Auto-generated CLAIM-001 to CLAIM-005 markdown files
+- Created rvs_calibration_experiment.py:
+  - 12 survey pairs (tesis vs thumbnails, RAW vs MP4, etc.)
+  - 5 target populations x 30+ respondents
+  - Bradley-Terry model implementation (fixed MM algorithm)
+  - Synthetic simulation verified: ranking tesis(78.5) > thumbnails(8.7) > ISO(5.0)
+  - Survey markdown and experiment design JSON generated
+- Updated protocol to v1.3:
+  - Section 14: Evidence Gate (language control)
+  - Section 15: Three-Level Architecture (/data, /analysis, /claims)
+  - Section 16: Meta-Rule ("No agregar feature sin aumentar evidencia")
+  - Section 17: RVS Calibration Experiment design
+  - Meta-rule on cover page in red
+  - Research KPI dashboard (not software dashboard)
+
+Stage Summary:
+- The project's three stages are now explicit: (1) build recovery engine, (2) build laboratory, (3) build system that guarantees conclusions are trustworthy
+- Evidence Gate is the most important structural change: it controls language based on evidence level
+- Three-level architecture separates observation from interpretation
+- RVS calibration experiment is designed and ready to distribute
+- Meta-rule: "No agregar una sola caracteristica nueva si no aumenta la calidad de la evidencia"
+
+---
 Task ID: 7
 Agent: Main
 Task: Incorporar segunda ronda de auditoría externa — Research Protocol v1.2
