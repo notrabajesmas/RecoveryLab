@@ -1,0 +1,74 @@
+[
+  {
+    "url": "https://www.reddit.com/r/computerforensics/comments/a5i5h8/ssds_vs_hdds",
+    "name": "Ssd's Vs hdd's : r/computerforensics",
+    "snippet": "SSDs automatically start a garbage collection process of cleaning up deleted files . are more likely to have success recovering deleted data ...",
+    "host_name": "www.reddit.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://mdrepairs.com/blog/what-is-trim-ssd",
+    "name": "What Is TRIM? Why SSD Recovery Is So Hard",
+    "snippet": "Mar 27, 2026 — TRIM keeps SSDs fast by erasing deleted data immediately , which is exactly why deleted-file recovery on SSDs usually fails.\nTRIM keeps SSDs fast by erasing deleted data immediately, which is exactly why deleted-file recovery on SSDs usually fails.",
+    "host_name": "mdrepairs.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://perez-aids.medium.com/solid-state-drive-ssd-file-recovery-challenge-cbde1935e33a",
+    "name": "Solid-State Drive (SSD) File Recovery Challenge - Medium",
+    "snippet": "Because of SSD's way of deleting files in most modern computers, it is more challenging now and almost impossible to recover files once they are deleted. Read more\nThe reason why performing file recovery on deleted files becomes a challenge is because of the implementation of the TRIM function and Garbage ... Read more",
+    "host_name": "perez-aids.medium.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://rossmanngroup.com/problems/can-you-recover-data-after-trim",
+    "name": "Can You Recover Data After TRIM? Honest Answer",
+    "snippet": "After TRIM, SSD recovery depends on whether garbage collection physically erased the NAND . If erasure completed, no software or lab can recover the deleted ... Read more\nAfter TRIM, SSD recovery depends on whether garbage collection physically erased the NAND. If erasure completed, no software or lab can recover the deleted ...",
+    "host_name": "rossmanngroup.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://community.handyrecovery.com/d/170-what-is-ssd-trim-and-why-does-it-make-data-recovery-harder",
+    "name": "What is SSD TRIM, and why does it make data recovery",
+    "snippet": "Nov 12, 2025 — TRIM lets the drive erase unused cells in advance . Basically the SSD keeps doing garbage collection and wear leveling. But without TRIM, it has ...\nNov 12, 2025 — Mostly yes, because after running TRIM on an SSD , deleted data is actually erased, not just hidden. Then recovery is impossible. Because TRIM ... Read more\nMostly yes, because after running TRIM on an SSD, deleted data is actually erased, not just hidden. Then recovery is impossible. Because TRIM ...",
+    "host_name": "community.handyrecovery.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=RfLB143QoKU",
+    "name": "How to Recover Data From SSD [Hard Drive Data Recovery]",
+    "snippet": "Data loss on an SSD can be more complicated than on HDDs because SSDs use the TRIM command , which makes deleted files harder to restore.\nData loss on an SSD can be more complicated than on HDDs because SSDs use the TRIM command, which makes deleted files harder to restore.",
+    "host_name": "www.youtube.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://security.stackexchange.com/questions/244154/data-recovery-from-trimmed-ssds",
+    "name": "forensics - Data recovery from TRIMmed SSDs",
+    "snippet": "Feb 2, 2021 — Assuming a given SSD supports TRIM, and is on a physical bus that supports sending that command, and the connected computer is running an OS that is ...\nThe answer is, there's absolutely no way to recover the erased data blocks from flash storage like SSDs, USB sticks, SD cards, etc.",
+    "host_name": "security.stackexchange.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.researchgate.net/publication/396260876_The_Effect_of_TRIM_Function_on_Data_Recovery_from_SSD_Solid-State_Drives",
+    "name": "(PDF) The Effect of TRIM Function on Data Recovery from",
+    "snippet": "Oct 6, 2025 — One of the key problems is the built-in SSD data self-destruction mechanism, which makes it difficult to recover deleted files . Because SSDs ...\nOct 6, 2025 — One of the key problems is the built-in SSD data self-destruction mechanism, which makes it difficult to recover deleted files.\nOne of the key problems is the built-in SSD data self-destruction mechanism, which makes it difficult to recover deleted files. In this ...",
+    "host_name": "www.researchgate.net",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  }
+]

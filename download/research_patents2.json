@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.starusrecovery.com/articles/data-carving-signature-based-data-recovery.html",
+    "name": "Data Carving: Signature-Based Data Recovery",
+    "snippet": "Instead of relying entirely on the file system, they can now scan the entire content of the device in order to automatically identify known types of files.  ...\nInstead of relying entirely on the file system, they can now scan the entire content of the device in order to automatically identify known types of files. ...",
+    "host_name": "www.starusrecovery.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://data.uspto.gov/patent-file-wrapper/search/details/90015716",
+    "name": "Patent File Wrapper - Open Data Portal - USPTO",
+    "snippet": "The Open Data Portal (ODP) is USPTO's data platform that empowers you to discover and easily extract USPTO data in one place for free.",
+    "host_name": "data.uspto.gov",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.handyrecovery.com/understanding-file-signatures-and-signature-based-data-recovery",
+    "name": "Understanding File Signatures and Signature-Based Data",
+    "snippet": "Jul 12, 2024 — File carving is a forensic technique used to recover files based solely on their intrinsic data, without any reference to an underlying file ...\nFile carving is a forensic technique used to recover files based solely on their intrinsic data, without any reference to an underlying file ...",
+    "host_name": "www.handyrecovery.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.uspto.gov/patents/search",
+    "name": "Search for patents | USPTO",
+    "snippet": "Apr 13, 2026 — Find existing patents , published patent applications, and other published patent documentation. See USPTO programs that can help you learn ...",
+    "host_name": "www.uspto.gov",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.salvationdata.com/knowledge/file-carving",
+    "name": "File Carving vs. Metadata Recovery: What's the Difference?",
+    "snippet": "Oct 16, 2024 — File carving is a forensic process utilized to recover files based on content signatures rather than relying on any filesystem metadata.",
+    "host_name": "www.salvationdata.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://hawkeyeforensic.com/file-carving-in-data-recovery-how-experts-retrieve-lost-data",
+    "name": "File Carving in Data Recovery: How Experts Retrieve Lost",
+    "snippet": "File carving is a data recovery technique used to reconstruct files from unallocated, fragmented, or corrupted storage space—without relying on file system ...\nPopular forensic tools like Scalpel, Foremost, and Autopsy automate the carving process, scanning through massive volumes of data to recover deleted files ...",
+    "host_name": "hawkeyeforensic.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://quizlet.com/study-guides/recovering-deleted-files-in-digital-forensics-lab-9b5bd394-195d-467e-a5f3-609c1c48f245",
+    "name": "Recovering Deleted Files in Digital Forensics Lab",
+    "snippet": "Mar 6, 2025 — Recovery Techniques: The task involves capturing the recovery of a patent file , showcasing the specific techniques used for APFS data recovery .",
+    "host_name": "quizlet.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://ijcit.com/index.php/ijcit/article/view/420/109",
+    "name": "File Carving: Analyzing Data Retrieval in Digital Forensics",
+    "snippet": "Scalpel is an open-source file carving tool designed for efficient and precise file recovery from various storage media.",
+    "host_name": "ijcit.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://belkasoft.com/carving-and-its-implementations",
+    "name": "Carving and its Implementations in Digital Forensics",
+    "snippet": "Carving is an irreplaceable technique widely used in data recovery and digital forensics. By using carving, we essentially perform a low-level scan of the media ...",
+    "host_name": "belkasoft.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.instagram.com/reel/DODy9rvEhQz",
+    "name": "File Carving is a digital forensic technique used to recover",
+    "snippet": "It analyzes file systems, registry artifacts, event logs, browser data, and memory to reconstruct user activity. The tool supports timeline ...",
+    "host_name": "www.instagram.com",
+    "rank": 9,
+    "date": "Sep 3, 2025",
+    "favicon": ""
+  }
+]

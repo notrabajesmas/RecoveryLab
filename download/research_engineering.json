@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.ijecs.in/index.php/ijecs/article/view/5234/4379",
+    "name": "Modern Algorithms for Recovering Deleted Data in User",
+    "snippet": "signature-based file carving aimed at searching the raw disk space for characteristic header and footer patterns of files. NTFS, APFS, Ext4,",
+    "host_name": "www.ijecs.in",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://medium.com/@mail2mohan.ch/file-carving-and-data-fragmentation-analysis-366363cd02ba",
+    "name": "File Carving and Data Fragmentation Analysis",
+    "snippet": "File carving (also called data carving) is a content-based recovery technique that extracts and reconstructs files directly from raw disk data",
+    "host_name": "medium.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://ijcit.com/index.php/ijcit/article/view/420/109",
+    "name": "File Carving: Analyzing Data Retrieval in Digital Forensics",
+    "snippet": "File carving techniques are essential in digital forensics and data recovery, enabling the extraction of files from raw data without relying on file system ...",
+    "host_name": "ijcit.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://datarecovery.com/rd/data-carving-data-recovery-techniques-explained",
+    "name": "Data Carving: Data Recovery Techniques Explained",
+    "snippet": "Data carving is an advanced data recovery technique that extracts files directly from the raw bits and bytes on a storage device.",
+    "host_name": "datarecovery.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://glossary.7datarecovery.com/file-carving",
+    "name": "What is File Carving - 7 Data Recovery Glossary",
+    "snippet": "The simplest file carving definition is this: File carving is the process of recovering files from raw storage data without using the file system's metadata.",
+    "host_name": "glossary.7datarecovery.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.lenovo.com/us/en/glossary/data-carving/?srsltid=AfmBOoofnLSRaXGOycRbv7jlEMkypZza-iEESITNEU0dXkPFdKEqm2Sf",
+    "name": "Exploring the Intricacies of Data Carving",
+    "snippet": "Data carving is a vital technique in computer forensics and data recovery. It involves extracting files and information from storage devices.",
+    "host_name": "www.lenovo.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://datastatresearch.com/courses/training-course-on-data-recovery-and-deleted-file-carving-beyond-basics",
+    "name": "Training Course on Data Recovery and Deleted File Carving",
+    "snippet": "Attendees will master both open-source and commercial data recovery software, delving into signature analysis, header/footer identification, and custom carving ...",
+    "host_name": "datastatresearch.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.coursehero.com/file/255715912/Week-5-File-Systems-Data-Recoverypdf",
+    "name": "Week 5 - File Systems Data Recovery.pdf",
+    "snippet": "Data carving is a technique that finds and extracts particular file patterns or signatures by scanning raw data on a storage device.",
+    "host_name": "www.coursehero.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.researchgate.net/publication/381203350_FILE_CARVING_ANALYZING_DATA_RETRIEVAL_IN_DIGITAL_FORENSICS",
+    "name": "File Carving: Analyzing Data Retrieval in Digital Forensics",
+    "snippet": "File caving is a technique used for data recovery from the file without the any contextual information when the storage media is formatted or file system got ...",
+    "host_name": "www.researchgate.net",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://forensicspot.com/topics/digital-forensics/data-recovery-file-carving-deleted-encrypted-content",
+    "name": "Data Recovery and File Carving | ForensicSpot",
+    "snippet": "Explain what 'deletion' means at the filesystem level for NTFS, ext4, APFS, and FAT32, and predict recovery probability before attempting it. Apply signature-based file carving with PhotoRec, Foremost, and Scalpel on raw disk images, and identify when fragmentation or encryption makes signature carving insufficient.",
+    "host_name": "forensicspot.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

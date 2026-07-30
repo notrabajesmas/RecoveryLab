@@ -1,0 +1,74 @@
+[
+  {
+    "url": "https://rossmanngroup.com/technical-reference/hddsuperclone-vs-ddrescue",
+    "name": "HDDSuperClone vs ddrescue",
+    "snippet": "Mar 19, 2026 — HDDSuperClone are the two most-recommended open-source tools for imaging a failing hard drive. Both can pause, resume, and work around bad ...\nMar 19, 2026 — HDDSuperClone are the two most-recommended open-source tools for imaging a failing hard drive . a raw binary image or a cloned disk .",
+    "host_name": "rossmanngroup.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://forum.hddguru.com/viewtopic.php?f=7&t=33291&start=60&mobile=desktop",
+    "name": "A new Linux hard drive cloning/imaging tool",
+    "snippet": "Aug 22, 2019 — HDDSuperClone managed to scan it and recover a fair bit of user data . Of the 2 heads one seemed to be badly damaged as far as I could tell.\nAug 22, 2019 — A recovery tool such as R-Studio can then read from the virtual disk , which invokes reading through HDDSuperClone , to access the filesystem and ... Read more",
+    "host_name": "forum.hddguru.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.r-studio.com/HDDSuperClone-drive-imaging.html",
+    "name": "Joint work of R-Studio and HDDSuperClone",
+    "snippet": "At the same time, the partial imaging performed by HDDSuperClone greatly reduces possible damage that may further deteriorate hard drive conditions.\nAt the same time, the partial imaging performed by HDD SuperClone greatly reduces possible damage that may further deteriorate hard drive conditions.",
+    "host_name": "www.r-studio.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=yZfYno83HIw",
+    "name": "OpenSuperClone: The BEST Tool for Data Recovery on a",
+    "snippet": "This video is a deep -dive tutorial and troubleshooting use the project file and multiple passes to recover the easy data first, reducing stress ...",
+    "host_name": "www.youtube.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/datarecoverysoftware/wiki/hddsuperclone_guide",
+    "name": "r/datarecoverysoftware Guide: OpenSuperClone",
+    "snippet": "Nov 21, 2025 — OpenSuperClone (OSC) is an advanced Linux-based cloning and imaging tool intended for data recovery from faulty disks.",
+    "host_name": "www.reddit.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://forums.tomshardware.com/threads/what-software-to-image-corrupted-hard-drive.1294109",
+    "name": "What software to image corrupted hard drive",
+    "snippet": "Feb 1, 2013 — Clone your drive sector-by-sector using a tool (eg ddrescue) that knows how to work around bad sectors, and then use data recovery software on the clone.\nFeb 1, 2013 — Clone your drive sector-by-sector using a tool (eg ddrescue) that knows how to work around bad sectors, and then use data recovery software on the clone. Read more",
+    "host_name": "forums.tomshardware.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=jiwz77qVsWU",
+    "name": "HDDSuperClone Virtual Disk Data Extraction DMDE part1",
+    "snippet": "HDDSuperClone Virtual Disk Data Extraction . DiskTuna Confused by DMDE scan results? Watch this. Hard Drive Data Recovery\nHDDSuperClone Virtual Disk Data Extraction DMDE . DiskTuna Confused by DMDE scan results? Watch this. Hard Drive Data Recovery",
+    "host_name": "www.youtube.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://superuser.com/questions/1855400/recovering-data-off-of-a-malfunctioning-external-hdd",
+    "name": "Recovering data off of a malfunctioning external HDD",
+    "snippet": "Sep 12, 2024 — I have a WD6400BEVT hard drive which I use in an enclosure to store some older files etc. I haven't accessed the drive in probably about 2 years, but ...",
+    "host_name": "superuser.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  }
+]

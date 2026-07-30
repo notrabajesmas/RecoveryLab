@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.ufsexplorer.com/articles/os-data-recovery-specifics/?srsltid=AfmBOoovFOcYDTNz35qew2KaaGYftoGx7V7iZ8y7MxyNSTbMqv3GF2_P",
+    "name": "File system and data recovery chances",
+    "snippet": "Dec 4, 2024 — The following information will guide you through assessing recovery prospects after accidental file deletion or file system formatting, based on the file ...",
+    "host_name": "www.ufsexplorer.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://mdrepairs.com/blog/exfat-vs-ntfs-vs-apfs",
+    "name": "exFAT vs NTFS vs APFS: Best File System for Your Drive",
+    "snippet": "Apr 19, 2026 — NTFS is the most recoverable and resilient file system for Windows users . APFS is the most secure option for Mac users, but its encryption makes ...\nApr 19, 2026 — NTFS is the safest and most recoverable choice . APFS is best for Macs but its full-disk encryption makes recovery harder. is still harder and ...",
+    "host_name": "mdrepairs.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/dxo1un/rebuilding_mft_and_mft_minor_even_when_testdisk",
+    "name": "Rebuilding MFT and MFT Minor even when TestDisk failed",
+    "snippet": "Recovering data from an NTFS formatted partition is >90% of all data recovery cases so NTFS has better tools available.",
+    "host_name": "www.reddit.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.datarecovery.net/file-system-data-recovery.aspx",
+    "name": "File System Recovery | NTFS, HFS+, APFS, EXT4, BtrFS",
+    "snippet": "Expert recovery across NTFS, FAT, APFS, HFS+ and Linux file systems . Free diagnostics, secure lab work, and guaranteed results. Call 1-877-304-7189.\nExpert recovery across NTFS, FAT, APFS, HFS+ and Linux file systems. Free diagnostics, secure lab work, and guaranteed results. Call 1-877-304-7189.",
+    "host_name": "www.datarecovery.net",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.sysdevlabs.com/articles/data-recovery-basics/filesystem-type-and-data-recovery-chances",
+    "name": "File system type and chances for successful data recovery",
+    "snippet": "Jan 29, 2026 — NTFS keeps the MFT record for the file , Recovery: The file's name, size and location should be left in the MFT record. data recovery software ...\nJan 29, 2026 — Here we will concentrate on a critical detail which determines recoverability – the way of data organization on a storage or, as it is called, the filesystem. Read more",
+    "host_name": "www.sysdevlabs.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.forensicfocus.com/forums/general/file-system-gone-only-raw-data-left-can-i-still-recover",
+    "name": "File system gone, only raw data left – Can I still recover?",
+    "snippet": "Oct 19, 2010 — There are numerous ways to recover data , some of which depend upon the MFT (or the FAT or whatever), and some which do not. The issue with ...",
+    "host_name": "www.forensicfocus.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=S_2OBsnXxfQ",
+    "name": "File System: NTFS, ext4, APFS",
+    "snippet": "File System: NTFS, ext4, APFS https://github.com/Orkhan-1/Concepts #softwareengineering #applicationengineering #systemdesign #coding ...",
+    "host_name": "www.youtube.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://askubuntu.com/questions/1351908/better-file-system-type-than-ext4-for-recovering-deleted-files",
+    "name": "Better file system type than ext4 for recovering deleted files?",
+    "snippet": "Jul 14, 2021 — I usually format all my drives to ext4, and have limited luck in restoring deleted files (using extrecover, extmagic etc.). Is there a better file system ...",
+    "host_name": "askubuntu.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.researchgate.net/publication/364477084_Forensic_Recovery_of_File_System_Metadata_for_Digital_Forensic_Investigation",
+    "name": "Forensic Recovery of File System Metadata for Digital",
+    "snippet": "Previous studies on the recovery of file system metadata. have been mainly conducted on NTFS , APFS , and Ext4 file. systems, which are the main file systems of ...\nPrevious studies on the recovery of file system metadata. have been mainly conducted on NTFS , APFS , and Ext4 file. systems, which are the main file systems of ... Read more",
+    "host_name": "www.researchgate.net",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.ufsexplorer.com/articles/os-data-recovery-specifics/?srsltid=AfmBOopedxSeUV6METfA7-9xQ2szHOgPl4YJjkE-JqutUixenhVJld83",
+    "name": "File system and data recovery chances",
+    "snippet": "Dec 4, 2024 — The following information will guide you through assessing recovery prospects after accidental file deletion or file system formatting, based on the file ... Read more",
+    "host_name": "www.ufsexplorer.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

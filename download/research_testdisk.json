@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.cgsecurity.org/wiki/photoRec",
+    "name": "PhotoRec, Digital Picture and File Recovery",
+    "snippet": "May 21, 2023 — PhotoRec is file data recovery software designed to recover lost files including video, documents and archives from hard disks (Mechanical Hard drives, Solid ... Read more",
+    "host_name": "www.cgsecurity.org",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://dappcdn.com/download/system-rescue/testdisk-and-photorec",
+    "name": "TestDisk & PhotoRec: Free Data Recovery Tools",
+    "snippet": "Oct 9, 2025 — TestDisk can recover deleted partitions with high accuracy . The app will use a reliable algorithm to scan for partition signatures and check the ... Read more",
+    "host_name": "dappcdn.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=ARGpHFOe4rg",
+    "name": "Setup Free Open Source Digital Picture and File Recovery",
+    "snippet": "PhotoRec ignores the file system and goes after the under lying data, so it will still work even if your media's file system has been severely ...",
+    "host_name": "www.youtube.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/sysadmin/comments/115byo/anyone_familiar_with_testdisk",
+    "name": "Anyone familiar with \"testdisk\"? : r/sysadmin",
+    "snippet": "Testdisk is for recovering corrupt partitions , as I understand it. And it would be tricky to recover text files with photorec, because I think ...",
+    "host_name": "www.reddit.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://itsfoss.community/t/just-in-case-you-dont-know-this-testdisk/4357",
+    "name": "Just in case you don't know this: TestDisk",
+    "snippet": "Mar 2, 2020 — TestDisk is a free and open source data recovery software tool designed to recover lost partition and unerase deleted files. Read more",
+    "host_name": "itsfoss.community",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.facebook.com/groups/linux.commands/posts/7540357879415054",
+    "name": "What are good free tools to recover photos and videos from",
+    "snippet": "Thank you all, decided to go for TestDisk/PhotoRec.\n\nI need some advice for a good working free recovery tool, need to recover photos and films from ...",
+    "host_name": "www.facebook.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.cgsecurity.org",
+    "name": "CGSecurity - Data recovery: TestDisk & PhotoRec",
+    "snippet": "Feb 22, 2024 — TestDisk and PhotoRec are free and open source data recovery software tools designed to recover lost partition, unerase deleted files, ...",
+    "host_name": "www.cgsecurity.org",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://scoreboard.pandorarecovery.com/testdisk-review",
+    "name": "TestDisk Review – Can This Repair Tool Recover Lost Files?",
+    "snippet": "Apr 3, 2024 — TestDisk is a free and open-source data recovery tool that can help you recover lost partitions or repair corrupted filesystems on your storage devices. Read more",
+    "host_name": "scoreboard.pandorarecovery.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "http://www.linux-magazine.com/Online/Features/Rescuing-Lost-Files-with-TestDisk-and-PhotoRec",
+    "name": "Rescuing Lost Files with TestDisk and PhotoRec",
+    "snippet": "TestDisk and its cousin PhotoRec will help you recover the data you thought you'd lost . TestDisk is a name you might associate with a disk performance ... Read more\nPhotoRec handles the source disk as “read-only” and therefore needs a writable directory on a second disk, into which it copies all the rescued files (Figure 10) ...",
+    "host_name": "www.linux-magazine.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.cgsecurity.org/wiki/TestDisk_Download",
+    "name": "TestDisk Download",
+    "snippet": "Mar 5, 2025 — Download TestDisk & PhotoRec. TestDisk is a free and open source data recovery software tool designed to recover lost partition and unerase ...",
+    "host_name": "www.cgsecurity.org",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

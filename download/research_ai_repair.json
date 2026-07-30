@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://medium.com/@renithprem/how-to-repair-your-damaged-images-with-deep-learning-cc404aec144",
+    "name": "How to Repair your Damaged Images with Deep Learning",
+    "snippet": "Image Inpainting is an art or process of filling the lost information in an image or to remove the unwanted or damaged portions from an image in a realistic ...\nImage Inpainting is an art or process of filling the lost information in an image or to remove the unwanted or damaged portions from an image in a realistic ... Read more",
+    "host_name": "medium.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.quora.com/Can-I-use-AI-or-machine-learning-to-repair-corrupted-photos-without-a-reference",
+    "name": "Can I use AI or machine learning to repair corrupted photos",
+    "snippet": "No. If you want to fix corrupted image file , you need to open the file and fix the data in it. To open the file , you need a software, at least ...\nNo. If you want to fix corrupted image file, you need to open the file and fix the data in it. To open the file, you need a software, at least ...",
+    "host_name": "www.quora.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/shorts/UXHOOBIzkZg?vl=en",
+    "name": "AI Repair Tools That Fix Corrupted Photos and Videos",
+    "snippet": "Download Recoverit (Windows/Mac): https://bit.ly/3NDRxnT AI repair tools can help fix corrupted photos and videos after recovery.",
+    "host_name": "www.youtube.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://cmns.umd.edu/news-events/news/new-algorithm-repairs-corrupted-digital-images-one-step",
+    "name": "New Algorithm Repairs Corrupted Digital Images in One Step",
+    "snippet": "Technique uses the power of artificial neural networks to address several types of flaws and degradations in a single image at once.",
+    "host_name": "cmns.umd.edu",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.reddit.com/r/datarecovery/comments/147guiz/ai_to_restore_corrupt_images_using_complete",
+    "name": "AI to restore corrupt images using complete thumbnails?",
+    "snippet": "I have a set of damaged jpeg photos recovered from a dead hard drive. They have grey rectangles covering parts of them when opened, but their thumbnails show ...\nAI to restore corrupt images using complete thumbnails? So there's nothing JPEG repair tools can actually repair by cutting some corrupt data. ...",
+    "host_name": "www.reddit.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://developer.nvidia.com/blog/ai-can-now-fix-your-grainy-photos-by-only-looking-at-grainy-photos",
+    "name": "AI Can Now Fix Your Grainy Photos by Only Looking at",
+    "snippet": "Jul 9, 2018 — This deep learning -based approach has learned to fix photos by simply looking at examples of corrupted photos only.",
+    "host_name": "developer.nvidia.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7720232",
+    "name": "On instabilities of deep learning in image reconstruction and",
+    "snippet": "2020 · Cited by 1059 — This paper demonstrates that the stability pillar is typically absent in current deep learning and AI -based algorithms for image reconstruction .",
+    "host_name": "pmc.ncbi.nlm.nih.gov",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.mathworks.com/help/images/jpeg-image-deblocking-using-deep-learning.html",
+    "name": "JPEG Image Deblocking Using Deep Learning",
+    "snippet": "This example shows how to reduce JPEG compression artifacts in an image using a denoising convolutional neural network (DnCNN).",
+    "host_name": "www.mathworks.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/rmsouza01/JPEG-reconstruction",
+    "name": "Improve JPEG reconstruction using deep learning.",
+    "snippet": "Improve JPEG reconstruction using deep learning . Quantization in the discrete cosine transform (DCT) domain can be defined as a sparse-sampling problem.",
+    "host_name": "github.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.sciencedirect.com/science/article/pii/S2405959526000354",
+    "name": "Image restoration using deep learning techniques",
+    "snippet": "2026 — Image restoration plays a vital role in computer vision by enhancing degraded images. Deep learning techniques, including convolutional neural networks and ... Read more",
+    "host_name": "www.sciencedirect.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]
