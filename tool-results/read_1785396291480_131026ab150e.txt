@@ -1,0 +1,840 @@
+     1→# Data Recovery Engine MVP — Technical Research Report
+     2→
+     3→**Date**: 2026-03-04  
+     4→**Scope**: Minimum Viable Product design for a data recovery engine covering NTFS parsing, raw disk access, disk imaging, diagnostics, and competitive benchmarking.
+     5→
+     6→---
+     7→
+     8→## 1. NTFS Recovery MVP
+     9→
+    10→### 1.1 Essential NTFS Structures to Parse
+    11→
+    12→An NTFS recovery MVP must parse the following structures in order:
+    13→
+    14→| Structure | Purpose | Key Offsets/Fields |
+    15→|-----------|---------|-------------------|
+    16→| **VBR (Volume Boot Record)** | Sector 0 entry point. Contains the BPB (BIOS Parameter Block) with filesystem geometry. | Bytes Per Sector (offset 0x0B), Sectors Per Cluster (0x0D), MFT Cluster Number (0x30), MFT Mirror Cluster Number (0x38), Bytes Per MFT Record (0x40) |
+    17→| **$MFT (Master File Table)** | The core metadata file — every file/directory is an MFT entry. | Located via VBR BPB. Each entry is typically 1024 bytes. Entry 0 = $MFT itself. |
+    18→| **MFT Entry (File Record)** | 1024-byte record per file. Contains header + attribute chain. | Signature "FILE" (0x454C4946), Fixup offset, Fixup count, Sequence number, Hard link count, Attribute offset, Attribute end marker (0xFFFFFFFF) |
+    19→| **$STANDARD_INFORMATION (0x10)** | Timestamps (created, modified, accessed, MFT modified), file permissions/flags. | Resident attribute. Critical for deleted file detection (in-use flag). |
+    20→| **$FILE_NAME (0x30)** | File name in Unicode, parent directory reference, file size, timestamps. | Resident attribute. Contains the 4-byte parent MFT reference (index + sequence). |
+    21→| **$DATA (0x80)** | File content — either resident (inline in MFT) or non-resident (data runs). | Resident: data inline. Non-resident: start VCN, last VCN, data runs offset, compressed size. |
+    22→| **$INDEX_ROOT (0x90)** | Directory index B-tree root. Needed for directory traversal. | Resident. Contains index entries with file references. |
+    23→| **$INDEX_ALLOCATION (0xA0)** | Non-resident index storage for large directories. | Non-resident. Contains index buffer (INDX) records. |
+    24→| **$BITMAP** | Tracks which MFT entries are allocated. | Referenced by $MFT entry 0. Each bit = 1 MFT entry. 0 = free, 1 = in-use. |
+    25→| **Data Runs** | Encoded run-length pairs describing cluster allocations on disk. | Variable-length encoding: header byte (low nibble = length size, high nibble = offset size), followed by length and signed offset bytes. Terminated by 0x00. |
+    26→
+    27→**MVP Minimum Set**: VBR → $MFT location → MFT entries → $STANDARD_INFORMATION + $FILE_NAME + $DATA attributes → Data runs for non-resident files. This is sufficient to enumerate and recover files from a healthy NTFS volume.
+    28→
+    29→### 1.2 Minimum Features for Healthy NTFS Volume Recovery
+    30→
+    31→1. **Parse VBR** to locate $MFT
+    32→2. **Read $MFT** sequentially, parsing each 1024-byte entry
+    33→3. **Extract $FILE_NAME** for file path reconstruction (follow parent directory chain)
+    34→4. **Extract $DATA** attribute:
+    35→   - **Resident files**: Read data directly from the MFT entry
+    36→   - **Non-resident files**: Parse data runs to get cluster chain → read clusters from disk
+    37→5. **Reconstruct directory tree** using $INDEX_ROOT/$INDEX_ALLOCATION
+    38→6. **Copy out files** to a destination volume
+    39→
+    40→### 1.3 Deleted File Recovery from NTFS
+    41→
+    42→Deleted file recovery on NTFS works because Windows does not immediately zero MFT entries. The key indicators and techniques:
+    43→
+    44→| Aspect | Detail |
+    45→|--------|--------|
+    46→| **MFT Entry In-Use Flag** | Byte offset 0x16 in MFT entry header. Bit 0 = in-use. When deleted, this bit is cleared. **This is the primary deleted file indicator.** |
+    47→| **$STANDARD_INFORMATION** | The in-use flag here is also cleared. Timestamps may still be intact. |
+    48→| **$FILE_NAME** | Often remains intact after deletion — file name and parent reference preserved. |
+    49→| **$DATA attribute** | For non-resident files, data runs may still be present but clusters are marked free in $Bitmap. **Race condition**: if clusters are reused, data is lost. |
+    50→| **Resident files** | Small files (< ~700 bytes) stored inline in MFT entry — often fully recoverable even after deletion, as MFT entries are not overwritten until the MFT slot is reused. |
+    51→| **MFT Slack Space** | On modern Windows (10/11), when a new file reuses an MFT entry, the old $DATA content beyond the new file's size may persist in the MFT record's slack space. Source: Sygnia research (2025). |
+    52→| **$LogFile** | NTFS journal can provide transaction history for recently deleted files. |
+    53→| **$UsnJrnl** | USN Change Journal records file creation/deletion/modification events — useful for forensic timeline. |
+    54→
+    55→**MVP Deleted Recovery Strategy**:
+    56→1. Scan all MFT entries (including those marked as not-in-use)
+    57→2. For each deleted entry: check if $DATA data runs are still present
+    58→3. Verify data run clusters are not marked as allocated in $Bitmap
+    59→4. If clusters are free, attempt to read them — success indicates likely valid data
+    60→5. For resident deleted files: read directly from MFT entry (highest recovery rate)
+    61→6. Use $LogFile/$UsnJrnl as supplementary metadata sources
+    62→
+    63→### 1.4 Corrupted MFT Scenarios
+    64→
+    65→| Scenario | Approach |
+    66→|----------|----------|
+    67→| **MFT partially corrupted** | Use $MFTMirr (MFT entry 1, stored at the cluster number in VBR offset 0x38). $MFTMirr stores copies of the first 4 MFT entries (0-3: $MFT, $MFTMirr, $LogFile, $Volume). If the VBR is intact but $MFT's first entries are damaged, $MFTMirr provides the bootstrap. |
+    68→| **VBR corrupted** | Search for backup VBR (last sector of the partition). NTFS stores a copy there. |
+    69→| **$MFT location unknown** | Scan the volume for the "FILE" signature pattern at 1024-byte boundaries. $MFT is a contiguous sequence of such entries. |
+    70→| **MFT entries scattered/gaps** | Use $Bitmap to determine which MFT slots are in use, then attempt to read each. Skip entries that fail checksum validation (fixup mismatch). |
+    71→| **Severe MFT corruption** | Fall back to raw file carving: scan for file signatures (JPEG: FF D8 FF, PDF: %PDF-, etc.) and reconstruct files from raw data. This is the "deep scan" approach used by R-Studio and DiskDrill. |
+    72→| **TestDisk's approach** | Compares $MFT and $MFTMirr to determine which is less damaged, then copies the better one over the damaged one. Simple but effective for many cases. |
+    73→
+    74→---
+    75→
+    76→## 2. HDD SATA Reading MVP
+    77→
+    78→### 2.1 ATA Commands for Raw Reading
+    79→
+    80→| ATA Command | Code | Purpose |
+    81→|-------------|------|---------|
+    82→| **IDENTIFY DEVICE** | 0xEC | Returns 512 bytes of device info (model, serial, LBA count, SMART support, etc.) |
+    83→| **READ SECTORS** | 0x20 | Read 1-256 sectors (CHS, legacy) |
+    84→| **READ SECTORS EXT** | 0x24 | Read 1-65536 sectors (LBA48, modern) |
+    85→| **READ DMA** | 0xC8 | Read with DMA transfer (CHS) |
+    86→| **READ DMA EXT** | 0x25 | Read with DMA transfer (LBA48) — **primary command for modern drives** |
+    87→| **SMART READ DATA** | 0xB0 (feature=0xD0) | Read 512 bytes of SMART attribute data |
+    88→| **SMART READ LOG** | 0xB0 (feature=0xD5) | Read SMART error/self-test logs |
+    89→
+    90→**For MVP**: Use `READ DMA EXT` (0x25) for LBA48 addressing. This supports drives > 137 GB and is the standard for modern SATA drives.
+    91→
+    92→### 2.2 Linux ioctl() for Direct Disk Access
+    93→
+    94→**Method 1: Simple read() on block device** (recommended for MVP)
+    95→```c
+    96→int fd = open("/dev/sda", O_RDONLY | O_DIRECT);
+    97→lseek(fd, sector_number * 512, SEEK_SET);
+    98→read(fd, buffer, num_sectors * 512);
+    99→```
+   100→- Works through the kernel block device layer
+   101→- Kernel handles ATA command translation
+   102→- No special ioctl needed for basic reading
+   103→- `O_DIRECT` bypasses page cache (important for imaging)
+   104→
+   105→**Method 2: SG_IO ioctl** (for raw ATA commands)
+   106→```c
+   107→#include <scsi/sg.h>
+   108→struct sg_io_hdr hdr;
+   109→// Set up hdr with ATA command passthrough
+   110→ioctl(fd, SG_IO, &hdr);
+   111→```
+   112→- Bypasses some kernel layers
+   113→- Allows sending raw ATA commands
+   114→- Used by smartctl, hdparm
+   115→
+   116→**Method 3: HDIO_DRIVE_CMD / HDIO_GET_IDENTITY**
+   117→```c
+   118→// Read ATA IDENTIFY DEVICE
+   119→ioctl(fd, HDIO_GET_IDENTITY, &identify_buf);
+   120→// Send ATA command
+   121→ioctl(fd, HDIO_DRIVE_CMD, &args);
+   122→```
+   123→- Older IDE interface
+   124→- Being deprecated in favor of SG_IO
+   125→- Requires `CAP_SYS_ADMIN` + `CAP_SYS_RAWIO`
+   126→
+   127→**Key Linux device paths**:
+   128→- `/dev/sdX` — SATA/SCSI block device
+   129→- `/dev/nvmeXnY` — NVMe namespace
+   130→- `/dev/sgX` — SCSI Generic (for SG_IO)
+   131→
+   132→### 2.3 Windows DeviceIoControl Approach
+   133→
+   134→**Method 1: ReadFile on volume handle** (simplest)
+   135→```c
+   136→HANDLE hDev = CreateFile("\\\\.\\PhysicalDrive0", 
+   137→    GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+   138→    NULL, OPEN_EXISTING, 0, NULL);
+   139→SetFilePointer(hDev, byteOffset, NULL, FILE_BEGIN);
+   140→ReadFile(hDev, buffer, bytesToRead, &bytesRead, NULL);
+   141→```
+   142→- Requires Administrator privileges
+   143→- Works through Windows storage stack
+   144→- Read in multiples of sector size (512 or 4096)
+   145→
+   146→**Method 2: IOCTL_ATA_PASS_THROUGH** (raw ATA commands)
+   147→```c
+   148→#include <ntddscsi.h>
+   149→ATA_PASS_THROUGH_EX apt;
+   150→apt.Length = sizeof(ATA_PASS_THROUGH_EX);
+   151→apt.AtaFlags = ATA_FLAGS_DRDY_REQUIRED | ATA_FLAGS_DATA_IN;
+   152→apt.DataBufferOffset = offsetof(BUF, Data);
+   153→apt.DataTransferLength = 512;
+   154→apt.TimeOutValue = 10;
+   155→apt.CurrentTaskFile[6] = 0xEC; // IDENTIFY DEVICE command
+   156→// apt.CurrentTaskFile[7] = 0xA0; // Device select
+   157→
+   158→DeviceIoControl(hDev, IOCTL_ATA_PASS_THROUGH,
+   159→    &apt, sizeof(apt), &apt, sizeof(apt), &returned, NULL);
+   160→```
+   161→
+   162→**Method 3: IOCTL_STORAGE_QUERY_PROPERTY** (device info)
+   163→```c
+   164→STORAGE_PROPERTY_QUERY query;
+   165→query.PropertyId = StorageDeviceProperty;
+   166→query.QueryType = PropertyStandardQuery;
+   167→DeviceIoControl(hDev, IOCTL_STORAGE_QUERY_PROPERTY,
+   168→    &query, sizeof(query), &desc, sizeof(desc), &returned, NULL);
+   169→```
+   170→
+   171→**Windows key paths**:
+   172→- `\\\\.\\PhysicalDriveN` — raw disk access
+   173→- `\\\\.\\C:` — raw volume access
+   174→- `\\\\.\\ScsiN:` — SCSI passthrough for ATA commands
+   175→
+   176→### 2.4 Handling I/O Errors Gracefully
+   177→
+   178→| Error Type | Detection | Handling |
+   179→|------------|-----------|----------|
+   180→| **EIO (read error)** | `read()` returns -1, errno=EIO | Mark sector as bad, skip to next sector, log position |
+   181→| **EAGAIN/EWOULDBLOCK** | `read()` returns -1, errno=EAGAIN | Retry with backoff |
+   182→| **Medium error** | Kernel log: "medium error" or "unrecoverable read error" | Mark as unreadable, continue with next sector |
+   183→| **DRDY timeout** | Drive not responding | Wait, re-issue command, if persistent: power cycle or reset |
+   184→| **UNC (Uncorrectable)** | ATA status bit | Mark as bad sector, attempt retry with smaller block size |
+   185→| **IDNF (ID Not Found)** | ATA status bit | Sector may not exist (beyond drive capacity) |
+   186→
+   187→**MVP Error Handling Strategy**:
+   188→1. **Timeout-based retry**: Set a per-read timeout (e.g., 3 seconds). If exceeded, abort the read.
+   189→2. **Exponential backoff**: After N consecutive failures, wait 2^N ms before retry.
+   190→3. **Block size reduction**: If reading 128 sectors fails, try 1 sector at a time.
+   191→4. **Error logging**: Record every error with LBA, error type, timestamp.
+   192→5. **Skip-and-continue**: Never abort the entire operation on a single error.
+   193→
+   194→### 2.5 Sector-by-Sector Reading with Retry Logic
+   195→
+   196→```
+   197→Pseudo-code for robust sector reading:
+   198→
+   199→function readSectorWithRetry(fd, lba, maxRetries=3, timeout=3000ms):
+   200→    for attempt in range(maxRetries):
+   201→        try:
+   202→            data = readWithTimeout(fd, lba * 512, 512, timeout)
+   203→            if validateChecksum(data):
+   204→                return (OK, data)
+   205→        except TimeoutError:
+   206→            log("Timeout at LBA {lba}, attempt {attempt}")
+   207→            sleep(min(2^attempt * 100, 5000))  // exponential backoff, cap at 5s
+   208→        except IOError as e:
+   209→            log("I/O error at LBA {lba}: {e}, attempt {attempt}")
+   210→            sleep(min(2^attempt * 100, 5000))
+   211→    
+   212→    return (FAILED, None)  // Sector is unrecoverable
+   213→```
+   214→
+   215→---
+   216→
+   217→## 3. Disk Imaging MVP
+   218→
+   219→### 3.1 ddrescue-like Adaptive Reading
+   220→
+   221→GNU ddrescue uses a **4-phase algorithm** with a mapfile (formerly logfile) that tracks the state of every sector range:
+   222→
+   223→| Phase | Name | Description |
+   224→|-------|------|-------------|
+   225→| **1** | **Copying** | Read non-tried areas. On error, skip ahead and mark the failed block as non-trimmed. Reads large blocks quickly for good areas. |
+   226→| **2** | **Trimming** | For each non-trimmed block, read forward from the beginning and backward from the end, trimming the bad area. Reduces the error boundary. |
+   227→| **3** | **Scraping** | For each non-scraped block, read sector-by-sector (single-sector reads). This is the slowest phase but recovers individual good sectors within bad blocks. |
+   228→| **4** | **Retrying** | Optionally re-attempt all bad-sector areas with a specified number of retries (-r option). |
+   229→
+   230→**Mapfile states**:
+   231→- `?` — non-tried (not yet read)
+   232→- `*` — finished (successfully read)
+   233→- `/` — non-trimmed (failed in copying phase)
+   234→- `-` — non-scraped (failed in trimming phase)
+   235→- `!` — bad-sector (failed in scraping phase)
+   236→
+   237→**Mapfile format** (text-based):
+   238→```
+   239→# Mapfile created by ddrescue
+   240→0x00000000 0x1A3BFE00 +
+   241→0x1A3BFE00 0x00000200 /
+   242→0x1A3C0000 0x00001000 !
+   243→0x1A3D1000 0x2C530000 ?
+   244→```
+   245→Each line: `start_offset  size  status`
+   246→
+   247→### 3.2 Read Timing and Error Detection
+   248→
+   249→| Timing Parameter | ddrescue Default | HDDSuperClone Approach |
+   250→|-----------------|-------------------|----------------------|
+   251→| **Read timeout** | No explicit timeout (relies on kernel) | Per-read timeout (typically 3-5 seconds) |
+   252→| **Slow read detection** | Not implemented | Measures read time; if > threshold (e.g., 500ms), marks as "slow" |
+   253→| **Consecutive error threshold** | N/A | After N consecutive errors (e.g., 3-7), infers bad head and skips to next head zone |
+   254→| **Block size on error** | Splits from 128 sectors down to 1 sector | Dynamically adjusts based on error density |
+   255→
+   256→**MVP timing strategy**:
+   257→1. Time every read operation
+   258→2. If a read takes > 2x normal time, mark as "slow read"
+   259→3. If a read fails, reduce block size to 1 sector
+   260→4. Track cumulative error patterns to detect head-level failures
+   261→
+   262→### 3.3 Checkpoint/Resume Mechanism
+   263→
+   264→**ddrescue's approach**:
+   265→- The mapfile IS the checkpoint — it's updated after every read operation
+   266→- To resume: `ddrescue /dev/sda image.img mapfile`
+   267→- ddrescue reads the mapfile, skips finished areas, and continues from where it left off
+   268→- The mapfile is written atomically (write to temp file, then rename)
+   269→
+   270→**MVP checkpoint design**:
+   271→```
+   272→Checkpoint file format (JSON or binary):
+   273→{
+   274→  "version": 1,
+   275→  "source_device": "/dev/sda",
+   276→  "image_path": "/output/image.img",
+   277→  "total_size": 1000204886016,
+   278→  "sector_size": 512,
+   279→  "start_time": "2026-03-04T10:00:00Z",
+   280→  "last_update": "2026-03-04T15:30:00Z",
+   281→  "phases_completed": ["copying", "trimming"],
+   282→  "current_phase": "scraping",
+   283→  "current_position": 500000000000,
+   284→  "sector_map": {
+   285→    "0": {"status": "done", "size": 512},
+   286→    "1": {"status": "done", "size": 512},
+   287→    ...
+   288→  },
+   289→  "stats": {
+   290→    "sectors_read": 1953500000,
+   291→    "sectors_failed": 50000,
+   292→    "bytes_recovered": 999930000000,
+   293→    "read_errors": 50000,
+   294→    "slow_reads": 2000
+   295→  }
+   296→}
+   297→```
+   298→
+   299→**Optimization**: Use a run-length encoded bitmap instead of per-sector entries. A 1 TB drive = ~2 billion sectors = ~250 MB bitmap. With RLE, this compresses to typically < 10 MB.
+   300→
+   301→### 3.4 Storing Partial Images Efficiently
+   302→
+   303→| Approach | Description | Pros | Cons |
+   304→|----------|-------------|------|------|
+   305→| **Sparse file** | Create image file with `fallocate()`, write only recovered sectors. Unrecovered sectors remain as zero holes. | No extra space for unrecovered areas; compatible with all tools | Requires filesystem supporting sparse files; may mislead about actual data |
+   306→| **ddrescue mapfile** | Separate image file + mapfile. Image has zeros for bad sectors, mapfile tracks which areas are valid. | De-facto standard; simple; resume support | Two files to manage |
+   307→| **Compressed image** | Use per-block compression (e.g., zlib per 1 MB block). | Reduces image size significantly | More complex; random access slower; not compatible with other tools |
+   308→| **E01/EWF format** | Expert Witness Format used in forensics. | Industry standard; built-in checksums; compression; metadata | Complex to implement; patent considerations |
+   309→
+   310→**MVP recommendation**: Use sparse file + mapfile. This is the ddrescue approach and is the simplest to implement while being compatible with other tools.
+   311→
+   312→### 3.5 HDDSuperClone / OpenSuperClone Approach
+   313→
+   314→**Key architectural difference**: HDDSuperClone bypasses the Linux kernel block device layer and sends raw ATA commands directly to the drive.
+   315→
+   316→| Feature | ddrescue | HDDSuperClone |
+   317→|---------|----------|---------------|
+   318→| **Read path** | Through kernel block layer (`read()` on `/dev/sdX`) | Direct ATA commands via SG_IO |
+   319→| **Head awareness** | No head mapping | Self-learning head skipping algorithm |
+   320→| **Error detection** | Relies on kernel error reporting | Detects ATA status registers directly |
+   321→| **Timeout handling** | Kernel-controlled | User-controlled per-read timeout |
+   322→| **Slow read detection** | None | Measures read latency; marks slow reads |
+   323→| **Head skip algorithm** | N/A | After ~7 consecutive errors in a zone, infers bad head and skips to next head zone |
+   324→| **Drive reset** | Manual | Can issue ATA SOFTWARE RESET on timeout |
+   325→| **Virtual disk driver** | None | Provides a virtual block device that other tools (like R-Studio) can mount |
+   326→
+   327→**Head skipping algorithm (HDDSuperClone)**:
+   328→1. Read a sector. If it fails, record the LBA.
+   329→2. If 7 consecutive failures occur within a zone, calculate the head zone boundary.
+   330→3. Skip all sectors belonging to that head zone.
+   331→4. Continue reading from the next head zone.
+   332→5. This dramatically reduces imaging time on drives with a failed head (from days to hours).
+   333→
+   334→**MVP enhancement**: Implement both ddrescue-style block-layer reading (for stability) and optional ATA-passthrough mode (for advanced recovery on failing drives).
+   335→
+   336→---
+   337→
+   338→## 4. Diagnostic MVP
+   339→
+   340→### 4.1 SMART Data Reading and Interpretation
+   341→
+   342→**How to read SMART data**:
+   343→
+   344→**Linux** (via smartctl or direct ioctl):
+   345→```c
+   346→// Method 1: Using smartmontools
+   347→// smartctl -a /dev/sda
+   348→
+   349→// Method 2: Direct ATA command
+   350→// Send SMART READ DATA (0xB0, feature=0xD0) via SG_IO
+   351→// Returns 512 bytes of SMART attribute data
+   352→```
+   353→
+   354→**Windows** (via DeviceIoControl):
+   355→```c
+   356→// IOCTL_ATA_PASS_THROUGH with SMART READ DATA command
+   357→ATA_PASS_THROUGH_EX apt;
+   358→apt.CurrentTaskFile[0] = 0xD0;  // SMART READ DATA
+   359→apt.CurrentTaskFile[6] = 0xB0;  // SMART command
+   360→```
+   361→
+   362→**Critical SMART attributes to interpret**:
+   363→
+   364→| ID | Attribute | Threshold | Interpretation |
+   365→|----|-----------|-----------|---------------|
+   366→| 5 | Reallocated Sectors Count | >0 | Drive has remapped bad sectors. Increasing = failing. |
+   367→| 10 | Spin Retry Count | >0 | Drive had trouble spinning up. Very bad sign. |
+   368→| 187 | Reported Uncorrectable Errors | >0 | Unrecoverable read errors. Increasing = failing. |
+   369→| 188 | Command Timeout | >0 | Communication timeouts. |
+   370→| 194 | Temperature | Varies | Overheating causes failures. |
+   371→| 196 | Reallocation Event Count | >0 | Sectors being reallocated. |
+   372→| 197 | Current Pending Sector Count | >0 | Sectors waiting to be remapped. **Key indicator of imminent failure.** |
+   373→| 198 | Offline Uncorrectable | >0 | Bad sectors found during offline scan. |
+   374→| 199 | UDMA CRC Error Count | >0 | Cable/interface errors. Often fixable by replacing cable. |
+   375→| 200 | Multi-Zone Error Rate | >0 | Write errors. |
+   376→
+   377→**MVP SMART interpretation**:
+   378→- **Green**: 0 reallocated, 0 pending, 0 uncorrectable
+   379→- **Yellow**: Pending sectors >0 but not increasing, or temperature elevated
+   380→- **Red**: Reallocated sectors increasing, spin retries, uncorrectable errors increasing
+   381→
+   382→### 4.2 Surface Scan (Read Test)
+   383→
+   384→**Implementation**:
+   385→```
+   386→1. Read every sector on the drive sequentially
+   387→2. Time each read operation
+   388→3. Categorize each sector:
+   389→   - FAST (< 50ms) — healthy
+   390→   - SLOW (50ms - 500ms) — degraded
+   391→   - VERY SLOW (500ms - 3000ms) — failing
+   392→   - ERROR (> 3000ms or read failure) — bad
+   393→4. Generate a visual map of the disk surface
+   394→5. Report statistics: % fast, % slow, % error
+   395→```
+   396→
+   397→**MVP surface scan**: Read 1 MB blocks sequentially, time each read, then re-read failed blocks at sector granularity. This is what tools like Victoria HDD and MHDD do.
+   398→
+   399→### 4.3 Filesystem Health Check
+   400→
+   401→| Check | What to Verify |
+   402→|-------|---------------|
+   403→| **VBR validity** | Boot sector signature (0x55AA), BPB fields are reasonable |
+   404→| **$MFT accessibility** | Can read $MFT entry 0, fixup values match |
+   405→| **$MFT mirror** | $MFTMirr entries 0-3 match $MFT entries 0-3 |
+   406→| **$Bitmap consistency** | Allocated clusters match MFT data runs |
+   407→| **$LogFile** | Journal is clean (no uncommitted transactions) |
+   408→| **Orphaned files** | MFT entries that are in-use but not reachable from any directory |
+   409→| **Cross-linked files** | Two files claiming the same cluster |
+   410→
+   411→### 4.4 Presenting Results to User
+   412→
+   413→**MVP diagnostic report format**:
+   414→```
+   415→=== DISK DIAGNOSTIC REPORT ===
+   416→Drive: ST2000DM001-1CH164 (Seagate 2TB)
+   417→Serial: W1E3ABCD
+   418→Firmware: CC25
+   419→Interface: SATA III
+   420→
+   421→--- SMART STATUS ---
+   422→Overall Health: CAUTION
+   423→  Reallocated Sectors: 24 (INCREASING)
+   424→  Pending Sectors: 156
+   425→  Uncorrectable Errors: 12
+   426→  Temperature: 42°C
+   427→  Power-On Hours: 34,512
+   428→
+   429→--- SURFACE SCAN ---
+   430→Total Sectors: 3,907,029,168
+   431→  Fast (< 50ms):   99.82%  (3,899,999,000)
+   432→  Slow (50-500ms):  0.15%  (5,860,000)
+   433→  Very Slow (>500ms): 0.01% (390,000)
+   434→  Bad (unreadable):  0.02% (780,000)
+   435→
+   436→--- FILESYSTEM CHECK ---
+   437→Volume: NTFS (Windows 10)
+   438→  VBR: OK
+   439→  $MFT: OK (fixup valid)
+   440→  $MFTMirr: OK
+   441→  $Bitmap: MINOR INCONSISTENCY (24 clusters mismatch)
+   442→  $LogFile: DIRTY (uncommitted transactions)
+   443→
+   444→--- RECOMMENDATION ---
+   445→IMMEDIATE ACTION REQUIRED:
+   446→  - Image this drive as soon as possible
+   447→  - Reallocated sectors are increasing — drive is failing
+   448→  - Do NOT write to this drive
+   449→  - Use disk imaging mode to create a full backup
+   450→```
+   451→
+   452→---
+   453→
+   454→## 5. Checkpoint/Resume Mechanism
+   455→
+   456→### 5.1 What State Needs to Be Saved
+   457→
+   458→| State Category | Specific Data |
+   459→|---------------|---------------|
+   460→| **Scan position** | Current LBA/sector being processed |
+   461→| **Sector map** | Status of every sector (done, failed, pending, slow) |
+   462→| **Phase information** | Current phase (copying, trimming, scraping, retrying) |
+   463→| **Filesystem parse state** | Current MFT entry index, directory tree built so far |
+   464→| **Found files** | List of recovered file metadata (paths, sizes, MFT references) |
+   465→| **Statistics** | Bytes read, errors, time elapsed, speed |
+   466→| **Device identity** | Source device path/serial (to verify same device on resume) |
+   467→| **Configuration** | Block sizes, retry counts, timeout settings |
+   468→
+   469→### 5.2 How to Serialize Scan Progress
+   470→
+   471→**Approach 1: Run-Length Encoded Bitmap** (recommended for imaging)
+   472→```
+   473→Format: [status_byte][count_32bit] repeated
+   474→Example: 0x00 0x00001000 0x01 0x00000010 0x00 0x00002000
+   475→Meaning: 4096 sectors done, 16 sectors failed, 8192 sectors done
+   476→```
+   477→
+   478→**Approach 2: SQLite Database** (recommended for filesystem scan)
+   479→```sql
+   480→CREATE TABLE scan_state (
+   481→    id INTEGER PRIMARY KEY,
+   482→    current_mft_entry INTEGER,
+   483→    current_lba INTEGER,
+   484→    phase TEXT,
+   485→    start_time TEXT,
+   486→    last_update TEXT,
+   487→    device_serial TEXT
+   488→);
+   489→CREATE TABLE found_files (
+   490→    id INTEGER PRIMARY KEY,
+   491→    mft_entry INTEGER,
+   492→    parent_mft INTEGER,
+   493→    filename TEXT,
+   494→    file_size INTEGER,
+   495→    is_deleted BOOLEAN,
+   496→    data_runs_valid BOOLEAN,
+   497→    first_lba INTEGER
+   498→);
+   499→CREATE TABLE sector_map (
+   500→    start_lba INTEGER,
+   501→    count INTEGER,
+   502→    status INTEGER,  -- 0=pending, 1=done, 2=failed, 3=slow
+   503→    PRIMARY KEY (start_lba)
+   504→);
+   505→```
+   506→
+   507→**Approach 3: JSON + Binary Hybrid** (for rapid prototyping)
+   508→```json
+   509→{
+   510→  "scan_info": { ... },
+   511→  "progress": { ... },
+   512→  "sector_map_file": "scan_20260304_100000.map"
+   513→}
+   514→```
+   515→
+   516→### 5.3 How to Handle Interrupted Scans
+   517→
+   518→1. **Atomic checkpoint writes**: Write checkpoint to a temp file, then `rename()` over the old checkpoint (atomic on POSIX)
+   519→2. **Checkpoint frequency**: Save every 10 seconds or every 1000 sectors, whichever is first
+   520→3. **On resume**: Read checkpoint, verify device identity (compare serial number), rebuild in-memory state from serialized data
+   521→4. **Crash recovery**: If checkpoint file is corrupt (partial write), fall back to the previous checkpoint
+   522→5. **Progress estimation**: Store `total_size` and `bytes_processed` to calculate % complete
+   523→
+   524→### 5.4 How R-Studio's Scan Resume Works
+   525→
+   526→Based on R-Studio documentation and forum posts:
+   527→
+   528→1. **Scan info file**: R-Studio creates a `.scan` file that stores all discovered filesystem structures
+   529→2. **Resume process**: Load the scan info file → click Scan → select Advanced → choose unscanned areas → resume
+   530→3. **Partial results**: Even before scan completes, R-Studio shows discovered partitions and files. Users can browse and recover files while the scan continues.
+   531→4. **Incremental discovery**: R-Studio parses filesystem structures as it finds them, building the file tree incrementally
+   532→5. **Scan info portability**: Scan files can be saved and loaded on a different machine (per R-Studio forum: "You can save the scan results and load it up later and recover to another drive")
+   533→
+   534→**Key insight for MVP**: R-Studio's approach of showing results incrementally is a major UX advantage. The MVP should display found files as soon as they're discovered, not wait for the full scan to complete.
+   535→
+   536→---
+   537→
+   538→## 6. Benchmarking Against Competitors
+   539→
+   540→### 6.1 Metrics That Matter
+   541→
+   542→| Metric | Definition | How to Measure |
+   543→|--------|-----------|---------------|
+   544→| **Recovery rate** | % of files successfully recovered (by count and by size) | Compare recovered files against known test set |
+   545→| **Recovery accuracy** | % of recovered files that are byte-identical to originals | SHA-256 hash comparison |
+   546→| **Speed** | Time to complete a scan/recovery | Wall-clock time on identical hardware |
+   547→| **Safety** | No writes to source drive; no modifications to evidence | Verify source drive is read-only; check for write operations |
+   548→| **Partial recovery** | Ability to recover partial files from damaged media | Measure % of file bytes recovered for damaged files |
+   549→| **Memory usage** | RAM consumed during operations | Process monitoring |
+   550→| **Error handling** | Graceful behavior on damaged media | Test on drives with known bad sectors |
+   551→| **UX responsiveness** | Time to first result, ability to browse during scan | User testing + timing |
+   552→
+   553→### 6.2 How to Create a Fair Test Set
+   554→
+   555→**Test scenarios** (in order of increasing difficulty):
+   556→
+   557→| Scenario | Description | Expected Recovery Rate |
+   558→|----------|-------------|----------------------|
+   559→| **T1: Healthy volume, deleted files** | NTFS volume with recently deleted files, not overwritten | 95%+ for all tools |
+   560→| **T2: Quick-formatted volume** | NTFS volume quick-formatted (MFT entries still intact) | 90%+ for good tools |
+   561→| **T3: Full-formatted volume** | NTFS volume full-formatted (zero-filled) | 0% for all tools (data destroyed) |
+   562→| **T4: Corrupted MFT** | MFT partially corrupted, MFTMirr intact | Varies widely by tool |
+   563→| **T5: Corrupted MFT + MFTMirr** | Both MFT and MFTMirr damaged | Only tools with raw carving can recover |
+   564→| **T6: Bad sectors** | Image with known bad sectors (use dmsetup to simulate) | Test how much data is recovered, how fast, and how safely |
+   565→| **T7: Partially overwritten** | Some clusters overwritten after deletion | Test accuracy — do tools detect corruption? |
+   566→| **T8: Large volume** | 2TB+ volume with 1M+ files | Test speed and memory usage |
+   567→| **T9: Fragmented files** | Heavily fragmented files (data runs scattered) | Test whether tools correctly follow data runs |
+   568→| **T10: Resident files** | Small files stored inline in MFT entries | Test deleted recovery of resident files |
+   569→
+   570→**Test file set**: 1,000 files of varying types (documents, images, videos, archives), sizes (1 KB to 1 GB), and fragmentation levels. All files SHA-256 hashed before testing.
+   571→
+   572→### 6.3 How to Compare with R-Studio, DMDE, DiskDrill
+   573→
+   574→| Aspect | R-Studio | DMDE | DiskDrill | MVP Target |
+   575→|--------|----------|------|-----------|-----------|
+   576→| **NTFS parsing depth** | Excellent (full attribute support, ADS, EFS) | Excellent (raw sector editing) | Good (deep scan) | Good (core attributes + data runs) |
+   577→| **Deleted recovery** | Excellent (MFT-based + carving) | Excellent (MFT-based + manual) | Good (carving-heavy) | Good (MFT-based) |
+   578→| **Speed** | Fast | Fast | Moderate | Target: competitive |
+   579→| **Resume capability** | Yes (scan info files) | Limited | Limited | Yes (checkpoint) |
+   580→| **Disk imaging** | Yes (byte-to-byte) | No | Yes | Yes (ddrescue-style) |
+   581→| **Price** | $49.99-$899 | $20-$133 | $89-$499 | TBD |
+   582→| **Platform** | Win/Mac/Linux | Win only | Win/Mac | Win/Mac/Linux |
+   583→
+   584→### 6.4 Specific Scenarios to Demonstrate Superiority
+   585→
+   586→1. **Faster imaging of failing drives**: Use ATA-passthrough + head-skipping (like HDDSuperClone) to image drives with bad heads significantly faster than ddrescue or R-Studio
+   587→2. **Better deleted file accuracy**: Show that MFT-based recovery correctly identifies file names and paths (whereas DiskDrill's carving-only approach loses filenames)
+   588→3. **Incremental results**: Show results as they're found (like R-Studio), not after the full scan completes (like many cheaper tools)
+   589→4. **Safe imaging**: Prove zero writes to source drive with a write-blocker verification
+   590→5. **Cross-platform**: Run on Linux, Windows, and macOS natively (R-Studio does this; DMDE is Windows-only)
+   591→6. **Checkpoint/resume**: Demonstrate reliable resume of interrupted scans (many tools lack this)
+   592→7. **Open/transparent**: Open-source the core engine — build trust that the tool doesn't phone home or exfiltrate data
+   593→
+   594→---
+   595→
+   596→## 7. Technical Stack for MVP
+   597→
+   598→### 7.1 Language Comparison
+   599→
+   600→| Factor | C/C++ | Rust | Python |
+   601→|--------|-------|------|--------|
+   602→| **Raw disk access** | Excellent (POSIX, Win32 APIs native) | Excellent (same APIs via libc/WinAPI bindings) | Good (via os/cygwin, but slower) |
+   603→| **Performance** | Excellent (zero-cost abstractions) | Excellent (comparable to C/C++) | Poor (10-100x slower for byte crunching) |
+   604→| **Memory safety** | Poor (manual management, UAF, buffer overflows) | Excellent (borrow checker, no GC) | Good (GC, but no compile-time guarantees) |
+   605→| **NTFS parsing** | Manual struct definitions | Can derive from binary specs; existing crates | Libraries like analyzeMFT exist |
+   606→| **Cross-platform** | Good (POSIX + Win32) | Good (same) | Good (inherent) |
+   607→| **Ecosystem** | Mature | Growing rapidly | Vast |
+   608→| **Learning curve** | Moderate | Steep | Easy |
+   609→| **Time to MVP** | Moderate | Slow (initial) then fast | Fast (prototype) then slow (production) |
+   610→
+   611→### 7.2 Recommended Stack: Rust (Core) + Python (Prototype/Testing)
+   612→
+   613→**Rationale**:
+   614→- **Rust** for the core engine: memory safety is critical when parsing untrusted binary data from potentially corrupted filesystems. A buffer overflow in a C NTFS parser could crash the recovery tool and lose the user's data. Rust's safety guarantees eliminate entire classes of bugs.
+   615→- **Python** for rapid prototyping: validate NTFS parsing logic quickly, then port to Rust.
+   616→- **C FFI** for platform-specific raw disk access (thin wrappers around ioctl/DeviceIoControl).
+   617→
+   618→### 7.3 Existing Libraries to Build On
+   619→
+   620→**Rust NTFS Libraries** (discovered via search):
+   621→
+   622→| Crate | Description | Status |
+   623→|-------|-------------|--------|
+   624→| **`ntfs`** (ColinFinck) | Full NTFS implementation. Comes with `ntfs-shell` example. Supports NTFS 3.1+ (Win 2000 through Win 11). Read + Seek based. | Mature, well-documented |
+   625→| **`ntfs-core`** | "Forensic-grade NTFS reader" — $MFT, attributes, indexes, data runs, named streams, LZNT1, $UsnJrnl. | Newer, focused on forensics |
+   626→| **`ntfs-reader`** | Higher-level reader for Windows volumes. Can open volumes by path. | Windows-focused |
+   627→| **`mfte-rs`** (MFTE-RS) | Cross-platform NTFS artifact parser, alternative to MFTECmd. | Active |
+   628→
+   629→**Other Useful Rust Crates**:
+   630→
+   631→| Crate | Purpose |
+   632→|-------|---------|
+   633→| `binrw` or `nom` | Binary parsing (derive macros for struct layout) |
+   634→| `memmap2` | Memory-mapped file I/O |
+   635→| `crossbeam` | Concurrent scanning |
+   636→| `serde` + `serde_json` | Checkpoint serialization |
+   637→| `rusqlite` | SQLite for scan state storage |
+   638→| `clap` | CLI argument parsing |
+   639→| `indicatif` | Progress bars |
+   640→| `crossterm` | Terminal UI |
+   641→
+   642→**Python Libraries for Prototyping**:
+   643→
+   644→| Library | Purpose |
+   645→|---------|---------|
+   646→| `analyzeMFT` | Python MFT parser (github.com/rowingdude/analyzeMFT) |
+   647→| `construct` | Binary data parsing (declarative struct definitions) |
+   648→| `struct` | Built-in binary struct unpacking |
+   649→| `smartctl` (via subprocess) | SMART data reading |
+   650→
+   651→**C/C++ Reference Implementations**:
+   652→
+   653→| Project | Purpose |
+   654→|---------|---------|
+   655→| **GNU ddrescue** | Reference implementation for adaptive disk imaging (C++) |
+   656→| **OpenSuperClone** | Fork of HDDSuperClone with ATA passthrough (C) |
+   657→| **TestDisk/PhotoRec** | NTFS repair and file carving (C) |
+   658→| **NTFS-3G** | Full NTFS read/write driver (C) — excellent reference for NTFS structures |
+   659→| **The Sleuth Kit** | Forensic filesystem analysis toolkit (C) — NTFS, FAT, ext, HFS+ |
+   660→
+   661→---
+   662→
+   663→## 8. Development Timeline
+   664→
+   665→### 8.1 Estimated Effort by Component
+   666→
+   667→| Component | Sub-Task | Estimated Time | Dependencies |
+   668→|-----------|----------|---------------|--------------|
+   669→| **Raw Disk Reader** | Linux block device reading | 1 week | None |
+   670→| | Windows DeviceIoControl reading | 1 week | None |
+   671→| | ATA passthrough (SG_IO / IOCTL_ATA_PASS_THROUGH) | 1 week | None |
+   672→| | Error handling + retry logic | 1 week | Disk reader |
+   673→| | Read timing + slow detection | 3 days | Disk reader |
+   674→| | **Total** | **~4 weeks** | |
+   675→| **NTFS Parser** | VBR/BPB parsing | 2 days | Disk reader |
+   676→| | MFT entry parsing (header + attributes) | 2 weeks | VBR parser |
+   677→| | Data run parsing | 1 week | MFT parser |
+   678→| | Directory tree reconstruction | 1 week | MFT + index parsing |
+   679→| | Deleted file detection | 1 week | MFT parser |
+   680→| | Resident file recovery | 3 days | MFT parser |
+   681→| | Non-resident file recovery | 1 week | Data run parser |
+   682→| | MFT corruption handling | 1 week | All above |
+   683→| | File carving (raw scan) | 1 week | Disk reader |
+   684→| | **Total** | **~8 weeks** | |
+   685→| **Disk Imager** | Basic sequential imaging | 1 week | Disk reader |
+   686→| | Mapfile/sector map management | 1 week | Disk reader |
+   687→| | 4-phase ddrescue algorithm | 2 weeks | Sector map |
+   688→| | Checkpoint/resume | 1 week | Sector map |
+   689→| | Sparse file output | 3 days | None |
+   690→| | ATA passthrough imaging mode | 1 week | ATA passthrough |
+   691→| | Head-skipping algorithm | 2 weeks | ATA passthrough |
+   692→| | **Total** | **~8 weeks** | |
+   693→| **Diagnostic Module** | SMART data reading | 1 week | ATA passthrough |
+   694→| | SMART attribute interpretation | 3 days | SMART reader |
+   695→| | Surface scan (read test) | 1 week | Disk reader |
+   696→| | Filesystem health check | 1 week | NTFS parser |
+   697→| | Report generation | 3 days | All above |
+   698→| | **Total** | **~4 weeks** | |
+   699→| **Basic UI** | CLI interface | 1 week | All modules |
+   700→| | TUI (terminal UI) with progress | 2 weeks | All modules |
+   701→| | Basic GUI (optional, phase 2) | 4 weeks | All modules |
+   702→| | **Total (CLI+TUI)** | **~3 weeks** | |
+   703→| **Integration & Testing** | Integration testing | 2 weeks | All modules |
+   704→| | Test suite creation | 1 week | None |
+   705→| | Bug fixes | 2 weeks | Testing |
+   706→| | Documentation | 1 week | All modules |
+   707→| | **Total** | **~6 weeks** | |
+   708→
+   709→### 8.2 Phased Delivery Plan
+   710→
+   711→| Phase | Duration | Deliverables |
+   712→|-------|----------|-------------|
+   713→| **Phase 1: Foundation** | 4 weeks | Raw disk reader (Linux + Windows), basic CLI, error handling, read timing |
+   714→| **Phase 2: NTFS Parser** | 8 weeks | Full NTFS parser: healthy volume recovery, deleted file recovery, directory tree |
+   715→| **Phase 3: Disk Imager** | 8 weeks | Adaptive imaging (ddrescue-style), checkpoint/resume, sparse file output |
+   716→| **Phase 4: Diagnostics** | 4 weeks | SMART reading + interpretation, surface scan, filesystem health check |
+   717→| **Phase 5: Polish** | 6 weeks | Integration, TUI, testing, bug fixes, documentation |
+   718→| **Total MVP** | **~30 weeks (7.5 months)** | Full data recovery engine MVP |
+   719→
+   720→### 8.3 Parallel Development Opportunities
+   721→
+   722→```
+   723→Week 1-4:   [Disk Reader] [NTFS Parser (VBR + MFT header)]
+   724→Week 5-8:   [Disk Reader (ATA passthrough)] [NTFS Parser (attributes + data runs)]
+   725→Week 9-12:  [NTFS Parser (deleted + corrupted)] [Disk Imager (basic + mapfile)]
+   726→Week 13-16: [NTFS Parser (carving)] [Disk Imager (4-phase + checkpoint)]
+   727→Week 17-20: [Disk Imager (head skip)] [Diagnostics (SMART + surface scan)]
+   728→Week 21-24: [Diagnostics (FS check + report)] [CLI + TUI]
+   729→Week 25-30: [Integration + Testing + Polish]
+   730→```
+   731→
+   732→With parallel work, the timeline could be compressed to **~24 weeks (6 months)**.
+   733→
+   734→---
+   735→
+   736→## Appendix A: Key Reference Sources
+   737→
+   738→| Source | URL | Relevance |
+   739→|--------|-----|-----------|
+   740→| Microsoft MFT Documentation | learn.microsoft.com/en-us/windows/win32/devnotes/master-file-table | Official NTFS MFT specification |
+   741→| NTFS Documentation (Kolibrios) | ftp.kolibrios.org/users/Asper/docs/NTFS/ntfsdoc.html | Comprehensive NTFS reverse-engineering docs |
+   742→| GNU ddrescue Algorithm | gnu.org/software/ddrescue/manual/ | Reference imaging algorithm |
+   743→| HDDSuperClone vs ddrescue | rossmanngroup.com/technical-reference/hddsuperclone-vs-ddrescue | Comparative analysis |
+   744→| Rust `ntfs` crate | github.com/ColinFinck/ntfs | Production NTFS parser in Rust |
+   745→| Rust `ntfs-core` crate | lib.rs/crates/ntfs-core | Forensic-grade NTFS reader |
+   746→| analyzeMFT (Python) | github.com/rowingdude/analyzeMFT | Python MFT parser reference |
+   747→| The Sleuth Kit | sleuthkit.org | Comprehensive forensic toolkit (C) |
+   748→| NTFS-3G | github.com/tuxera/ntfs-3g | Full NTFS driver reference |
+   749→| Linux HDIO ioctl | docs.kernel.org/userspace-api/ioctl/hdio.html | Kernel ioctl documentation |
+   750→| Windows ATA Pass Through | stackoverflow.com/questions/5070987 | DeviceIoControl ATA examples |
+   751→| Direct $MFT Parsing (Medium) | medium.com/@s12deff/direct-mft-parsing | MFT parsing walkthrough |
+   752→| MFT Parsing Tutorial | handmade.network/wiki/7002-tutorial_parsing_the_mft | Step-by-step MFT parsing |
+   753→| R-Studio Scan Resume | forum.r-tt.com/viewtopic.php?t=9380 | How R-Studio resume works |
+   754→| Sygnia MFT Slack Space | sygnia.co/blog/the-forensic-value-of-mft-slack-space | Modern NTFS forensics |
+   755→| TestDisk MFT Repair | cgsecurity.org/wiki/Advanced_NTFS_Boot_and_MFT_Repair | MFT repair techniques |
+   756→
+   757→---
+   758→
+   759→## Appendix B: Key Data Structures (Pseudocode)
+   760→
+   761→### NTFS VBR BPB
+   762→```
+   763→struct NTFS_BPB {
+   764→    bytes_per_sector: u16,       // offset 0x0B, typically 512
+   765→    sectors_per_cluster: u8,     // offset 0x0D
+   766→    reserved_sectors: u16,       // offset 0x0E
+   767→    // ... unused fields ...
+   768→    total_sectors: u64,          // offset 0x28
+   769→    mft_cluster: u64,            // offset 0x30
+   770→    mft_mirror_cluster: u64,     // offset 0x38
+   771→    bytes_per_mft_record: u32,   // offset 0x40 (if negative, 2^|value|)
+   772→    bytes_per_index_record: u32, // offset 0x44
+   773→    volume_serial: u64,          // offset 0x48
+   774→}
+   775→```
+   776→
+   777→### MFT Entry Header
+   778→```
+   779→struct MFT_ENTRY_HEADER {
+   780→    signature: [u8; 4],         // "FILE" = 0x454C4946
+   781→    fixup_offset: u16,          // offset 0x04
+   782→    fixup_count: u16,           // offset 0x06
+   783→    sequence_number: u16,       // offset 0x10
+   784→    hard_link_count: u16,       // offset 0x12
+   785→    first_attribute_offset: u16, // offset 0x14
+   786→    flags: u16,                 // offset 0x16 (0x0001 = in-use, 0x0002 = directory)
+   787→    used_size: u32,             // offset 0x18
+   788→    allocated_size: u32,        // offset 0x1C
+   789→}
+   790→```
+   791→
+   792→### MFT Attribute Header
+   793→```
+   794→struct ATTR_HEADER {
+   795→    type_id: u32,               // 0x10, 0x30, 0x80, etc.
+   796→    length: u32,                // total attribute length including header
+   797→    non_resident: u8,           // 0 = resident, 1 = non-resident
+   798→    name_length: u8,            // 0 for unnamed attributes
+   799→    name_offset: u16,           // offset to name from attribute start
+   800→    flags: u16,                 // 0x0001 = compressed, 0x0002 = encrypted, 0x0004 = sparse
+   801→    attribute_id: u16,          // unique within MFT entry
+   802→}
+   803→
+   804→struct RESIDENT_ATTR {
+   805→    header: ATTR_HEADER,
+   806→    data_size: u32,             // offset 0x10
+   807→    data_offset: u16,           // offset 0x14
+   808→    // data follows at data_offset
+   809→}
+   810→
+   811→struct NON_RESIDENT_ATTR {
+   812→    header: ATTR_HEADER,
+   813→    start_vcn: u64,             // offset 0x10
+   814→    last_vcn: u64,              // offset 0x18
+   815→    data_runs_offset: u16,      // offset 0x20
+   816→    compression_size: u32,      // offset 0x22 (if compressed)
+   817→    allocated_size: u64,        // offset 0x28
+   818→    data_size: u64,             // offset 0x30
+   819→    initialized_size: u64,      // offset 0x38
+   820→    // data runs follow at data_runs_offset
+   821→}
+   822→```
+   823→
+   824→### Data Run Encoding
+   825→```
+   826→// Header byte: low nibble = length bytes, high nibble = offset bytes
+   827→// Example: 0x11 → 1 byte length, 1 byte offset
+   828→// Followed by: length value (unsigned), offset value (signed, relative to previous)
+   829→// Terminated by 0x00
+   830→
+   831→// Example: 0x11 0x10 0x20 0x11 0x08 0x30 0x00
+   832→// Run 1: 16 clusters starting at cluster 32
+   833→// Run 2: 8 clusters starting at cluster 32+48=80
+   834→// Total: 24 clusters
+   835→```
+   836→
+   837→---
+   838→
+   839→*End of Research Report*
+   840→

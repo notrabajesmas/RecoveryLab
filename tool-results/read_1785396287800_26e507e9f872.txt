@@ -1,0 +1,876 @@
+     1→# Open-Source Data Recovery Components: Research Report
+     2→
+     3→**Date:** 2026-03-04  
+     4→**Purpose:** Identify reusable open-source components for integration into a new data recovery engine  
+     5→**Scope:** Architecture, filesystem support, licensing, library feasibility, and integration analysis
+     6→
+     7→---
+     8→
+     9→## Table of Contents
+    10→
+    11→1. [TestDisk](#1-testdisk)
+    12→2. [PhotoRec](#2-photorec)
+    13→3. [The Sleuth Kit (TSK) / libtsk](#3-the-sleuth-kit-tsk--libtsk)
+    14→4. [Untrunc](#4-untrunc)
+    15→5. [GNU ddrescue](#5-gnu-ddrescue)
+    16→6. [HDDSuperClone / OpenSuperClone](#6-hddsuperclone--opensuperclone)
+    17→7. [Other Relevant Tools](#7-other-relevant-tools)
+    18→8. [Licensing Analysis](#8-licensing-analysis)
+    19→9. [Integration Feasibility](#9-integration-feasibility)
+    20→10. [Summary & Recommendations](#10-summary--recommendations)
+    21→
+    22→---
+    23→
+    24→## 1. TestDisk
+    25→
+    26→### Overview
+    27→TestDisk is a free and open-source data recovery utility designed primarily to recover lost partitions and repair corrupted filesystems. It is maintained by Christophe Grenier (CGSecurity) and distributed alongside PhotoRec.
+    28→
+    29→### What It Does
+    30→- **Partition recovery**: Scans for lost/deleted partition tables and rebuilds them
+    31→- **Boot sector repair**: Rebuilds corrupted boot sectors (FAT12/16/32, NTFS boot sector)
+    32→- **Filesystem repair**: Fixes corrupted MFT (NTFS), FAT tables, ext2/3/4 superblocks
+    33→- **File undelete**: Recovers deleted files from supported filesystems (limited capability)
+    34→- **Partition table rewriting**: Can write recovered partition tables back to disk
+    35→
+    36→### Supported Filesystems
+    37→| Filesystem | Read | Write/Repair | Notes |
+    38→|---|---|---|---|
+    39→| FAT12/16/32 | Yes | Yes | Boot sector repair, FAT rebuilding |
+    40→| NTFS | Yes | Yes | MFT repair, boot sector rebuild |
+    41→| exFAT | Yes | Limited | Partition recovery mainly |
+    42→| ext2/ext3/ext4 | Yes | Yes | Superblock recovery |
+    43→| HFS/HFS+ | Yes | Limited | Partition recovery |
+    44→| ReiserFS | Yes | Limited | Via NTFS-3G integration |
+    45→| UFS/UFS2 | Yes | Limited | BSD/Sun partition tables |
+    46→| Sun Solaris | Yes | No | Partition table recovery |
+    47→| BSD disklabel | Yes | No | Partition table recovery |
+    48→
+    49→### Architecture
+    50→- **Language**: Pure C (ANSI C)
+    51→- **Source structure**: Monolithic single-binary architecture; TestDisk and PhotoRec share a common codebase
+    52→- **Build system**: Autoconf/Automake with `./configure && make`
+    53→- **UI**: Interactive text-based (ncurses) menu-driven interface; no headless/library mode
+    54→- **Disk access**: Direct device access via OS-level APIs (Linux `/dev/`, Windows `\\.\PhysicalDrive`)
+    55→- **Key modules**:
+    56→  - `src/` directory: `testdisk.c` (main), `partauto.c` (auto-detection), `tdiskop.c` (disk operations)
+    57→  - Filesystem-specific handlers in separate files (e.g., `ntfs.c`, `fat.c`, `ext2.c`)
+    58→  - Partition table handlers: `parti386.c` (MBR), `partgpt.c` (GPT), `partsun.c`, `partmac.c`
+    59→
+    60→### Library Usability
+    61→- **NOT designed as a library**. TestDisk is a standalone CLI/interactive tool.
+    62→- No exported API, no shared library (.so/.dll), no header files for programmatic use.
+    63→- **Integration options**:
+    64→  - Fork and extract the filesystem-specific recovery logic (significant refactoring needed)
+    65→  - Shell out to the CLI and parse output (fragile, limited)
+    66→  - The partition detection logic in `partauto.c` could be extracted with moderate effort
+    67→
+    68→### License
+    69→- **GPL v2+** (GNU General Public License version 2 or later)
+    70→- This means any derivative work must also be GPL v2+
+    71→
+    72→### Limitations
+    73→- No library/API mode; tightly coupled to interactive UI
+    74→- No network/remote disk support
+    75→- Limited file undelete (not as robust as dedicated carving tools)
+    76→- No APFS support
+    77→- No Btrfs support
+    78→- No ZFS support
+    79→- No parallel processing/multi-threading
+    80→- No progress reporting API for GUI integration
+    81→- Monolithic architecture makes extracting individual components difficult
+    82→
+    83→---
+    84→
+    85→## 2. PhotoRec
+    86→
+    87→### Overview
+    88→PhotoRec is a free and open-source file carving utility that recovers deleted files by scanning raw disk data for file signatures, independent of the filesystem. It is bundled with TestDisk and shares the same codebase.
+    89→
+    90→### What It Does
+    91→- **File carving**: Recovers files from damaged, formatted, or corrupted media regardless of filesystem state
+    92→- **Read-only operation**: Never writes to the source media; always operates non-destructively
+    93→- **Broad format support**: 300+ file families, 480+ file extensions
+    94→- **Custom signatures**: Supports user-defined signature files for custom file types
+    95→
+    96→### How the Carving Engine Works
+    97→PhotoRec's carving engine is **not** a simple header-footer carver. It uses a multi-layered approach:
+    98→
+    99→1. **Signature scanning**: Scans raw disk data block-by-block looking for known file header signatures (magic bytes)
+   100→2. **File-type-specific parsing**: Once a signature is found, type-specific parsers validate and extract the file:
+   101→   - **Structured formats** (JPEG, PNG, PDF, DOCX): Parse internal structure to determine file size
+   102→   - **Container formats** (ZIP, RAR, 7z): Parse headers to find end-of-archive markers
+   103→   - **Video formats** (MP4, AVI, MOV): Parse atom/chunk structure for boundaries
+   104→   - **RAW camera formats** (CR2, NEF, ORF): Parse TIFF/EXIF-like structures
+   105→3. **Fragment handling**: For some formats, PhotoRec can handle fragmented files by looking for continuation markers
+   106→4. **Validation**: Recovered files are validated against known format constraints
+   107→5. **Custom signatures**: Users can define custom signatures via a `photorec.sig` file with header bytes, offset, and file extension
+   108→
+   109→### Supported File Formats (Major Categories)
+   110→| Category | Examples | Count |
+   111→|---|---|---|
+   112→| Images | JPEG, PNG, GIF, TIFF, BMP, RAW (CR2, NEF, ORF, DNG, ARW) | 80+ |
+   113→| Video | MP4, AVI, MOV, MKV, WMV, FLV, 3GP | 30+ |
+   114→| Audio | MP3, WAV, OGG, FLAC, AAC, WMA | 20+ |
+   115→| Documents | PDF, DOC/DOCX, XLS/XLSX, PPT/PPTX, ODT, RTF | 40+ |
+   116→| Archives | ZIP, RAR, 7z, TAR, GZ, BZ2 | 20+ |
+   117→| Database | MDB, SQL, DBF, SQLite | 10+ |
+   118→| Executable | EXE, DLL, ELF | 5+ |
+   119→| Other | ISO, VMDK, VHD, eml, mbox | 50+ |
+   120→
+   121→### Architecture
+   122→- **Language**: Pure C (ANSI C), same codebase as TestDisk
+   123→- **Source structure**: File-type-specific parsers in `src/` directory (e.g., `file_jpg.c`, `file_pdf.c`, `file_mp4.c`)
+   124→- **Carving engine**: Core logic in `photorec.c` and `phrecn.c`
+   125→- **Signature database**: Compiled into the binary from individual `file_*.c` files
+   126→- **Session management**: Supports resume/continue interrupted recovery sessions
+   127→- **Output**: Files recovered to a specified output directory with sequential naming
+   128→
+   129→### Library Usability
+   130→- **NOT designed as a library**. Like TestDisk, it is a standalone CLI/interactive tool.
+   131→- No exported API, no shared library, no header files.
+   132→- **Integration options**:
+   133→  - The file-type-specific parsers (e.g., `file_jpg.c`, `file_mp4.c`) are relatively self-contained and could be extracted
+   134→  - The carving engine core (`photorec.c`) is tightly coupled to the interactive UI
+   135→  - CLI invocation with output parsing is the simplest integration path
+   136→  - Autopsy (by TSK) integrates PhotoRec as a module by invoking it as a subprocess
+   137→
+   138→### License
+   139→- **GPL v2+** (same as TestDisk)
+   140→
+   141→### Limitations
+   142→- No library/API mode; interactive UI only
+   143→- File names are lost (carved files get sequential names like `f0000001.jpg`)
+   144→- No directory structure recovery (inherent to carving)
+   145→- No support for fragmented files in most formats
+   146→- Single-threaded processing
+   147→- No network/remote source support
+   148→- No progress callback API
+   149→- No built-in deduplication of recovered files
+   150→- Cannot recover files smaller than the filesystem block size
+   151→
+   152→---
+   153→
+   154→## 3. The Sleuth Kit (TSK) / libtsk
+   155→
+   156→### Overview
+   157→The Sleuth Kit (TSK) is a collection of command-line tools and a **C library (libtsk)** for analyzing disk images and recovering files. It is the most mature and library-friendly open-source forensic tool available. TSK powers Autopsy (its GUI front-end) and many other commercial and open-source tools.
+   158→
+   159→### Supported Filesystems
+   160→| Filesystem | Read | Write | Notes |
+   161→|---|---|---|---|
+   162→| NTFS | Yes | No | Full MFT parsing, ADS support |
+   163→| FAT12/16/32 | Yes | No | Full directory parsing |
+   164→| exFAT | Yes | No | |
+   165→| ext2/ext3/ext4 | Yes | No | Full inode parsing |
+   166→| HFS/HFS+ | Yes | No | |
+   167→| HFSX | Yes | No | |
+   168→| UFS1/UFS2 | Yes | No | |
+   169→| YAFFS2 | Yes | No | Embedded/Android |
+   170→| ISO 9660 | Yes | No | CD-ROM |
+   171→| APFS | Partial | No | Limited/experimental support |
+   172→| LVM | Yes | No | Volume management layer |
+   173→
+   174→### Volume System Support
+   175→| Type | Support |
+   176→|---|---|
+   177→| MBR/DOS | Yes |
+   178→| GPT | Yes |
+   179→| BSD Disklabel | Yes |
+   180→| Sun VTOC | Yes |
+   181→| Mac Partition Map | Yes |
+   182→| LVM | Yes |
+   183→| RAID (mdadm) | Limited |
+   184→| LUKS | No (encrypted) |
+   185→
+   186→### Library API (libtsk)
+   187→TSK is **designed as a library** with a well-documented C API. Key API groups:
+   188→
+   189→#### Image Layer
+   190→```c
+   191→TSK_IMG_INFO *tsk_img_open_utf8_sing(const char *a_utf8, TSK_IMG_TYPE_ENUM a_type, unsigned int a_ssize);
+   192→TSK_IMG_INFO *tsk_img_open_sing(const char *a_image, TSK_IMG_TYPE_ENUM a_type, unsigned int a_ssize);
+   193→uint8_t tsk_img_read(TSK_IMG_INFO *a_img_info, TSK_OFF_T a_offset, char *a_buf, size_t a_len);
+   194→void tsk_img_close(TSK_IMG_INFO *a_img_info);
+   195→```
+   196→
+   197→#### Volume System Layer
+   198→```c
+   199→TSK_VS_INFO *tsk_vs_open(TSK_IMG_INFO *a_img_info, TSK_DADDR_T a_offset, TSK_VS_TYPE_ENUM a_type);
+   200→TSK_VS_PART_INFO *tsk_vs_part_get(TSK_VS_INFO *a_vs_info, int a_index);
+   201→void tsk_vs_close(TSK_VS_INFO *a_vs_info);
+   202→```
+   203→
+   204→#### Filesystem Layer
+   205→```c
+   206→TSK_FS_INFO *tsk_fs_open_img(TSK_IMG_INFO *a_img_info, TSK_OFF_T a_offset, TSK_FS_TYPE_ENUM a_type);
+   207→TSK_FS_FILE *tsk_fs_file_open_meta(TSK_FS_INFO *a_fs, TSK_FS_FILE *a_fs_file, TSK_INUM_T a_addr);
+   208→TSK_FS_FILE *tsk_fs_file_open(TSK_FS_INFO *a_fs, TSK_FS_FILE *a_fs_file, const char *a_path);
+   209→ssize_t tsk_fs_file_read(TSK_FS_FILE *a_fs_file, TSK_OFF_T a_offset, char *a_buf, size_t a_len, TSK_FS_FILE_READ_FLAG_ENUM a_flags);
+   210→uint8_t tsk_fs_dir_walk(TSK_FS_INFO *a_fs, TSK_INUM_T a_addr, TSK_FS_DIR_WALK_FLAG_ENUM a_flags, TSK_FS_DIR_WALK_CB a_action, void *a_ptr);
+   211→uint8_t tsk_fs_fls(TSK_FS_INFO *a_fs, TSK_TCHAR **a_argv);
+   212→void tsk_fs_close(TSK_FS_INFO *a_fs);
+   213→```
+   214→
+   215→#### Key Features of the API
+   216→- **Layered architecture**: Image → Volume System → Filesystem → File (clean abstraction)
+   217→- **Callback-based iteration**: `tsk_fs_dir_walk()`, `tsk_fs_file_walk()` for directory traversal
+   218→- **Autodetection**: `tsk_fs_open_img()` can auto-detect filesystem type with `TSK_FS_TYPE_DETECT`
+   219→- **Java bindings**: Official JNI bindings available (`bindings/java/`)
+   220→- **Python bindings**: Available via third-party `pytsk` wrapper
+   221→
+   222→### Language Bindings
+   223→| Language | Binding | Status |
+   224→|---|---|---|
+   225→| C | libtsk (native) | Official, full API |
+   226→| Java | JNI bindings | Official, in repo |
+   227→| Python | pytsk | Third-party, partial |
+   228→| C++ | Direct C linkage | Trivial |
+   229→| .NET | TSK wrapper | Third-party, limited |
+   230→
+   231→### Limitations for Recovery (vs. Forensics)
+   232→- **Read-only**: TSK is designed for forensic analysis, not repair. It cannot write/repair filesystems.
+   233→- **No partition recovery**: Cannot rebuild partition tables (unlike TestDisk)
+   234→- **No file carving**: TSK does not include a carving engine (relies on filesystem metadata)
+   235→- **No deleted file recovery guarantee**: Deleted files may have overwritten metadata; TSK can find them but cannot guarantee content
+   236→- **No APFS full support**: APFS is still experimental/incomplete
+   237→- **No Btrfs/ZFS support**: Missing modern Linux filesystems
+   238→- **No encrypted volume support**: Cannot handle BitLocker, LUKS, FileVault
+   239→- **Single-threaded**: Core operations are not multi-threaded
+   240→- **No disk imaging**: Cannot create disk images (unlike ddrescue)
+   241→
+   242→### License
+   243→- **Mixed licensing** (important for commercial use):
+   244→  - **Core library (libtsk)**: Predominantly **IBM Public License v1.0** and **Common Public License v1.0 (CPL)**
+   245→  - **Some tools**: **GPL v2+**
+   246→  - **Some modules**: **LGPL**
+   247→  - The IBM CPL and CPL are **OSI-approved** and generally compatible with commercial use (similar to LGPL in effect)
+   248→  - **Critical**: The library portion can be linked into commercial applications without requiring the application to be open-sourced, but the specific license terms must be carefully reviewed per-module
+   249→
+   250→### Integration Verdict
+   251→- **Best candidate for library integration** among all tools researched
+   252→- Well-documented C API with stable ABI
+   253→- Existing commercial products use libtsk (e.g., some forensic tools)
+   254→- Java bindings available for JVM-based projects
+   255→- The read-only nature is actually a feature for recovery (non-destructive analysis)
+   256→
+   257→---
+   258→
+   259→## 4. Untrunc
+   260→
+   261→### Overview
+   262→Untrunc is a specialized open-source tool for repairing corrupted/truncated MP4, MOV, M4V, and 3GP video files. It is particularly useful for recovering video from dashcams, bodycams, smartphones, and drones where recording was interrupted.
+   263→
+   264→### What It Does
+   265→- Repairs MP4/MOV files with missing or corrupted `moov` atom (metadata block)
+   266→- Recovers truncated video files where recording was interrupted
+   267→- Reconstructs the `moov` atom using a healthy reference video from the same device
+   268→- Handles H.264, H.265, and other codec streams within MP4 containers
+   269→
+   270→### How It Works
+   271→The repair process operates in **three phases**:
+   272→
+   273→1. **Reference Analysis**: Untrunc reads the `moov` atom from the healthy reference video, extracting:
+   274→   - Codec parameters (H.264 profile, level, SPS/PPS)
+   275→   - Sample table structure (sample sizes, offsets, durations)
+   276→   - Track layout and timing information
+   277→   - Audio/video synchronization metadata
+   278→
+   279→2. **Stream Parsing**: Untrunc scans the broken file byte-by-byte, identifying:
+   280→   - `mdat` atom boundaries (raw media data)
+   281→   - Individual NAL units (Network Abstraction Layer units for H.264)
+   282→   - Audio frames (AAC, PCM, etc.)
+   283→   - Sync points (keyframes/I-frames)
+   284→
+   285→3. **Reconstruction**: A new `moov` atom is constructed by:
+   286→   - Mapping the identified media data to sample table entries
+   287→   - Calculating offsets, sizes, and durations for each sample
+   288→   - Building the track structure based on the reference template
+   289→   - Writing the repaired file with a valid `moov` atom prepended/appended
+   290→
+   291→### Architecture
+   292→- **Language**: C++ (original by Federico Dossena), with active forks in C++
+   293→- **Source**: Single-file architecture (`untrunc.cpp`), relatively simple
+   294→- **Dependencies**: FFmpeg (libavcodec, libavformat) for codec parsing
+   295→- **Build**: Simple Makefile or CMake
+   296→- **Active fork**: `anthwlock/untrunc` on GitHub (10x faster, lower memory, fixes)
+   297→
+   298→### Library Usability
+   299→- **NOT designed as a library**. Standalone CLI tool.
+   300→- The core logic is in a single C++ file and could be refactored into a library with moderate effort
+   301→- The reference-analysis and stream-parsing logic are separable
+   302→- **Integration options**:
+   303→  - Fork and wrap the core logic into a C++ library class
+   304→  - CLI invocation with output parsing
+   305→  - The `anthwlock` fork has cleaner code structure
+   306→
+   307→### License
+   308→- **GPL v2.0** (original and most forks)
+   309→- Some forks may have different licenses; check specific fork
+   310→
+   311→### Limitations
+   312→- Requires a reference video from the same device/recorder (same codec settings)
+   313→- Only handles MP4/MOV/3GP container formats
+   314→- Cannot repair files where the `mdat` data itself is corrupted
+   315→- No support for AVI, MKV, or other containers
+   316→- No GUI in the original (some forks add GUIs)
+   317→- No batch processing
+   318→- Single-threaded
+   319→- Memory-intensive for large files (original); improved in `anthwlock` fork
+   320→
+   321→### Integration Potential
+   322→- **High value** for a recovery engine focused on video recovery
+   323→- The MP4 reconstruction logic is unique and valuable
+   324→- Would need refactoring from CLI to library
+   325→- The FFmpeg dependency is a consideration (LGPL v2.1+ or GPL depending on build options)
+   326→
+   327→---
+   328→
+   329→## 5. GNU ddrescue
+   330→
+   331→### Overview
+   332→GNU ddrescue is a data recovery tool that copies data from one file or block device to another, with a sophisticated algorithm designed to rescue as much data as possible from failing drives while minimizing additional damage.
+   333→
+   334→### What Makes It Better Than dd for Failing Disks
+   335→| Feature | dd | ddrescue |
+   336→|---|---|---|
+   337→| Error handling | Stops on first error | Skips errors, retries later |
+   338→| Block size | Fixed | Adaptive (shrinks on error) |
+   339→| Resume | No | Yes (mapfile-based) |
+   340→| Read strategy | Sequential only | Adaptive multi-pass |
+   341→| Bad sector tracking | No | Yes (mapfile) |
+   342→| Trim/scrape | No | Yes (per-sector recovery) |
+   343→| Progress tracking | Minimal | Detailed (mapfile) |
+   344→| Additional damage risk | High (repeated reads) | Minimized (smart retry) |
+   345→
+   346→### Adaptive Reading Algorithm (5 Phases)
+   347→
+   348→#### Phase 1: Copying
+   349→- Reads non-tried areas in **large blocks** (default: 128 KiB)
+   350→- When a read error occurs, marks the failed block as "non-tried" at a smaller size
+   351→- Skips over bad areas quickly to rescue good data first
+   352→- **Key insight**: Get one good read from every accessible sector before spending time on bad ones
+   353→
+   354→#### Phase 2: Trimming
+   355→- Reads forwards one sector at a time from the edges of bad areas
+   356→- "Trims" the boundaries of unreadable regions to their minimum size
+   357→- Each sector is tried at most once in this phase
+   358→- **Purpose**: Recover data from the edges of bad blocks where only part of the block is damaged
+   359→
+   360→#### Phase 3: Sweeping (ddrescue 1.22+)
+   361→- Reads the remaining non-tried blocks in reverse direction
+   362→- Helps identify boundaries that might be different when reading from the opposite direction
+   363→- **Purpose**: Some drives read differently depending on direction
+   364→
+   365→#### Phase 4: Scraping
+   366→- Reads each non-scraped block forwards, **one sector at a time**
+   367→- Single-sector reads are more likely to succeed than multi-sector reads
+   368→- Each sector is tried at most once in this phase
+   369→- **Purpose**: Recover individual sectors that failed in larger block reads
+   370→
+   371→#### Phase 5: Retrying (disabled by default)
+   372→- Re-attempts all failed sectors with a specified number of retries
+   373→- Can be configured with `--retry-passes=N`
+   374→- **Purpose**: Last-resort attempt for remaining bad sectors
+   375→
+   376→### Mapfile
+   377→- Binary mapfile tracks the status of every sector:
+   378→  - `+` (rescued): Successfully read
+   379→  - `-` (bad): Failed to read
+   380→  - `/` (non-tried): Not yet attempted
+   381→  - `?` (non-trimmed): Edge of bad area, needs trimming
+   382→  - `*` (non-scraped): Needs scraping
+   383→- Enables resume after interruption
+   384→- Can be manually edited for advanced control
+   385→
+   386→### Architecture
+   387→- **Language**: C++
+   388→- **Source**: Single-file architecture (`ddrescue.cc`), well-structured
+   389→- **I/O model**: Asynchronous I/O with non-blocking reads
+   390→- **Build**: Standard GNU autotools
+   391→- **No external dependencies**
+   392→
+   393→### Library Usability
+   394→- **NOT designed as a library**. Standalone CLI tool.
+   395→- The algorithm logic is in a single C++ file
+   396→- **Integration options**:
+   397→  - Fork and extract the core algorithm (the `Rescuebook` class)
+   398→  - CLI invocation with mapfile parsing
+   399→  - The algorithm is well-documented and could be reimplemented in a clean-room manner
+   400→
+   401→### License
+   402→- **GPL v2+** (part of GNU project)
+   403→- Cannot be linked into proprietary software
+   404→
+   405→### Limitations
+   406→- No library mode
+   407→- No GUI (third-party GUIs exist: ddrescueview, DDRescue-GUI)
+   408→- Reads through Linux kernel block device layer (cannot send raw ATA commands)
+   409→- No head-awareness (doesn't know which physical head is failing)
+   410→- No SMART integration
+   411→- No automatic disk health assessment
+   412→- Single-threaded I/O (one read at a time)
+   413→- No network/remote source support
+   414→
+   415→---
+   416→
+   417→## 6. HDDSuperClone / OpenSuperClone
+   418→
+   419→### Overview
+   420→HDDSuperClone (by Scott Dwyer) and its open-source fork OpenSuperClone (by ISpillMyDrink) are advanced Linux-based disk cloning/imaging tools specifically designed for data recovery from failing drives. They represent a significant step beyond ddrescue in their approach to failing disk handling.
+   421→
+   422→### What Makes It Different from ddrescue
+   423→| Feature | ddrescue | HDDSuperClone/OpenSuperClone |
+   424→|---|---|---|
+   425→| I/O path | Linux kernel block layer | Raw ATA/SCSI commands |
+   426→| Head awareness | No | Yes (head mapping) |
+   427→| Read strategy | Adaptive multi-pass | Adaptive + head-skipping |
+   428→| Virtual driver | No | Yes (virtual driver for OS access) |
+   429→| Firmware access | No | Yes (ATA/SCSI passthrough) |
+   430→| Write-blocking | No | Yes (read-only virtual driver) |
+   431→| Phase management | 5 fixed phases | Configurable multi-phase |
+   432→| Drive-specific tuning | No | Yes (adjustable timeouts, block sizes) |
+   433→
+   434→### Adaptive Reading Strategy
+   435→OpenSuperClone's approach is fundamentally different from ddrescue:
+   436→
+   437→1. **Head-Skipping Algorithm**: 
+   438→   - Deduces head boundaries from LBA error clustering
+   439→   - When one head is failing, skips the entire head's LBA range
+   440→   - Returns to skipped heads later (some heads may recover after rest)
+   441→   - This is the key advantage: Linux software cannot read firmware geometry directly, so OSC infers it from error patterns
+   442→
+   443→2. **Configurable Read Modes**:
+   444→   - **Standard read**: Normal kernel-level reads
+   445→   - **ATA pass-through**: Sends raw ATA read commands (READ DMA, READ NATIVE MAX ADDRESS)
+   446→   - **SCSI pass-through**: Raw SCSI commands for SCSI/SAS drives
+   447→   - **Virtual driver**: Presents a virtual block device to the OS that proxies reads
+   448→
+   449→3. **Adaptive Block Sizing**:
+   450→   - Starts with large block sizes for healthy areas
+   451→   - Automatically reduces block size on errors
+   452→   - Can be configured per-head or per-zone
+   453→
+   454→4. **Multi-Phase Recovery**:
+   455→   - Phase 1: Quick pass (large blocks, skip errors)
+   456→   - Phase 2: Head analysis (identify failing heads)
+   457→   - Phase 3: Per-head recovery (skip bad heads, recover good ones)
+   458→   - Phase 4: Retry bad areas with smaller blocks
+   459→   - Phase 5: Final scrape (sector-by-sector)
+   460→
+   461→5. **Virtual Driver**:
+   462→   - Creates a virtual block device (`/dev/osc0`)
+   463→   - Allows the OS to mount the image while cloning is in progress
+   464→   - Reads from the clone image for already-rescued sectors
+   465→   - Reads from the source drive for not-yet-rescued sectors
+   466→   - This enables running filesystem recovery tools on the drive while it's still being cloned
+   467→
+   468→### Architecture
+   469→- **Language**: C (core), Python (GUI/HDDSuperClone)
+   470→- **Source**: OpenSuperClone on GitHub (`ISpillMyDrink/OpenSuperClone`)
+   471→- **Components**:
+   472→  - `oscsuper`: Main cloning engine (C)
+   473→  - `oscvt`: Virtual driver (C kernel module)
+   474→  - `oscviewer`: Progress log viewer
+   475→  - GUI: Python/Qt-based
+   476→- **Build**: Makefile-based, requires kernel headers for virtual driver
+   477→- **Live ISO**: Available for boot-and-recover scenarios
+   478→
+   479→### Library Usability
+   480→- **NOT designed as a library**. Standalone application with GUI.
+   481→- The core cloning engine is a standalone C program
+   482→- **Integration options**:
+   483→  - Fork and extract the head-mapping algorithm
+   484→  - CLI invocation with output parsing
+   485→  - The virtual driver is a kernel module that could be used independently
+   486→  - The ATA/SCSI command layer is a valuable reusable component
+   487→
+   488→### License
+   489→- **OpenSuperClone**: **GPL v2** (as stated on GitHub)
+   490→- **HDDSuperClone**: Originally proprietary (closed-source), then dual-licensed; the original HDDSuperClone has a commercial license option
+   491→- **Note**: HDDSuperClone's website still sells a "pro" version with additional features
+   492→
+   493→### Limitations
+   494→- Linux-only (requires raw device access and kernel module)
+   495→- No library mode
+   496→- Requires root/sudo for raw device access
+   497→- The virtual driver requires kernel module compilation
+   498→- No Windows/macOS support
+   499→- GUI is Python/Qt-based (heavy dependency)
+   500→- No network/remote source support
+   501→- Documentation is limited (community-driven)
+   502→- The head-skipping algorithm is heuristic-based (may not work for all drives)
+   503→
+   504→---
+   505→
+   506→## 7. Other Relevant Tools
+   507→
+   508→### 7.1 Foremost
+   509→| Attribute | Detail |
+   510→|---|---|
+   511→| **Purpose** | File carving based on headers, footers, and data structures |
+   512→| **Language** | C |
+   513→| **License** | Public Domain (original by USAF/US DoD) |
+   514→| **Architecture** | CLI tool, single-threaded, config-file-driven |
+   515→| **File formats** | ~20 formats (JPEG, GIF, PNG, BMP, AVI, EXE, RTF, ZIP, DOC, etc.) |
+   516→| **Library mode** | No |
+   517→| **Strengths** | Public domain license (no restrictions), simple config format |
+   518→| **Limitations** | Limited format support, no file validation, no fragmentation handling, no library mode |
+   519→| **Integration** | **Best license** (public domain) but limited capability; could be used as reference for clean-room reimplementation |
+   520→
+   521→### 7.2 Scalpel
+   522→| Attribute | Detail |
+   523→|---|---|
+   524→| **Purpose** | Fast file carving (rewrite of Foremost) |
+   525→| **Language** | C |
+   526→| **License** | **Apache 2.0** (scalpel 2.0) / GPL v2 (scalpel 1.60) |
+   527→| **Architecture** | CLI tool, config-file-driven, GPU-enhanced version available |
+   528→| **File formats** | Configurable via `scalpel.conf` |
+   529→| **Library mode** | No |
+   530→| **Strengths** | Apache 2.0 license (commercial-friendly), fast, GPU-enhanced version, configurable |
+   531→| **Limitations** | No library mode, header-footer only (no structural validation), no fragmentation handling |
+   532→| **Integration** | **Good license** (Apache 2.0), could fork and extract carving logic; the GPU-enhanced version is notable for performance |
+   533→
+   534→### 7.3 Bulk Extractor
+   535→| Attribute | Detail |
+   536→|---|---|
+   537→| **Purpose** | High-performance forensic scanner that extracts useful information without parsing filesystem |
+   538→| **Language** | C++ |
+   539→| **License** | **GPL v2** (with some modules under LGPL) |
+   540→| **Architecture** | Stream-based scanner (processes every byte), plugin architecture for feature scanners |
+   541→| **Key features** | Email extraction, credit card number detection, URL extraction, JPEG carving, GPS coordinate extraction, decompression of embedded data |
+   542→| **Library mode** | Partial (has a C API for integration, but designed for standalone use) |
+   543→| **Strengths** | Plugin architecture, stream-based (no seeking), recursive decompression, highly optimized |
+   544→| **Limitations** | GPL license, forensic-focused (not recovery-focused), heavy dependencies |
+   545→| **Integration** | The plugin architecture is interesting as a design pattern; the stream-based approach is novel |
+   546→
+   547→### 7.4 RecoverJPEG
+   548→| Attribute | Detail |
+   549→|---|---|
+   550→| **Purpose** | Specialized JPEG recovery tool |
+   551→| **Language** | C |
+   552→| **License** | **BSD-style** (permissive) |
+   553→| **Library mode** | No |
+   554→| **Integration** | Permissive license, simple code, good reference for JPEG carving |
+   555→
+   556→### 7.5 Magic Rescue
+   557→| Attribute | Detail |
+   558→|---|---|
+   559→| **Purpose** | File carving using "magic" file definitions and extraction rules |
+   560→| **Language** | C |
+   561→| **License** | **GPL v2** |
+   562→| **Library mode** | No |
+   563→| **Integration** | Interesting rule-based approach, but GPL license |
+   564→
+   565→### 7.6 PySlice / python-ntfs / python-ext4
+   566→| Attribute | Detail |
+   567→|---|---|
+   568→| **Purpose** | Python libraries for filesystem parsing |
+   569→| **Language** | Python |
+   570→| **License** | **MIT** (typically) |
+   571→| **Library mode** | Yes (Python libraries) |
+   572→| **Strengths** | Easy to integrate, readable, well-documented, MIT license |
+   573→| **Limitations** | Slow (Python), not comprehensive, not production-grade for recovery |
+   574→| **Integration** | Good for prototyping and reference; not suitable for production performance |
+   575→
+   576→### 7.7 libfsntfs / libvhdi / libvmdk (libyal)
+   577→| Attribute | Detail |
+   578→|---|---|
+   579→| **Purpose** | Individual C libraries for NTFS, VHDI, VMDK parsing |
+   580→| **Language** | C |
+   581→| **License** | **LGPL v3+** (library) / **GPL v3+** (tools) |
+   582→| **Library mode** | **Yes** (designed as libraries) |
+   583→| **Strengths** | Library-first design, per-fileystem libraries, LGPL allows commercial linking |
+   584→| **Integration** | **Excellent** for commercial integration; LGPL allows dynamic linking without GPL obligations |
+   585→
+   586→### 7.8 WinHex Scripts / X-Ways Forensics
+   587→| Attribute | Detail |
+   588→|---|---|
+   589→| **Purpose** | Commercial hex editor and forensic tool with scripting |
+   590→| **License** | **Proprietary** (not open-source) |
+   591→| **Integration** | Not applicable; proprietary and closed-source |
+   592→
+   593→---
+   594→
+   595→## 8. Licensing Analysis
+   596→
+   597→### License Summary Table
+   598→
+   599→| Tool | License | Commercial Use | Linking | Source Required | Notes |
+   600→|---|---|---|---|---|---|
+   601→| TestDisk | GPL v2+ | Only if GPL | No | Yes | Cannot use in proprietary product |
+   602→| PhotoRec | GPL v2+ | Only if GPL | No | Yes | Cannot use in proprietary product |
+   603→| TSK (libtsk) | IBM CPL / CPL v1.0 | **Yes** | **Yes** | No (for library) | Library can be linked commercially |
+   604→| TSK (tools) | GPL v2+ | Only if GPL | No | Yes | CLI tools are GPL |
+   605→| Untrunc | GPL v2.0 | Only if GPL | No | Yes | Cannot use in proprietary product |
+   606→| ddrescue | GPL v2+ | Only if GPL | No | Yes | Cannot use in proprietary product |
+   607→| OpenSuperClone | GPL v2 | Only if GPL | No | Yes | Cannot use in proprietary product |
+   608→| HDDSuperClone | Dual (GPL + commercial) | Yes (with license) | Yes (with license) | No (with commercial) | Commercial license available |
+   609→| Foremost | **Public Domain** | **Yes** | **Yes** | No | No restrictions whatsoever |
+   610→| Scalpel 2.0 | **Apache 2.0** | **Yes** | **Yes** | No | Commercial-friendly, patent grant |
+   611→| Bulk Extractor | GPL v2 | Only if GPL | No | Yes | Cannot use in proprietary product |
+   612→| RecoverJPEG | **BSD-style** | **Yes** | **Yes** | No | Permissive |
+   613→| libyal (libfsntfs, etc.) | **LGPL v3+** | **Yes** | **Yes (dynamic)** | No | Dynamic linking OK; static linking requires LGPL compliance |
+   614→| python-ntfs etc. | **MIT** | **Yes** | **Yes** | No | Most permissive |
+   615→
+   616→### GPL Implications for Commercial Integration
+   617→
+   618→#### GPLv2
+   619→- **Cannot** be linked into proprietary software (static or dynamic)
+   620→- **Cannot** be used as a library in a commercial product without open-sourcing the entire product
+   621→- **Can** be used as a separate process (CLI invocation) via pipe/socket if the communication is at arm's length
+   622→- **Can** be distributed alongside commercial software if they are separate programs
+   623→- **Derivative works** must be GPL v2
+   624→
+   625→#### GPLv3
+   626→- Same as GPLv2 but with additional anti-tivoization and patent provisions
+   627→- Stricter about "conveying" and "user product" definitions
+   628→- Explicit about dynamic linking creating a derivative work
+   629→
+   630→#### LGPL v3
+   631→- **Can** be linked (dynamically) into proprietary software
+   632→- The proprietary software must allow the user to relink with a modified version of the LGPL library
+   633→- Static linking is allowed if the object files are provided for relinking
+   634→- **No** obligation to open-source the proprietary application
+   635→- Modifications to the LGPL library itself must be shared under LGPL
+   636→
+   637→#### IBM CPL / CPL v1.0 (TSK)
+   638→- **OSI-approved** and generally compatible with commercial use
+   639→- Similar effect to LGPL: the library can be used in commercial products
+   640→- Requires that the library's source code (including modifications) be made available
+   641→- The application using the library is not required to be open-sourced
+   642→
+   643→#### Apache 2.0
+   644→- **Commercial-friendly**: can be used, modified, and distributed in proprietary software
+   645→- Includes patent grant from contributors
+   646→- Requires attribution and license notice
+   647→- Modifications must be noted but not necessarily open-sourced
+   648→
+   649→#### Public Domain
+   650→- **No restrictions**: can be used, modified, and distributed without any obligations
+   651→- No attribution required (but appreciated)
+   652→- No warranty or liability
+   653→
+   654→### Strategies for Using GPL Code in a Commercial Product
+   655→
+   656→1. **Process isolation**: Run GPL tools as separate processes, communicate via pipes/sockets
+   657→   - Legal gray area; the FSF considers this a "technical subterfuge" if the communication is intimate
+   658→   - More defensible if the GPL tool is a standard system utility
+   659→   - Example: Invoking `ddrescue` as a subprocess and parsing its mapfile
+   660→
+   661→2. **Plugin architecture**: Design the core engine to load GPL code as optional plugins
+   662→   - Users must install GPL plugins separately
+   663→   - The core engine must be useful without the GPL plugins
+   664→   - This is the approach used by some commercial forensic tools
+   665→
+   666→3. **Clean-room reimplementation**: Study the GPL code's behavior, then reimplement from scratch
+   667→   - Must be done by a developer who has not read the GPL source code
+   668→   - A separate "dirty room" team studies the code and writes specifications
+   669→   - A "clean room" team implements from specifications only
+   670→   - This is the most legally defensible approach but also the most expensive
+   671→
+   672→4. **Dual licensing**: Contact the copyright holder for a commercial license
+   673→   - Some projects (e.g., HDDSuperClone) offer this
+   674→   - May be expensive or unavailable
+   675→
+   676→5. **Use permissively-licensed alternatives**:
+   677→   - **Scalpel (Apache 2.0)** instead of PhotoRec for carving
+   678→   - **libyal (LGPL)** instead of TSK for filesystem parsing
+   679→   - **Foremost (Public Domain)** for basic carving
+   680→   - **libtsk (IBM CPL)** for filesystem analysis
+   681→
+   682→---
+   683→
+   684→## 9. Integration Feasibility
+   685→
+   686→### 9.1 Language Barriers
+   687→
+   688→| Tool | Language | FFI Difficulty | Notes |
+   689→|---|---|---|---|
+   690→| TestDisk | C | Easy | C is the lingua franca of FFI |
+   691→| PhotoRec | C | Easy | Same as TestDisk |
+   692→| TSK/libtsk | C | Easy | Designed as a library with C API |
+   693→| Untrunc | C++ | Moderate | C++ ABI issues; need `extern "C"` wrapper |
+   694→| ddrescue | C++ | Moderate | Same as Untrunc |
+   695→| OpenSuperClone | C | Easy | Core engine is C |
+   696→| Foremost | C | Easy | |
+   697→| Scalpel | C | Easy | |
+   698→| Bulk Extractor | C++ | Moderate | |
+   699→| libyal | C | Easy | Designed as libraries |
+   700→
+   701→### 9.2 API Conflicts
+   702→- **No direct API conflicts** between tools since none are designed as libraries (except libtsk and libyal)
+   703→- **Disk access conflicts**: Multiple tools cannot safely access the same disk simultaneously
+   704→- **File format conflicts**: Different tools may produce different output formats for the same data
+   705→- **Memory model conflicts**: C tools use manual memory management; C++ tools use RAII; Python tools use GC
+   706→
+   707→### 9.3 Proposed Modular Architecture
+   708→
+   709→```
+   710→┌─────────────────────────────────────────────────────────────────┐
+   711→│                    DATA RECOVERY ENGINE                          │
+   712→│                   (Core Orchestrator)                            │
+   713→│                   Language: C or Rust                            │
+   714→│                   License: Proprietary / MIT                     │
+   715→├─────────────────────────────────────────────────────────────────┤
+   716→│                                                                  │
+   717→│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+   718→│  │  Disk Access  │  │  Image Mgmt  │  │  Job/Queue Manager   │  │
+   719→│  │    Layer      │  │    Layer     │  │  (Progress, Resume)  │  │
+   720→│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
+   721→│         │                 │                      │               │
+   722→│  ┌──────▼───────────────▼──────────────────────▼───────────┐   │
+   723→│  │              PHYSICAL / VIRTUAL DEVICE LAYER             │   │
+   724→│  │   (unified I/O: direct device, image file, network)     │   │
+   725→│  └──────────────────────────┬───────────────────────────────┘   │
+   726→│                             │                                    │
+   727→│         ┌───────────────────┼───────────────────┐               │
+   728→│         │                   │                   │               │
+   729→│  ┌──────▼──────┐  ┌────────▼───────┐  ┌────────▼───────┐      │
+   730→│  │   IMAGING   │  │  FILESYSTEM    │  │    CARVING     │      │
+   731→│  │    ENGINE   │  │    ENGINE      │  │    ENGINE      │      │
+   732→│  │             │  │                │  │                │      │
+   733→│  │ • Adaptive  │  │ • libtsk       │  │ • Scalpel      │      │
+   734→│  │   read      │  │   (IBM CPL)    │  │   (Apache 2.0) │      │
+   735→│  │ • Head map  │  │ • libyal       │  │ • Custom sigs  │      │
+   736→│  │ • Mapfile   │  │   (LGPL)       │  │ • Validation   │      │
+   737→│  │ • Resume    │  │ • Custom FS    │  │ • Fragment     │      │
+   738→│  │             │  │                │  │   handling     │      │
+   739→│  └─────────────┘  └────────────────┘  └────────────────┘      │
+   740→│                                                                  │
+   741→│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+   742→│  │  PARTITION   │  │   REPAIR     │  │   OUTPUT / EXPORT    │  │
+   743→│  │  RECOVERY    │  │   ENGINE     │  │   ENGINE             │  │
+   744→│  │              │  │              │  │                      │  │
+   745→│  │ • GPT/MBR    │  │ • Untrunc    │  │ • File organization │  │
+   746→│  │   scan/fix   │  │   (video)    │  │ • Deduplication     │  │
+   747→│  │ • LVM/RAID   │  │ • MFT repair │  │ • Format conversion │  │
+   748→│  │ • Detection  │  │ • FAT repair │  │ • Report generation │  │
+   749→│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
+   750→│                                                                  │
+   751→│  ┌──────────────────────────────────────────────────────────┐   │
+   752→│  │              GPL PROCESS ISOLATION LAYER                  │   │
+   753→│  │  (subprocess invocations for GPL tools: TestDisk,        │   │
+   754→│  │   PhotoRec, ddrescue, OpenSuperClone)                    │   │
+   755→│  └──────────────────────────────────────────────────────────┘   │
+   756→│                                                                  │
+   757→└─────────────────────────────────────────────────────────────────┘
+   758→```
+   759→
+   760→### 9.4 Integration Strategy by Component
+   761→
+   762→#### Tier 1: Direct Library Integration (Permissive License)
+   763→These components can be directly linked into the recovery engine:
+   764→
+   765→| Component | Source | License | Role |
+   766→|---|---|---|---|
+   767→| libtsk | The Sleuth Kit | IBM CPL / CPL | Filesystem parsing, file listing, metadata extraction |
+   768→| libfsntfs | libyal | LGPL v3 | NTFS-specific deep parsing |
+   769→| libvmdk | libyal | LGPL v3 | VMware disk image support |
+   770→| libvhdi | libyal | LGPL v3 | VHDX disk image support |
+   771→| Scalpel carving engine | Scalpel | Apache 2.0 | File carving (header/footer) |
+   772→| Foremost carving logic | Foremost | Public Domain | Reference carving implementation |
+   773→
+   774→#### Tier 2: Process Isolation (GPL Tools)
+   775→These GPL tools are invoked as separate processes:
+   776→
+   777→| Component | Source | License | Role |
+   778→|---|---|---|---|
+   779→| TestDisk | CGSecurity | GPL v2+ | Partition recovery, boot sector repair |
+   780→| PhotoRec | CGSecurity | GPL v2+ | File carving (comprehensive signatures) |
+   781→| ddrescue | GNU | GPL v2+ | Disk imaging from failing drives |
+   782→| OpenSuperClone | GitHub | GPL v2 | Advanced disk imaging with head mapping |
+   783→
+   784→**Integration approach for Tier 2**:
+   785→- Each tool runs as a subprocess
+   786→- Communication via: mapfile parsing (ddrescue), output directory monitoring (PhotoRec), CLI output parsing (TestDisk)
+   787→- The core engine provides a unified API that abstracts the subprocess details
+   788→- Users can opt-in to GPL components by installing them separately
+   789→
+   790→#### Tier 3: Clean-Room Reimplementation Candidates
+   791→These algorithms are valuable but trapped in GPL code:
+   792→
+   793→| Algorithm | Source | Complexity | Reimplementation Effort |
+   794→|---|---|---|---|
+   795→| ddrescue adaptive algorithm | ddrescue | Medium | 2-4 weeks (well-documented) |
+   796→| Head-skipping algorithm | OpenSuperClone | High | 4-8 weeks (requires ATA knowledge) |
+   797→| PhotoRec file parsers | PhotoRec | Very High | 8-16 weeks (480+ formats) |
+   798→| MP4 moov reconstruction | Untrunc | Medium | 2-4 weeks (well-understood) |
+   799→| Partition table detection | TestDisk | Medium | 4-8 weeks (well-documented) |
+   800→
+   801→#### Tier 4: Reference Implementations
+   802→These are too complex to reimplement but can inform design:
+   803→
+   804→| Component | Source | Role |
+   805→|---|---|---|
+   806→| Bulk Extractor plugin architecture | Bulk Extractor | Plugin system design pattern |
+   807→| PhotoRec signature database | PhotoRec | Comprehensive file signature reference |
+   808→| OpenSuperClone virtual driver | OpenSuperClone | Live-mounting during imaging |
+   809→
+   810→### 9.5 Recommended Technology Stack
+   811→
+   812→| Layer | Technology | Rationale |
+   813→|---|---|---|
+   814→| Core engine | **Rust** or **C** | Memory safety (Rust) or FFI compatibility (C) |
+   815→| Filesystem parsing | **libtsk** (C) | Best-in-class, permissive license, library-first |
+   816→| Supplementary FS parsing | **libyal** (C) | LGPL, per-filesystem libraries |
+   817→| File carving | **Scalpel** (C) fork | Apache 2.0, fast, extensible |
+   818→| Disk imaging | **Clean-room ddrescue-like** | Reimplement adaptive algorithm |
+   819→| Video repair | **Clean-room untrunc-like** | Reimplement MP4 moov reconstruction |
+   820→| Partition recovery | **Clean-room** | Based on TestDisk's published algorithms |
+   821→| Advanced imaging | **OpenSuperClone** subprocess | GPL, process-isolated |
+   822→| GUI | **Qt** or **Electron** | Cross-platform |
+   823→| Plugin system | **C API** with dynamic loading | Bulk Extractor-inspired |
+   824→
+   825→---
+   826→
+   827→## 10. Summary & Recommendations
+   828→
+   829→### Key Findings
+   830→
+   831→1. **The Sleuth Kit (libtsk) is the best foundation** for a data recovery engine. It is the only tool with a proper C library API, permissive licensing (IBM CPL/CPL), and comprehensive filesystem support. It should be the core of any recovery engine.
+   832→
+   833→2. **libyal libraries are the best complement** for filesystem parsing. They are LGPL-licensed, library-first, and cover NTFS, VMDK, VHDX, and other formats not fully supported by TSK.
+   834→
+   835→3. **Scalpel (Apache 2.0) is the best carving engine** for commercial integration. It is fast, configurable, and permissively licensed. It lacks PhotoRec's format breadth but is extensible.
+   836→
+   837→4. **GPL tools (TestDisk, PhotoRec, ddrescue, Untrunc, OpenSuperClone) cannot be directly linked** into a commercial product. They can be used as subprocesses or as references for clean-room reimplementation.
+   838→
+   839→5. **The most valuable GPL algorithms to reimplement** are:
+   840→   - ddrescue's adaptive reading algorithm (well-documented, medium complexity)
+   841→   - Untrunc's MP4 moov reconstruction (well-understood, medium complexity)
+   842→   - TestDisk's partition detection (well-documented, medium complexity)
+   843→
+   844→6. **The PhotoRec signature database** (480+ file formats) is extremely valuable but trapped in GPL code. A clean-room reimplementation of the signature database (as a data file, not code) may be feasible.
+   845→
+   846→7. **OpenSuperClone's head-skipping algorithm** is the most valuable advanced feature but also the most complex to reimplement. It requires deep ATA/SCSI knowledge.
+   847→
+   848→### Recommended Integration Roadmap
+   849→
+   850→| Phase | Components | Timeline | License |
+   851→|---|---|---|---|
+   852→| **Phase 1: Core** | libtsk + libyal + Scalpel | 2-3 months | IBM CPL / LGPL / Apache 2.0 |
+   853→| **Phase 2: Imaging** | Clean-room ddrescue-like algorithm | 2-3 months | Proprietary |
+   854→| **Phase 3: Partition** | Clean-room partition recovery | 2-3 months | Proprietary |
+   855→| **Phase 4: Carving** | Extended Scalpel + custom signatures | 2-3 months | Apache 2.0 + proprietary |
+   856→| **Phase 5: Video** | Clean-room MP4 repair | 1-2 months | Proprietary |
+   857→| **Phase 6: Advanced** | GPL subprocess integration (ddrescue, PhotoRec, OSC) | 2-3 months | GPL (optional) |
+   858→| **Phase 7: Head-aware** | Clean-room head-skipping algorithm | 3-6 months | Proprietary |
+   859→
+   860→### Risk Assessment
+   861→
+   862→| Risk | Severity | Mitigation |
+   863→|---|---|---|
+   864→| GPL contamination | High | Use process isolation for GPL tools; clean-room for reimplemented algorithms |
+   865→| libtsk license complexity | Medium | Careful per-module license review; consult legal counsel |
+   866→| TSK read-only limitation | Low | Accept; recovery engine doesn't need to write to source |
+   867→| Scalpel limited format support | Medium | Invest in custom signature development |
+   868→| ddrescue algorithm complexity | Low | Well-documented; moderate reimplementation effort |
+   869→| OpenSuperClone head-skipping | High | Complex; defer to later phase; consider GPL subprocess approach |
+   870→| Performance (single-threaded) | Medium | Design for multi-threaded operation from the start |
+   871→| Cross-platform support | Medium | Use Rust for core; C libraries for FFI; abstract platform-specific I/O |
+   872→
+   873→---
+   874→
+   875→*End of Research Report*
+   876→
