@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "description": "Gold Images — fixed benchmark set that NEVER changes",
+  "count": 10,
+  "philosophy": "Every version of the motor must pass through these images. Always. This way you can compare today's performance with six months ago.",
+  "seeds": [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
+  "volume_size": 10485760,
+  "cluster_size": 4096,
+  "files_per_image": 30,
+  "locked": true,
+  "locked_at": "2026-07-30",
+  "note": "These images are immutable. Once generated, they must never change. They are the equivalent of an official benchmark."
+}
