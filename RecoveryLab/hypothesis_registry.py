@@ -303,26 +303,27 @@ class HypothesisRegistry:
             dependencies=["H1.2"],
         )
 
-        # H2: An adaptive strategy consistently outperforms any fixed strategy
-        # This is the NEW hypothesis — the one about the value of the ORCHESTRATOR,
-        # not the value of any single data source.
+        # H2: Strategy Crossover — the most important hypothesis
+        # Original: "Motor C supera estrategias fijas"
+        # Refined: The observable frontier where optimal strategy changes
+        # This is FALSIFIABLE — we can find the exact crossover point
         # H1 asks: "Is MFT useful?"
-        # H2 asks: "Is the strategy selector useful?"
-        # These are DIFFERENT questions.
+        # H2 asks: "When does the optimal strategy change?"
+        # These are DIFFERENT questions. H2 is the more valuable one.
         self.register(
             "H2",
-            "Una estrategia adaptativa (que selecciona entre carving, MFT-first, "
-            "journal-guided, bitmap-guided según el estado del disco) "
-            "supera consistentemente a cualquier estrategia fija individual, "
-            "medida por la relación entre recuperación, tiempo y riesgo.",
+            "Existe una frontera observable donde la estrategia óptima cambia "
+            "según el estado del medio. Específicamente, existe un punto de "
+            "degradación del MFT a partir del cual una estrategia de carving "
+            "supera a una estrategia basada en metadatos.",
             open_questions=[
-                "¿Qué métrica combina recuperación, tiempo y riesgo de forma justa?",
-                "¿'Consistentemente' significa en todos los escenarios o en la mayoría?",
-                "¿Hay escenarios donde una estrategia fija es suficiente?",
-                "¿Motor C puede ser peor que una estrategia fija en algún caso?",
-                "¿Cómo se compara contra un técnico humano experimentado?",
+                "¿Cuál es el porcentaje exacto de degradación del MFT donde ocurre el crossover?",
+                "¿El crossover es gradual o abrupto?",
+                "¿El crossover depende del tipo de daño (intermitente vs destrucción total)?",
+                "¿El crossover cambia con el tipo de archivo (JPEG vs PDF vs TXT)?",
+                "¿El crossover se mantiene con discos reales?",
             ],
-            dependencies=["H1.1", "H1.2"],
+            dependencies=["H1.1"],
         )
 
         # BLOCKER-001: All previous A vs B comparisons are invalid
@@ -418,6 +419,64 @@ class HypothesisRegistry:
             experiment_id="experiment_v2_20260730_142442",
             strength="moderate",
             details={"support_pct": 0.05, "avg_delta_recovery": 0.014},
+        ))
+
+        # ─── H2: Crossover Curve evidence ──────────────────────────────
+        now_crossover = datetime.now(timezone.utc).isoformat()
+        self.add_evidence("H2", Evidence(
+            timestamp=now_crossover,
+            type=EvidenceType.SIMULATION,
+            supports=True,
+            description="Crossover Curve (21 puntos, 5 repeticiones): "
+                        "La frontera observable EXISTE. MFT-First supera a Carving "
+                        "desde 0% hasta 95% de daño del MFT. Carving solo supera "
+                        "a MFT-First cuando el MFT está 100% destruido. "
+                        "Crossover en 95% de daño. Carving es constante (6.7% "
+                        "recovery) sin importar el daño del MFT. MFT-First decae "
+                        "linealmente. La frontera es gradual, no abrupta.",
+            experiment_id="crossover_curve_20260730",
+            strength="strong",
+            details={
+                "crossover_point": 0.95,
+                "crossover_type": "gradual",
+                "carving_constant_recovery": 0.067,
+                "mft_at_0_pct": 0.933,
+                "mft_at_100_pct": 0.0,
+            },
+        ))
+
+        # ─── H3: No universally optimal strategy ─────────────────────────
+        # If H2 is true (there's a crossover frontier), then H3 follows:
+        # No single strategy wins everywhere. The value is in the SELECTOR.
+        # This is the real product: not "the best algorithm" but
+        # "the best system for choosing algorithms."
+        self.register(
+            "H3",
+            "No existe una estrategia de recuperación universalmente óptima. "
+            "Para cualquier estrategia fija, existe al menos un estado del medio "
+            "donde otra estrategia fija produce mejores resultados.",
+            open_questions=[
+                "¿Es H3 una consecuencia de H2, o una hipótesis independiente?",
+                "¿Se puede demostrar H3 con un contraejemplo para cada estrategia?",
+                "¿H3 implica que Motor C siempre es mejor que cualquier estrategia fija?",
+                "¿Existen estrategias que son 'casi universalmente óptimas'?",
+            ],
+            dependencies=["H2"],
+        )
+        self.add_evidence("H3", Evidence(
+            timestamp=now_blocker,
+            type=EvidenceType.SIMULATION,
+            supports=True,
+            description="MFT-First supera a Carving en 90/100 escenarios, pero Carving "
+                        "supera a MFT-First en A09 (intermitente). Ninguna estrategia "
+                        "gana en todos los escenarios. Esto es evidencia preliminar "
+                        "de que no existe una estrategia universalmente óptima.",
+            experiment_id="experiment_v2_20260730_142442",
+            strength="moderate",
+            details={
+                "mft_wins": 90, "carving_wins": 9, "neutral": 1,
+                "note": "A09 es el contraejemplo para MFT-First",
+            },
         ))
 
     def register(self, hypothesis_id: str, statement: str,
