@@ -1,7 +1,36 @@
 # RecoveryLab — Work Log
 
 ---
-Task ID: 6
+Task ID: 7
+Agent: Main
+Task: Incorporar segunda ronda de auditoría externa — Research Protocol v1.2
+
+Work Log:
+- Added Section 12: Threats to Validity (4 subsections)
+  - 12.1 Internal Validity: 5 threats (2 mitigated, 3 open)
+  - 12.2 External Validity: 5 threats (0 mitigated, 5 open)
+  - 12.3 Statistical Validity: 5 threats (2 mitigated, 3 open)
+  - 12.4 Construct Validity: 4 threats (0 mitigated, 4 open)
+  - Total: 4 mitigated, 12 open, 0 resolved
+- Added Section 13: Hypothesis Set v1.0 (Frozen)
+  - 6 freezing rules: no rewriting, new = H9+, refuted = marked
+  - Full frozen hypothesis table (H1.1-H8, H3 eliminated and documented)
+  - Future hypothesis space (H9, H10, H11 candidates)
+- Added ★★★ KPI as primary progress metric
+  - KPI dashboard on cover page: "Resultados con 3+ estrellas: 2/15"
+  - KPI table in Section 4.1 with Phase A/B targets
+  - Explicit statement: this is the real bottleneck, not Recovery Rate or Overall Utility
+- Generated: /home/z/my-project/download/Research_Protocol_v1.2.docx
+
+Stage Summary:
+- Protocol now has 13 sections covering all major scientific rigor dimensions
+- Threats to Validity makes the lab's weaknesses explicit and trackable
+- Frozen hypothesis set prevents retroactive rewriting and preserves scientific history
+- The ★★★ count (2/15) is the single most important number in the project
+- The project's true bottleneck is evidence accumulation, not feature development
+
+---
+Task ID:6
 Agent: Main
 Task: Incorporar auditoría externa al Research Protocol — v1.1
 
