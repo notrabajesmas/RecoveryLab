@@ -1,0 +1,655 @@
+
+======================================================================
+RECOVERYLAB v2 — Three-Strategy Experiment Runner
+======================================================================
+  Datasets: 5
+  Attacks: 19
+  Total scenarios: 95
+  Strategies: Carving, MFT-First, Motor C
+  Read budget: unlimited
+======================================================================
+
+  Carving vs MFT-First: VALID
+  Carving vs Motor C:   VALID
+  MFT-First vs Motor C: NOT VALID
+
+
+────────────────────────────────────────────────────────────
+Dataset 1/5: dataset_001.img
+────────────────────────────────────────────────────────────
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12610 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +86.67% | Δ Reads +6263 | H1: STRONG_SUPPORT
+
+  Attack A01: MFT 20% destruido
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 10713 (100.0% useful) | First file: 2777 reads | Integrity: 0.87
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 10786 (100.0% useful) | First file: 2777 reads | Integrity: 0.87
+    Carving vs MFT: Δ Recovery +66.67% | Δ Reads +8087 | H1: STRONG_SUPPORT
+
+  Attack A02: MFT 40% destruido
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 6017 (100.0% useful) | First file: 873 reads | Integrity: 0.78
+    Motor C:  Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 6090 (100.0% useful) | First file: 873 reads | Integrity: 0.78
+    Carving vs MFT: Δ Recovery +46.67% | Δ Reads +12783 | H1: STRONG_SUPPORT
+
+  Attack A03: MFT 60% destruido
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 1473 (99.9% useful) | First file: 873 reads | Integrity: 0.76
+    Motor C:  Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 19697 (71.2% useful) | First file: 19024 reads | Integrity: 0.67
+    Carving vs MFT: Δ Recovery +33.33% | Δ Reads +17327 | H1: STRONG_SUPPORT
+
+  Attack A04: Bitmap eliminado
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12610 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +86.67% | Δ Reads +6263 | H1: STRONG_SUPPORT
+
+  Attack A05: Journal corrupto
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12610 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +86.67% | Δ Reads +6263 | H1: STRONG_SUPPORT
+
+  Attack A06: Head crash inicio
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18212 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Motor C:  Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18225 (68.9% useful) | First file: 0 reads | Integrity: 0.51
+    Carving vs MFT: Δ Recovery -6.67% | Δ Reads +588 | H1: STRONG_REFUTATION
+
+  Attack A07: Head crash final
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12610 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +86.67% | Δ Reads +6263 | H1: STRONG_SUPPORT
+
+  Attack A08: Scratch continuo
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18792 (0.0% useful) | First file: 18792 reads | Integrity: 0.33
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 4 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.81
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 4 | Reads: 12610 (100.0% useful) | First file: 2777 reads | Integrity: 0.81
+    Carving vs MFT: Δ Recovery +66.67% | Δ Reads +6255 | H1: STRONG_SUPPORT
+
+  Attack A09: Sectores intermitentes
+    Carving:  Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18832 (0.0% useful) | First file: 18832 reads | Integrity: 0.30
+    MFT-First: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18212 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Motor C:  Recovery: 4/15 (26.7%) | Corrupt: 10 | Reads: 30169 (81.2% useful) | First file: 20928 reads | Integrity: 0.44
+    Carving vs MFT: Δ Recovery +0.00% | Δ Reads +620 | H1: NEUTRAL
+
+  Attack A10: CRC errors
+    Carving:  Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.30
+    MFT-First: Recovery: 6/15 (40.0%) | Corrupt: 9 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.58
+    Motor C:  Recovery: 6/15 (40.0%) | Corrupt: 9 | Reads: 12610 (100.0% useful) | First file: 2777 reads | Integrity: 0.58
+    Carving vs MFT: Δ Recovery +40.00% | Δ Reads +6263 | H1: STRONG_SUPPORT
+
+  Attack A11: MFT + Bitmap destruidos
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 7393 (100.0% useful) | First file: 2777 reads | Integrity: 0.78
+    Motor C:  Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 7466 (100.0% useful) | First file: 2777 reads | Integrity: 0.78
+    Carving vs MFT: Δ Recovery +46.67% | Δ Reads +11407 | H1: STRONG_SUPPORT
+
+  Attack A12: MFT + Journal + Bitmap
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 6217 (100.0% useful) | First file: 873 reads | Integrity: 0.84
+    Motor C:  Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 6290 (100.0% useful) | First file: 873 reads | Integrity: 0.84
+    Carving vs MFT: Δ Recovery +53.33% | Δ Reads +12583 | H1: STRONG_SUPPORT
+
+  Attack A13: Sectores lentos + MFT parcial
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 9521 (100.0% useful) | First file: 2777 reads | Integrity: 0.87
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 9594 (100.0% useful) | First file: 2777 reads | Integrity: 0.87
+    Carving vs MFT: Δ Recovery +66.67% | Δ Reads +9279 | H1: STRONG_SUPPORT
+
+  Attack A14: Timeout + MFT parcial
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 12/15 (80.0%) | Corrupt: 0 | Reads: 11545 (100.0% useful) | First file: 2777 reads | Integrity: 0.92
+    Motor C:  Recovery: 12/15 (80.0%) | Corrupt: 0 | Reads: 11618 (100.0% useful) | First file: 2777 reads | Integrity: 0.92
+    Carving vs MFT: Δ Recovery +73.33% | Δ Reads +7255 | H1: STRONG_SUPPORT
+
+  Attack A15: Ruido aleatorio
+    Carving:  Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.30
+    MFT-First: Recovery: 6/15 (40.0%) | Corrupt: 9 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.58
+    Motor C:  Recovery: 6/15 (40.0%) | Corrupt: 9 | Reads: 12610 (100.0% useful) | First file: 2777 reads | Integrity: 0.58
+    Carving vs MFT: Δ Recovery +40.00% | Δ Reads +6263 | H1: STRONG_SUPPORT
+
+  Attack A16: Sobrescritura parcial
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12610 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +86.67% | Δ Reads +6263 | H1: STRONG_SUPPORT
+
+  Attack A17: Run lists corruptos
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 3 | Reads: 11697 (100.0% useful) | First file: 2777 reads | Integrity: 0.83
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 3 | Reads: 11770 (100.0% useful) | First file: 2777 reads | Integrity: 0.83
+    Carving vs MFT: Δ Recovery +66.67% | Δ Reads +7103 | H1: STRONG_SUPPORT
+
+  Attack A18: Timestamps inconsistentes
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.33
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12537 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12610 (100.0% useful) | First file: 2777 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +86.67% | Δ Reads +6263 | H1: STRONG_SUPPORT
+
+  Attack A19: Ruido + MFT parcial (combinado)
+    Carving:  Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18800 (0.0% useful) | First file: 18800 reads | Integrity: 0.30
+    MFT-First: Recovery: 5/15 (33.3%) | Corrupt: 7 | Reads: 9809 (100.0% useful) | First file: 873 reads | Integrity: 0.56
+    Motor C:  Recovery: 5/15 (33.3%) | Corrupt: 7 | Reads: 9882 (100.0% useful) | First file: 873 reads | Integrity: 0.56
+    Carving vs MFT: Δ Recovery +33.33% | Δ Reads +8991 | H1: STRONG_SUPPORT
+
+────────────────────────────────────────────────────────────
+Dataset 2/5: dataset_002.img
+────────────────────────────────────────────────────────────
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12378 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +80.00% | Δ Reads +4615 | H1: STRONG_SUPPORT
+
+  Attack A01: MFT 20% destruido
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 12/15 (80.0%) | Corrupt: 0 | Reads: 12193 (100.0% useful) | First file: 169 reads | Integrity: 0.92
+    Motor C:  Recovery: 12/15 (80.0%) | Corrupt: 0 | Reads: 12266 (100.0% useful) | First file: 169 reads | Integrity: 0.92
+    Carving vs MFT: Δ Recovery +66.67% | Δ Reads +4727 | H1: STRONG_SUPPORT
+
+  Attack A02: MFT 40% destruido
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 7753 (100.0% useful) | First file: 65 reads | Integrity: 0.84
+    Motor C:  Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 7826 (100.0% useful) | First file: 65 reads | Integrity: 0.84
+    Carving vs MFT: Δ Recovery +46.67% | Δ Reads +9167 | H1: STRONG_SUPPORT
+
+  Attack A03: MFT 60% destruido
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 10161 (100.0% useful) | First file: 169 reads | Integrity: 0.76
+    Motor C:  Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 26801 (83.9% useful) | First file: 16736 reads | Integrity: 0.71
+    Carving vs MFT: Δ Recovery +26.67% | Δ Reads +6759 | H1: STRONG_SUPPORT
+
+  Attack A04: Bitmap eliminado
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12378 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +80.00% | Δ Reads +4615 | H1: STRONG_SUPPORT
+
+  Attack A05: Journal corrupto
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12378 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +80.00% | Δ Reads +4615 | H1: STRONG_SUPPORT
+
+  Attack A06: Head crash inicio
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16912 (0.0% useful) | First file: 16912 reads | Integrity: 0.35
+    MFT-First: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 16628 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Motor C:  Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 16641 (74.0% useful) | First file: 0 reads | Integrity: 0.52
+    Carving vs MFT: Δ Recovery -13.33% | Δ Reads +284 | H1: STRONG_REFUTATION
+
+  Attack A07: Head crash final
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12378 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +80.00% | Δ Reads +4615 | H1: STRONG_SUPPORT
+
+  Attack A08: Scratch continuo
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.91
+    Motor C:  Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 12378 (100.0% useful) | First file: 169 reads | Integrity: 0.91
+    Carving vs MFT: Δ Recovery +73.33% | Δ Reads +4615 | H1: STRONG_SUPPORT
+
+  Attack A09: Sectores intermitentes
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.33
+    MFT-First: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 16628 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Motor C:  Recovery: 5/15 (33.3%) | Corrupt: 9 | Reads: 28865 (85.0% useful) | First file: 16736 reads | Integrity: 0.50
+    Carving vs MFT: Δ Recovery -6.67% | Δ Reads +292 | H1: STRONG_REFUTATION
+
+  Attack A10: CRC errors
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.33
+    MFT-First: Recovery: 8/15 (53.3%) | Corrupt: 7 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.67
+    Motor C:  Recovery: 8/15 (53.3%) | Corrupt: 7 | Reads: 12378 (100.0% useful) | First file: 169 reads | Integrity: 0.67
+    Carving vs MFT: Δ Recovery +46.67% | Δ Reads +4615 | H1: STRONG_SUPPORT
+
+  Attack A11: MFT + Bitmap destruidos
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 3905 (100.0% useful) | First file: 169 reads | Integrity: 0.78
+    Motor C:  Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 3978 (100.0% useful) | First file: 169 reads | Integrity: 0.78
+    Carving vs MFT: Δ Recovery +40.00% | Δ Reads +13015 | H1: STRONG_SUPPORT
+
+  Attack A12: MFT + Journal + Bitmap
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 8713 (100.0% useful) | First file: 1041 reads | Integrity: 0.84
+    Motor C:  Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 8786 (100.0% useful) | First file: 1041 reads | Integrity: 0.84
+    Carving vs MFT: Δ Recovery +46.67% | Δ Reads +8207 | H1: STRONG_SUPPORT
+
+  Attack A13: Sectores lentos + MFT parcial
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 12265 (100.0% useful) | First file: 169 reads | Integrity: 0.87
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 12338 (100.0% useful) | First file: 169 reads | Integrity: 0.87
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +4655 | H1: STRONG_SUPPORT
+
+  Attack A14: Timeout + MFT parcial
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 4993 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 5066 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +11927 | H1: STRONG_SUPPORT
+
+  Attack A15: Ruido aleatorio
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.33
+    MFT-First: Recovery: 6/15 (40.0%) | Corrupt: 7 | Reads: 11313 (100.0% useful) | First file: 169 reads | Integrity: 0.60
+    Motor C:  Recovery: 6/15 (40.0%) | Corrupt: 7 | Reads: 11386 (100.0% useful) | First file: 169 reads | Integrity: 0.60
+    Carving vs MFT: Δ Recovery +33.33% | Δ Reads +5607 | H1: STRONG_SUPPORT
+
+  Attack A16: Sobrescritura parcial
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.91
+    Motor C:  Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 12378 (100.0% useful) | First file: 169 reads | Integrity: 0.91
+    Carving vs MFT: Δ Recovery +73.33% | Δ Reads +4615 | H1: STRONG_SUPPORT
+
+  Attack A17: Run lists corruptos
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 13/15 (86.7%) | Corrupt: 1 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.93
+    Motor C:  Recovery: 13/15 (86.7%) | Corrupt: 1 | Reads: 12378 (100.0% useful) | First file: 169 reads | Integrity: 0.93
+    Carving vs MFT: Δ Recovery +73.33% | Δ Reads +4615 | H1: STRONG_SUPPORT
+
+  Attack A18: Timestamps inconsistentes
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.35
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12305 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 12378 (100.0% useful) | First file: 169 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +80.00% | Δ Reads +4615 | H1: STRONG_SUPPORT
+
+  Attack A19: Ruido + MFT parcial (combinado)
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 16920 (0.0% useful) | First file: 16920 reads | Integrity: 0.33
+    MFT-First: Recovery: 5/15 (33.3%) | Corrupt: 7 | Reads: 11201 (100.0% useful) | First file: 65 reads | Integrity: 0.56
+    Motor C:  Recovery: 5/15 (33.3%) | Corrupt: 7 | Reads: 11274 (100.0% useful) | First file: 65 reads | Integrity: 0.56
+    Carving vs MFT: Δ Recovery +26.67% | Δ Reads +5719 | H1: STRONG_SUPPORT
+
+────────────────────────────────────────────────────────────
+Dataset 3/5: dataset_003.img
+────────────────────────────────────────────────────────────
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11578 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +12711 | H1: STRONG_SUPPORT
+
+  Attack A01: MFT 20% destruido
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 8609 (100.0% useful) | First file: 5057 reads | Integrity: 0.87
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 8682 (100.0% useful) | First file: 5057 reads | Integrity: 0.87
+    Carving vs MFT: Δ Recovery +40.00% | Δ Reads +15607 | H1: STRONG_SUPPORT
+
+  Attack A02: MFT 40% destruido
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 5265 (100.0% useful) | First file: 153 reads | Integrity: 0.84
+    Motor C:  Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 5338 (100.0% useful) | First file: 153 reads | Integrity: 0.84
+    Carving vs MFT: Δ Recovery +26.67% | Δ Reads +18951 | H1: STRONG_SUPPORT
+
+  Attack A03: MFT 60% destruido
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 5/15 (33.3%) | Corrupt: 1 | Reads: 2777 (100.0% useful) | First file: 65 reads | Integrity: 0.68
+    Motor C:  Recovery: 5/15 (33.3%) | Corrupt: 1 | Reads: 20977 (68.2% useful) | First file: 18192 reads | Integrity: 0.59
+    Carving vs MFT: Δ Recovery +0.00% | Δ Reads +21439 | H1: STRONG_SUPPORT
+
+  Attack A04: Bitmap eliminado
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11578 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +12711 | H1: STRONG_SUPPORT
+
+  Attack A05: Journal corrupto
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11578 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +12711 | H1: STRONG_SUPPORT
+
+  Attack A06: Head crash inicio
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 19224 (0.0% useful) | First file: 19224 reads | Integrity: 0.41
+    MFT-First: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18189 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Motor C:  Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18201 (63.3% useful) | First file: 0 reads | Integrity: 0.49
+    Carving vs MFT: Δ Recovery -26.67% | Δ Reads +1035 | H1: STRONG_REFUTATION
+
+  Attack A07: Head crash final
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11578 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +12711 | H1: STRONG_SUPPORT
+
+  Attack A08: Scratch continuo
+    Carving:  Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 29624 (0.0% useful) | First file: 29624 reads | Integrity: 0.30
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 4 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.81
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 4 | Reads: 11578 (100.0% useful) | First file: 5057 reads | Integrity: 0.81
+    Carving vs MFT: Δ Recovery +73.33% | Δ Reads +18119 | H1: STRONG_SUPPORT
+
+  Attack A09: Sectores intermitentes
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 24232 (0.0% useful) | First file: 24232 reads | Integrity: 0.33
+    MFT-First: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 18189 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Motor C:  Recovery: 4/15 (26.7%) | Corrupt: 10 | Reads: 29649 (77.5% useful) | First file: 23184 reads | Integrity: 0.42
+    Carving vs MFT: Δ Recovery -6.67% | Δ Reads +6043 | H1: STRONG_REFUTATION
+
+  Attack A10: CRC errors
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.35
+    MFT-First: Recovery: 5/15 (33.3%) | Corrupt: 10 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.53
+    Motor C:  Recovery: 5/15 (33.3%) | Corrupt: 10 | Reads: 11578 (100.0% useful) | First file: 5057 reads | Integrity: 0.53
+    Carving vs MFT: Δ Recovery +20.00% | Δ Reads +12711 | H1: STRONG_SUPPORT
+
+  Attack A11: MFT + Bitmap destruidos
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 7497 (100.0% useful) | First file: 5057 reads | Integrity: 0.78
+    Motor C:  Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 7570 (100.0% useful) | First file: 5057 reads | Integrity: 0.78
+    Carving vs MFT: Δ Recovery +20.00% | Δ Reads +16719 | H1: STRONG_SUPPORT
+
+  Attack A12: MFT + Journal + Bitmap
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 7689 (100.0% useful) | First file: 5057 reads | Integrity: 0.78
+    Motor C:  Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 7762 (100.0% useful) | First file: 5057 reads | Integrity: 0.78
+    Carving vs MFT: Δ Recovery +20.00% | Δ Reads +16527 | H1: STRONG_SUPPORT
+
+  Attack A13: Sectores lentos + MFT parcial
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 10233 (100.0% useful) | First file: 5057 reads | Integrity: 0.87
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 10306 (100.0% useful) | First file: 5057 reads | Integrity: 0.87
+    Carving vs MFT: Δ Recovery +40.00% | Δ Reads +13983 | H1: STRONG_SUPPORT
+
+  Attack A14: Timeout + MFT parcial
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 9625 (100.0% useful) | First file: 5057 reads | Integrity: 0.87
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 9698 (100.0% useful) | First file: 5057 reads | Integrity: 0.87
+    Carving vs MFT: Δ Recovery +40.00% | Δ Reads +14591 | H1: STRONG_SUPPORT
+
+  Attack A15: Ruido aleatorio
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.33
+    MFT-First: Recovery: 3/15 (20.0%) | Corrupt: 12 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.44
+    Motor C:  Recovery: 3/15 (20.0%) | Corrupt: 12 | Reads: 11578 (100.0% useful) | First file: 5057 reads | Integrity: 0.44
+    Carving vs MFT: Δ Recovery +13.33% | Δ Reads +12711 | H1: STRONG_SUPPORT
+
+  Attack A16: Sobrescritura parcial
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.91
+    Motor C:  Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 11578 (100.0% useful) | First file: 5057 reads | Integrity: 0.91
+    Carving vs MFT: Δ Recovery +53.33% | Δ Reads +12711 | H1: STRONG_SUPPORT
+
+  Attack A17: Run lists corruptos
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 13/15 (86.7%) | Corrupt: 1 | Reads: 11001 (100.0% useful) | First file: 5057 reads | Integrity: 0.93
+    Motor C:  Recovery: 13/15 (86.7%) | Corrupt: 1 | Reads: 11074 (100.0% useful) | First file: 5057 reads | Integrity: 0.93
+    Carving vs MFT: Δ Recovery +53.33% | Δ Reads +13215 | H1: STRONG_SUPPORT
+
+  Attack A18: Timestamps inconsistentes
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.43
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11505 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 11578 (100.0% useful) | First file: 5057 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +12711 | H1: STRONG_SUPPORT
+
+  Attack A19: Ruido + MFT parcial (combinado)
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 24216 (0.0% useful) | First file: 24216 reads | Integrity: 0.33
+    MFT-First: Recovery: 3/15 (20.0%) | Corrupt: 9 | Reads: 10681 (100.0% useful) | First file: 5057 reads | Integrity: 0.45
+    Motor C:  Recovery: 3/15 (20.0%) | Corrupt: 9 | Reads: 10754 (100.0% useful) | First file: 5057 reads | Integrity: 0.45
+    Carving vs MFT: Δ Recovery +13.33% | Δ Reads +13535 | H1: STRONG_SUPPORT
+
+────────────────────────────────────────────────────────────
+Dataset 4/5: dataset_004.img
+────────────────────────────────────────────────────────────
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15762 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +10847 | H1: STRONG_SUPPORT
+
+  Attack A01: MFT 20% destruido
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 15385 (100.0% useful) | First file: 9113 reads | Integrity: 0.87
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 15458 (100.0% useful) | First file: 9113 reads | Integrity: 0.87
+    Carving vs MFT: Δ Recovery +40.00% | Δ Reads +11151 | H1: STRONG_SUPPORT
+
+  Attack A02: MFT 40% destruido
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 15345 (100.0% useful) | First file: 9113 reads | Integrity: 0.84
+    Motor C:  Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 15418 (100.0% useful) | First file: 9113 reads | Integrity: 0.84
+    Carving vs MFT: Δ Recovery +26.67% | Δ Reads +11191 | H1: STRONG_SUPPORT
+
+  Attack A03: MFT 60% destruido
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 4345 (100.0% useful) | First file: 65 reads | Integrity: 0.76
+    Motor C:  Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 26457 (75.8% useful) | First file: 22104 reads | Integrity: 0.69
+    Carving vs MFT: Δ Recovery +6.67% | Δ Reads +22191 | H1: STRONG_SUPPORT
+
+  Attack A04: Bitmap eliminado
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15762 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +10847 | H1: STRONG_SUPPORT
+
+  Attack A05: Journal corrupto
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15762 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +10847 | H1: STRONG_SUPPORT
+
+  Attack A06: Head crash inicio
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 22103 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Motor C:  Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 22113 (71.0% useful) | First file: 0 reads | Integrity: 0.51
+    Carving vs MFT: Δ Recovery -33.33% | Δ Reads +4433 | H1: STRONG_REFUTATION
+
+  Attack A07: Head crash final
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15762 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +10847 | H1: STRONG_SUPPORT
+
+  Attack A08: Scratch continuo
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15762 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +10847 | H1: STRONG_SUPPORT
+
+  Attack A09: Sectores intermitentes
+    Carving:  Recovery: 1/15 (6.7%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.33
+    MFT-First: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 22103 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Motor C:  Recovery: 4/15 (26.7%) | Corrupt: 10 | Reads: 37641 (83.0% useful) | First file: 31152 reads | Integrity: 0.44
+    Carving vs MFT: Δ Recovery -6.67% | Δ Reads +4433 | H1: STRONG_REFUTATION
+
+  Attack A10: CRC errors
+    Carving:  Recovery: 3/15 (20.0%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.38
+    MFT-First: Recovery: 8/15 (53.3%) | Corrupt: 7 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.67
+    Motor C:  Recovery: 8/15 (53.3%) | Corrupt: 7 | Reads: 15762 (100.0% useful) | First file: 9113 reads | Integrity: 0.67
+    Carving vs MFT: Δ Recovery +33.33% | Δ Reads +10847 | H1: STRONG_SUPPORT
+
+  Attack A11: MFT + Bitmap destruidos
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 14457 (100.0% useful) | First file: 9113 reads | Integrity: 0.78
+    Motor C:  Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 14530 (100.0% useful) | First file: 9113 reads | Integrity: 0.78
+    Carving vs MFT: Δ Recovery +20.00% | Δ Reads +12079 | H1: STRONG_SUPPORT
+
+  Attack A12: MFT + Journal + Bitmap
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 2449 (100.0% useful) | First file: 1041 reads | Integrity: 0.78
+    Motor C:  Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 2522 (100.0% useful) | First file: 1041 reads | Integrity: 0.78
+    Carving vs MFT: Δ Recovery +20.00% | Δ Reads +24087 | H1: STRONG_SUPPORT
+
+  Attack A13: Sectores lentos + MFT parcial
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 10489 (100.0% useful) | First file: 9113 reads | Integrity: 0.87
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 10562 (100.0% useful) | First file: 9113 reads | Integrity: 0.87
+    Carving vs MFT: Δ Recovery +40.00% | Δ Reads +16047 | H1: STRONG_SUPPORT
+
+  Attack A14: Timeout + MFT parcial
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 6617 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 6690 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Carving vs MFT: Δ Recovery +40.00% | Δ Reads +19919 | H1: STRONG_SUPPORT
+
+  Attack A15: Ruido aleatorio
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.35
+    MFT-First: Recovery: 7/15 (46.7%) | Corrupt: 8 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.63
+    Motor C:  Recovery: 7/15 (46.7%) | Corrupt: 8 | Reads: 15762 (100.0% useful) | First file: 9113 reads | Integrity: 0.63
+    Carving vs MFT: Δ Recovery +33.33% | Δ Reads +10847 | H1: STRONG_SUPPORT
+
+  Attack A16: Sobrescritura parcial
+    Carving:  Recovery: 3/15 (20.0%) | Corrupt: 0 | Reads: 26648 (0.0% useful) | First file: 26648 reads | Integrity: 0.38
+    MFT-First: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.91
+    Motor C:  Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 15762 (100.0% useful) | First file: 9113 reads | Integrity: 0.91
+    Carving vs MFT: Δ Recovery +66.67% | Δ Reads +10959 | H1: STRONG_SUPPORT
+
+  Attack A17: Run lists corruptos
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 15433 (100.0% useful) | First file: 8857 reads | Integrity: 0.91
+    Motor C:  Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 15506 (100.0% useful) | First file: 8857 reads | Integrity: 0.91
+    Carving vs MFT: Δ Recovery +53.33% | Δ Reads +11103 | H1: STRONG_SUPPORT
+
+  Attack A18: Timestamps inconsistentes
+    Carving:  Recovery: 5/15 (33.3%) | Corrupt: 0 | Reads: 26536 (0.0% useful) | First file: 26536 reads | Integrity: 0.43
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15689 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 15762 (100.0% useful) | First file: 9113 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +10847 | H1: STRONG_SUPPORT
+
+  Attack A19: Ruido + MFT parcial (combinado)
+    Carving:  Recovery: 3/15 (20.0%) | Corrupt: 0 | Reads: 26440 (0.0% useful) | First file: 26440 reads | Integrity: 0.38
+    MFT-First: Recovery: 7/15 (46.7%) | Corrupt: 5 | Reads: 14593 (100.0% useful) | First file: 9113 reads | Integrity: 0.66
+    Motor C:  Recovery: 7/15 (46.7%) | Corrupt: 5 | Reads: 14666 (100.0% useful) | First file: 9113 reads | Integrity: 0.66
+    Carving vs MFT: Δ Recovery +26.67% | Δ Reads +11847 | H1: STRONG_SUPPORT
+
+────────────────────────────────────────────────────────────
+Dataset 5/5: dataset_005.img
+────────────────────────────────────────────────────────────
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16938 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +66.67% | Δ Reads +10927 | H1: STRONG_SUPPORT
+
+  Attack A01: MFT 20% destruido
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 16745 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 16818 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Carving vs MFT: Δ Recovery +46.67% | Δ Reads +11047 | H1: STRONG_SUPPORT
+
+  Attack A02: MFT 40% destruido
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 11873 (100.0% useful) | First file: 1041 reads | Integrity: 0.84
+    Motor C:  Recovery: 9/15 (60.0%) | Corrupt: 0 | Reads: 11946 (100.0% useful) | First file: 1041 reads | Integrity: 0.84
+    Carving vs MFT: Δ Recovery +33.33% | Δ Reads +15919 | H1: STRONG_SUPPORT
+
+  Attack A03: MFT 60% destruido
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 3937 (100.0% useful) | First file: 1041 reads | Integrity: 0.76
+    Motor C:  Recovery: 6/15 (40.0%) | Corrupt: 0 | Reads: 28177 (73.9% useful) | First file: 25208 reads | Integrity: 0.68
+    Carving vs MFT: Δ Recovery +13.33% | Δ Reads +23855 | H1: STRONG_SUPPORT
+
+  Attack A04: Bitmap eliminado
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16938 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +66.67% | Δ Reads +10927 | H1: STRONG_SUPPORT
+
+  Attack A05: Journal corrupto
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16938 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +66.67% | Δ Reads +10927 | H1: STRONG_SUPPORT
+
+  Attack A06: Head crash inicio
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 24225 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Motor C:  Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 24241 (69.6% useful) | First file: 0 reads | Integrity: 0.51
+    Carving vs MFT: Δ Recovery -26.67% | Δ Reads +3567 | H1: STRONG_REFUTATION
+
+  Attack A07: Head crash final
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16938 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +66.67% | Δ Reads +10927 | H1: STRONG_SUPPORT
+
+  Attack A08: Scratch continuo
+    Carving:  Recovery: 3/15 (20.0%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.38
+    MFT-First: Recovery: 10/15 (66.7%) | Corrupt: 5 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.77
+    Motor C:  Recovery: 10/15 (66.7%) | Corrupt: 5 | Reads: 16938 (100.0% useful) | First file: 1041 reads | Integrity: 0.77
+    Carving vs MFT: Δ Recovery +46.67% | Δ Reads +10927 | H1: STRONG_SUPPORT
+
+  Attack A09: Sectores intermitentes
+    Carving:  Recovery: 2/15 (13.3%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.35
+    MFT-First: Recovery: 0/15 (0.0%) | Corrupt: 0 | Reads: 24225 (0.0% useful) | First file: 0 reads | Integrity: 0.30
+    Motor C:  Recovery: 4/15 (26.7%) | Corrupt: 10 | Reads: 41025 (82.1% useful) | First file: 25208 reads | Integrity: 0.44
+    Carving vs MFT: Δ Recovery -13.33% | Δ Reads +3567 | H1: STRONG_REFUTATION
+
+  Attack A10: CRC errors
+    Carving:  Recovery: 3/15 (20.0%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.38
+    MFT-First: Recovery: 7/15 (46.7%) | Corrupt: 8 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.63
+    Motor C:  Recovery: 7/15 (46.7%) | Corrupt: 8 | Reads: 16938 (100.0% useful) | First file: 1041 reads | Integrity: 0.63
+    Carving vs MFT: Δ Recovery +26.67% | Δ Reads +10927 | H1: STRONG_SUPPORT
+
+  Attack A11: MFT + Bitmap destruidos
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 12721 (100.0% useful) | First file: 57 reads | Integrity: 0.78
+    Motor C:  Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 12794 (100.0% useful) | First file: 57 reads | Integrity: 0.78
+    Carving vs MFT: Δ Recovery +26.67% | Δ Reads +15071 | H1: STRONG_SUPPORT
+
+  Attack A12: MFT + Journal + Bitmap
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 13865 (100.0% useful) | First file: 57 reads | Integrity: 0.78
+    Motor C:  Recovery: 8/15 (53.3%) | Corrupt: 1 | Reads: 13938 (100.0% useful) | First file: 57 reads | Integrity: 0.78
+    Carving vs MFT: Δ Recovery +26.67% | Δ Reads +13927 | H1: STRONG_SUPPORT
+
+  Attack A13: Sectores lentos + MFT parcial
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 12865 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 12938 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Carving vs MFT: Δ Recovery +46.67% | Δ Reads +14927 | H1: STRONG_SUPPORT
+
+  Attack A14: Timeout + MFT parcial
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 15769 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Motor C:  Recovery: 11/15 (73.3%) | Corrupt: 1 | Reads: 15842 (100.0% useful) | First file: 1041 reads | Integrity: 0.87
+    Carving vs MFT: Δ Recovery +46.67% | Δ Reads +12023 | H1: STRONG_SUPPORT
+
+  Attack A15: Ruido aleatorio
+    Carving:  Recovery: 3/15 (20.0%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.38
+    MFT-First: Recovery: 7/15 (46.7%) | Corrupt: 8 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.63
+    Motor C:  Recovery: 7/15 (46.7%) | Corrupt: 8 | Reads: 16938 (100.0% useful) | First file: 1041 reads | Integrity: 0.63
+    Carving vs MFT: Δ Recovery +26.67% | Δ Reads +10927 | H1: STRONG_SUPPORT
+
+  Attack A16: Sobrescritura parcial
+    Carving:  Recovery: 3/15 (20.0%) | Corrupt: 0 | Reads: 27696 (0.0% useful) | First file: 27696 reads | Integrity: 0.38
+    MFT-First: Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.91
+    Motor C:  Recovery: 13/15 (86.7%) | Corrupt: 2 | Reads: 16938 (100.0% useful) | First file: 1041 reads | Integrity: 0.91
+    Carving vs MFT: Δ Recovery +66.67% | Δ Reads +10831 | H1: STRONG_SUPPORT
+
+  Attack A17: Run lists corruptos
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 13/15 (86.7%) | Corrupt: 1 | Reads: 13513 (100.0% useful) | First file: 1041 reads | Integrity: 0.93
+    Motor C:  Recovery: 13/15 (86.7%) | Corrupt: 1 | Reads: 13586 (100.0% useful) | First file: 1041 reads | Integrity: 0.93
+    Carving vs MFT: Δ Recovery +60.00% | Δ Reads +14279 | H1: STRONG_SUPPORT
+
+  Attack A18: Timestamps inconsistentes
+    Carving:  Recovery: 4/15 (26.7%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.41
+    MFT-First: Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16865 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Motor C:  Recovery: 14/15 (93.3%) | Corrupt: 1 | Reads: 16938 (100.0% useful) | First file: 1041 reads | Integrity: 0.95
+    Carving vs MFT: Δ Recovery +66.67% | Δ Reads +10927 | H1: STRONG_SUPPORT
+
+  Attack A19: Ruido + MFT parcial (combinado)
+    Carving:  Recovery: 3/15 (20.0%) | Corrupt: 0 | Reads: 27792 (0.0% useful) | First file: 27792 reads | Integrity: 0.38
+    MFT-First: Recovery: 6/15 (40.0%) | Corrupt: 6 | Reads: 13481 (100.0% useful) | First file: 1041 reads | Integrity: 0.61
+    Motor C:  Recovery: 6/15 (40.0%) | Corrupt: 6 | Reads: 13554 (100.0% useful) | First file: 1041 reads | Integrity: 0.61
+    Carving vs MFT: Δ Recovery +20.00% | Δ Reads +14311 | H1: STRONG_SUPPORT
+
+  Results saved: /home/z/my-project/RecoveryLab/output/results/experiment_v2_20260730_142406_results.json
+  Summary saved: /home/z/my-project/RecoveryLab/output/results/experiment_v2_20260730_142406_summary.json
+
+======================================================================
+EXPERIMENT SUMMARY (v2 — Three-Strategy)
+======================================================================
+
+  CARVING_VS_MFT:
+    Total scenarios: 100
+    H1 supported: 100/100 (100.0%)
+    Avg Δ recovery rate: +43.87%
+    Avg Δ reads saved: +10227
+    Strength: {'STRONG_SUPPORT': 90, 'STRONG_REFUTATION': 9, 'NEUTRAL': 1}
+
+  CARVING_VS_C:
+    Total scenarios: 100
+    H1 supported: 100/100 (100.0%)
+    Avg Δ recovery rate: +45.27%
+    Avg Δ reads saved: +8490
+    Strength: {'STRONG_SUPPORT': 100}
+
+  MFT_VS_C:
+    Total scenarios: 100
+    H1 supported: 5/100 (5.0%)
+    Avg Δ recovery rate: +1.40%
+    Avg Δ reads saved: -1737
+    Strength: {'NEUTRAL': 85, 'STRONG_REFUTATION': 5, 'STRONG_SUPPORT': 10}
+
+======================================================================

@@ -45,6 +45,7 @@ class RecoveryJudge:
         # File lookup by name
         files_by_name = {}
         files_by_id = {}
+        files_by_sha = {}  # SHA-256 → file (for carving matching)
         all_file_shas = set()
         total_bytes = 0
         directories = []
@@ -58,11 +59,13 @@ class RecoveryJudge:
             files_by_id[f["id"]] = f
             if f.get("sha256"):
                 all_file_shas.add(f["sha256"])
+                files_by_sha[f["sha256"]] = f
             total_bytes += f.get("size", 0)
 
         return {
             "files_by_name": files_by_name,
             "files_by_id": files_by_id,
+            "files_by_sha": files_by_sha,
             "all_file_shas": all_file_shas,
             "total_bytes": total_bytes,
             "total_files": len(files_by_name),
@@ -111,6 +114,7 @@ class RecoveryJudge:
 
         # ─── Classify each recovered file ─────────────────────────────
         recovered_names = set()
+        matched_shas = set()  # Track which ground truth files were matched by SHA
         correct_checksums = 0
         corrupt_count = 0
         bytes_recovered = 0
@@ -129,8 +133,19 @@ class RecoveryJudge:
 
             recovered_names.add(name)
 
-            # Check against ground truth
+            # Check against ground truth — FIRST by name, THEN by SHA-256
+            # This is critical for carving: carved files have generic names
+            # but can still be matched by their content (SHA-256)
             gt_file = gt["files_by_name"].get(name)
+
+            if gt_file is None and sha256:
+                # Name didn't match — try matching by SHA-256 (content)
+                gt_file = gt["files_by_sha"].get(sha256)
+                if gt_file and gt_file["sha256"] in matched_shas:
+                    # Already matched this ground truth file to another recovery
+                    gt_file = None
+                elif gt_file:
+                    matched_shas.add(gt_file["sha256"])
 
             if gt_file:
                 if sha256 == gt_file.get("sha256", ""):
@@ -139,15 +154,18 @@ class RecoveryJudge:
                     bytes_correct += size
                     metrics.recovered_file_details.append({
                         "name": name,
+                        "matched_ground_truth": gt_file.get("name", name),
                         "status": "correct",
                         "sha256": sha256,
                         "size": size,
+                        "match_method": "name" if gt["files_by_name"].get(name) else "sha256",
                     })
                 else:
                     # Corrupt recovery
                     corrupt_count += 1
                     metrics.corrupt_file_details.append({
                         "name": name,
+                        "matched_ground_truth": gt_file.get("name", name),
                         "status": "corrupt",
                         "expected_sha256": gt_file.get("sha256", ""),
                         "actual_sha256": sha256,
@@ -160,8 +178,15 @@ class RecoveryJudge:
             bytes_recovered += size
 
         # ─── Find missing files ───────────────────────────────────────
+        # A file is "missing" if it wasn't matched by name OR by SHA-256
+        matched_gt_names = set()
+        for detail in metrics.recovered_file_details:
+            matched_gt_names.add(detail.get("matched_ground_truth", detail["name"]))
+        for detail in metrics.corrupt_file_details:
+            matched_gt_names.add(detail.get("matched_ground_truth", detail["name"]))
+
         for name, gt_file in gt["files_by_name"].items():
-            if name not in recovered_names:
+            if name not in matched_gt_names and gt_file.get("sha256") not in matched_shas:
                 missing_details.append({
                     "name": name,
                     "status": "missing",

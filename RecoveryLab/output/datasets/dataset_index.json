@@ -2,7 +2,7 @@
   "version": "1.0",
   "master_seed": 42,
   "num_images": 5,
-  "volume_size": 5242880,
+  "volume_size": 10485760,
   "cluster_size": 4096,
   "files_per_image": 15,
   "images": [
@@ -12,7 +12,7 @@
       "manifest_file": "dataset_001_manifest.json",
       "seed": 2746317213,
       "serial": "0x46685257",
-      "volume_size": 4662410,
+      "volume_size": 9324821,
       "file_count": 15
     },
     {
@@ -21,7 +21,7 @@
       "manifest_file": "dataset_002_manifest.json",
       "seed": 3163119785,
       "serial": "0x6c031199",
-      "volume_size": 4256793,
+      "volume_size": 8513586,
       "file_count": 15
     },
     {
@@ -30,7 +30,7 @@
       "manifest_file": "dataset_003_manifest.json",
       "seed": 939042955,
       "serial": "0x8b8148f6",
-      "volume_size": 4656601,
+      "volume_size": 9313202,
       "file_count": 15
     },
     {
@@ -39,7 +39,7 @@
       "manifest_file": "dataset_004_manifest.json",
       "seed": 2530876844,
       "serial": "0xce4a2bbd",
-      "volume_size": 5658408,
+      "volume_size": 11316816,
       "file_count": 15
     },
     {
@@ -48,7 +48,7 @@
       "manifest_file": "dataset_005_manifest.json",
       "seed": 1461364854,
       "serial": "0x27cd8130",
-      "volume_size": 6201725,
+      "volume_size": 12403450,
       "file_count": 15
     }
   ]

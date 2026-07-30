@@ -1,0 +1,42 @@
+{
+  "timestamp": "20260730_142406",
+  "seed": 42,
+  "version": "v2_three_strategy",
+  "aggregated": {
+    "total_comparisons": 300,
+    "carving_vs_mft": {
+      "total": 100,
+      "h1_supported_count": 100,
+      "h1_supported_pct": 1.0,
+      "strength_distribution": {
+        "STRONG_SUPPORT": 90,
+        "STRONG_REFUTATION": 9,
+        "NEUTRAL": 1
+      },
+      "avg_delta_recovery_rate": 0.4387,
+      "avg_delta_reads_saved": 10226.8
+    },
+    "carving_vs_c": {
+      "total": 100,
+      "h1_supported_count": 100,
+      "h1_supported_pct": 1.0,
+      "strength_distribution": {
+        "STRONG_SUPPORT": 100
+      },
+      "avg_delta_recovery_rate": 0.4527,
+      "avg_delta_reads_saved": 8490.1
+    },
+    "mft_vs_c": {
+      "total": 100,
+      "h1_supported_count": 5,
+      "h1_supported_pct": 0.05,
+      "strength_distribution": {
+        "NEUTRAL": 85,
+        "STRONG_REFUTATION": 5,
+        "STRONG_SUPPORT": 10
+      },
+      "avg_delta_recovery_rate": 0.014,
+      "avg_delta_reads_saved": -1736.8
+    }
+  }
+}

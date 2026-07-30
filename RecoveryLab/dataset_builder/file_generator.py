@@ -39,6 +39,18 @@ FILE_SIGNATURES = {
     ".dat":  b'',                     # Generic data
 }
 
+# File footers for carving — these are the end-of-file markers
+# that a carving tool would search for to determine file boundaries.
+# Without proper footers, carving becomes much harder.
+FILE_FOOTERS = {
+    ".jpg":  b'\xFF\xD9',              # JPEG EOI (End of Image)
+    ".png":  b'IEND\xAE\x42\x60\x82',  # PNG IEND chunk + CRC
+    ".pdf":  b'%%EOF\n',              # PDF end-of-file marker
+    ".zip":  b'PK\x05\x06',            # ZIP End of Central Directory
+    ".docx": b'PK\x05\x06',            # DOCX (same as ZIP)
+    ".xlsx": b'PK\x05\x06',            # XLSX (same as ZIP)
+}
+
 
 @dataclass
 class GeneratedFile:
@@ -174,10 +186,14 @@ class FileGenerator:
 
     def _generate_content(self, ext: str, size: int) -> bytes:
         """
-        Generate deterministic file content with realistic header.
+        Generate deterministic file content with realistic header AND footer.
 
         The content is seeded by (global_seed + extension + size) so that
         the same parameters always produce the same bytes.
+
+        CRITICAL: Files now include proper footers (JPEG EOI, PNG IEND,
+        PDF %%EOF, etc.) so that carving tools can detect file boundaries.
+        Without footers, carving is practically impossible.
         """
         # Create a deterministic seed for this specific file
         content_seed = hashlib.md5(
@@ -185,12 +201,18 @@ class FileGenerator:
         ).hexdigest()
         content_rng = random.Random(content_seed)
 
-        # Start with file signature
+        # Start with file signature (header)
         header = FILE_SIGNATURES.get(ext, b'')
 
-        # Generate body
-        body_size = size - len(header)
+        # Get footer for this file type
+        footer = FILE_FOOTERS.get(ext, b'')
+
+        # Calculate body size: total = header + body + footer
+        total_fixed = len(header) + len(footer)
+        body_size = size - total_fixed
+
         if body_size <= 0:
+            # File too small for header + footer, just return header
             return header[:size]
 
         # Generate pseudo-random body
@@ -203,7 +225,7 @@ class FileGenerator:
                          range(min(chunk_size, body_size - len(body))))
             body.extend(chunk)
 
-        return header + bytes(body[:body_size])
+        return header + bytes(body[:body_size]) + footer
 
     def generate_directories(self, files: List[GeneratedFile],
                              max_depth: int = 2) -> List[dict]:

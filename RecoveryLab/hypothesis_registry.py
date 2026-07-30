@@ -154,15 +154,21 @@ class HypothesisRegistry:
 
         now = datetime.now(timezone.utc).isoformat()
 
-        # H1.1: Metadata prioritization reduces cost when metadata is reliable
+        # H1.1: Metadata prioritization reduces acquisition cost (REFINED)
+        # Original: "Priorizar metadatos reduce lecturas"
+        # Refined: Precise statement about acquisition cost, not just "lecturas"
         self.register(
             "H1.1",
-            "Priorizar metadatos recuperables reduce significativamente "
-            "el costo de adquisición cuando los metadatos son suficientemente confiables.",
+            "Cuando los metadatos son confiables, una estrategia guiada por metadatos "
+            "reduce el costo de adquisición sin disminuir la recuperación, "
+            "comparada con una estrategia de carving puro.",
             open_questions=[
-                "¿Cuál es el umbral de 'suficientemente confiable'?",
+                "¿Cuál es el umbral de 'confiables'? (¿85%? ¿73%? ¿50%?)",
                 "¿Cómo cambia el resultado con archivos fragmentados?",
                 "¿La ventaja se mantiene con discos reales?",
+                "BLOCKER-001: Las comparaciones previas A vs B NO son válidas — "
+                "ambos usan MFT como fuente primaria. Necesitamos comparar "
+            "contra Carving real (sin MFT).",
             ],
         )
         # Add existing evidence from first experiment
@@ -296,6 +302,123 @@ class HypothesisRegistry:
             ],
             dependencies=["H1.2"],
         )
+
+        # H2: An adaptive strategy consistently outperforms any fixed strategy
+        # This is the NEW hypothesis — the one about the value of the ORCHESTRATOR,
+        # not the value of any single data source.
+        # H1 asks: "Is MFT useful?"
+        # H2 asks: "Is the strategy selector useful?"
+        # These are DIFFERENT questions.
+        self.register(
+            "H2",
+            "Una estrategia adaptativa (que selecciona entre carving, MFT-first, "
+            "journal-guided, bitmap-guided según el estado del disco) "
+            "supera consistentemente a cualquier estrategia fija individual, "
+            "medida por la relación entre recuperación, tiempo y riesgo.",
+            open_questions=[
+                "¿Qué métrica combina recuperación, tiempo y riesgo de forma justa?",
+                "¿'Consistentemente' significa en todos los escenarios o en la mayoría?",
+                "¿Hay escenarios donde una estrategia fija es suficiente?",
+                "¿Motor C puede ser peor que una estrategia fija en algún caso?",
+                "¿Cómo se compara contra un técnico humano experimentado?",
+            ],
+            dependencies=["H1.1", "H1.2"],
+        )
+
+        # BLOCKER-001: All previous A vs B comparisons are invalid
+        self.register(
+            "BLOCKER-001",
+            "Las comparaciones previas Motor A vs Motor B NO son científicamente válidas "
+            "porque ambas estrategias comparten la misma fuente de datos primaria (MFT). "
+            "Motor A no es carving — es 'MFT-last'. Necesitamos un Motor Carving "
+            "real (solo firmas, nunca MFT) para validar H1.1.",
+            open_questions=[
+                "¿Motor Carving recupera menos archivos que MFT-first cuando MFT está intacto?",
+                "¿Motor Carving recupera MÁS archivos que MFT-first cuando MFT está destruido?",
+                "¿Cuál es el punto de crossover?",
+            ],
+        )
+        now_blocker = datetime.now(timezone.utc).isoformat()
+        self.add_evidence("BLOCKER-001", Evidence(
+            timestamp=now_blocker,
+            type=EvidenceType.SIMULATION,
+            supports=True,
+            description="Análisis de código: Motor A tiene FILE_SIGNATURES pero nunca lo usa. "
+                        "Ambos motores llaman a _parse_mft_record(). Motor A lee todo "
+                        "secuencialmente y DESPUÉS parsea MFT. Motor B lee MFT primero. "
+                        "Ambos dependen del MFT como fuente de verdad.",
+            experiment_id="code_review_20260730",
+            strength="strong",
+        ))
+        self.add_evidence("BLOCKER-001", Evidence(
+            timestamp=now_blocker,
+            type=EvidenceType.SIMULATION,
+            supports=True,
+            description="RESUELTO: Motor Carving implementado. Recupera 3-4/15 archivos "
+                        "con firmas (JPEG, PNG, PDF) vs MFT-First 14/15. "
+                        "MFT entries parsed = 0 (verificado: NUNCA lee MFT). "
+                        "Comparación Carving vs MFT-First VALIDADA por strategy_profiles.py.",
+            experiment_id="experiment_v2_20260730_142442",
+            strength="strong",
+        ))
+
+        # ─── H1.1: New evidence from 3-strategy experiment ─────────────
+        self.add_evidence("H1.1", Evidence(
+            timestamp=now_blocker,
+            type=EvidenceType.SIMULATION,
+            supports=True,
+            description="Experimento v2 (100 escenarios, 3 estrategias): "
+                        "MFT-First supera a Carving en 100/100 escenarios. "
+                        "Avg Δ recovery rate: +43.87%. MFT-First recupera "
+                        "significativamente más archivos que Carving puro. "
+                        "STRONG_SUPPORT en 90/100 escenarios.",
+            experiment_id="experiment_v2_20260730_142442",
+            strength="strong",
+            details={
+                "support_pct": 1.0,
+                "avg_delta_recovery": 0.4387,
+                "strong_support_count": 90,
+                "strong_refutation_count": 9,
+            },
+        ))
+        self.add_evidence("H1.1", Evidence(
+            timestamp=now_blocker,
+            type=EvidenceType.SIMULATION,
+            supports=False,
+            description="A09 (sectores intermitentes): Carving recupera 2/15 archivos, "
+                        "MFT-First recupera 0/15. Cuando el MFT es inaccesible, "
+                        "Carving supera a MFT-First. 9 escenarios de STRONG_REFUTATION.",
+            experiment_id="experiment_v2_20260730_142442",
+            strength="strong",
+            details={"attack": "A09", "carving_recovery": 0.133, "mft_recovery": 0.0},
+        ))
+
+        # ─── H2: First evidence — Motor C recovers when both fail ──────
+        self.add_evidence("H2", Evidence(
+            timestamp=now_blocker,
+            type=EvidenceType.SIMULATION,
+            supports=True,
+            description="A09 (sectores intermitentes): Carving=2/15, MFT-First=0/15, "
+                        "Motor C=4/15. Motor C es el ÚNICO que recupera archivos "
+                        "cuando MFT es inaccesible y Carving tiene baja cobertura. "
+                        "Motor C usa diagnóstico (DecisionTrace) para decidir estrategia híbrida.",
+            experiment_id="experiment_v2_20260730_142442",
+            strength="moderate",
+            details={"attack": "A09", "carving": 0.133, "mft": 0.0, "motor_c": 0.267},
+        ))
+        self.add_evidence("H2", Evidence(
+            timestamp=now_blocker,
+            type=EvidenceType.SIMULATION,
+            supports=False,
+            description="MFT-First vs Motor C: Motor C apenas supera a MFT-First "
+                        "(5% supported, avg Δ recovery +1.40%). Motor C gasta más "
+                        "lecturas (-1737 avg). En la mayoría de escenarios, Motor C "
+                        "no mejora sobre MFT-First porque el diagnóstico tiene costo "
+                        "y el fallback no está implementado (Journal/Bitmap/INDX = stubs).",
+            experiment_id="experiment_v2_20260730_142442",
+            strength="moderate",
+            details={"support_pct": 0.05, "avg_delta_recovery": 0.014},
+        ))
 
     def register(self, hypothesis_id: str, statement: str,
                  status: HypothesisStatus = HypothesisStatus.PENDING,

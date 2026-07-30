@@ -1,0 +1,658 @@
+     1→"""
+     2→RecoveryLab — Motor C (Orchestrator) with DecisionTrace
+     3→=========================================================
+     4→Objeción 4: Motor C needs to justify its decisions.
+     5→
+     6→Not just "Confianza = 47%" — but:
+     7→
+     8→    Modo seleccionado: Hybrid
+     9→    Razones:
+    10→    ✓ 32% de registros MFT ilegibles
+    11→    ✓ MFT Mirror parcialmente válida
+    12→    ✓ Bitmap inconsistente
+    13→    ✓ Journal recuperable
+    14→    Confianza MFT: 46%
+    15→    Se recomienda cambiar a estrategia híbrida.
+    16→
+    17→This has two enormous advantages:
+    18→  1. The user understands the decision
+    19→  2. You can debug the algorithm
+    20→
+    21→DecisionTrace is a structured record of every signal the motor observed
+    22→and how it contributed to the final decision.
+    23→"""
+    24→
+    25→import hashlib
+    26→import struct
+    27→import math
+    28→from typing import List, Dict, Optional, Set, Tuple
+    29→from dataclasses import dataclass, field
+    30→
+    31→from .base_motor import BaseMotor, MotorResult, RecoveredFile
+    32→from .motor_a_sequential import MotorASequential
+    33→from .motor_b_mft_first import MotorBMFTFirst
+    34→
+    35→
+    36→# ─── Confidence Thresholds ────────────────────────────────────────────────────
+    37→
+    38→CONFIDENCE_HIGH = 0.85      # Above this → MFT-first
+    39→CONFIDENCE_MEDIUM = 0.50    # Above this → Hybrid (MFT + fallback)
+    40→CONFIDENCE_LOW = 0.20       # Above this → Journal/Bitmap guided
+    41→# Below CONFIDENCE_LOW → Carving
+    42→
+    43→# ─── Strategy Names ───────────────────────────────────────────────────────────
+    44→
+    45→STRATEGY_MFT_FIRST = "mft_first"
+    46→STRATEGY_HYBRID = "hybrid"
+    47→STRATEGY_JOURNAL = "journal"
+    48→STRATEGY_BITMAP = "bitmap"
+    49→STRATEGY_CARVING = "carving"
+    50→
+    51→
+    52→@dataclass
+    53→class DiagnosticSignal:
+    54→    """A single diagnostic signal observed during disk analysis."""
+    55→    name: str               # e.g., "mft_readability", "bitmap_validity"
+    56→    value: float            # 0.0-1.0
+    57→    threshold: float        # What threshold this signal was compared against
+    58→    passed: bool            # Did this signal pass its threshold?
+    59→    weight: float           # How much this signal influenced the decision (0.0-1.0)
+    60→    description: str        # Human-readable explanation
+    61→
+    62→
+    63→@dataclass
+    64→class DecisionTrace:
+    65→    """
+    66→    Complete trace of Motor C's decision process.
+    67→
+    68→    This is the key innovation: instead of a black box, every decision
+    69→    is explained with specific signals and their contributions.
+    70→    """
+    71→    # ─── Phase 1: Diagnosis ─────────────────────────────────────────
+    72→    signals: List[DiagnosticSignal] = field(default_factory=list)
+    73→
+    74→    # ─── Phase 2: Confidence Calculation ────────────────────────────
+    75→    mft_confidence: float = 0.0
+    76→    mft_confidence_components: Dict[str, float] = field(default_factory=dict)
+    77→
+    78→    # ─── Phase 3: Strategy Selection ────────────────────────────────
+    79→    strategy_selected: str = ""
+    80→    strategy_reasons: List[str] = field(default_factory=list)
+    81→    strategy_alternatives: List[Dict] = field(default_factory=list)
+    82→
+    83→    # ─── Phase 4: Execution ─────────────────────────────────────────
+    84→    execution_notes: List[str] = field(default_factory=list)
+    85→
+    86→    # ─── Phase 5: Retreat ───────────────────────────────────────────
+    87→    retreat_triggered: bool = False
+    88→    retreat_reason: str = ""
+    89→    retreat_from_strategy: str = ""
+    90→    retreat_to_strategy: str = ""
+    91→
+    92→    def to_dict(self) -> Dict:
+    93→        return {
+    94→            "signals": [
+    95→                {
+    96→                    "name": s.name,
+    97→                    "value": round(s.value, 4),
+    98→                    "threshold": round(s.threshold, 4),
+    99→                    "passed": s.passed,
+   100→                    "weight": round(s.weight, 4),
+   101→                    "description": s.description,
+   102→                }
+   103→                for s in self.signals
+   104→            ],
+   105→            "mft_confidence": round(self.mft_confidence, 4),
+   106→            "mft_confidence_components": {
+   107→                k: round(v, 4) for k, v in self.mft_confidence_components.items()
+   108→            },
+   109→            "strategy_selected": self.strategy_selected,
+   110→            "strategy_reasons": self.strategy_reasons,
+   111→            "strategy_alternatives": self.strategy_alternatives,
+   112→            "execution_notes": self.execution_notes,
+   113→            "retreat_triggered": self.retreat_triggered,
+   114→            "retreat_reason": self.retreat_reason,
+   115→            "retreat_from_strategy": self.retreat_from_strategy,
+   116→            "retreat_to_strategy": self.retreat_to_strategy,
+   117→        }
+   118→
+   119→    def human_readable(self) -> str:
+   120→        """Generate a human-readable decision report."""
+   121→        lines = []
+   122→        lines.append(f"Modo seleccionado: {self.strategy_selected.upper()}")
+   123→        lines.append("")
+   124→        lines.append("Razones:")
+   125→
+   126→        for reason in self.strategy_reasons:
+   127→            lines.append(f"  {reason}")
+   128→
+   129→        lines.append("")
+   130→        lines.append(f"Confianza MFT: {self.mft_confidence:.0%}")
+   131→
+   132→        if self.mft_confidence_components:
+   133→            lines.append("  Componentes:")
+   134→            for comp, val in self.mft_confidence_components.items():
+   135→                lines.append(f"    {comp}: {val:.0%}")
+   136→
+   137→        if self.strategy_alternatives:
+   138→            lines.append("")
+   139→            lines.append("Alternativas consideradas:")
+   140→            for alt in self.strategy_alternatives:
+   141→                lines.append(f"  {alt['strategy']}: {alt['reason']}")
+   142→
+   143→        if self.retreat_triggered:
+   144→            lines.append("")
+   145→            lines.append(f"RETIRADA: {self.retreat_from_strategy} → {self.retreat_to_strategy}")
+   146→            lines.append(f"  Razón: {self.retreat_reason}")
+   147→
+   148→        return "\n".join(lines)
+   149→
+   150→
+   151→@dataclass
+   152→class DiagnosisResult:
+   153→    """Result of diagnosing a disk image."""
+   154→    vbr_valid: bool = False
+   155→    mft_found: bool = False
+   156→    mft_confidence: float = 0.0
+   157→    mft_entries_total: int = 0
+   158→    mft_entries_readable: int = 0
+   159→    mft_entries_in_use: int = 0
+   160→    mft_mirror_valid: bool = False
+   161→    mft_mirror_consistent: bool = False
+   162→    bitmap_valid: bool = False
+   163→    bitmap_confidence: float = 0.0
+   164→    journal_valid: bool = False
+   165→    journal_confidence: float = 0.0
+   166→    recommended_strategy: str = STRATEGY_CARVING
+   167→    diagnosis_reads: int = 0
+   168→
+   169→
+   170→class MotorCOrchestrator(BaseMotor):
+   171→    """
+   172→    Motor C: The Orchestrator with DecisionTrace.
+   173→
+   174→    Diagnoses the disk, calculates confidence, and selects the
+   175→    optimal strategy. Can retreat from a strategy when it stops working.
+   176→
+   177→    Every decision is explained with specific signals and their contributions.
+   178→    """
+   179→
+   180→    @property
+   181→    def name(self) -> str:
+   182→        return "Motor C (Orchestrator)"
+   183→
+   184→    @property
+   185→    def description(self) -> str:
+   186→        return "Diagnoses disk, calculates confidence, selects optimal strategy. Every decision explained."
+   187→
+   188→    def __init__(self):
+   189→        self._motor_a = MotorASequential()
+   190→        self._motor_b = MotorBMFTFirst()
+   191→        self._confidence_threshold = CONFIDENCE_HIGH
+   192→
+   193→    def recover(self, image: bytes, manifest: Dict,
+   194→                read_budget: int = 0,
+   195→                corruption_metadata: Optional[Dict] = None) -> MotorResult:
+   196→        """
+   197→        Run the orchestrated recovery with full decision trace.
+   198→
+   199→        Step 1: Diagnose the disk (with signals)
+   200→        Step 2: Calculate confidence (with components)
+   201→        Step 3: Select strategy (with reasons)
+   202→        Step 4: Execute with monitoring
+   203→        Step 5: Retreat if strategy fails
+   204→        """
+   205→        result = MotorResult(motor_name=self.name)
+   206→        trace = DecisionTrace()
+   207→
+   208→        # ─── Step 1: Diagnose ─────────────────────────────────────────
+   209→        diagnosis = self._diagnose(image, manifest, trace)
+   210→
+   211→        # ─── Step 2: Calculate confidence ─────────────────────────────
+   212→        self._calculate_confidence(diagnosis, trace)
+   213→
+   214→        # ─── Step 3: Select strategy ──────────────────────────────────
+   215→        strategy = self._select_strategy_with_trace(diagnosis, trace)
+   216→
+   217→        # ─── Step 4: Execute strategy ─────────────────────────────────
+   218→        trace.execution_notes.append(f"Executing strategy: {strategy}")
+   219→
+   220→        if strategy == STRATEGY_MFT_FIRST:
+   221→            sub_result = self._motor_b.recover(
+   222→                image, manifest, read_budget=read_budget,
+   223→                corruption_metadata=corruption_metadata,
+   224→            )
+   225→            result = self._merge_results(result, sub_result, strategy)
+   226→
+   227→        elif strategy == STRATEGY_HYBRID:
+   228→            sub_result = self._motor_b.recover(
+   229→                image, manifest, read_budget=read_budget,
+   230→                corruption_metadata=corruption_metadata,
+   231→            )
+   232→
+   233→            recovery_rate = self._estimate_recovery_rate(sub_result, manifest)
+   234→
+   235→            if recovery_rate < 0.5:
+   236→                # ─── Step 5: Retreat ──────────────────────────────────
+   237→                trace.retreat_triggered = True
+   238→                trace.retreat_from_strategy = STRATEGY_MFT_FIRST
+   239→                trace.retreat_to_strategy = STRATEGY_CARVING
+   240→                trace.retreat_reason = (
+   241→                    f"MFT-first recovery rate too low ({recovery_rate:.1%}). "
+   242→                    f"Switching to carving to supplement."
+   243→                )
+   244→
+   245→                carving_result = self._motor_a.recover(
+   246→                    image, manifest, read_budget=read_budget,
+   247→                    corruption_metadata=corruption_metadata,
+   248→                )
+   249→                result = self._merge_hybrid_results(
+   250→                    result, sub_result, carving_result, manifest
+   251→                )
+   252→            else:
+   253→                result = self._merge_results(result, sub_result, strategy)
+   254→
+   255→        elif strategy == STRATEGY_JOURNAL:
+   256→            trace.execution_notes.append("Journal strategy: delegating to Motor A (journal parsing not yet implemented)")
+   257→            sub_result = self._motor_a.recover(
+   258→                image, manifest, read_budget=read_budget,
+   259→                corruption_metadata=corruption_metadata,
+   260→            )
+   261→            result = self._merge_results(result, sub_result, strategy)
+   262→
+   263→        elif strategy == STRATEGY_BITMAP:
+   264→            trace.execution_notes.append("Bitmap strategy: delegating to Motor A (bitmap-guided recovery not yet implemented)")
+   265→            sub_result = self._motor_a.recover(
+   266→                image, manifest, read_budget=read_budget,
+   267→                corruption_metadata=corruption_metadata,
+   268→            )
+   269→            result = self._merge_results(result, sub_result, strategy)
+   270→
+   271→        else:  # STRATEGY_CARVING
+   272→            sub_result = self._motor_a.recover(
+   273→                image, manifest, read_budget=read_budget,
+   274→                corruption_metadata=corruption_metadata,
+   275→            )
+   276→            result = self._merge_results(result, sub_result, strategy)
+   277→
+   278→        # Add diagnosis reads to total
+   279→        result.read_count += diagnosis.diagnosis_reads
+   280→
+   281→        # Store the decision trace in the result
+   282→        result.metadata["decision_trace"] = trace.to_dict()
+   283→        result.metadata["mft_confidence"] = round(diagnosis.mft_confidence, 4)
+   284→        result.metadata["strategy_selected"] = strategy
+   285→
+   286→        return result
+   287→
+   288→    def _diagnose(self, image: bytes, manifest: Dict,
+   289→                  trace: DecisionTrace) -> DiagnosisResult:
+   290→        """
+   291→        Diagnose the disk image with full signal tracking.
+   292→        """
+   293→        diag = DiagnosisResult()
+   294→        cluster_size = manifest.get("cluster_size", 4096)
+   295→        mft_info = manifest.get("mft", {})
+   296→        mft_start = mft_info.get("start_cluster", 0)
+   297→        mft_record_count = mft_info.get("record_count", 0)
+   298→        diag_reads = 0
+   299→
+   300→        # ─── Signal 1: VBR Validity ──────────────────────────────────
+   301→        vbr_valid = False
+   302→        if len(image) >= 512:
+   303→            oem_id = image[3:11]
+   304→            if oem_id == b'NTFS    ':
+   305→                vbr_valid = True
+   306→                try:
+   307→                    vbr_mft_cluster = struct.unpack_from('<Q', image, 48)[0]
+   308→                    if vbr_mft_cluster == mft_start:
+   309→                        diag.mft_found = True
+   310→                except:
+   311→                    pass
+   312→            diag_reads += 1
+   313→
+   314→        diag.vbr_valid = vbr_valid
+   315→        trace.signals.append(DiagnosticSignal(
+   316→            name="vbr_validity",
+   317→            value=1.0 if vbr_valid else 0.0,
+   318→            threshold=1.0,
+   319→            passed=vbr_valid,
+   320→            weight=0.25,
+   321→            description="VBR válido con firma NTFS" if vbr_valid else
+   322→                       "VBR inválido o destruido — no se puede localizar MFT",
+   323→        ))
+   324→
+   325→        # ─── Signal 2: MFT Readability ───────────────────────────────
+   326→        if diag.mft_found:
+   327→            mft_offset = mft_start * cluster_size
+   328→            readable = 0
+   329→            in_use = 0
+   330→            total_user = 0
+   331→
+   332→            for rec_num in range(mft_record_count):
+   333→                rec_offset = mft_offset + rec_num * 1024
+   334→                if rec_offset + 1024 > len(image):
+   335→                    break
+   336→
+   337→                sig = image[rec_offset:rec_offset + 4]
+   338→                if sig == b'FILE':
+   339→                    readable += 1
+   340→                    try:
+   341→                        flags = struct.unpack_from('<H', image, rec_offset + 22)[0]
+   342→                        if flags & 0x0001:
+   343→                            in_use += 1
+   344→                    except:
+   345→                        pass
+   346→
+   347→                if rec_num >= 12:
+   348→                    total_user += 1
+   349→
+   350→                if rec_num % 4 == 0:
+   351→                    diag_reads += cluster_size // 512
+   352→
+   353→            diag.mft_entries_total = mft_record_count
+   354→            diag.mft_entries_readable = readable
+   355→            diag.mft_entries_in_use = in_use
+   356→
+   357→            # Calculate user entry readability
+   358→            user_readable = max(0, readable - 12)
+   359→            user_total = max(0, mft_record_count - 12)
+   360→
+   361→            if user_total > 0:
+   362→                readability = user_readable / user_total
+   363→            else:
+   364→                readability = 1.0 if readable > 0 else 0.0
+   365→
+   366→            diag.mft_confidence = readability
+   367→
+   368→            # Create signal
+   369→            pct_illegible = (1.0 - readability) * 100
+   370→            if pct_illegible > 0:
+   371→                desc = f"{pct_illegible:.0f}% de registros MFT ilegibles ({user_total - user_readable}/{user_total})"
+   372→            else:
+   373→                desc = "Todos los registros MFT son legibles"
+   374→
+   375→            trace.signals.append(DiagnosticSignal(
+   376→                name="mft_readability",
+   377→                value=readability,
+   378→                threshold=CONFIDENCE_HIGH,
+   379→                passed=readability >= CONFIDENCE_HIGH,
+   380→                weight=0.50,
+   381→                description=desc,
+   382→            ))
+   383→
+   384→            # ─── Signal 2b: MFT Mirror Consistency ───────────────────
+   385→            mirror_info = manifest.get("mft_mirror", {})
+   386→            mirror_start = mirror_info.get("start_cluster", 0)
+   387→            mirror_consistent = False
+   388→
+   389→            if mirror_start > 0:
+   390→                mirror_offset = mirror_start * cluster_size
+   391→                # Check first 4 MFT records (MFT Mirror stores first 4)
+   392→                if mirror_offset + 4 * 1024 <= len(image):
+   393→                    # Compare first 4 records
+   394→                    matches = 0
+   395→                    for i in range(4):
+   396→                        orig_offset = mft_offset + i * 1024
+   397→                        mirror_rec_offset = mirror_offset + i * 1024
+   398→                        if (orig_offset + 1024 <= len(image) and
+   399→                            mirror_rec_offset + 1024 <= len(image)):
+   400→                            if image[orig_offset:orig_offset+1024] == image[mirror_rec_offset:mirror_rec_offset+1024]:
+   401→                                matches += 1
+   402→                    mirror_consistent = (matches == 4)
+   403→                    diag.mft_mirror_valid = True
+   404→                    diag.mft_mirror_consistent = mirror_consistent
+   405→                    diag_reads += cluster_size // 512
+   406→
+   407→            trace.signals.append(DiagnosticSignal(
+   408→                name="mft_mirror_consistency",
+   409→                value=1.0 if mirror_consistent else 0.0,
+   410→                threshold=1.0,
+   411→                passed=mirror_consistent,
+   412→                weight=0.10,
+   413→                description="MFT Mirror consistente con MFT" if mirror_consistent else
+   414→                           "MFT Mirror inconsistente — posible corrupción",
+   415→            ))
+   416→
+   417→        # ─── Signal 3: Bitmap Validity ───────────────────────────────
+   418→        bitmap_info = manifest.get("bitmap", {})
+   419→        bitmap_start = bitmap_info.get("start_cluster", 0)
+   420→        bitmap_valid = False
+   421→        bitmap_confidence = 0.0
+   422→
+   423→        if bitmap_start > 0:
+   424→            bitmap_offset = bitmap_start * cluster_size
+   425→            if bitmap_offset + cluster_size <= len(image):
+   426→                bitmap_data = image[bitmap_offset:bitmap_offset + cluster_size]
+   427→                nonzero_bytes = sum(1 for b in bitmap_data if b != 0)
+   428→                if nonzero_bytes > 0:
+   429→                    bitmap_valid = True
+   430→                    bitmap_confidence = nonzero_bytes / len(bitmap_data)
+   431→                diag_reads += cluster_size // 512
+   432→
+   433→        diag.bitmap_valid = bitmap_valid
+   434→        diag.bitmap_confidence = bitmap_confidence
+   435→
+   436→        trace.signals.append(DiagnosticSignal(
+   437→            name="bitmap_validity",
+   438→            value=bitmap_confidence,
+   439→            threshold=0.1,
+   440→            passed=bitmap_valid,
+   441→            weight=0.10,
+   442→            description="Bitmap válido con datos de asignación" if bitmap_valid else
+   443→                       "Bitmap vacío o corrupto — no se puede usar para guiar búsqueda",
+   444→        ))
+   445→
+   446→        # ─── Signal 4: Journal Validity ──────────────────────────────
+   447→        logfile_info = manifest.get("logfile", {})
+   448→        logfile_start = logfile_info.get("start_cluster", 0)
+   449→        journal_valid = False
+   450→        journal_confidence = 0.0
+   451→
+   452→        if logfile_start > 0:
+   453→            logfile_offset = logfile_start * cluster_size
+   454→            if logfile_offset + cluster_size <= len(image):
+   455→                journal_sig = image[logfile_offset:logfile_offset + 4]
+   456→                if journal_sig == b'NTFS' or journal_sig != b'\x00' * 4:
+   457→                    journal_valid = True
+   458→                    journal_confidence = 0.5  # Basic check
+   459→                diag_reads += cluster_size // 512
+   460→
+   461→        diag.journal_valid = journal_valid
+   462→        diag.journal_confidence = journal_confidence
+   463→
+   464→        trace.signals.append(DiagnosticSignal(
+   465→            name="journal_validity",
+   466→            value=journal_confidence,
+   467→            threshold=0.5,
+   468→            passed=journal_valid,
+   469→            weight=0.05,
+   470→            description="Journal recuperable — puede contener referencias a archivos" if journal_valid else
+   471→                       "Journal no disponible o corrupto",
+   472→        ))
+   473→
+   474→        # ─── Select strategy ──────────────────────────────────────────
+   475→        diag.recommended_strategy = self._select_strategy_from_diagnosis(diag)
+   476→        diag.diagnosis_reads = diag_reads
+   477→
+   478→        return diag
+   479→
+   480→    def _calculate_confidence(self, diag: DiagnosisResult,
+   481→                              trace: DecisionTrace):
+   482→        """
+   483→        Calculate MFT confidence with component breakdown.
+   484→
+   485→        The confidence is a weighted sum of signals, not just
+   486→        user_readable / user_total. This makes it more robust.
+   487→        """
+   488→        # Component 1: MFT readability (primary)
+   489→        readability = diag.mft_confidence
+   490→
+   491→        # Component 2: VBR validity (enables MFT location)
+   492→        vbr_score = 1.0 if diag.vbr_valid else 0.0
+   493→
+   494→        # Component 3: MFT Mirror consistency (validates MFT)
+   495→        mirror_score = 1.0 if diag.mft_mirror_consistent else 0.5 if diag.mft_mirror_valid else 0.0
+   496→
+   497→        # Weighted confidence
+   498→        confidence = (
+   499→            0.60 * readability +
+   500→            0.20 * vbr_score +
+   501→            0.10 * mirror_score +
+   502→            0.10 * (1.0 if diag.bitmap_valid else 0.0)
+   503→        )
+   504→
+   505→        # Override with direct readability if we have MFT data
+   506→        if diag.mft_entries_total > 0:
+   507→            trace.mft_confidence = readability  # Keep the primary signal
+   508→        else:
+   509→            trace.mft_confidence = confidence
+   510→
+   511→        trace.mft_confidence_components = {
+   512→            "mft_readability": readability,
+   513→            "vbr_validity": vbr_score,
+   514→            "mft_mirror_consistency": mirror_score,
+   515→            "bitmap_validity": 1.0 if diag.bitmap_valid else 0.0,
+   516→            "weighted_confidence": confidence,
+   517→        }
+   518→
+   519→    def _select_strategy_with_trace(self, diag: DiagnosisResult,
+   520→                                     trace: DecisionTrace) -> str:
+   521→        """
+   522→        Select the optimal strategy with full reasoning.
+   523→        """
+   524→        strategy = self._select_strategy_from_diagnosis(diag)
+   525→        trace.strategy_selected = strategy
+   526→
+   527→        # Build reasons list
+   528→        if not diag.vbr_valid:
+   529→            trace.strategy_reasons.append("VBR destruido — no se puede localizar MFT")
+   530→            trace.strategy_reasons.append("Se requiere carving como única opción")
+   531→        elif diag.mft_confidence >= CONFIDENCE_HIGH:
+   532→            pct = diag.mft_confidence * 100
+   533→            trace.strategy_reasons.append(f"MFT altamente confiable ({pct:.0f}% legible)")
+   534→            trace.strategy_reasons.append("MFT-first es la estrategia óptima")
+   535→        elif diag.mft_confidence >= CONFIDENCE_MEDIUM:
+   536→            pct = (1.0 - diag.mft_confidence) * 100
+   537→            trace.strategy_reasons.append(f"{pct:.0f}% de registros MFT ilegibles")
+   538→            if not diag.mft_mirror_consistent:
+   539→                trace.strategy_reasons.append("MFT Mirror inconsistente")
+   540→            trace.strategy_reasons.append("Se recomienda estrategia híbrida (MFT + fallback)")
+   541→        elif diag.journal_valid and diag.journal_confidence > 0.5:
+   542→            pct = (1.0 - diag.mft_confidence) * 100
+   543→            trace.strategy_reasons.append(f"{pct:.0f}% de registros MFT ilegibles")
+   544→            trace.strategy_reasons.append("Journal recuperable — puede contener referencias a archivos")
+   545→            trace.strategy_reasons.append("Se recomienda estrategia Journal-guided")
+   546→        elif diag.bitmap_valid and diag.bitmap_confidence > 0.1:
+   547→            pct = (1.0 - diag.mft_confidence) * 100
+   548→            trace.strategy_reasons.append(f"{pct:.0f}% de registros MFT ilegibles")
+   549→            trace.strategy_reasons.append("Bitmap válido — puede reducir espacio de búsqueda")
+   550→            trace.strategy_reasons.append("Se recomienda estrategia Bitmap-guided")
+   551→        else:
+   552→            pct = (1.0 - diag.mft_confidence) * 100
+   553→            trace.strategy_reasons.append(f"{pct:.0f}% de registros MFT ilegibles")
+   554→            if not diag.bitmap_valid:
+   555→                trace.strategy_reasons.append("Bitmap inconsistente")
+   556→            if not diag.journal_valid:
+   557→                trace.strategy_reasons.append("Journal no disponible")
+   558→            trace.strategy_reasons.append("Solo queda carving como opción")
+   559→
+   560→        # Record alternatives
+   561→        if strategy != STRATEGY_MFT_FIRST and diag.mft_confidence > 0:
+   562→            trace.strategy_alternatives.append({
+   563→                "strategy": STRATEGY_MFT_FIRST,
+   564→                "reason": f"Descartado: confianza MFT insuficiente ({diag.mft_confidence:.0%} < {CONFIDENCE_HIGH:.0%})",
+   565→            })
+   566→        if strategy != STRATEGY_CARVING:
+   567→            trace.strategy_alternatives.append({
+   568→                "strategy": STRATEGY_CARVING,
+   569→                "reason": "Siempre disponible como último recurso",
+   570→            })
+   571→
+   572→        return strategy
+   573→
+   574→    def _select_strategy_from_diagnosis(self, diag: DiagnosisResult) -> str:
+   575→        """Select strategy based on diagnosis (no trace)."""
+   576→        if not diag.vbr_valid:
+   577→            return STRATEGY_CARVING
+   578→
+   579→        if diag.mft_confidence >= CONFIDENCE_HIGH:
+   580→            return STRATEGY_MFT_FIRST
+   581→
+   582→        if diag.mft_confidence >= CONFIDENCE_MEDIUM:
+   583→            return STRATEGY_HYBRID
+   584→
+   585→        if diag.journal_valid and diag.journal_confidence > 0.5:
+   586→            return STRATEGY_JOURNAL
+   587→
+   588→        if diag.bitmap_valid and diag.bitmap_confidence > 0.1:
+   589→            return STRATEGY_BITMAP
+   590→
+   591→        return STRATEGY_CARVING
+   592→
+   593→    def _estimate_recovery_rate(self, sub_result: MotorResult,
+   594→                                 manifest: Dict) -> float:
+   595→        """Estimate the recovery rate from a sub-result."""
+   596→        total_files = len([f for f in manifest.get("files", [])
+   597→                          if not f.get("is_directory", False)])
+   598→        if total_files == 0:
+   599→            return 0.0
+   600→        recovered = len([f for f in sub_result.recovered_files
+   601→                        if not f.is_directory])
+   602→        return recovered / total_files
+   603→
+   604→    def _merge_results(self, main_result: MotorResult,
+   605→                       sub_result: MotorResult,
+   606→                       strategy: str) -> MotorResult:
+   607→        """Merge a sub-result into the main result."""
+   608→        main_result.recovered_files = sub_result.recovered_files
+   609→        main_result.read_count = sub_result.read_count
+   610→        main_result.sectors_wasted = sub_result.sectors_wasted
+   611→        main_result.time_to_first_file = sub_result.time_to_first_file
+   612→        main_result.mft_entries_parsed = sub_result.mft_entries_parsed
+   613→        main_result.directories_rebuilt = sub_result.directories_rebuilt
+   614→        main_result.total_time_seconds = sub_result.total_time_seconds
+   615→        main_result.metadata["strategy_executed"] = strategy
+   616→        return main_result
+   617→
+   618→    def _merge_hybrid_results(self, main_result: MotorResult,
+   619→                               mft_result: MotorResult,
+   620→                               carving_result: MotorResult,
+   621→                               manifest: Dict) -> MotorResult:
+   622→        """Merge results from MFT-first and carving strategies."""
+   623→        recovered_names = set()
+   624→
+   625→        for f in mft_result.recovered_files:
+   626→            if f.name not in recovered_names:
+   627→                main_result.recovered_files.append(f)
+   628→                recovered_names.add(f.name)
+   629→
+   630→        for f in carving_result.recovered_files:
+   631→            if f.name not in recovered_names:
+   632→                f.source = "carving_fallback"
+   633→                main_result.recovered_files.append(f)
+   634→                recovered_names.add(f.name)
+   635→            else:
+   636→                main_result.duplicates += 1
+   637→
+   638→        main_result.read_count = mft_result.read_count + carving_result.read_count
+   639→        main_result.sectors_wasted = mft_result.sectors_wasted + carving_result.sectors_wasted
+   640→        main_result.time_to_first_file = mft_result.time_to_first_file
+   641→        main_result.mft_entries_parsed = mft_result.mft_entries_parsed
+   642→        main_result.directories_rebuilt = max(
+   643→            mft_result.directories_rebuilt,
+   644→            carving_result.directories_rebuilt,
+   645→        )
+   646→        main_result.metadata["strategy_executed"] = STRATEGY_HYBRID
+   647→        main_result.metadata["mft_recovery_count"] = len(mft_result.recovered_files)
+   648→        main_result.metadata["carving_recovery_count"] = len(carving_result.recovered_files)
+   649→
+   650→        return main_result
+   651→
+   652→    def compute_mft_confidence(self, image: bytes, manifest: Dict) -> float:
+   653→        """Compute MFT confidence for an image (for Confidence Sweep)."""
+   654→        trace = DecisionTrace()
+   655→        diag = self._diagnose(image, manifest, trace)
+   656→        self._calculate_confidence(diag, trace)
+   657→        return trace.mft_confidence
+   658→
