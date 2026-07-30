@@ -1,0 +1,237 @@
+{
+  "dataset": "0x46685257",
+  "threshold": null,
+  "points": [
+    {
+      "mft_damage_pct": 0.0,
+      "mft_confidence": 1.0,
+      "motor_a_recovery": 0.9333,
+      "motor_b_recovery": 0.9333,
+      "motor_a_reads": 16840,
+      "motor_b_reads": 7793,
+      "motor_a_efficiency": 0.9221,
+      "motor_b_efficiency": 0.9999,
+      "optimal_strategy": "mft_first"
+    },
+    {
+      "mft_damage_pct": 0.05,
+      "mft_confidence": 1.0,
+      "motor_a_recovery": 0.9333,
+      "motor_b_recovery": 0.9333,
+      "motor_a_reads": 16840,
+      "motor_b_reads": 7793,
+      "motor_a_efficiency": 0.9221,
+      "motor_b_efficiency": 0.9999,
+      "optimal_strategy": "mft_first"
+    },
+    {
+      "mft_damage_pct": 0.1,
+      "mft_confidence": 0.9333333333333333,
+      "motor_a_recovery": 0.8667,
+      "motor_b_recovery": 0.8667,
+      "motor_a_reads": 16832,
+      "motor_b_reads": 7785,
+      "motor_a_efficiency": 0.9221,
+      "motor_b_efficiency": 0.9999,
+      "optimal_strategy": "mft_first"
+    },
+    {
+      "mft_damage_pct": 0.15,
+      "mft_confidence": 0.8666666666666667,
+      "motor_a_recovery": 0.8,
+      "motor_b_recovery": 0.8,
+      "motor_a_reads": 16824,
+      "motor_b_reads": 7777,
+      "motor_a_efficiency": 0.922,
+      "motor_b_efficiency": 0.9999,
+      "optimal_strategy": "mft_first"
+    },
+    {
+      "mft_damage_pct": 0.2,
+      "mft_confidence": 0.8,
+      "motor_a_recovery": 0.7333,
+      "motor_b_recovery": 0.7333,
+      "motor_a_reads": 15416,
+      "motor_b_reads": 6369,
+      "motor_a_efficiency": 0.9149,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "hybrid"
+    },
+    {
+      "mft_damage_pct": 0.25,
+      "mft_confidence": 0.8,
+      "motor_a_recovery": 0.7333,
+      "motor_b_recovery": 0.7333,
+      "motor_a_reads": 15416,
+      "motor_b_reads": 6369,
+      "motor_a_efficiency": 0.9149,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "hybrid"
+    },
+    {
+      "mft_damage_pct": 0.3,
+      "mft_confidence": 0.7333333333333333,
+      "motor_a_recovery": 0.7333,
+      "motor_b_recovery": 0.7333,
+      "motor_a_reads": 15416,
+      "motor_b_reads": 6369,
+      "motor_a_efficiency": 0.9149,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "hybrid"
+    },
+    {
+      "mft_damage_pct": 0.35,
+      "mft_confidence": 0.6666666666666666,
+      "motor_a_recovery": 0.6667,
+      "motor_b_recovery": 0.6667,
+      "motor_a_reads": 15312,
+      "motor_b_reads": 6265,
+      "motor_a_efficiency": 0.9143,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "hybrid"
+    },
+    {
+      "mft_damage_pct": 0.4,
+      "mft_confidence": 0.6,
+      "motor_a_recovery": 0.6,
+      "motor_b_recovery": 0.6,
+      "motor_a_reads": 14328,
+      "motor_b_reads": 5281,
+      "motor_a_efficiency": 0.9084,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "hybrid"
+    },
+    {
+      "mft_damage_pct": 0.45,
+      "mft_confidence": 0.6,
+      "motor_a_recovery": 0.6,
+      "motor_b_recovery": 0.6,
+      "motor_a_reads": 14328,
+      "motor_b_reads": 5281,
+      "motor_a_efficiency": 0.9084,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "hybrid"
+    },
+    {
+      "mft_damage_pct": 0.5,
+      "mft_confidence": 0.5333333333333333,
+      "motor_a_recovery": 0.5333,
+      "motor_b_recovery": 0.5333,
+      "motor_a_reads": 13792,
+      "motor_b_reads": 4745,
+      "motor_a_efficiency": 0.9049,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "hybrid"
+    },
+    {
+      "mft_damage_pct": 0.55,
+      "mft_confidence": 0.4666666666666667,
+      "motor_a_recovery": 0.4667,
+      "motor_b_recovery": 0.4667,
+      "motor_a_reads": 13784,
+      "motor_b_reads": 4737,
+      "motor_a_efficiency": 0.9048,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "carving"
+    },
+    {
+      "mft_damage_pct": 0.6,
+      "mft_confidence": 0.4,
+      "motor_a_recovery": 0.4,
+      "motor_b_recovery": 0.4,
+      "motor_a_reads": 13680,
+      "motor_b_reads": 4633,
+      "motor_a_efficiency": 0.9041,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "carving"
+    },
+    {
+      "mft_damage_pct": 0.65,
+      "mft_confidence": 0.4,
+      "motor_a_recovery": 0.4,
+      "motor_b_recovery": 0.4,
+      "motor_a_reads": 13680,
+      "motor_b_reads": 4633,
+      "motor_a_efficiency": 0.9041,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "carving"
+    },
+    {
+      "mft_damage_pct": 0.7,
+      "mft_confidence": 0.3333333333333333,
+      "motor_a_recovery": 0.3333,
+      "motor_b_recovery": 0.3333,
+      "motor_a_reads": 13656,
+      "motor_b_reads": 4609,
+      "motor_a_efficiency": 0.9039,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "carving"
+    },
+    {
+      "mft_damage_pct": 0.75,
+      "mft_confidence": 0.26666666666666666,
+      "motor_a_recovery": 0.2667,
+      "motor_b_recovery": 0.2667,
+      "motor_a_reads": 13648,
+      "motor_b_reads": 4601,
+      "motor_a_efficiency": 0.9039,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "carving"
+    },
+    {
+      "mft_damage_pct": 0.8,
+      "mft_confidence": 0.2,
+      "motor_a_recovery": 0.2,
+      "motor_b_recovery": 0.2,
+      "motor_a_reads": 13624,
+      "motor_b_reads": 4577,
+      "motor_a_efficiency": 0.9037,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "carving"
+    },
+    {
+      "mft_damage_pct": 0.85,
+      "mft_confidence": 0.2,
+      "motor_a_recovery": 0.2,
+      "motor_b_recovery": 0.2,
+      "motor_a_reads": 13624,
+      "motor_b_reads": 4577,
+      "motor_a_efficiency": 0.9037,
+      "motor_b_efficiency": 0.9998,
+      "optimal_strategy": "carving"
+    },
+    {
+      "mft_damage_pct": 0.9,
+      "mft_confidence": 0.13333333333333333,
+      "motor_a_recovery": 0.1333,
+      "motor_b_recovery": 0.1333,
+      "motor_a_reads": 10904,
+      "motor_b_reads": 1857,
+      "motor_a_efficiency": 0.8797,
+      "motor_b_efficiency": 0.9995,
+      "optimal_strategy": "carving"
+    },
+    {
+      "mft_damage_pct": 0.95,
+      "mft_confidence": 0.06666666666666667,
+      "motor_a_recovery": 0.0667,
+      "motor_b_recovery": 0.0667,
+      "motor_a_reads": 10088,
+      "motor_b_reads": 1041,
+      "motor_a_efficiency": 0.8699,
+      "motor_b_efficiency": 0.999,
+      "optimal_strategy": "carving"
+    },
+    {
+      "mft_damage_pct": 1.0,
+      "mft_confidence": 0.0,
+      "motor_a_recovery": 0.0,
+      "motor_b_recovery": 0.0,
+      "motor_a_reads": 9104,
+      "motor_b_reads": 57,
+      "motor_a_efficiency": 0.8559,
+      "motor_b_efficiency": 0.9825,
+      "optimal_strategy": "carving"
+    }
+  ]
+}
