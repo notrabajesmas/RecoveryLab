@@ -1,6 +1,66 @@
 # RecoveryLab — Work Log
 
 ---
+Task ID: 11
+Agent: Main
+Task: Incorporar quinta ronda (definitiva) de auditoria externa — Research Protocol v1.5 (Frozen for Phase A) + Research Constitution
+
+Work Log:
+- Created Research Protocol v1.5 (Frozen for Phase A) incorporating auditor's definitive review
+- Section 0 (NEW): Freeze Clause — protocol frozen for Phase A, changes require RP-XXX proposal
+  - Justification explicita, evaluacion de impacto sobre experimentos ejecutados, Decision Log update
+  - Criterio: "No se cambia porque aparecio una idea mejor. Se cambia porque la evidencia mostro que el protocolo falla."
+- Section 23 (NEW): Decision Log — recording WHY, not just WHAT
+  - 8 fields: ID, Fecha, Decision, Motivo, Evidencia, Alternativas, Impacto, RP-XXX
+  - 5 initial entries (DL-001 through DL-005)
+  - Append-only, stored in /data/decision_log.csv
+- Section 24 (NEW): Evidence Debt — structured tracking of evidence gaps
+  - 8 fields: ID, Deuda, Impacto, Prioridad, Seccion, Estado, Fecha creacion, Fecha pago
+  - 8 initial debts: ED-001 (umbral empirico) through ED-008 (variabilidad desconocida)
+  - 4 CRITICAS: ED-001, ED-002, ED-004, ED-008
+  - CRITICAL debts must be resolved before Phase A graduation
+- Section 25 (NEW): Phase A Graduation Criteria — formal exit conditions
+  - 7 mandatory criteria: RCR>=80%, 5+ ★★★, Judge stable, 1+ external validation/family, 30 baseline, RVS calibrated, run_all.py reproducible
+  - 4 desirable criteria: 8+ threats mitigated, 3+ golden reference parsers, <4 CRITICAL debts, Decision Log complete
+  - 6-step graduation procedure
+- Section 26 (NEW): Experiment Versioning — versioning all components per experiment
+  - Every experiment records version of ALL components (Protocol, Judge, Builder, Corruptor, Motor, etc.)
+  - Current version table for all 9 components
+  - Evidence Ledger updated to include "Versiones" field
+- Section 27 (NEW): Complexity as Scientific Cost
+  - Explicit acknowledgment: "El proyecto no morira por errores. Morira por complejidad."
+  - 5 principles of complexity control
+  - Auditor's role shift: from questioning conclusions to questioning protocol obedience
+- Updated Meta-Regla (Section 22): "Cada nuevo documento, modulo o algoritmo debe responder: Reduce una deuda de evidencia identificada?"
+- Cover page updated with:
+  - FROZEN FOR PHASE A banner
+  - Freeze Clause on cover
+  - Complexity risk warning
+  - Three assets table (Framework, Protocol, Evidence)
+  - Updated graduation target (RCR >= 80%)
+- Created Research Constitution v1.0 (separate document, 2 pages, 8 principles)
+  - Principle I: Evidence over intuition
+  - Principle II: No claim before its evidence
+  - Principle III: Hypotheses don't change during a phase
+  - Principle IV: Every experiment must be reproducible
+  - Principle V: Negative results have equal value
+  - Principle VI: Reducing evidence debt > adding features
+  - Principle VII: Complexity is a scientific cost
+  - Principle VIII: Every interpretation must trace to an observation
+- Generated: /home/z/my-project/download/Research_Protocol_v1.5_Frozen_Phase_A.docx
+- Generated: /home/z/my-project/download/Research_Constitution_v1.0.docx
+- Scripts: /home/z/my-project/scripts/generate_research_protocol_v1.5.py, /home/z/my-project/scripts/generate_research_constitution.py
+
+Stage Summary:
+- The auditor's definitive review: "Si yo fuera el auditor que va a firmar el inicio de la Fase A, el protocolo v1.5 ya estaria listo"
+- Protocol is now FROZEN for Phase A — changes require formal Proposal (RP-XXX)
+- Three gaps closed: Decision Log (why), Evidence Debt (what's missing), Graduation Criteria (when done)
+- Research Constitution is a separate document defining principles, not procedures
+- The project has three distinct assets: Framework (advanced), Protocol (mature), Evidence (in construction)
+- The auditor's single condition for Phase A: "No modificar mas el protocolo salvo que aparezca una evidencia que demuestre que el propio protocolo es insuficiente"
+- The project transformation is complete: from building a recovery engine → building a laboratory → building an evidence production system
+
+---
 Task ID: 10
 Agent: Main
 Task: Incorporar cuarta ronda de auditoria externa (final) — Research Protocol v1.5
