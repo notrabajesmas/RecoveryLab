@@ -1,6 +1,48 @@
 # RecoveryLab — Work Log
 
 ---
+Task ID: 10
+Agent: Main
+Task: Incorporar cuarta ronda de auditoria externa (final) — Research Protocol v1.5
+
+Work Log:
+- Updated Research Protocol from v1.4 to v1.5 incorporating three final recommendations from external review
+- New Section 23: Decision Log (why decisions were made, not just what happened)
+  - Distinct from Evidence Ledger: records WHY, not WHAT
+  - 6 initial entries: D-001 (Eliminar H3), D-002 (Congelar Judge), D-003 (JPEG/PNG/PDF referencia), D-004 (RCR como KPI), D-005 (Fase A estricta), D-006 (Separar observacion)
+  - Fields: ID, Decision, Motivo, Evidencia, Alternativas consideradas, Fecha
+  - Append-only, stored in /data/decision_log.csv
+- New Section 24: Evidence Debt (like technical debt, but for evidence gaps)
+  - 10 initial debts: ED-001 (hardware real) to ED-010 (Judge versioning)
+  - 3 CRITICAL debts: ED-001 (hardware), ED-003 (reproducibilidad), ED-009 (RCR=0%)
+  - Every new module must reduce an identified evidence debt
+  - CRITICAL debts must be resolved before Phase A graduation
+  - Evidence Debt vs Threats to Validity comparison table
+- New Section 25: Phase A Graduation Criteria (formal exit criteria)
+  - 7 simultaneous conditions: RCR >= 80%, 5+ Claims ★★★, Judge stable, external validation (4 families), baseline complete, RVS calibrated, evidence debt critical = 0
+  - Current vs graduation status table showing gaps
+  - Graduation is a Decision Log event with evidence for each criterion
+- New Section 26: Complexity Risk (explicitly acknowledged)
+  - New risk: not bias, not methodology, but complexity
+  - "Un proyecto puede morir no porque este equivocado, sino porque se vuelve imposible de mantener"
+  - 7th sacred rule: every new module must reduce an evidence debt
+- Cover page updated with:
+  - 7 sacred rules (new: "Solo reducir deuda de evidencia")
+  - Graduation criteria summary on cover
+  - Meta-rule extended: "Cada nuevo documento, modulo o algoritmo debe responder: Reduce una deuda de evidencia identificada?"
+  - Subtitle: "De la produccion de software a la produccion de evidencia"
+- Generated: /home/z/my-project/download/Research_Protocol_v1.5.docx
+- Script: /home/z/my-project/scripts/generate_research_protocol_v1.5.py
+
+Stage Summary:
+- The reviewer identified this as the final audit round: "Ya no intentaria agregar secciones grandes"
+- Three gaps closed: Decision Log (why), Evidence Debt (what's missing), Graduation Criteria (when done)
+- The reviewer's final rule: "Cada nuevo documento, modulo o algoritmo debe responder: Reduce una deuda de evidencia identificada?"
+- The project transformation is now complete: from building a recovery engine → building a laboratory → building an evidence production system
+- Complexity is the new risk: too many mechanisms, not enough evidence
+- Phase A has a formal exit criteria for the first time
+
+---
 Task ID: 9
 Agent: Main
 Task: Incorporar tercera ronda de auditoria externa — Research Protocol v1.4
