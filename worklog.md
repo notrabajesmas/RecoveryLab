@@ -1,6 +1,28 @@
 # RecoveryLab — Work Log
 
 ---
+Task ID: 6
+Agent: Main
+Task: Incorporar auditoría externa al Research Protocol — v1.1
+
+Work Log:
+- Updated Research Protocol from v1.0 to v1.1 incorporating four critical corrections from external review
+- Correction 1 (Section 10): Changed "El producto ES Benchmark Suite" to hypothesis language — "Estamos investigando si el verdadero activo competitivo termina siendo el Benchmark Suite"
+- Correction 2 (Section 7.2): Expanded external validation beyond PhotoRec to include 4 tool families: Carving (PhotoRec), MFT-first (R-Studio/ReclaiMe), Hybrid (DMDE), Orchestrator (UFS Explorer)
+- Correction 3 (Section 3): Replaced arbitrary 5% threshold with empirical calibration framework — 30 baseline runs, threshold = max(2×σ, 1%), provisional threshold of 3% until calibrated
+- Correction 4 (Section 5.4): Added RVS calibration plan with real users — Bradley-Terry pairwise comparison, 5 target populations, 30+ responses per population
+- Added Section 11: Immediate Operational Objectives (4 objectives from reviewer feedback)
+- Generated script: /home/z/my-project/scripts/generate_research_protocol_v1.1.py
+- Generated document: /home/z/my-project/download/Research_Protocol_v1.1.docx
+
+Stage Summary:
+- Research Protocol v1.1 is now more scientifically rigorous: product identity is hypothesis, not statement
+- External validation now covers all strategy families, not just carving
+- Success criterion is empirically calibrated, not arbitrarily chosen
+- RVS has a path to real-user calibration (currently the weakest point)
+- The four immediate objectives are: (1) golden reference JPEG/PNG/PDF, (2) reach ★★★ on main hypotheses, (3) validate against external tools, (4) get first real-world datasets
+
+---
 Task ID: 5
 Agent: Main
 Task: Congelar la arquitectura y auditar la ciencia — Research Protocol v1.0
