@@ -5,7 +5,7 @@
   "title": "Validación del Carving Parser",
   "date_defined": "2026-07-31",
   "origin": "Auditoría externa r11 — Instrument Validation Matrix + RC-A-003 discriminación de hipótesis",
-  "status": "DEFINED",
+  "status": "COMPLETED",
 
   "question": "¿El Carving Parser funciona correctamente como instrumento de medición? ¿Cuál de las hipótesis H1-H5 de RC-A-003 explica el colapso de recuperación dependiente de escala?",
 
@@ -78,5 +78,38 @@
     "RC-A-003 — discriminación de hipótesis"
   ],
 
-  "notes": "Este experimento es el más urgente de la familia INST. Discrimina entre las hipótesis de RC-A-003 y determina si el problema es algorítmico o de instrumento. Depende de INST-0001 para descartar H6 primero, pero puede ejecutarse en paralelo."
+  "notes": "Este experimento es el más urgente de la familia INST. Discrimina entre las hipótesis de RC-A-003 y determina si el problema es algorítmico o de instrumento. Depende de INST-0001 para descartar H6 primero, pero puede ejecutarse en paralelo.",
+
+  "results": {
+    "date_executed": "2026-07-31",
+    "total_files_traced": 525,
+    "fully_recovered": 162,
+    "loss_at_scan": 0,
+    "loss_at_delimitation": 0,
+    "loss_at_dedup": 234,
+    "loss_at_judge": 129,
+
+    "hypothesis_discrimination": {
+      "H1_scanner_loss": "NOT SUPPORTED — scanner finds all signatures (0% loss at scan stage)",
+      "H2_delimitation_loss": "NOT SUPPORTED — all signatures lead to valid carves (0% loss at delimitation)",
+      "H3_dedup_loss": "SUPPORTED — 234 files (44.6%) eliminated by dedup. This is the MAJOR loss stage.",
+      "H4_judge_loss": "SUPPORTED — 129 files (24.6%) have SHA-256 mismatch. This is the SECONDARY loss stage.",
+      "H5_multi_stage": "SUPPORTED — losses occur at 2 different stages (Dedup + Judge)"
+    },
+
+    "root_cause_chain": {
+      "primary": "BMP false positive → dedup eliminates real files",
+      "secondary": "PDF footer truncation (1 byte short → SHA-256 mismatch)",
+      "mechanism": "The BMP signature 'BM' (0x42 0x4D) is only 2 bytes long and appears in random data within other files. When the scanner finds 'BM' at a cluster start, it carves a 50MB 'BMP file' that overlaps with all other files. The dedup logic then eliminates real files because they overlap with the BMP false positive.",
+      "format_specific": {
+        "PDF": "100% loss at Judge — all files 1 byte short (%%EOF vs %%EOF\\n footer bug)",
+        "JPEG": "91.1% loss at Dedup — eliminated by BMP false positive overlap",
+        "PNG": "62.2% recovered, 37.8% lost at Dedup — same BMP false positive issue",
+        "ZIP": "33.8% recovered, 66.2% lost at Dedup — same BMP false positive issue at N>15",
+        "DOCX": "58.6% recovered, 41.4% lost at Dedup — same BMP false positive issue at N>15"
+      }
+    },
+
+    "consequence": "RC-A-003 is explained by two distinct algorithmic defects: (1) BMP false positive in scanner causing dedup cascade, and (2) PDF footer truncation. These are NOT scale-dependent per se — they are format-specific bugs that become more visible at higher N because the BMP false positive covers more files. The 'scale-dependent collapse' is an artifact of the BMP false positive's 50MB size overlapping with proportionally more files as N increases."
+  }
 }

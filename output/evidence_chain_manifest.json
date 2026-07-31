@@ -41,9 +41,9 @@
       "RC-P": "Protocol — problems with experimental protocol (hypothesis, claim, threshold)"
     },
     "current_registry": {
-      "RC-A-001": {"former": "RC-001", "title": "PDF footer inconsistency", "origin": "DIAG-0001", "status": "IDENTIFIED", "remediation": "RP-001"},
-      "RC-A-002": {"former": "RC-002", "title": "JPEG deduplication too aggressive", "origin": "DIAG-0001", "status": "IDENTIFIED", "remediation": "PENDING"},
-      "RC-A-003": {"former": "RC-003", "title": "Scale-dependent recovery collapse", "origin": "VAL-0001", "status": "IDENTIFIED — root cause OPEN", "remediation": "PENDING — requires INST-0001/0002"}
+      "RC-A-001": {"former": "RC-001", "title": "PDF footer inconsistency", "origin": "DIAG-0001", "status": "ROOT_CAUSE_CONFIRMED", "remediation": "RP-001"},
+      "RC-A-002": {"former": "RC-002", "title": "BMP false positive causes dedup cascade", "origin": "DIAG-0001 + INST-0002", "status": "ROOT_CAUSE_CONFIRMED", "remediation": "RP-002 (new)"},
+      "RC-A-003": {"former": "RC-003", "title": "Scale-dependent recovery collapse", "origin": "VAL-0001", "status": "ROOT_CAUSE_IDENTIFIED — explained by BMP false positive + PDF footer", "remediation": "RP-001 + RP-002"}
     }
   },
 
@@ -51,8 +51,8 @@
     "status": "ACTIVE",
     "file": "RecoveryLab/instrument_validation_matrix.json",
     "summary": {
-      "Dataset Builder": "❓ UNKNOWN",
-      "Carving Parser": "⚠️ PARTIAL",
+      "Dataset Builder": "✅ VALIDATED (INST-0001, 13/13 V1-V4, 3/3 V6, H6 refuted)",
+      "Carving Parser": "🔬 DIAGNOSED (INST-0002: BMP false positive → dedup cascade, PDF footer truncation)",
       "Judge": "❓ UNKNOWN",
       "RVS": "⚠️ PARTIAL",
       "FQS": "❓ UNKNOWN",
@@ -187,16 +187,25 @@
     },
     "INST-0001": {
       "name": "Dataset Builder Validation",
-      "status": "DEFINED",
+      "status": "COMPLETED",
       "question": "Does the Dataset Builder produce realistic, non-adversarial layouts?",
+      "answer": "YES — H6 REFUTED. Dataset Builder generates correct, non-adversarial layouts. 13/13 V1-V4 pass, 3/3 V6 determinism pass.",
       "discriminates": "H6 of RC-A-003"
     },
     "INST-0002": {
-      "name": "Carving Parser Validation",
-      "status": "DEFINED",
-      "question": "Does the Carving Parser work correctly? Which hypothesis explains RC-A-003?",
+      "name": "Carving Parser Pipeline Loss Localization",
+      "status": "COMPLETED",
+      "question": "¿En qué etapa exacta del pipeline desaparece cada archivo?",
+      "answer": "Two root causes identified: (1) BMP false positive (50MB) → dedup cascade eliminates real files (44.6% loss), (2) PDF footer truncation (1 byte) → SHA-256 mismatch (24.6% loss). Scanner and delimitation work correctly (0% loss).",
       "discriminates": "H1-H5 of RC-A-003",
-      "subsumes": "VAL-0001"
+      "subsumes": "VAL-0001",
+      "key_findings": {
+        "H1_scanner_loss": "NOT SUPPORTED — 0% loss at scan",
+        "H2_delimitation_loss": "NOT SUPPORTED — 0% loss at delimitation",
+        "H3_dedup_loss": "SUPPORTED — 44.6% eliminated by dedup (BMP false positive cascade)",
+        "H4_judge_loss": "SUPPORTED — 24.6% SHA-256 mismatch (PDF truncation)",
+        "H5_multi_stage": "SUPPORTED — losses at 2 stages"
+      }
     },
     "INST-0003": {
       "name": "Judge Validation",
@@ -283,16 +292,19 @@
     "8. The bottleneck is NOT engineering — it's converting observations into independent evidence (auditor r8)",
     "9. VAL-0001 invalidated a previous conclusion of the lab — exactly what a healthy scientific system should do (auditor r11)",
     "10. RC-A-003 is NOT a deduplication defect — it's a scale-dependent recovery collapse with multiple compatible hypotheses (auditor r11)",
-    "11. The paradigm shifted from 'Motor → Result' to 'Instrument → Validation → Experiment → Evidence Ledger → Claim' (auditor r11)"
+    "11. The paradigm shifted from 'Motor → Result' to 'Instrument → Validation → Experiment → Evidence Ledger → Claim' (auditor r11)",
+    "12. INST-0002 localized the exact loss stage for every file: 0% at scan, 0% at delimitation, 44.6% at dedup, 24.6% at judge (INST-0002)",
+    "13. The BMP signature 'BM' (2 bytes) creates a 50MB false positive that eliminates real files via dedup cascade — this is the primary root cause of RC-A-003 (INST-0002)",
+    "14. RC-A-003 is NOT a scale-dependent algorithmic property — it's a constant-size bug whose impact scales with N because the BMP false positive overlaps with more files at higher density (INST-0002)"
   ],
 
   "next_actions": [
-    "1. Execute INST-0001 (Dataset Builder validation) — foundational: if the generator is adversarial, everything is questionable",
-    "2. Execute INST-0002 (Carving Parser validation) — urgent: RC-A-003 needs hypothesis discrimination",
-    "3. Execute INST-0003 (Judge validation) — critical: if the Judge has bias, all OUs are questionable",
-    "4. Execute EXP-0003 reproduction package on another machine (CRITICAL for RCR)",
-    "5. Execute EXP-0004 (dataset scaling) — requires longer runtime",
-    "6. Execute INST-0004 (RVS calibration) and INST-0005 (FQS validation) — important but not urgent",
-    "7. Do NOT implement new features until instrument validation is complete"
+    "1. ✅ INST-0001 COMPLETED — Dataset Builder validated, H6 refuted",
+    "2. ✅ INST-0002 COMPLETED — Pipeline loss localized: BMP false positive (dedup cascade) + PDF footer truncation",
+    "3. Apply RP-001 (PDF footer fix) + RP-002 (BMP false positive fix) — now justified by INST-0002 evidence",
+    "4. Re-run INST-0002 after fixes to verify recovery improvement (VAL-0002)",
+    "5. Execute INST-0003 (Judge validation) — critical: if the Judge has bias, all OUs are questionable",
+    "6. Execute EXP-0003 reproduction package on another machine (CRITICAL for RCR)",
+    "7. Execute INST-0004 (RVS calibration) and INST-0005 (FQS validation) — important but not urgent"
   ]
 }

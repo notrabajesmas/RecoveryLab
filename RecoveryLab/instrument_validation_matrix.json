@@ -46,21 +46,41 @@
       "id": "INST-0002",
       "component": "motors/motor_carving.py",
       "role": "Motor de carving que detecta firmas y extrae archivos de imágenes sin MFT.",
-      "validation_status": "PARTIAL",
-      "status_symbol": "⚠️",
-      "concerns": [
-        "RC-A-001: PDF footer excluye newline (confirmed, bounded)",
-        "RC-A-002: JPEG dedup demasiado agresiva (confirmed, needs design)",
-        "RC-A-003: Colapso de recuperación dependiente de escala (root cause abierto)",
-        "DIAG-0001 mostró 3/5 formatos funcionando a N=15, pero VAL-0001 mostró colapso a N=100"
+      "validation_status": "DIAGNOSED",
+      "status_symbol": "🔬",
+      "validation_date": "2026-07-31",
+      "validation_experiment": "INST-0002",
+      "validation_results": {
+        "stage_1_scan": "PASS — scanner finds all signatures (0% loss)",
+        "stage_2_delimitation": "PASS — all signatures lead to valid carves (0% loss)",
+        "stage_3_dedup": "FAIL — 234/525 files (44.6%) eliminated by dedup cascade from BMP false positive",
+        "stage_4_judge": "PARTIAL — 129/525 files (24.6%) have SHA-256 mismatch (PDF: 1 byte short, JPEG: truncated)"
+      },
+      "root_causes_identified": [
+        "RC-A-001: PDF footer truncation — %%EOF vs %%EOF\\n (1 byte short, all PDFs affected)",
+        "RC-A-002: BMP false positive — 'BM' (0x42 0x4D) appears in random data, creates 50MB false carve that eliminates real files via dedup",
+        "RC-A-003: Scale-dependent collapse is an ARTIFACT of BMP false positive's 50MB size overlapping with more files as N increases"
       ],
+      "concerns": [
+        "RC-A-001: PDF footer excluye newline (confirmed by INST-0002, bounded, fixable)",
+        "RC-A-002: BMP false positive causes dedup cascade (confirmed by INST-0002, needs design fix)",
+        "RC-A-003: Resolved — not a scale-dependent phenomenon per se, but BMP false positive artifact"
+      ],
+      "hypothesis_discrimination": {
+        "H1_scanner_loss": "NOT SUPPORTED — 0% loss at scan stage",
+        "H2_delimitation_loss": "NOT SUPPORTED — 0% loss at delimitation stage",
+        "H3_dedup_loss": "SUPPORTED — 44.6% of files eliminated by dedup (BMP false positive cascade)",
+        "H4_judge_loss": "SUPPORTED — 24.6% of files have SHA-256 mismatch (PDF 1-byte truncation)",
+        "H5_multi_stage": "SUPPORTED — losses at 2 stages (Dedup + Judge)",
+        "H6_instrument_loss": "REFUTED by INST-0001 — Dataset Builder is not adversarial"
+      },
       "critical_for": [
         "CLAIM-001 — MFT-First > Carving depende de que el carving funcione correctamente",
         "CLAIM-004 — crossover point depende de carving funcional",
         "EXP-0005 — external validation asume que carving es un strategy legítimo"
       ],
-      "validation_experiment": "INST-0002",
-      "minimum_validation": "N=100 por formato, match exacto SHA-256, con y sin deduplicación, para discriminar H1-H6 de RC-A-003"
+      "minimum_validation": "N=100 por formato, match exacto SHA-256, con y sin deduplicación, para discriminar H1-H6 de RC-A-003",
+      "next_step": "Apply RP-001 (PDF footer fix) and RP-002 (BMP false positive fix), then re-run to verify recovery improvement"
     },
     "Judge": {
       "id": "INST-0003",
@@ -137,7 +157,7 @@
 
   "summary_table": {
     "Dataset Builder": "✅ VALIDATED (INST-0001, 13/13 V1-V4, 3/3 V6, no adversarial indicators)",
-    "Carving Parser": "⚠️ PARTIAL (DIAG-0001 + VAL-0001, pero RC-A-003 abierto)",
+    "Carving Parser": "🔬 DIAGNOSED (INST-0002: BMP false positive → dedup cascade, PDF footer truncation)",
     "Judge": "❓ UNKNOWN",
     "RVS": "⚠️ PARTIAL (definido pero no calibrado con usuarios reales)",
     "FQS": "❓ UNKNOWN",

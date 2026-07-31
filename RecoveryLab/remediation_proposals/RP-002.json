@@ -1,0 +1,42 @@
+{
+  "proposal_id": "RP-002",
+  "title": "Remove or constrain BMP signature detection",
+  "origin": "INST-0002 — BMP false positive causes dedup cascade",
+  "date_proposed": "2026-07-31",
+  "status": "PROPOSED",
+  "priority": "HIGH",
+  "evidence_base": "INST-0002 traced 525 files through the pipeline and found that 234 (44.6%) were eliminated at the dedup stage, primarily because a BMP false positive carved a 50MB region that overlapped with real files.",
+
+  "problem_statement": "The BMP signature 'BM' (0x42 0x4D) is only 2 bytes long. These bytes appear frequently in random data within other files (JPEG, PNG, ZIP, PDF, DOCX). When the scanner finds 'BM' at a cluster start, it carves a 50MB 'BMP file' using the max-size heuristic (BMP has no footer). This 50MB carved region overlaps with all other files in the image, causing the dedup logic to eliminate real files.",
+
+  "proposed_fix": {
+    "option_A": "Remove BMP from SIGNATURES list entirely — simplest fix, removes the false positive entirely. BMP is a low-value format for carving (rare in forensic scenarios).",
+    "option_B": "Add BMP header validation — after finding 'BM', validate the DIB header structure (check BITMAPINFOHEADER size field, verify width/height are reasonable, check bits_per_pixel). This would eliminate most false positives while keeping BMP detection.",
+    "option_C": "Add minimum confidence threshold — BMP carves must pass additional validation (e.g., check that the file size declared in the BMP header matches the carved size). This is more robust but more complex.",
+    "recommended": "Option A — simplest, most effective, and BMP is a low-priority format for carving. If BMP detection is needed later, Option B can be added."
+  },
+
+  "impact_analysis": {
+    "if_applied": "INST-0002 results suggest that removing BMP detection would eliminate 44.6% of file losses at the dedup stage. ZIP recovery would improve from 33.8% to near 100%, DOCX from 58.6% to near 100%, JPEG from 8.9% to near 100%, PNG from 62.2% to near 100%.",
+    "if_not_applied": "Carving motor will continue to produce incorrect results at scale. RC-A-003 will remain unresolved. All claims about carving performance are questionable.",
+    "risk": "LOW — removing BMP detection only affects BMP file recovery, which is a low-priority format. No other functionality is affected."
+  },
+
+  "dependencies": {
+    "requires": "INST-0002 evidence (completed)",
+    "conflicts_with": "None",
+    "must_be_applied_before": "Re-running INST-0002 or any carving experiment",
+    "must_be_applied_after": "INST-0002 (completed)"
+  },
+
+  "verification_plan": {
+    "step_1": "Apply the fix (remove BMP from SIGNATURES or add validation)",
+    "step_2": "Re-run INST-0002 with the same configurations (N=15, 30, 100)",
+    "step_3": "Verify that dedup loss rate drops to near 0%",
+    "step_4": "Verify that recovery rates improve for all formats",
+    "step_5": "Update RC-A-002 status to RESOLVED",
+    "step_6": "Update IVM Carving Parser status to VALIDATED (if all stages pass)"
+  },
+
+  "relationship_to_rp_001": "RP-001 (PDF footer fix) and RP-002 (BMP false positive fix) are independent. They can be applied in any order. Together, they address both root causes identified by INST-0002: RP-001 fixes the Judge loss (PDF 1-byte truncation), RP-002 fixes the Dedup loss (BMP false positive cascade)."
+}

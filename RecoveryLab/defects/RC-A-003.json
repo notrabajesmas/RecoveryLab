@@ -6,7 +6,7 @@
   "date_identified": "2026-07-31",
   "date_reformulated": "2026-07-31",
   "severity": "HIGH",
-  "status": "IDENTIFIED",
+  "status": "ROOT_CAUSE_IDENTIFIED",
   "classification": "RC-A",
   "classification_note": "Clasificado como RC-A (Algorithm) tentativamente. La hipótesis dominante apunta al algoritmo de deduplicación, pero hipótesis instrumentales (H6) no están descartadas. La clasificación puede cambiar según resultados de INST-0001.",
 
@@ -123,6 +123,38 @@
   ],
 
   "remediation_proposal": "PENDIENTE — No se puede proponer remedio sin determinar root cause. La próxima acción es INST-0002 (validación de Carving Parser) para discriminar entre hipótesis.",
+
+  "inst_0002_results": {
+    "experiment": "INST-0002",
+    "date": "2026-07-31",
+    "verdict": "ROOT CAUSE IDENTIFIED — Two distinct algorithmic defects, not a single scale-dependent phenomenon",
+    "total_files_traced": 525,
+    "loss_at_scan": 0,
+    "loss_at_delimitation": 0,
+    "loss_at_dedup": 234,
+    "loss_at_judge": 129,
+    "hypothesis_discrimination": {
+      "H1": "NOT SUPPORTED — scanner finds all signatures (0% loss)",
+      "H2": "NOT SUPPORTED — all signatures lead to valid carves (0% loss)",
+      "H3": "SUPPORTED — 44.6% of files eliminated by dedup (BMP false positive cascade)",
+      "H4": "SUPPORTED — 24.6% of files have SHA-256 mismatch (PDF truncation)",
+      "H5": "SUPPORTED — losses at 2 stages (Dedup + Judge)",
+      "H6": "REFUTED by INST-0001"
+    },
+    "root_cause_chain": {
+      "primary_defect": "BMP false positive — signature 'BM' (0x42 0x4D) is only 2 bytes and appears in random data within other files. Creates a 50MB carved 'BMP file' that overlaps with all other files, triggering dedup cascade.",
+      "secondary_defect": "PDF footer truncation — carving motor uses %%EOF (5 bytes) but file generator produces %%EOF\\n (6 bytes), making all carved PDFs 1 byte short.",
+      "scale_dependent_explanation": "The 'scale-dependent collapse' is an artifact: the BMP false positive's 50MB size overlaps with proportionally more files as N increases. At N=15, the BMP may not overlap with any file. At N=100, it overlaps with dozens. This is NOT a scale-dependent algorithmic property — it's a constant-size bug whose impact scales with N."
+    },
+    "format_specific": {
+      "PDF": "100% loss at Judge — all files 1 byte short (footer bug)",
+      "JPEG": "91.1% loss at Dedup — eliminated by BMP false positive",
+      "PNG": "62.2% recovered, 37.8% lost at Dedup — same BMP issue",
+      "ZIP": "33.8% recovered at N>15, 66.2% lost at Dedup — same BMP issue",
+      "DOCX": "58.6% recovered at N>15, 41.4% lost at Dedup — same BMP issue"
+    },
+    "consequence": "RC-A-003 is now explained. The 'scale-dependent collapse' is not a fundamental property of the algorithm — it's a BMP false positive whose 50MB carved region overlaps with more files as N increases. Two targeted fixes would resolve most of the observed collapse: (1) remove or constrain BMP signature detection, and (2) fix PDF footer to include \\n."
+  },
 
   "reformulation_rationale": {
     "original_title": "Deduplicación escala-dependiente — elimina archivos válidos proporcionalmente a N",

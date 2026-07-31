@@ -1,6 +1,39 @@
 # RecoveryLab — Work Log
 
 ---
+Task ID: 18
+Agent: Main
+Task: INST-0002 — Pipeline Loss Localization (r12 auditoría)
+
+Work Log:
+- Auditor confirmed INST-0001 validated Dataset Builder, H6 refuted
+- Auditor recommended INST-0002 next: instrument the full pipeline to determine exact loss stage per file
+- Designed per-file trace system: Scanner → Delimitation → Dedup → Judge
+- Implemented inst_0002_pipeline_loss_localization.py with 4 instrumented stages
+- Ran INST-0002 across 5 formats × 3 N values (15, 30, 100) = 525 files traced
+- KEY FINDINGS:
+  - Scanner: 0% loss — finds all signatures correctly
+  - Delimitation: 0% loss — all signatures lead to valid carves
+  - Dedup: 44.6% loss — 234/525 files eliminated (BMP false positive cascade)
+  - Judge: 24.6% loss — 129/525 files have SHA-256 mismatch (PDF truncation)
+- ROOT CAUSE CHAIN:
+  - Primary: BMP signature 'BM' (2 bytes) creates 50MB false positive → dedup eliminates real files
+  - Secondary: PDF footer %%EOF vs %%EOF\n → 1 byte truncation → SHA-256 mismatch
+  - RC-A-003 explained: NOT a scale-dependent algorithmic property, but a constant-size bug (BMP false positive) whose impact scales with N
+- Updated artifacts:
+  - INST-0002.json: DEFINED → COMPLETED with results
+  - IVM: Carving Parser ⚠️ PARTIAL → 🔬 DIAGNOSED
+  - RC-A-002: reformulated from "JPEG dedup too aggressive" to "BMP false positive causes dedup cascade"
+  - RC-A-003: status IDENTIFIED → ROOT_CAUSE_IDENTIFIED
+  - Created RP-002: Remove or constrain BMP signature detection
+  - Evidence chain manifest: updated with INST-0002 results and new next_actions
+
+Stage Summary:
+- INST-0002 COMPLETED — the "OU=0" mystery is now a complete causal chain
+- Two targeted fixes (RP-001 + RP-002) would resolve the vast majority of observed losses
+- The auditor's vision is validated: "primero se valida el instrumento; después se estudia el fenómeno"
+
+---
 Task ID: 14
 Agent: Main
 Task: Octava ronda de auditoría — Correcciones metodológicas + DIAG-0001

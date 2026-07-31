@@ -1,83 +1,56 @@
 {
   "defect_id": "RC-A-002",
   "former_id": "RC-002",
-  "title": "Heurística de deduplicación JPEG demasiado agresiva — elimina 12/15 archivos válidos",
+  "title": "BMP false positive causes dedup cascade",
+  "former_title": "JPEG deduplication too aggressive",
   "origin": "DIAG-0001",
   "date_identified": "2026-07-30",
-  "date_reclassified": "2026-07-31",
+  "date_reformulated": "2026-07-31",
   "severity": "HIGH",
-  "status": "IDENTIFIED",
+  "status": "ROOT_CAUSE_CONFIRMED",
   "classification": "RC-A",
-  "classification_rationale": "Problema del algoritmo de deduplicación del carving motor. La heurística _deduplicate_carves elimina archivos legítimos cuando sus rangos se superponen. Es una decisión algorítmica, no un problema del instrumento de medición ni del protocolo.",
 
   "observation": {
-    "pure": "En DIAG-0001, el scanner de firmas detectó 15 firmas JPEG en el Dataset A (JPEG-only). Sin embargo, el motor de carving solo produjo 3 archivos carved. Los 12 archivos eliminados fueron removidos por la heurística de deduplicación/superposición (_deduplicate_carves). Los 3 archivos carved restantes son demasiado cortos (missing 865K-923K bytes cada uno).",
-    "context": "Los archivos JPEG son grandes (hasta ~1MB) y sus datos contienen firmas de otros formatos (BMP dentro de datos JPEG). La deduplicación interpreta estos rangos como superpuestos y elimina los archivos que deberían ser más largos."
+    "pure": "En DIAG-0001 (N=15): 15 firmas JPEG encontradas, solo 3 archivos carved. En INST-0002 (N=15): 15 firmas JPEG, 13 eliminadas por dedup. En INST-0002 (N=30): 30 firmas JPEG, 28 eliminadas por dedup.",
+    "context": "La deduplicación elimina archivos JPEG porque se superponen con un 'archivo BMP' falso de 50MB creado por el scanner."
   },
 
-  "interpretation": "La heurística de deduplicación es una política algorítmica, no un bug simple. Elimina archivos legítimos cuando los rangos de datos de archivos grandes se superponen con las firmas de otros archivos. Esto requiere diseño, no un parche.",
-
-  "evidence": {
-    "experiment": "DIAG-0001",
-    "dataset": "A (JPEG-only, 15 archivos)",
-    "signatures_found": {"JPEG": 15, "BMP": 1},
-    "files_carved": 3,
-    "files_matched_ground_truth": 0,
-    "false_positives": 3,
-    "truncation_fixable": 2,
-    "carving_ou": 0.0,
-    "mft_first_ou": 1.0
+  "root_cause": {
+    "identified_by": "INST-0002",
+    "date": "2026-07-31",
+    "mechanism": "The BMP signature 'BM' (0x42 0x4D) is only 2 bytes long. These bytes appear in random data within other files (JPEG, PNG, ZIP, PDF, DOCX). When the scanner finds 'BM' at a cluster start, it carves a 50MB 'BMP file' using the max-size heuristic (BMP has no footer). This 50MB carved region overlaps with all other files in the image. The dedup logic then eliminates real files because they overlap with the BMP false positive.",
+    "why_scale_dependent": "At N=15, the BMP false positive may not overlap with any file (if the BMP appears at the end of the image). At N=30+, the image is denser and the 50MB BMP region overlaps with proportionally more files. This is why the loss appears 'scale-dependent' — it's actually a constant-size bug whose impact scales with file density.",
+    "format_impact": {
+      "JPEG": "91.1% loss at dedup — BMP false positive eliminates most JPEG files",
+      "PNG": "37.8% loss at dedup — same BMP false positive issue",
+      "ZIP": "66.2% loss at dedup at N>15 — same BMP false positive issue",
+      "DOCX": "41.4% loss at dedup at N>15 — same BMP false positive issue"
+    }
   },
+
+  "reformulation_rationale": {
+    "original_title": "JPEG deduplication too aggressive",
+    "why_changed": "INST-0002 demonstrated that the dedup logic is NOT the problem — it correctly removes overlapping carves. The real problem is that the BMP signature creates a 50MB false positive that makes the dedup logic eliminate legitimate files. The dedup logic is working as designed; it's the input (BMP false positive) that is wrong.",
+    "principle": "The defect is in the scanner (BMP signature too weak), not in the dedup algorithm. Fixing the dedup threshold would be a workaround, not a fix. The correct fix is to remove or constrain BMP signature detection."
+  },
+
+  "remediation_proposal": "RP-002 — Remove BMP signature from SIGNATURES list, or add minimum size/content validation for BMP. The BMP signature 'BM' (2 bytes) is too weak for reliable carving. It should either be removed or validated with additional checks (e.g., verify BMP header structure, check DIB header size field).",
 
   "scope": {
-    "affected_component": "motors/motor_carving.py — _deduplicate_carves method",
-    "affected_formats": ["JPEG"],
-    "unaffected_formats": ["ZIP", "DOCX", "PNG", "PDF"],
-    "risk": "MEDIUM — cambiar la heurística podría afectar la calidad de otros formatos"
+    "affected_component": "motors/motor_carving.py — SIGNATURES list (BMP entry) + _deduplicate_carves (indirectly)",
+    "affected_formats": ["JPEG", "PNG", "ZIP", "DOCX", "PDF — all formats that can contain 'BM' in their data"],
+    "risk": "HIGH — causes 44.6% file loss across all formats at scale"
   },
 
-  "root_cause_analysis": {
-    "location": "motor_carving.py, _deduplicate_carves()",
-    "mechanism": "Cuando dos firmas detectadas tienen rangos superpuestos (start_A < end_B), el método elimina la carve más corta. Con archivos JPEG grandes, esto elimina archivos legítimos porque sus datos contienen firmas de otros formatos.",
-    "why_it_matters": "La deduplicación es necesaria para evitar false positives, pero la política actual es demasiado agresiva para archivos grandes. No está claro cuál es la mejor política."
-  },
-
-  "claims_affected": [],
-
-  "remediation_proposal": "PENDIENTE — requiere diseño (no es un parche simple)",
-
-  "design_options": [
-    {
-      "option": "A: Cambiar deduplicación",
-      "description": "Modificación de la heurística para permitir superposición parcial cuando los archivos son grandes",
-      "complexity": "MEDIUM",
-      "risk": "Podría aumentar false positives"
-    },
-    {
-      "option": "B: Cambiar prioridad",
-      "description": "Priorizar firmas más confiables sobre las menos confiables",
-      "complexity": "LOW",
-      "risk": "Podría afectar otros formatos"
-    },
-    {
-      "option": "C: Cambiar orden de escaneo",
-      "description": "Escanear primero los formatos con firmas más específicas",
-      "complexity": "LOW",
-      "risk": "Podría afectar el rendimiento"
-    },
-    {
-      "option": "D: Dividir archivos superpuestos",
-      "description": "En vez de eliminar, dividir los archivos superpuestos en segmentos",
-      "complexity": "HIGH",
-      "risk": "Podría generar archivos parciales incorrectos"
-    },
-    {
-      "option": "E: Mejorar delimitación",
-      "description": "Usar conocimiento del formato para delimitar mejor los archivos (ej: IEND para PNG, EOI para JPEG)",
-      "complexity": "MEDIUM",
-      "risk": "Podría no funcionar con archivos corruptos"
-    }
+  "claims_affected": [
+    "CLAIM-001 — MFT-First > Carving is inflated because carving loses files to BMP false positive",
+    "CLAIM-005 — parsers golden reference invalid at N>15",
+    "RC-A-003 — BMP false positive is the primary root cause of the 'scale-dependent collapse'"
   ],
 
-  "notes": "Este defecto es más complejo que RC-A-001. No es un bug sino una decisión algorítmica. Requiere diseño antes de implementar. No se debe parchear sin entender las implicaciones. Reclassificado de RC-002 a RC-A-002 en r11 al introducir taxonomía RC-I/RC-A/RC-P. Nota: RC-A-003 (Colapso de recuperación dependiente de escala) puede subsumir este defecto si se confirma H1."
+  "evidence": {
+    "DIAG-0001": "15 JPEG signatures found, only 3 carved, 13 eliminated by dedup",
+    "INST-0002": "525 files traced: 234 (44.6%) eliminated at dedup stage, primarily by BMP false positive",
+    "INST-0002_per_file_trace": "Every eliminated file shows 'eliminated by BMP at offset X' in the trace"
+  }
 }
