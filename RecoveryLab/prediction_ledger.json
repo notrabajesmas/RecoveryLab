@@ -3,6 +3,8 @@
   "title": "Prediction Ledger",
   "date_created": "2026-07-31",
   "origin": "Auditoría externa r14 — las predicciones falsables merecen un registro propio, no disperso dentro de cada RP",
+  "date_architecture_frozen": "2026-07-31",
+  "architecture_freeze_origin": "Auditoría externa r15 — la arquitectura de Fase A está estabilizada. Cualquier documento nuevo debe justificar por qué no puede expresarse con los artefactos existentes.",
   "rationale": "El laboratorio ya no acumula 'mejoras' sino hipótesis que hacen predicciones y sobreviven a intentos de refutación. Este ledger registra cada predicción, su estado, y su resultado. La capacidad predictiva es una métrica distinta de la capacidad explicativa: explicar el pasado no garantiza predecir el futuro.",
 
   "schema": {
@@ -11,12 +13,37 @@
     "associated_hypothesis": "Hipótesis causal que la predicción pone a prueba",
     "variable_observed": "Variable del pipeline que se observa",
     "prediction": "Dirección esperada del cambio (decrease / increase / no_change)",
-    "expected_magnitude": "Rango cuantitativo esperado (ej: '90-100% de reducción', '>±1% = sin cambio')",
+    "expected_magnitude": "Rango cuantitativo esperado",
+    "success_criterion": "Umbral para considerar la predicción CONFIRMADA (ej: '>=90% de reducción')",
+    "refutation_criterion": "Umbral para considerar la predicción REFUTADA (ej: '<50% de reducción')",
+    "inconclusive_zone": "Rango entre success y refutation donde el resultado es INCONCLUSIVE (ej: '50-89%')",
     "confidence": "★★★ = alta certeza lógica, ★★ = razonable, ★ = especulativa",
-    "status": "PENDING / CONFIRMED / REFUTED / INCONCLUSIVE",
+    "frozen": "true = predicción congelada, no puede modificarse. Se congela cuando el RP asociado entra en ejecución.",
+    "frozen_date": "Fecha en que se congeló la predicción",
+    "status": "PENDING / CONFIRMED / REFUTED / INCONCLUSIVE / ARCHIVED",
+    "history": "Lista de transiciones de estado. Nunca se sobrescribe — solo se agregan transiciones.",
     "verification_method": "Cómo se verifica (experimento + métrica)",
     "result": "Resultado observado tras la intervención (se completa post-ejecución)",
     "date_verified": "Fecha de verificación"
+  },
+
+  "freeze_policy": {
+    "rule": "Una vez que el RP asociado entra en ejecución, las predicciones correspondientes no pueden modificarse. Si la predicción resulta incorrecta, queda refutada. No se reescribe post-hoc.",
+    "rationale": "Congelar predicciones evita reinterpretar los resultados cuando ya existen. Es la misma disciplina que se aplica a hipótesis, protocolo y Judge API.",
+    "enforcement": "El campo 'frozen' pasa de false a true cuando el RP asociado comienza su ejecución. A partir de ese momento, cualquier cambio a la predicción (variable, magnitud, criterios) es un error metodológico."
+  },
+
+  "history_policy": {
+    "rule": "Nunca se sobrescribe una entrada del ledger. Solo se agregan transiciones de estado.",
+    "valid_transitions": {
+      "PENDING → CONFIRMED": "El resultado observado cumple el success_criterion",
+      "PENDING → REFUTED": "El resultado observado cumple el refutation_criterion",
+      "PENDING → INCONCLUSIVE": "El resultado observado cae en la inconclusive_zone",
+      "CONFIRMED → ARCHIVED": "La predicción fue confirmada y la hipótesis queda respaldada",
+      "REFUTED → ARCHIVED": "La predicción fue refutada y la hipótesis queda debilitada o refutada",
+      "INCONCLUSIVE → ARCHIVED": "La predicción fue inconclusa y se necesita más evidencia"
+    },
+    "rationale": "Mantener un historial científico completo. Cada transición es un evento auditable con fecha y justificación."
   },
 
   "predictions": [
@@ -27,9 +54,17 @@
       "variable_observed": "losses_at_judge_for_PDF",
       "prediction": "decrease",
       "expected_magnitude": "90-100% de reducción (de 100% PDFs con SHA-256 mismatch a ~0%)",
+      "success_criterion": "Reducción >=90% (de 100% a <=10% de PDFs con SHA-256 mismatch)",
+      "refutation_criterion": "Reducción <50% (más del 50% de PDFs siguen con SHA-256 mismatch)",
+      "inconclusive_zone": "50-89% de reducción (mejora significativa pero no la esperada)",
       "confidence": "★★★",
       "confidence_rationale": "El cambio es un literal de 1 byte. La evidencia DIAG-0001 mostró 15/15 PDFs fixeados agregando 0x0A. Es una predicción de alta certeza lógica.",
+      "frozen": false,
+      "frozen_date": null,
       "status": "PENDING",
+      "history": [
+        {"from": null, "to": "PENDING", "date": "2026-07-31", "rationale": "Predicción creada"}
+      ],
       "verification_method": "Re-ejecutar INST-0002 después de RP-001. Comparar losses_at_judge_for_PDF con baseline (100%).",
       "result": null,
       "date_verified": null
@@ -41,9 +76,17 @@
       "variable_observed": "losses_at_dedup",
       "prediction": "no_change",
       "expected_magnitude": "Sin cambios significativos (>±1% respecto al baseline de 44.6%)",
+      "success_criterion": "Cambio <=±1% (losses_at_dedup permanece entre 43.6% y 45.6%)",
+      "refutation_criterion": "Cambio >±5% (losses_at_dedup se desplaza significativamente del baseline)",
+      "inconclusive_zone": "Cambio entre ±1% y ±5% (desplazamiento menor pero no trivial)",
       "confidence": "★★★",
       "confidence_rationale": "El cambio de footer PDF no altera la superposición de rangos. Solo afecta la delimitación del final del archivo PDF.",
+      "frozen": false,
+      "frozen_date": null,
       "status": "PENDING",
+      "history": [
+        {"from": null, "to": "PENDING", "date": "2026-07-31", "rationale": "Predicción creada"}
+      ],
       "verification_method": "Re-ejecutar INST-0002 después de RP-001. Comparar losses_at_dedup con baseline (44.6%).",
       "result": null,
       "date_verified": null
@@ -55,9 +98,17 @@
       "variable_observed": "losses_at_scan",
       "prediction": "no_change",
       "expected_magnitude": "Sin cambios (>±0% — scanner ya tiene 0% pérdida)",
+      "success_criterion": "losses_at_scan = 0% (sin cambio)",
+      "refutation_criterion": "losses_at_scan > 0% (el scanner pierde firmas que antes detectaba)",
+      "inconclusive_zone": "No aplicable — variable binaria (0% o >0%)",
       "confidence": "★★★",
       "confidence_rationale": "El cambio de footer no altera la firma de inicio (%%EOF es footer, no header). El scanner no se ve afectado.",
+      "frozen": false,
+      "frozen_date": null,
       "status": "PENDING",
+      "history": [
+        {"from": null, "to": "PENDING", "date": "2026-07-31", "rationale": "Predicción creada"}
+      ],
       "verification_method": "Re-ejecutar INST-0002 después de RP-001. Verificar que losses_at_scan = 0%.",
       "result": null,
       "date_verified": null
@@ -69,9 +120,17 @@
       "variable_observed": "losses_at_delimitation",
       "prediction": "no_change",
       "expected_magnitude": "Sin cambios (>±0% — delimitación ya tiene 0% pérdida)",
+      "success_criterion": "losses_at_delimitation = 0% (sin cambio)",
+      "refutation_criterion": "losses_at_delimitation > 0% (la delimitación pierde archivos que antes procesaba)",
+      "inconclusive_zone": "No aplicable — variable binaria (0% o >0%)",
       "confidence": "★★★",
       "confidence_rationale": "El cambio solo afecta PDF footer. Los otros formatos usan footers diferentes.",
+      "frozen": false,
+      "frozen_date": null,
       "status": "PENDING",
+      "history": [
+        {"from": null, "to": "PENDING", "date": "2026-07-31", "rationale": "Predicción creada"}
+      ],
       "verification_method": "Re-ejecutar INST-0002 después de RP-001. Verificar que losses_at_delimitation = 0%.",
       "result": null,
       "date_verified": null
@@ -83,9 +142,17 @@
       "variable_observed": "losses_at_dedup",
       "prediction": "decrease",
       "expected_magnitude": "80-100% de reducción (de 44.6% a <10%)",
+      "success_criterion": "Reducción >=80% (losses_at_dedup baja a <10%)",
+      "refutation_criterion": "Reducción <30% (losses_at_dedup permanece >30%)",
+      "inconclusive_zone": "30-79% de reducción (mejora significativa pero queda pérdida residual considerable)",
       "confidence": "★★",
       "confidence_rationale": "La evidencia observada es consistente con H_BMP, pero no está demostrada. Si hay otras causas de pérdida en dedup aparte del BMP, la reducción será parcial. La predicción asume que H_BMP es la causa dominante.",
+      "frozen": false,
+      "frozen_date": null,
       "status": "PENDING",
+      "history": [
+        {"from": null, "to": "PENDING", "date": "2026-07-31", "rationale": "Predicción creada"}
+      ],
       "verification_method": "Re-ejecutar INST-0002 después de RP-002. Comparar losses_at_dedup con baseline post-RP-001.",
       "result": null,
       "date_verified": null
@@ -94,12 +161,20 @@
       "prediction_id": "PRED-006",
       "associated_rp": "RP-002",
       "associated_hypothesis": "H_BMP — Eliminar la firma BMP reduce el número de firmas detectadas",
-      "variable_observed": "signatures_detected",
+      "variable_observed": "signatures_detected_bmp",
       "prediction": "decrease",
-      "expected_magnitude": "Reducción de ~2-5 firmas BMP (falsos positivos) por imagen",
+      "expected_magnitude": "Reducción de ~2-5 firmas BMP (falsos positivos) por imagen → 0 firmas BMP",
+      "success_criterion": "Firmas BMP detectadas = 0 (eliminación completa de firmas BMP)",
+      "refutation_criterion": "Firmas BMP detectadas > 0 (la firma BMP sigue siendo detectada por otra ruta)",
+      "inconclusive_zone": "No aplicable — variable discreta (0 o >0)",
       "confidence": "★★★",
       "confidence_rationale": "Eliminar una firma del scanner reduce las detecciones. Las firmas BMP son falsos positivos en los datos actuales.",
+      "frozen": false,
+      "frozen_date": null,
       "status": "PENDING",
+      "history": [
+        {"from": null, "to": "PENDING", "date": "2026-07-31", "rationale": "Predicción creada"}
+      ],
       "verification_method": "Re-ejecutar INST-0002 después de RP-002. Contar firmas BMP detectadas (debería ser 0).",
       "result": null,
       "date_verified": null
@@ -111,9 +186,17 @@
       "variable_observed": "losses_at_judge",
       "prediction": "no_change",
       "expected_magnitude": "Sin cambios significativos (>±2% respecto al baseline post-RP-001)",
+      "success_criterion": "Cambio <=±2% (losses_at_judge permanece dentro de ±2% del baseline post-RP-001)",
+      "refutation_criterion": "Cambio >±5% (losses_at_judge se desplaza significativamente del baseline post-RP-001)",
+      "inconclusive_zone": "Cambio entre ±2% y ±5% (desplazamiento menor pero no trivial)",
       "confidence": "★★★",
       "confidence_rationale": "Eliminar firmas BMP no altera el SHA-256 matching de los archivos restantes.",
+      "frozen": false,
+      "frozen_date": null,
       "status": "PENDING",
+      "history": [
+        {"from": null, "to": "PENDING", "date": "2026-07-31", "rationale": "Predicción creada"}
+      ],
       "verification_method": "Re-ejecutar INST-0002 después de RP-002. Comparar losses_at_judge con baseline post-RP-001.",
       "result": null,
       "date_verified": null
@@ -125,9 +208,17 @@
       "variable_observed": "pdf_losses",
       "prediction": "no_change",
       "expected_magnitude": "Sin cambios significativos (>±1% respecto al baseline post-RP-001)",
+      "success_criterion": "Cambio <=±1% (pdf_losses permanece dentro de ±1% del baseline post-RP-001)",
+      "refutation_criterion": "Cambio >±3% (pdf_losses se desplaza significativamente del baseline post-RP-001)",
+      "inconclusive_zone": "Cambio entre ±1% y ±3% (desplazamiento menor pero no trivial)",
       "confidence": "★★★",
       "confidence_rationale": "Los PDFs no se ven afectados por la presencia o ausencia de la firma BMP. Sus pérdidas son causadas por el footer truncation (H_PDF).",
+      "frozen": false,
+      "frozen_date": null,
       "status": "PENDING",
+      "history": [
+        {"from": null, "to": "PENDING", "date": "2026-07-31", "rationale": "Predicción creada"}
+      ],
       "verification_method": "Re-ejecutar INST-0002 después de RP-002. Comparar pdf_losses con baseline post-RP-001.",
       "result": null,
       "date_verified": null
@@ -140,13 +231,46 @@
     "confirmed": 0,
     "refuted": 0,
     "inconclusive": 0,
-    "predictive_accuracy": "N/A — sin predicciones verificadas aún"
+    "archived": 0,
+    "evaluated": 0,
+    "predictive_accuracy": {
+      "definition": "PA = confirmed_predictions / evaluated_predictions",
+      "current": "N/A — sin predicciones evaluadas aún",
+      "target": ">= 70% — indica que el modelo causal tiene buena capacidad predictiva",
+      "note": "PA mide algo diferente al RCR. RCR responde: ¿cuántos claims sobreviven? PA responde: ¿qué tan bueno es nuestro modelo para anticipar resultados?"
+    }
+  },
+
+  "kpi_registry": {
+    "RCR": {
+      "full_name": "Reproducible Claims Ratio",
+      "definition": "Claims at REPEATED or above / Total claims",
+      "current": "2/5 = 40%",
+      "measures": "Supervivencia de claims ante escrutinio"
+    },
+    "PA": {
+      "full_name": "Predictive Accuracy",
+      "definition": "confirmed_predictions / evaluated_predictions",
+      "current": "N/A",
+      "measures": "Capacidad del modelo para anticipar resultados"
+    },
+    "confidence_distribution": {
+      "definition": "Distribución de ★ por predicción",
+      "current": "★★★ ×6, ★★ ×2, ★ ×0",
+      "measures": "Confianza agregada del modelo predictivo"
+    },
+    "evidence_debt": {
+      "definition": "Deudas de evidencia abiertas",
+      "current": "ED-002, ED-004, ED-009",
+      "measures": "Completitud de la base evidencial"
+    }
   },
 
   "meta": {
     "principle": "El laboratorio ya no acumula 'mejoras' sino hipótesis que hacen predicciones y sobreviven a intentos de refutación. La capacidad predictiva es una métrica distinta de la capacidad explicativa.",
     "origin_quote": "Ese registro termina siendo extremadamente valioso porque el laboratorio empieza a medir algo muy distinto: capacidad predictiva. No solo capacidad de explicar el pasado. (auditor r14)",
     "falsification_rule": "Si una predicción no se cumple, la hipótesis asociada queda refutada. No se ajusta la predicción post-hoc para que encaje. Se revierte el cambio y se investiga la alternativa.",
-    "prediction_discipline": "Cada predicción debe ser cuantitativa (magnitud esperada), direccionada (decrease/increase/no_change), y verificable (método explícito). Las predicciones 'debería mejorar' sin magnitud NO son aceptables."
+    "prediction_discipline": "Cada predicción debe ser cuantitativa (magnitud esperada), direccionada (decrease/increase/no_change), verificable (método explícito), y tener criterios explícitos de confirmación y refutación. Las predicciones 'debería mejorar' sin magnitud NI criterios NO son aceptables.",
+    "architecture_freeze": "A partir de r15, la arquitectura de Fase A está estabilizada. Cualquier documento nuevo debe justificar por qué no puede expresarse con los artefactos existentes. El laboratorio deja de crecer en estructura y empieza a crecer únicamente en evidencia."
   }
 }

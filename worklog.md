@@ -750,3 +750,38 @@ Stage Summary:
 - El laboratorio ahora mide capacidad predictiva, no solo capacidad explicativa.
 - Open alternatives evitan que hipótesis desaparezcan por atracción. H_DedupOverlap, H_FragmentationLayout, H_JudgeSensitivity, H_ScaleDependentAlgorithm son alternativas vivas con experimentos discriminadores asignados.
 - Hoja de ruta confirmada: RP-001 → INST-0002 → evaluar PRED-001..004 → RP-002 → INST-0002 → evaluar PRED-005..008 → INST-0003
+
+---
+Task ID: 21
+Agent: Main
+Task: R15 auditoría — Criterios de éxito/refutación, Freeze, History, PA
+
+Work Log:
+- Auditor r15 propuso cuatro adiciones finales antes de congelar la arquitectura:
+  1. Success/Refutation/Inconclusive criteria en cada predicción
+  2. Freeze de predicciones cuando el RP entra en ejecución
+  3. Prediction History (append-only, transiciones, no overwrites)
+  4. Predictive Accuracy (PA) como KPI complementario al RCR
+- Reescrito prediction_ledger.json con las 8 predicciones actualizadas:
+  - Cada predicción tiene: success_criterion, refutation_criterion, inconclusive_zone
+  - Cada predicción tiene: frozen (bool), frozen_date, history (array de transiciones)
+  - Ejemplo PRED-001: success >=90%, refutation <50%, inconclusive 50-89%
+  - Ejemplo PRED-005: success >=80%, refutation <30%, inconclusive 30-79%
+- Agregado freeze_policy: "Una vez que el RP asociado entra en ejecución, las predicciones no pueden modificarse"
+- Agregado history_policy: "Nunca se sobrescribe una entrada. Solo se agregan transiciones de estado"
+- Transiciones válidas: PENDING → CONFIRMED/REFUTED/INCONCLUSIVE → ARCHIVED
+- Agregado PA (Predictive Accuracy) al evidence_chain_manifest:
+  - PA = confirmed / evaluated
+  - KPI complementario: RCR mide supervivencia de claims, PA mide capacidad predictiva
+- Agregado kpi_summary con 4 KPIs: RCR, PA, confidence_distribution, evidence_debt_open
+- Agregado architecture_freeze al manifest:
+  - Status: FROZEN
+  - Rule: "Cualquier documento nuevo debe justificar por qué no puede expresarse con los artefactos existentes"
+  - Lista de artefactos existentes que cubren todas las necesidades
+- Agregado key_insight #15 sobre arquitectura congelada
+
+Stage Summary:
+- Arquitectura de Fase A FROZEN. El laboratorio crece solo en evidencia, no en estructura.
+- Prediction Ledger tiene 8 predicciones con criterios explícitos, freeze, e historial.
+- PA es el tercer KPI del laboratorio (junto a RCR y evidence debt).
+- Próximo paso: ejecutar RP-001 (cambio de 1 byte), re-ejecutar INST-0002, evaluar PRED-001..004.

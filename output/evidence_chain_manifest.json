@@ -54,7 +54,16 @@
     "pending": 8,
     "confirmed": 0,
     "refuted": 0,
-    "predictive_accuracy": "N/A — sin predicciones verificadas aún",
+    "inconclusive": 0,
+    "evaluated": 0,
+    "predictive_accuracy": {
+      "definition": "PA = confirmed / evaluated",
+      "current": "N/A — sin predicciones evaluadas aún",
+      "target": ">= 70%"
+    },
+    "freeze_policy": "Las predicciones se congelan cuando el RP asociado entra en ejecución. No se modifican post-hoc.",
+    "history_policy": "Nunca se sobrescriben entradas. Solo se agregan transiciones de estado (PENDING → CONFIRMED/REFUTED/INCONCLUSIVE → ARCHIVED).",
+    "architecture_freeze": "A partir de r15, la arquitectura de Fase A está estabilizada. El laboratorio crece solo en evidencia, no en estructura.",
     "principle": "El laboratorio mide capacidad predictiva, no solo capacidad explicativa. Explicar el pasado no garantiza predecir el futuro."
   },
 
@@ -292,6 +301,39 @@
     "note": "CLAIM-005 está bajo revisión tras VAL-0001. Si se baja a OBSERVED, RCR baja a 1/5 = 20%."
   },
 
+  "pa": {
+    "metric": "Predictive Accuracy",
+    "definition": "confirmed_predictions / evaluated_predictions",
+    "current": "N/A — sin predicciones evaluadas aún",
+    "target": ">= 70%",
+    "note": "PA mide algo diferente al RCR. RCR responde: ¿cuántos claims sobreviven? PA responde: ¿qué tan bueno es nuestro modelo para anticipar resultados? Es un KPI extremadamente útil cuando se acumulan RPs.",
+    "origin": "Auditoría externa r15"
+  },
+
+  "kpi_summary": {
+    "RCR": {"current": "40%", "target": ">= 60%", "measures": "Supervivencia de claims"},
+    "PA": {"current": "N/A", "target": ">= 70%", "measures": "Capacidad predictiva del modelo"},
+    "confidence_distribution": {"current": "★★★ ×6, ★★ ×2", "measures": "Confianza agregada"},
+    "evidence_debt_open": {"current": "3 (ED-002, ED-004, ED-009)", "measures": "Completitud evidencial"}
+  },
+
+  "architecture_freeze": {
+    "status": "FROZEN",
+    "date": "2026-07-31",
+    "origin": "Auditoría externa r15 — la arquitectura de Fase A está estabilizada",
+    "rule": "A partir de este punto, cualquier documento nuevo debe justificar por qué no puede expresarse con los artefactos existentes. El laboratorio deja de crecer en estructura y empieza a crecer únicamente en evidencia.",
+    "existing_artifacts": [
+      "prediction_ledger.json — Predicciones con criterios de éxito/refutación/inconclusive",
+      "instrument_validation_matrix.json — Validación de instrumentos",
+      "evidence_chain_manifest.json — Cadena de evidencia y KPIs",
+      "evidence_gate.py — Progresión de evidencia",
+      "defects/ — RC taxonomy (RC-I/RC-A/RC-P)",
+      "remediation_proposals/ — RPs con predicciones falsables",
+      "experiments/ — Familias INST/DIAG/VAL/EXP",
+      "claims/ — Claims con Evidence Gate"
+    ]
+  },
+
   "key_insights": [
     "1. The laboratory is deterministic under identical conditions (EXP-0001, EXP-0002, EXP-SD0)",
     "2. SD=0 is genuine for result metrics — OU is quantized from integer file counts (EXP-SD0)",
@@ -306,7 +348,8 @@
     "11. The paradigm shifted from 'Motor → Result' to 'Instrument → Validation → Experiment → Evidence Ledger → Claim' (auditor r11)",
     "12. INST-0002 establece un modelo causal observable: Scanner ✓, Delimitación ✓, Dedup ✗ 44.6%, Judge ✗ 24.6%, Recovered 30.9%. Este modelo sobrevivirá incluso si las hipótesis causales resultan incorrectas (INST-0002, auditor r13)",
     "13. La evidencia observada es CONSISTENTE con la hipótesis de que los falsos positivos BMP generan candidatos extensos que desencadenan eliminaciones posteriores, pero NO está demostrada. Requiere intervención controlada (RP-002) con predicción falsable (INST-0002, auditor r13)",
-    "14. La evidencia observada es CONSISTENTE con la hipótesis de que el 'colapso escala-dependiente' es un artefacto de un bug de tamaño constante cuyo impacto escala con N, pero NO está demostrada. Requiere verificación experimental (INST-0002, auditor r13)"
+    "14. La evidencia observada es CONSISTENTE con la hipótesis de que el 'colapso escala-dependiente' es un artefacto de un bug de tamaño constante cuyo impacto escala con N, pero NO está demostrada. Requiere verificación experimental (INST-0002, auditor r13)",
+    "15. La arquitectura de Fase A está congelada (r15). El laboratorio crece solo en evidencia, no en estructura. Cada predicción tiene criterios explícitos de éxito, refutación, y zona inconclusa. El Prediction Ledger es append-only (historial, no overwrites). PA (Predictive Accuracy) es el KPI complementario al RCR."
   ],
 
   "next_actions": [
