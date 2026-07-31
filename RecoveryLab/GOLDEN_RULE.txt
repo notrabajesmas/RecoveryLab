@@ -12,3 +12,21 @@ Cada módulo debe preguntarse:
 
 NO:
   "¿Cómo puedo hacer que H1 gane?"
+
+
+---
+
+REGLA DE SUSTITUCIÓN (Fase A — arquitectura cerrada)
+
+Toda nueva estructura debe justificar la eliminación de una
+estructura existente.
+
+El riesgo ya no es la falta de rigor, sino el sobre-diseño.
+A partir de este punto, el laboratorio crece únicamente en
+evidencia, no en estructura.
+
+Cada ejecución produce solo cuatro clases de artefactos:
+
+  Experimento → Evidence Ledger → Prediction Ledger → Claims
+
+Nada más.

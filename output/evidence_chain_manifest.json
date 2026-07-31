@@ -318,10 +318,24 @@
   },
 
   "architecture_freeze": {
-    "status": "FROZEN",
+    "status": "CLOSED",
     "date": "2026-07-31",
-    "origin": "Auditoría externa r15 — la arquitectura de Fase A está estabilizada",
-    "rule": "A partir de este punto, cualquier documento nuevo debe justificar por qué no puede expresarse con los artefactos existentes. El laboratorio deja de crecer en estructura y empieza a crecer únicamente en evidencia.",
+    "origin": "Auditoría externa r15 (freeze) → r16 (closure)",
+    "substitution_rule": "Toda nueva estructura debe justificar la eliminación de una estructura existente. El riesgo ya no es la falta de rigor, sino el sobre-diseño.",
+    "allowed_artifact_flow": "Experimento → Evidence Ledger → Prediction Ledger (update) → Claims. Nada más.",
+    "closure_checklist": {
+      "protocol_frozen": true,
+      "hypotheses_frozen": true,
+      "judge_api_frozen": true,
+      "evidence_gate_defined": true,
+      "evidence_ledger_defined": true,
+      "prediction_ledger_defined": true,
+      "decision_log_defined": true,
+      "evidence_debt_defined": true,
+      "rc_rp_formalized": true,
+      "instrument_validation_framework_defined": true,
+      "kpi_defined_rcr_pa": true
+    },
     "existing_artifacts": [
       "prediction_ledger.json — Predicciones con criterios de éxito/refutación/inconclusive",
       "instrument_validation_matrix.json — Validación de instrumentos",

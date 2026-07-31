@@ -785,3 +785,22 @@ Stage Summary:
 - Prediction Ledger tiene 8 predicciones con criterios explícitos, freeze, e historial.
 - PA es el tercer KPI del laboratorio (junto a RCR y evidence debt).
 - Próximo paso: ejecutar RP-001 (cambio de 1 byte), re-ejecutar INST-0002, evaluar PRED-001..004.
+
+---
+Task ID: 22
+Agent: Main
+Task: R16 auditoría — Cierre formal de la arquitectura de Fase A
+
+Work Log:
+- Auditor r16 declaró la arquitectura de Fase A CERRADA
+- Checklist de cierre: todos los 11 ítems ✅ (protocolo, hipótesis, Judge API, Evidence Gate, Evidence Ledger, Prediction Ledger, Decision Log, Evidence Debt, RC/RP, INST framework, KPIs)
+- Regla de sustitución agregada a GOLDEN_RULE.txt: "Toda nueva estructura debe justificar la eliminación de una estructura existente"
+- Architecture freeze status: FROZEN → CLOSED
+- Flujo de artefactos permitido: Experimento → Evidence Ledger → Prediction Ledger (update) → Claims. Nada más.
+- El auditor explicitó: "El riesgo ya no es la falta de rigor, sino el sobre-diseño"
+- El auditor explicitó: "La disciplina más importante a partir de ahora no es inventar mejores procesos, sino resistir la tentación de hacerlo"
+
+Stage Summary:
+- ARQUITECTURA DE FASE A CERRADA. No más documentos, métricas, registros o protocolos.
+- El laboratorio crece únicamente en evidencia: experimentos, evaluaciones de predicciones, claims.
+- Próximo paso: ejecutar RP-001 → INST-0002 → evaluar PRED-001..004.
