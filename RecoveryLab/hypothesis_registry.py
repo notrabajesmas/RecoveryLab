@@ -695,6 +695,75 @@ class HypothesisRegistry:
             },
         ))
 
+        # ─── H9: JPEG Exposure — cascade effect reveals hidden delimitation defect ───
+        # Derived from PRED-007 (INCONCLUSIVE): when BMP false positives were removed,
+        # JPEG files that were previously eliminated at Dedup now reached the Judge,
+        # where they were classified as SHA-256 mismatches due to truncation.
+        # This is NOT a Judge defect — it's a delimitation defect that was HIDDEN
+        # by the upstream BMP cascade. The Judge acts as a diagnostic instrument.
+        self.register(
+            "H9",
+            "Al eliminar las pérdidas en Dedup (RP-002), aumenta el flujo de "
+            "candidatos JPEG hacia el Judge, exponiendo defectos de delimitación "
+            "JPEG que antes permanecían ocultos. Específicamente: el carving motor "
+            "usa el primer FFD9 como footer, pero los JPEG pueden contener "
+            "múltiples marcadores FFD9 dentro de su payload, causando que el "
+            "archivo se trunque prematuramente. El Judge no cambió — cambió el "
+            "flujo de entrada que antes era filtrado por el BMP cascade.",
+            open_questions=[
+                "¿El primer FFD9 aparece dentro del payload JPEG o es el verdadero EOI?",
+                "¿El parser usa el primer footer en lugar del último?",
+                "¿La delimitación ignora la estructura interna del JPEG?",
+                "¿El Dataset Builder genera JPEG válidos con FFD9 internos?",
+                "¿PhotoRec presenta el mismo comportamiento sobre exactamente esos archivos?",
+                "¿Cuántos FFD9 contiene un JPEG típico dentro de sus datos?",
+                "¿La solución es buscar el ÚLTIMO FFD9 o validar la estructura JPEG?",
+            ],
+            dependencies=["H5"],
+        )
+        now_h9 = datetime.now(timezone.utc).isoformat()
+        self.add_evidence("H9", Evidence(
+            timestamp=now_h9,
+            type=EvidenceType.SIMULATION,
+            supports=True,
+            description="PRED-007 (INCONCLUSIVE): losses_at_judge pasó de 0.8% (4/525) a 8.6% "
+                        "(45/525) después de RP-002. Los 45 archivos son JPEG truncados que "
+                        "antes eran eliminados por dedup (BMP cascade) y ahora llegan al Judge. "
+                        "Los JPEG truncados muestran carved_size << gt_size (ej: 63101 vs 928182, "
+                        "1467 vs 2615725). El patrón de truncamiento es consistente con "
+                        "delimitación prematura por FFD9 dentro del payload.",
+            experiment_id="INST-0002",
+            strength="moderate",
+            details={
+                "pred_007_status": "INCONCLUSIVE",
+                "judge_loss_pre_rp002": "0.8% (4/525)",
+                "judge_loss_post_rp002": "8.6% (45/525)",
+                "all_45_are_jpeg": True,
+                "truncation_pattern": "carved_size << gt_size",
+                "example_truncation": "jpg_0001: carved=63101 gt=928182 (865081 bytes short)",
+            },
+        ))
+        self.add_evidence("H9", Evidence(
+            timestamp=now_h9,
+            type=EvidenceType.SIMULATION,
+            supports=True,
+            description="Análisis del código fuente: motor_carving.py._find_footer() busca "
+                        "la PRIMERA ocurrencia del footer bytes. Para JPEG, el footer es "
+                        "b'\\xFF\\xD9' (FFD9 = EOI marker). Si el payload JPEG contiene "
+                        "FFD9 dentro de sus datos de imagen (ej: thumbnails EXIF, datos "
+                        "de imagen comprimidos), el parser se detiene en el primer FFD9 "
+                        "en lugar del último. Esto es consistente con la observación de "
+                        "truncamiento severo (archivos de ~1MB truncados a ~60KB).",
+            experiment_id="code_review_motor_carving",
+            strength="moderate",
+            details={
+                "function": "_find_footer",
+                "behavior": "returns first occurrence of footer bytes",
+                "jpeg_footer": "b'\\xFF\\xD9'",
+                "line_range": "593-619",
+            },
+        ))
+
     def register(self, hypothesis_id: str, statement: str,
                  status: HypothesisStatus = HypothesisStatus.PENDING,
                  dependencies: List[str] = None,

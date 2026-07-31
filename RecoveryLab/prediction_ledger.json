@@ -213,7 +213,15 @@
       ],
       "verification_method": "Re-ejecutar INST-0002 después de RP-002. Comparar losses_at_judge con baseline post-RP-001.",
       "result": "losses_at_judge pasó de 0.8% (4/525) a 8.6% (45/525). El aumento de +7.8% se debe a que los archivos JPEG truncados que antes eran eliminados por dedup (BMP cascade) ahora llegan al Judge, donde son clasificados como SHA-256 mismatch. El Judge no cambió — es un efecto de cascada de etapas, no un cambio en el Judge mismo.",
-      "date_verified": "2026-07-31"
+      "date_verified": "2026-07-31",
+      "no_reinterpretation_ruling": {
+        "date": "2026-07-31",
+        "ruling": "PRED-007 PERMANECE COMO INCONCLUSIVE. No se reinterpretará como CONFIRMADA.",
+        "rationale": "La predicción cuantitativa congelada era: losses_at_judge ≈ sin cambio (cambio <=±2%). El resultado observado fue: +7.8% (0.8% → 8.6%). Eso no cumple el criterio numérico congelado, ni siquiera el criterio de éxito (<=±2%), ni siquiera la zona inconclusa (±2%-5%). El cambio excede incluso el criterio de refutación (>5%). La explicación causal ('más JPEG llegan al Judge') es coherente y merece convertirse en una nueva hipótesis (H_JPEGExposure), pero NO modifica el hecho de que la predicción cuantitativa no se cumplió. Mantener INCONCLUSIVE preserva la integridad metodológica del Prediction Ledger.",
+        "derived_hypothesis": "H_JPEGExposure: Al eliminar las pérdidas en Dedup, aumenta el flujo de candidatos JPEG hacia el Judge, exponiendo defectos de delimitación que antes permanecían ocultos.",
+        "derived_hypothesis_status": "NUEVA — requiere formalización y experimento dedicado",
+        "principle": "Un ledger donde todo sale bien no es un instrumento científico. La predicción inconclusa es la evidencia de que el sistema puede detectar lo inesperado."
+      }
     },
     {
       "prediction_id": "PRED-008",
@@ -253,7 +261,9 @@
       "definition": "PA = confirmed_predictions / evaluated_predictions",
       "current": "7/8 = 87.5%",
       "target": ">= 70% — indica que el modelo causal tiene buena capacidad predictiva",
-      "note": "PA mide algo diferente al RCR. RCR responde: ¿cuántos claims sobreviven? PA responde: ¿qué tan bueno es nuestro modelo para anticipar resultados? PRED-007 es inconclusa porque el efecto de cascada no fue anticipado en la predicción, pero el Judge funciona correctamente."
+      "note": "PA mide algo diferente al RCR. RCR responde: ¿cuántos claims sobreviven? PA responde: ¿qué tan bueno es nuestro modelo para anticipar resultados? PRED-007 es inconclusa porque el efecto de cascada no fue anticipado en la predicción, pero el Judge funciona correctamente.",
+      "methodological_significance": "PA = 87.5% tiene valor metodológico precisamente porque hubo una predicción inconclusa. Si las 8 predicciones hubieran sido confirmadas, existiría la duda de si fueron formuladas de manera demasiado vaga o acomodadas al resultado. 7 confirmadas + 1 inconclusa = el Prediction Ledger tiene credibilidad. No está actuando como un registro donde 'todo sale bien', sino como un mecanismo que realmente puede confirmar o no una hipótesis.",
+      "no_reinterpretation_rule": "PRED-007 no debe reinterpretarse para convertirla en confirmada. La explicación causal ('más JPEG llegan al Judge') es coherente y merece convertirse en una nueva hipótesis (H_JPEGExposure), pero no modifica el hecho de que la predicción cuantitativa congelada no se cumplió. Mantener INCONCLUSIVE preserva la integridad metodológica del ledger."
     }
   },
 

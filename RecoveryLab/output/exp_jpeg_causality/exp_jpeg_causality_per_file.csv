@@ -1,0 +1,16 @@
+gt_name,gt_size,ffd9_count,first_ffd9_offset,last_ffd9_offset,first_ffd9_is_eoi,expected_carved_size,truncation_ratio,truncation_bytes,is_truncated,gt_valid_jpeg,gt_has_exif,gt_has_thumbnail,gt_thumbnail_contains_ffd9
+jpg_0001.jpg,928182,21,164862,926431,False,164864,0.1776,763318,True,False,True,False,False
+jpg_0002.jpg,1130223,23,164862,1112500,False,164864,0.1459,965359,True,False,True,False,False
+jpg_0003.jpg,2615725,48,164862,2605908,False,164864,0.063,2450861,True,False,True,False,False
+jpg_0004.jpg,2492678,46,164862,2466531,False,164864,0.0661,2327814,True,False,True,False,False
+jpg_0005.jpg,1958849,35,164862,1909426,False,164864,0.0842,1793985,True,False,True,False,False
+jpg_0006.jpg,1521668,28,164862,1439577,False,164864,0.1083,1356804,True,False,True,False,False
+jpg_0007.jpg,1231152,23,164862,1112500,False,164864,0.1339,1066288,True,False,True,False,False
+jpg_0008.jpg,1555586,29,164862,1550645,False,164864,0.106,1390722,True,False,True,False,False
+jpg_0009.jpg,1186515,23,164862,1112500,False,164864,0.1389,1021651,True,False,True,False,False
+jpg_0010.jpg,78858,0,-1,-1,True,78858,1.0,0,False,False,False,False,False
+jpg_0011.jpg,1261992,23,164862,1112500,False,164864,0.1306,1097128,True,False,True,False,False
+jpg_0012.jpg,2100790,38,164862,2076797,False,164864,0.0785,1935926,True,False,True,False,False
+jpg_0013.jpg,816699,17,164862,755128,False,164864,0.2019,651835,True,False,True,False,False
+jpg_0014.jpg,2341891,44,164862,2283749,False,164864,0.0704,2177027,True,False,True,False,False
+jpg_0015.jpg,2545608,46,164862,2466531,False,164864,0.0648,2380744,True,False,True,False,False

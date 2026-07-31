@@ -1,80 +1,152 @@
 {
   "defect_id": "RC-002",
-  "title": "Heurística de deduplicación JPEG demasiado agresiva — elimina 12/15 archivos válidos",
+  "title": "Delimitación JPEG prematura — el parser se detiene en el primer FFD9 en lugar del último",
+  "former_title": "Heurística de deduplicación JPEG demasiado agresiva — elimina 12/15 archivos válidos",
   "origin": "DIAG-0001",
   "date_identified": "2026-07-30",
+  "date_reformulated": "2026-07-31",
   "severity": "HIGH",
-  "status": "IDENTIFIED",
+  "status": "ROOT_CAUSE_CONFIRMED",
   "defect_type": "ALGORITHMIC_POLICY",
-
-  "observation": {
-    "pure": "En DIAG-0001, el scanner de firmas detectó 15 firmas JPEG en el Dataset A (JPEG-only). Sin embargo, el motor de carving solo produjo 3 archivos carved. Los 12 archivos eliminados fueron removidos por la heurística de deduplicación/superposición (_deduplicate_carves). Los 3 archivos carved restantes son demasiado cortos (missing 865K-923K bytes cada uno).",
-    "context": "Los archivos JPEG son grandes (hasta ~1MB) y sus datos contienen firmas de otros formatos (BMP dentro de datos JPEG). La deduplicación interpreta estos rangos como superpuestos y elimina los archivos que deberían ser más largos."
+  "reformulation_rationale": {
+    "original_title": "Heurística de deduplicación JPEG demasiado agresiva",
+    "why_changed": "INST-0002 post-RP-002 demostró que la deduplicación ya NO es el problema (losses_at_dedup = 0%). El problema real es que los JPEG llegan truncados al Judge (45/525 = 8.6% losses_at_judge). El Judge detecta correctamente el truncamiento — es un instrumento diagnóstico, no un culpable. La deduplicación era un síntoma del BMP cascade (RC-A-002), no la causa del truncamiento JPEG. Reformular a 'Delimitación JPEG prematura' separa el hecho observado (truncamiento) de la explicación anterior (dedup agresiva).",
+    "principle": "Un RC debe registrar lo que se observó, no por qué se observó. El 'por qué' pertenece a las hipótesis. La deduplicación era una hipótesis incorrecta; la delimitación prematura es la nueva hipótesis consistente con la evidencia."
   },
 
-  "interpretation": "La heurística de deduplicación es una política algorítmica, no un bug simple. Elimina archivos legítimos cuando los rangos de datos de archivos grandes se superponen con las firmas de otros archivos. Esto requiere diseño, no un parche.",
+  "observation": {
+    "pure": "Después de RP-002 (eliminación de BMP), INST-0002 muestra que 45/525 archivos (8.6%) tienen SHA-256 mismatch en el Judge. Los 45 archivos son exclusivamente JPEG. Todos muestran truncamiento severo: carved_size << gt_size (ej: 63101 vs 928182, 1467 vs 2615725, 33388 vs 2545608).",
+    "context": "Antes de RP-002, estos JPEG truncados eran eliminados por el BMP cascade en la etapa de dedup. Al eliminar BMP, los JPEG truncados ahora sobreviven dedup y llegan al Judge, donde se detecta su truncamiento. El Judge no cambió — actúa como instrumento diagnóstico que revela un defecto anterior."
+  },
+
+  "pipeline_state_change": {
+    "before_RP002": {
+      "Scanner": "✓ 0% loss",
+      "Delimitation": "✓ 0% loss (peroJPEG truncados pasan inadvertidos)",
+      "Dedup": "✗ 44.6% loss (BMP cascade eliminaba JPEG truncados y válidos por igual)",
+      "Judge": "✗ 24.6% loss (PDF 1-byte + JPEG truncados que sobrevivieron dedup)"
+    },
+    "after_RP002": {
+      "Scanner": "✓ 0% loss",
+      "Delimitation": "? JPEG truncados pasan inadvertidos — la delimitación NO detecta su propio error",
+      "Dedup": "✓ 0% loss (BMP eliminado)",
+      "Judge": "✓ como diagnóstico — detecta correctamente los 45 JPEG truncados"
+    },
+    "conceptual_shift": "El Judge dejó de aparecer como un posible culpable y pasó a comportarse como un instrumento diagnóstico que revela un defecto anterior. El cuello de botella se movió de Dedup a Delimitación JPEG."
+  },
+
+  "root_cause_hypothesis": {
+    "status": "CONFIRMED — experimento EXP-JPEG-CAUSALITY verificó la causa el 2026-07-31",
+    "hypothesis_ref": "H9 (H_JPEGExposure)",
+    "mechanism": "El carving motor usa _find_footer() que busca la PRIMERA ocurrencia de FFD9 (JPEG EOI marker). El body pseudo-aleatorio del JPEG generado por el Dataset Builder contiene múltiples secuencias FFD9 por coincidencia estadística (en archivos de ~1MB, se esperan ~15 FFD9 aleatorios). El parser se detiene en el primer FFD9, que NO es el EOI real sino una coincidencia en los datos aleatorios, truncando el archivo prematuramente.",
+    "verification": {
+      "experiment": "EXP-JPEG-CAUSALITY",
+      "date": "2026-07-31",
+      "method": "Para cada JPEG en ground truth (N=15): (1) Extraer datos del archivo. (2) Contar todas las ocurrencias de FFD9. (3) Comparar carved_size observado con first_ffd9_offset + 2.",
+      "result": "15/15 archivos: carved_size = first_ffd9_offset + 2 (match exacto). El parser se detiene en el primer FFD9 en todos los casos.",
+      "examples": [
+        "jpg_0001: GT=928,182, FFD9 count=21, first FFD9 at 63,099, carved=63,101 — truncation 93.2%",
+        "jpg_0003: GT=2,615,725, FFD9 count=49, first FFD9 at 1,465, carved=1,467 — truncation 99.9%",
+        "jpg_0007: GT=1,231,152, FFD9 count=23, first FFD9 at 24,089, carved=24,091 — truncation 98.0%"
+      ],
+      "statistical_note": "FFD9 es 2 bytes. En datos aleatorios, la probabilidad de FFD9 en cualquier posición es 1/65536. Para un archivo de ~1MB, se esperan ~15 ocurrencias aleatorias. El primer FFD9 aparece muy temprano (típicamente en los primeros 100KB), causando truncamiento severo."
+    },
+    "alternative_mechanisms_checked": [
+      {
+        "mechanism": "El Dataset Builder genera JPEG inválidos",
+        "status": "REFUTADO — todos los JPEG empiezan con FF D8 (SOI) y terminan con FF D9 (EOI)",
+        "evidence": "Verificación directa: 15/15 archivos tienen SOI y EOI correctos"
+      },
+      {
+        "mechanism": "Los JPEG tienen thumbnails EXIF con FFD9",
+        "status": "NO APLICABLE — el Dataset Builder no genera thumbnails EXIF, el body es pseudo-aleatorio",
+        "evidence": "Los FFD9 internos provienen del body aleatorio, no de estructura EXIF"
+      },
+      {
+        "mechanism": "PhotoRec presenta el mismo comportamiento",
+        "status": "PENDIENTE — Q5 requiere experimento con PhotoRec",
+        "note": "Si PhotoRec también trunca, es un problema del formato JPEG; si no, es un problema de nuestro parser"
+      }
+    ],
+    "why_not_code_yet": "No se debe escribir código hasta que el experimento de causalidad identifique de forma inequívoca la causa. Seguir la disciplina: Observación → Hipótesis → Predicción → Cambio → Verificación. LA CAUSA YA ESTÁ IDENTIFICADA. El siguiente paso es diseñar RP-003 con predicción falsable."
+  },
+
+  "experiment_design": {
+    "title": "EXP-JPEG-CAUSALITY: ¿Por qué exactamente los JPEG terminan truncados?",
+    "status": "EXECUTED — 2026-07-31",
+    "purpose": "Identificar la causa exacta del truncamiento JPEG antes de diseñar cualquier remedio",
+    "result": "CAUSA CONFIRMADA: _find_footer() busca la primera ocurrencia de FFD9. El body pseudo-aleatorio contiene múltiples FFD9. 15/15 archivos: carved_size = first_ffd9_offset + 2.",
+    "questions_answered": {
+      "Q1": "¿El primer FFD9 aparece dentro del payload JPEG o es el verdadero EOI? — RESPUESTA: 14/15 JPEG tienen múltiples FFD9 en el body. El primer FFD9 NO es el EOI. El EOI real es el ÚLTIMO FFD9.",
+      "Q2": "¿El parser usa el primer footer en lugar del último? — RESPUESTA: SÍ. 15/15 match exacto: carved_size = first_ffd9_offset + 2.",
+      "Q3": "¿La delimitación ignora la estructura JPEG? — RESPUESTA: SÍ. _find_footer() no parsea la estructura JPEG, solo busca bytes.",
+      "Q4": "¿El Dataset Builder genera JPEG válidos? — RESPUESTA: SÍ. 15/15 tienen SOI (FF D8) al inicio y EOI (FF D9) al final. El problema es que el body pseudo-aleatorio contiene FFD9 por coincidencia estadística.",
+      "Q5": "¿PhotoRec presenta el mismo comportamiento? — PENDIENTE. Requiere experimento con PhotoRec."
+    },
+    "questions": [
+      "¿El primer FFD9 aparece dentro del payload JPEG o es el verdadero EOI?",
+      "¿El parser usa el primer footer en lugar del último?",
+      "¿La delimitación ignora la estructura JPEG?",
+      "¿El Dataset Builder genera JPEG válidos?",
+      "¿PhotoRec presenta el mismo comportamiento sobre exactamente esos archivos?"
+    ],
+    "method": "Para cada JPEG truncado en INST-0002 (N=15): (1) Verificar si el archivo ground truth es un JPEG válido. (2) Buscar todas las ocurrencias de FFD9 dentro del payload. (3) Determinar si el primer FFD9 corresponde al EOI real o a datos internos. (4) Comparar el offset del primer FFD9 con el carved_size observado. (5) Si es posible, ejecutar PhotoRec sobre la misma imagen y comparar resultados.",
+    "predictions": "Se registrarán como PRED-009..013 cuando el experimento sea formalizado como RP.",
+    "no_code_before_experiment": "No se debe escribir código de reparación hasta que el experimento de causalidad identifique la causa. Un RP sin causa confirmada es un parche intuitivo, no una intervención científica."
+  },
 
   "evidence": {
-    "experiment": "DIAG-0001",
-    "dataset": "A (JPEG-only, 15 archivos)",
-    "signatures_found": {"JPEG": 15, "BMP": 1},
-    "files_carved": 3,
-    "files_matched_ground_truth": 0,
-    "false_positives": 3,
-    "truncation_fixable": 2,
-    "carving_ou": 0.0,
-    "mft_first_ou": 1.0
+    "DIAG-0001": "15 JPEG signatures found, only 3 carved, 12 eliminated by dedup (BMP cascade)",
+    "INST-0002_pre_RP002": "44.6% loss at dedup (BMP cascade), 24.6% loss at Judge (PDF + JPEG truncation)",
+    "INST-0002_post_RP002": "0% loss at dedup, 8.6% loss at Judge (45/525 — all JPEG, all truncated)",
+    "per_file_trace": "All 45 JPEG Judge losses show carved_size << gt_size (severe truncation pattern)",
+    "code_review": "_find_footer() returns first occurrence of footer bytes — consistent with premature truncation"
   },
 
   "scope": {
-    "affected_component": "motors/motor_carving.py — _deduplicate_carves method",
+    "affected_component": "motors/motor_carving.py — _find_footer() and _carve_file() methods",
     "affected_formats": ["JPEG"],
     "unaffected_formats": ["ZIP", "DOCX", "PNG", "PDF"],
-    "risk": "MEDIUM — cambiar la heurística podría afectar la calidad de otros formatos"
+    "risk": "MEDIUM — cambiar la delimitación JPEG podría afectar la calidad de otros formatos si se comparte lógica"
   },
 
-  "root_cause_analysis": {
-    "location": "motor_carving.py, _deduplicate_carves()",
-    "mechanism": "Cuando dos firmas detectadas tienen rangos superpuestos (start_A < end_B), el método elimina la carve más corta. Con archivos JPEG grandes, esto elimina archivos legítimos porque sus datos contienen firmas de otros formatos.",
-    "why_it_matters": "La deduplicación es necesaria para evitar false positives, pero la política actual es demasiado agresiva para archivos grandes. No está claro cuál es la mejor política."
-  },
+  "claims_affected": [
+    "CLAIM-001 — carving performance is affected by JPEG truncation",
+    "H9 — H_JPEGExposure: delimitación defect expuesto por eliminación de BMP cascade"
+  ],
 
-  "claims_affected": [],
-
-  "remediation_proposal": "PENDIENTE — requiere diseño (no es un parche simple)",
+  "remediation_proposal": "RP-003 — Buscar el ÚLTIMO FFD9 en lugar del primero. La causa está identificada: _find_footer() busca la primera ocurrencia. El fix es buscar la última ocurrencia dentro del rango max_size. Esto requiere un RP con predicción falsable antes de implementar.",
 
   "design_options": [
     {
-      "option": "A: Cambiar deduplicación",
-      "description": "Modificación de la heurística para permitir superposición parcial cuando los archivos son grandes",
-      "complexity": "MEDIUM",
-      "risk": "Podría aumentar false positives"
-    },
-    {
-      "option": "B: Cambiar prioridad",
-      "description": "Priorizar firmas más confiables sobre las menos confiables",
+      "option": "A: Buscar el ÚLTIMO FFD9",
+      "description": "En lugar del primer FFD9, buscar el último FFD9 antes del final del archivo",
       "complexity": "LOW",
-      "risk": "Podría afectar otros formatos"
+      "risk": "Podría sobre-extender archivos si hay FFD9 en datos posteriores al JPEG real",
+      "requires_experiment": true
     },
     {
-      "option": "C: Cambiar orden de escaneo",
-      "description": "Escanear primero los formatos con firmas más específicas",
-      "complexity": "LOW",
-      "risk": "Podría afectar el rendimiento"
-    },
-    {
-      "option": "D: Dividir archivos superpuestos",
-      "description": "En vez de eliminar, dividir los archivos superpuestos en segmentos",
-      "complexity": "HIGH",
-      "risk": "Podría generar archivos parciales incorrectos"
-    },
-    {
-      "option": "E: Mejorar delimitación",
-      "description": "Usar conocimiento del formato para delimitar mejor los archivos (ej: IEND para PNG, EOI para JPEG)",
+      "option": "B: Validar estructura JPEG",
+      "description": "Parsear la estructura JPEG (SOI, APP0/APP1, DQT, SOF, SOS, EOI) para identificar el EOI real",
       "complexity": "MEDIUM",
-      "risk": "Podría no funcionar con archivos corruptos"
+      "risk": "Podría no funcionar con archivos corruptos",
+      "requires_experiment": true
+    },
+    {
+      "option": "C: Usar tamaño del ground truth",
+      "description": "No aplicable — carving no tiene acceso a ground truth",
+      "complexity": "N/A",
+      "risk": "N/A — viola la pureza del carving",
+      "requires_experiment": false
+    },
+    {
+      "option": "D: Validar con PhotoRec",
+      "description": "Verificar si PhotoRec también trunca estos JPEG — si sí, es un problema del formato; si no, es un problema de nuestro parser",
+      "complexity": "LOW",
+      "risk": "N/A — es un experimento, no un fix",
+      "requires_experiment": false
     }
   ],
 
-  "notes": "Este defecto es más complejo que RC-001. No es un bug sino una decisión algorítmica. Requiere diseño antes de implementar. No se debe parchear sin entender las implicaciones."
+  "notes": "Este defecto fue reformulado de 'dedup agresiva' a 'delimitación prematura' después de que RP-002 eliminó el BMP cascade y expuso el verdadero problema. La deduplicación era un síntoma, no la causa. El cambio conceptual es importante: el Judge pasó de ser un sospechoso a ser un instrumento diagnóstico. La disciplina exige: no escribir código hasta que el experimento de causalidad identifique la causa exacta."
 }

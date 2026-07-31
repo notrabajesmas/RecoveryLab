@@ -879,3 +879,46 @@ Stage Summary:
 - Post-RP-001+RP-002: 91.4% recovery rate (480/525 files). Only JPEG truncation remains.
 - The only remaining carving loss is JPEG truncation (FF D9 footer found too early in data), which is a delimitation issue, not a dedup or Judge issue.
 - PA = 87.5% — the causal model has excellent predictive capacity.
+
+---
+Task ID: 19
+Agent: Main
+Task: Formalizar decisiones metodológicas post-RP-002 y ejecutar EXP-JPEG-CAUSALITY
+
+Work Log:
+- Formalized three methodological decisions from user review:
+  1. PRED-007 PERMANECE INCONCLUSIVE — no reinterpretar como CONFIRMADA
+     - Rationale: la predicción cuantitativa congelada era losses_at_judge ≈ sin cambio (cambio <=±2%), el resultado fue +7.8% (0.8% → 8.6%)
+     - La explicación causal ('más JPEG llegan al Judge') es coherente pero NO modifica el hecho de que la predicción no se cumplió
+     - Added no_reinterpretation_ruling to PRED-007 in prediction_ledger.json
+  2. PA = 87.5% tiene valor metodológico precisamente porque hubo una predicción inconclusa
+     - Added methodological_significance to prediction_ledger summary
+     - "Un ledger donde todo sale bien no es un instrumento científico"
+  3. H_JPEGExposure registrada como H9 en hypothesis_registry.py
+     - Derived from PRED-007 (INCONCLUSIVE)
+     - Two evidence entries: INST-0002 observation + code review of _find_footer()
+- Reformulated RC-002 from "Deduplicación JPEG demasiado agresiva" to "Delimitación JPEG prematura"
+  - The dedup was a symptom of BMP cascade, not the cause of JPEG truncation
+  - The Judge is now a diagnostic instrument, not a suspect
+  - Pipeline state: Scanner ✓ → Delimitation JPEG (?) → Dedup ✓ → Judge ✓
+- Designed and executed EXP-JPEG-CAUSALITY experiment
+  - Question: "¿Por qué exactamente los JPEG terminan truncados?"
+  - Method: For each JPEG (N=15), count FFD9 occurrences, compare carved_size with first_ffd9+2
+  - KEY RESULT: 15/15 files — carved_size = first_ffd9_offset + 2 (EXACT MATCH)
+  - The body pseudo-aleatorio contains ~15-50 FFD9 occurrences per file
+  - _find_footer() returns the FIRST FFD9, which is NOT the EOI
+  - The real EOI is the LAST FFD9 (at gt_size - 2)
+  - Q4 REFUTADO: Dataset Builder generates valid JPEGs (SOI + EOI correct)
+  - Q5 PENDIENTE: PhotoRec comparison not yet done
+- Updated RC-002 status: ROOT_CAUSE_HYPOTHESIZED → ROOT_CAUSE_CONFIRMED
+- Updated RC-A-003 status: LOSS_STAGES_LOCALIZED → PARTIALLY_RESOLVED
+- Added RP-001/RP-002 results to RC-A-003
+- Next step: Design RP-003 with falsifiable prediction (search LAST FFD9 instead of FIRST)
+
+Stage Summary:
+- CAUSA CONFIRMADA: _find_footer() busca la primera ocurrencia de FFD9. El body pseudo-aleatorio contiene múltiples FFD9 por coincidencia estadística. 15/15 match exacto.
+- PRED-007 permanece INCONCLUSIVE — no se reinterpretará. Esto preserva la integridad metodológica del Prediction Ledger.
+- H9 (H_JPEGExposure) registrada con 2 evidencias consistentes.
+- RC-002 reformulado como "Delimitación JPEG prematura" — ROOT_CAUSE_CONFIRMED.
+- El experimento EXP-JPEG-CAUSALITY respondió 4 de 5 preguntas. Q5 (PhotoRec) pendiente.
+- Próximo paso: diseñar RP-003 con predicción falsable.

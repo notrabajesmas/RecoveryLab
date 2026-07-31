@@ -6,7 +6,7 @@
   "date_identified": "2026-07-31",
   "date_reformulated": "2026-07-31",
   "severity": "HIGH",
-  "status": "LOSS_STAGES_LOCALIZED",
+  "status": "PARTIALLY_RESOLVED — Dedup loss eliminada por RP-002, JPEG truncation persiste como RC-002 reformulado",
   "classification": "RC-A",
   "classification_note": "Clasificado como RC-A (Algorithm) tentativamente. La hipótesis dominante apunta al algoritmo de deduplicación, pero hipótesis instrumentales (H6) no están descartadas. La clasificación puede cambiar según resultados de INST-0001.",
 
@@ -105,8 +105,21 @@
   },
 
   "root_cause_analysis": {
-    "status": "PARTIALLY RESOLVED — loss stages localized, causal hypotheses pending falsification",
-    "note": "INST-0002 localizó las etapas de pérdida (Dedup 44.6%, Judge 24.6%) pero no demostró las causas. Las explicaciones causales (falso positivo BMP, truncamiento PDF) son hipótesis consistentes con la evidencia, pendientes de confirmación mediante intervención controlada (RP-001, RP-002 con predicciones falsables). El RC anterior (RC-003) afirmaba que la deduplicación era la causa. Eso era una hipótesis, no un hecho.",
+    "status": "PARTIALLY RESOLVED — BMP cascade confirmada por RP-002, PDF footer confirmada por RP-001, JPEG truncation pendiente de experimento de causalidad",
+    "note": "RP-001 (PDF footer) confirmó H_PDF con 100% de reducción de pérdidas en Judge para PDF. RP-002 (BMP signature) confirmó H_BMP con 100% de reducción de pérdidas en Dedup. Sin embargo, PRED-007 (INCONCLUSIVE) reveló un efecto de cascada: al eliminar BMP, los JPEG truncados que antes eran eliminados por dedup ahora llegan al Judge. Esto generó la hipótesis H9 (H_JPEGExposure): delimitación JPEG prematura. El defecto fue reformulado en RC-002 como 'Delimitación JPEG prematura'. El próximo paso es un experimento de causalidad, no un parche."
+  },
+  "rp_001_rp_002_results": {
+    "RP_001": {
+      "verdict": "CONFIRMED — H_PDF verificada",
+      "pred_001_to_004": "7/7 CONFIRMED (PRED-001..004)",
+      "effect": "PDF Judge loss: 100% → 0%"
+    },
+    "RP_002": {
+      "verdict": "PARTIALLY CONFIRMED — H_BMP verificada para dedup, pero PRED-007 inconclusa",
+      "pred_005_to_008": "3/4 CONFIRMED, 1/8 INCONCLUSIVE (PRED-007)",
+      "effect": "Dedup loss: 44.6% → 0%, Judge loss: 0.8% → 8.6% (JPEG truncation exposed)",
+      "cascading_effect": "PRED-007 (INCONCLUSIVE) reveló que eliminar BMP cascade expuso un defecto de delimitación JPEG previamente oculto. Esto generó H9 (H_JPEGExposure) y la reformulación de RC-002."
+    },
     "candidate_components": [
       "motors/motor_carving.py — _deduplicate_carves (H1, H4)",
       "motors/motor_carving.py — signature resolution (H5)",
