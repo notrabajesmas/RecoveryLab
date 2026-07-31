@@ -1,0 +1,1054 @@
+     1→"""
+     2→RecoveryLab — Motor Carving (Signature-Based Recovery)
+     3→========================================================
+     4→BLOCKER-001 resolution: a TRUE carving strategy that NEVER touches the MFT.
+     5→
+     6→Philosophy:
+     7→  - Uses ONLY file signatures (magic bytes) to identify files
+     8→  - NEVER reads the VBR
+     9→  - NEVER reads the MFT
+    10→  - NEVER reads any filesystem metadata
+    11→  - Recovers files by scanning raw bytes for known patterns
+    12→
+    13→This is the genuine adversarial strategy. It represents the "no metadata"
+    14→philosophy: if you don't trust the filesystem at all, what can you recover
+    15→by looking at the raw data alone?
+    16→
+    17→Supported formats:
+    18→  - JPEG:  FF D8 FF [E0|E1|E8|DB]
+    19→  - PNG:   89 50 4E 47 0D 0A 1A 0A
+    20→  - PDF:   25 50 44 46
+    21→  - ZIP:   50 4B 03 04
+    22→  - MP4:   ....ftyp
+    23→  - DOCX:  50 4B 03 04 (same as ZIP — distinguished by internal structure)
+    24→  - TIFF:  49 49 2A 00 (little-endian) or 4D 4D 00 2A (big-endian)
+    25→  - CR2:   49 49 2A 00 (Canon RAW — same as TIFF, distinguished by internal markers)
+    26→  - NEF:   4D 4D 00 2A (Nikon RAW — same as TIFF big-endian)
+    27→  - MOV:   ....ftypqt (QuickTime)
+    28→  - XLSX:  50 4B 03 04 (same as ZIP — distinguished by xl/ internal path)
+    29→  - SQLite: 53 51 4C 69 74 65 20 66 6F 72 6D 20 31 00
+    30→  - GIF:   47 49 46 38
+    31→  - BMP:   42 4D
+    32→  - RAR:   52 61 72 21 1A 07
+    33→  - 7Z:    37 7A BC AF 27 1C
+    34→  - PSD:   38 42 50 53 (Photoshop)
+    35→  - DNG:   49 49 2A 00 (same as TIFF — distinguished by DNG markers)
+    36→  - HEIC:  ....ftypheic (same container as MP4)
+    37→  - AVI:   52 49 46 46....415649
+    38→
+    39→Limitations of carving (by design):
+    40→  - No filenames (we assign generic names like "carved_0001.jpg")
+    41→  - No directory structure (everything in a flat list)
+    42→  - No file size from metadata (we use end-of-signature heuristics)
+    43→  - No fragmentation support (contiguous files only)
+    44→  - ZIP/DOCX ambiguity (same signature)
+    45→  - Text files without signatures are invisible
+    46→
+    47→These limitations are NOT bugs — they are the fundamental constraints
+    48→of a carving-only approach. That's the whole point of the experiment.
+    49→"""
+    50→
+    51→import hashlib
+    52→import struct
+    53→from typing import List, Dict, Optional, Set, Tuple
+    54→from dataclasses import dataclass
+    55→
+    56→from .base_motor import BaseMotor, MotorResult, RecoveredFile
+    57→
+    58→
+    59→# ─── File Signature Definitions ───────────────────────────────────────────────
+    60→
+    61→@dataclass
+    62→class FileSignature:
+    63→    """A file signature (magic bytes) for carving."""
+    64→    name: str           # Format name (e.g., "JPEG")
+    65→    extension: str      # File extension (e.g., ".jpg")
+    66→    header: bytes       # Magic bytes to search for
+    67→    header_mask: bytes  # Mask for wildcard bytes (0xFF = must match, 0x00 = don't care)
+    68→    footer: bytes       # End-of-file marker (empty = use max-size heuristic)
+    69→    max_size: int       # Maximum file size to carve (sanity limit)
+    70→    min_size: int       # Minimum file size (below this = false positive)
+    71→
+    72→    @property
+    73→    def header_len(self) -> int:
+    74→        return len(self.header)
+    75→
+    76→
+    77→# ─── Signature Database ───────────────────────────────────────────────────────
+    78→
+    79→SIGNATURES: List[FileSignature] = [
+    80→    # JPEG — most common photo format
+    81→    # Header: FF D8 FF [E0|E1|E8|DB] (4th byte varies)
+    82→    # Footer: FF D9
+    83→    FileSignature(
+    84→        name="JPEG",
+    85→        extension=".jpg",
+    86→        header=b'\xFF\xD8\xFF',
+    87→        header_mask=b'\xFF\xFF\xFF',  # First 3 bytes must match exactly
+    88→        footer=b'\xFF\xD9',
+    89→        max_size=50 * 1024 * 1024,   # 50 MB
+    90→        min_size=200,                 # JPEG smaller than 200 bytes is suspicious
+    91→    ),
+    92→
+    93→    # PNG — most common lossless image format
+    94→    # Header: 89 50 4E 47 0D 0A 1A 0A (8 bytes, exact)
+    95→    # Footer: IEND chunk: 00 00 00 00 49 45 4E 44 AE 42 60 82
+    96→    FileSignature(
+    97→        name="PNG",
+    98→        extension=".png",
+    99→        header=b'\x89PNG\r\n\x1a\n',
+   100→        header_mask=b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
+   101→        footer=b'IEND\xAE\x42\x60\x82',
+   102→        max_size=50 * 1024 * 1024,
+   103→        min_size=100,
+   104→    ),
+   105→
+   106→    # PDF — Portable Document Format
+   107→    # Header: %PDF-1.[0-9]
+   108→    # Footer: %%EOF
+   109→    FileSignature(
+   110→        name="PDF",
+   111→        extension=".pdf",
+   112→        header=b'%PDF-',
+   113→        header_mask=b'\xFF\xFF\xFF\xFF\xFF',
+   114→        footer=b'%%EOF\n',
+   115→        max_size=100 * 1024 * 1024,   # 100 MB
+   116→        min_size=500,
+   117→    ),
+   118→
+   119→    # ZIP — ZIP archive (also DOCX, XLSX, PPTX)
+   120→    # Header: PK\x03\x04
+   121→    # Footer: End of central directory: PK\x05\x06
+   122→    FileSignature(
+   123→        name="ZIP",
+   124→        extension=".zip",
+   125→        header=b'PK\x03\x04',
+   126→        header_mask=b'\xFF\xFF\xFF\xFF',
+   127→        footer=b'PK\x05\x06',
+   128→        max_size=100 * 1024 * 1024,
+   129→        min_size=100,
+   130→    ),
+   131→
+   132→    # MP4 — Video container
+   133→    # Header: [4 bytes size]ftyp[4 bytes brand]
+   134→    # Footer: No reliable footer — use max-size heuristic
+   135→    FileSignature(
+   136→        name="MP4",
+   137→        extension=".mp4",
+   138→        header=b'ftyp',
+   139→        header_mask=b'\xFF\xFF\xFF\xFF',
+   140→        footer=b'',  # No reliable footer
+   141→        max_size=500 * 1024 * 1024,   # 500 MB
+   142→        min_size=1000,
+   143→    ),
+   144→
+   145→    # DOCX — Microsoft Word (ZIP-based, but we try to distinguish)
+   146→    # We'll detect these as ZIP and then check for word/ internal path
+   147→    # For now, we create a separate entry that searches for the same header
+   148→    # but tries to distinguish by looking for "word/" inside the ZIP
+   149→    FileSignature(
+   150→        name="DOCX",
+   151→        extension=".docx",
+   152→        header=b'PK\x03\x04',
+   153→        header_mask=b'\xFF\xFF\xFF\xFF',
+   154→        footer=b'PK\x05\x06',
+   155→        max_size=100 * 1024 * 1024,
+   156→        min_size=100,
+   157→    ),
+   158→
+   159→    # TIFF — Tagged Image File Format (little-endian)
+   160→    # Header: 49 49 2A 00 (II + 0x002A)
+   161→    # Also matches CR2 (Canon RAW) which uses TIFF structure
+   162→    # Footer: No reliable footer — use max-size heuristic
+   163→    FileSignature(
+   164→        name="TIFF",
+   165→        extension=".tiff",
+   166→        header=b'II\x2a\x00',
+   167→        header_mask=b'\xFF\xFF\xFF\xFF',
+   168→        footer=b'',
+   169→        max_size=100 * 1024 * 1024,
+   170→        min_size=1000,
+   171→    ),
+   172→
+   173→    # TIFF big-endian — also matches NEF (Nikon RAW)
+   174→    # Header: 4D 4D 00 2A (MM + 0x002A)
+   175→    FileSignature(
+   176→        name="TIFF_BE",
+   177→        extension=".tiff",
+   178→        header=b'MM\x00\x2a',
+   179→        header_mask=b'\xFF\xFF\xFF\xFF',
+   180→        footer=b'',
+   181→        max_size=100 * 1024 * 1024,
+   182→        min_size=1000,
+   183→    ),
+   184→
+   185→    # MOV — QuickTime video
+   186→    # Header: [4 bytes size]ftypqt
+   187→    # Similar to MP4 but with 'qt' brand
+   188→    FileSignature(
+   189→        name="MOV",
+   190→        extension=".mov",
+   191→        header=b'ftypqt',
+   192→        header_mask=b'\xFF\xFF\xFF\xFF\xFF\xFF',
+   193→        footer=b'',
+   194→        max_size=500 * 1024 * 1024,
+   195→        min_size=1000,
+   196→    ),
+   197→
+   198→    # XLSX — Microsoft Excel (ZIP-based)
+   199→    # Same header as ZIP/DOCX — distinguished by xl/ internal path
+   200→    FileSignature(
+   201→        name="XLSX",
+   202→        extension=".xlsx",
+   203→        header=b'PK\x03\x04',
+   204→        header_mask=b'\xFF\xFF\xFF\xFF',
+   205→        footer=b'PK\x05\x06',
+   206→        max_size=100 * 1024 * 1024,
+   207→        min_size=100,
+   208→    ),
+   209→
+   210→    # SQLite — Database file
+   211→    # Header: "SQLite format 3\000"
+   212→    # Footer: No reliable footer — use max-size heuristic
+   213→    FileSignature(
+   214→        name="SQLite",
+   215→        extension=".sqlite",
+   216→        header=b'SQLite format 3\x00',
+   217→        header_mask=b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF',
+   218→        footer=b'',
+   219→        max_size=500 * 1024 * 1024,
+   220→        min_size=512,
+   221→    ),
+   222→
+   223→    # GIF — Graphics Interchange Format
+   224→    # Header: GIF87a or GIF89a
+   225→    # Footer: 3B (semicolon)
+   226→    FileSignature(
+   227→        name="GIF",
+   228→        extension=".gif",
+   229→        header=b'GIF8',
+   230→        header_mask=b'\xFF\xFF\xFF\xFF',
+   231→        footer=b';',
+   232→        max_size=50 * 1024 * 1024,
+   233→        min_size=100,
+   234→    ),
+   235→
+   236→    # BMP — REMOVED per RP-002 (2026-07-31)
+   237→    # The 2-byte 'BM' signature produces massive false positives in random data,
+   238→    # creating ~50MB carved candidates that trigger dedup cascade elimination of
+   239→    # legitimate files. BMP is a low-priority format for carving scenarios.
+   240→    # If BMP detection is needed later, add header validation (Option B).
+   241→    # Original entry:
+   242→    # FileSignature(
+   243→    #     name="BMP",
+   244→    #     extension=".bmp",
+   245→    #     header=b'BM',
+   246→    #     header_mask=b'\xFF\xFF',
+   247→    #     footer=b'',
+   248→    #     max_size=50 * 1024 * 1024,
+   249→    #     min_size=100,
+   250→    # ),
+   251→
+   252→    # RAR — RAR archive
+   253→    # Header: Rar!\x1A\x07
+   254→    FileSignature(
+   255→        name="RAR",
+   256→        extension=".rar",
+   257→        header=b'Rar!\x1a\x07',
+   258→        header_mask=b'\xFF\xFF\xFF\xFF\xFF\xFF',
+   259→        footer=b'',
+   260→        max_size=500 * 1024 * 1024,
+   261→        min_size=100,
+   262→    ),
+   263→
+   264→    # 7Z — 7-Zip archive
+   265→    # Header: 37 7A BC AF 27 1C
+   266→    FileSignature(
+   267→        name="7Z",
+   268→        extension=".7z",
+   269→        header=b'7z\xBC\xAF\x27\x1C',
+   270→        header_mask=b'\xFF\xFF\xFF\xFF\xFF\xFF',
+   271→        footer=b'',
+   272→        max_size=500 * 1024 * 1024,
+   273→        min_size=100,
+   274→    ),
+   275→
+   276→    # PSD — Adobe Photoshop
+   277→    # Header: 8BPS
+   278→    FileSignature(
+   279→        name="PSD",
+   280→        extension=".psd",
+   281→        header=b'8BPS',
+   282→        header_mask=b'\xFF\xFF\xFF\xFF',
+   283→        footer=b'',
+   284→        max_size=500 * 1024 * 1024,
+   285→        min_size=1000,
+   286→    ),
+   287→
+   288→    # AVI — Audio Video Interleave
+   289→    # Header: RIFF....AVI
+   290→    FileSignature(
+   291→        name="AVI",
+   292→        extension=".avi",
+   293→        header=b'RIFF',
+   294→        header_mask=b'\xFF\xFF\xFF\xFF',
+   295→        footer=b'',
+   296→        max_size=500 * 1024 * 1024,
+   297→        min_size=1000,
+   298→    ),
+   299→]
+   300→
+   301→
+   302→class MotorCarving(BaseMotor):
+   303→    """
+   304→    Motor Carving: signature-based file recovery.
+   305→
+   306→    This motor NEVER reads the MFT. It scans the raw disk image
+   307→    byte-by-byte looking for known file signatures.
+   308→
+   309→    Strategy:
+   310→      1. Scan the ENTIRE image for file signatures
+   311→      2. When a signature is found, extract the file
+   312→      3. Use footer markers to determine file boundaries
+   313→      4. If no footer, use max-size heuristic
+   314→      5. Assign generic names (carved_0001.jpg, etc.)
+   315→
+   316→    This is the "adversarial baseline" — it represents the best
+   317→    you can do without any filesystem metadata.
+   318→    """
+   319→
+   320→    @property
+   321→    def name(self) -> str:
+   322→        return "Motor Carving (Signature-Only)"
+   323→
+   324→    @property
+   325→    def description(self) -> str:
+   326→        return ("Carving: scans raw bytes for file signatures. "
+   327→                "NEVER reads MFT, VBR, or any filesystem metadata. "
+   328→                "No filenames, no directories, no fragmentation support.")
+   329→
+   330→    def recover(self, image: bytes, manifest: Dict,
+   331→                read_budget: int = 0,
+   332→                corruption_metadata: Optional[Dict] = None) -> MotorResult:
+   333→        """
+   334→        Run signature-based carving recovery.
+   335→
+   336→        Key constraint: This method NEVER accesses:
+   337→          - manifest["mft"] (MFT data)
+   338→          - manifest["vbr"] (VBR data)
+   339→          - Any filesystem metadata
+   340→
+   341→        It ONLY uses manifest["cluster_size"] and manifest["total_clusters"]
+   342→        to understand the image geometry, and manifest["files"] to know
+   343→        what file types exist (for reporting purposes only — NOT for recovery).
+   344→
+   345→        Actually, to be STRICTLY pure carving, we should NOT use the manifest
+   346→        at all for recovery. The manifest is only used for Judge evaluation
+   347→        after recovery.
+   348→        """
+   349→        result = MotorResult(motor_name=self.name)
+   350→        cluster_size = manifest.get("cluster_size", 4096)
+   351→        total_clusters = manifest.get("total_clusters", len(image) // cluster_size)
+   352→
+   353→        reads = 0
+   354→        sectors_per_cluster = cluster_size // 512
+   355→        first_file_reads = 0
+   356→        found_first_file = False
+   357→
+   358→        # ─── Phase 1: Scan entire image for signatures ────────────────
+   359→        # We read every cluster sequentially (like a real carver would)
+   360→        # This is the MAXIMUM read cost — no metadata guidance at all
+   361→
+   362→        carved_files: List[Dict] = []
+   363→        signatures_found: Dict[str, int] = {}
+   364→        scan_offset = 0
+   365→
+   366→        # Build a list of all header patterns to search for
+   367→        # We scan byte-by-byte through the image
+   368→        image_len = len(image)
+   369→
+   370→        # Track which clusters we've already read (for read counting)
+   371→        read_clusters: Set[int] = set()
+   372→
+   373→        # Scan the image looking for file signatures
+   374→        # We scan at every byte position within the first sector of each cluster
+   375→        # (in practice, signatures are usually at the start of a cluster)
+   376→        for cluster_num in range(total_clusters):
+   377→            cluster_start = cluster_num * cluster_size
+   378→
+   379→            if cluster_start + cluster_size > image_len:
+   380→                break
+   381→
+   382→            # Read this cluster
+   383→            cluster_data = image[cluster_start:cluster_start + cluster_size]
+   384→            read_clusters.add(cluster_num)
+   385→            reads += sectors_per_cluster
+   386→
+   387→            # Check for budget exhaustion
+   388→            if read_budget > 0 and reads >= read_budget:
+   389→                break
+   390→
+   391→            # Search for signatures within this cluster
+   392→            # Check at the start of the cluster (most common case)
+   393→            # and also at every offset within the first 512 bytes
+   394→            # (some signatures might be offset within a cluster)
+   395→            for sig in SIGNATURES:
+   396→                # Quick check: does the signature match at the start?
+   397→                matches = self._find_signature_matches(
+   398→                    image, cluster_start, cluster_size, sig, image_len
+   399→                )
+   400→
+   401→                for match_offset in matches:
+   402→                    # Found a signature! Try to extract the file
+   403→                    carved = self._carve_file(
+   404→                        image, match_offset, sig, image_len,
+   405→                        cluster_size, total_clusters, read_clusters
+   406→                    )
+   407→
+   408→                    if carved is not None:
+   409→                        carved_files.append(carved)
+   410→                        sig_name = sig.name
+   411→                        signatures_found[sig_name] = signatures_found.get(sig_name, 0) + 1
+   412→
+   413→                        # Update read count for any additional clusters we read
+   414→                        # beyond the current scan position
+   415→                        extra_reads = carved.get("extra_clusters_read", 0)
+   416→                        reads += extra_reads * sectors_per_cluster
+   417→
+   418→        # ─── Phase 2: Resolve ZIP/DOCX ambiguity ─────────────────────
+   419→        # ZIP and DOCX share the same PK\x03\x04 header.
+   420→        # We try to distinguish them by looking for internal structure.
+   421→        carved_files = self._resolve_zip_docx(carved_files)
+   422→
+   423→        # ─── Phase 3: Deduplicate overlapping carves ──────────────────
+   424→        # If two signatures overlap (e.g., ZIP and DOCX at same offset),
+   425→        # keep the more specific one
+   426→        carved_files = self._deduplicate_carves(carved_files)
+   427→
+   428→        # ─── Phase 4: Build result ────────────────────────────────────
+   429→        # Assign generic names
+   430→        type_counters: Dict[str, int] = {}
+   431→
+   432→        for carved in carved_files:
+   433→            ext = carved["extension"]
+   434→            type_counters[ext] = type_counters.get(ext, 0) + 1
+   435→            name = f"carved_{type_counters[ext]:04d}{ext}"
+   436→
+   437→            data = carved["data"]
+   438→            sha256 = hashlib.sha256(data).hexdigest()
+   439→
+   440→            if not found_first_file:
+   441→                first_file_reads = reads
+   442→                found_first_file = True
+   443→
+   444→            result.recovered_files.append(RecoveredFile(
+   445→                name=name,
+   446→                sha256=sha256,
+   447→                size=len(data),
+   448→                data=data,
+   449→                source="carving",  # Mark as carving-recovered
+   450→                read_count=reads,
+   451→            ))
+   452→
+   453→        # ─── Compute final metrics ────────────────────────────────────
+   454→        result.read_count = reads
+   455→        result.time_to_first_file = first_file_reads
+   456→        result.mft_entries_parsed = 0  # NEVER parses MFT
+   457→        result.total_time_seconds = reads * 0.001
+   458→        result.directories_rebuilt = 0  # No directory support
+   459→
+   460→        # Sectors wasted: we read everything, but not all clusters had files
+   461→        # In carving, "wasted" is relative — we had to read everything to find files
+   462→        useful_clusters = len(set(
+   463→            cf.get("start_cluster", 0) // cluster_size
+   464→            for cf in carved_files
+   465→        ))
+   466→        result.sectors_wasted = max(0, reads - useful_clusters * sectors_per_cluster)
+   467→
+   468→        # Store carving statistics for debugging
+   469→        result.carving_stats = {
+   470→            "signatures_found": signatures_found,
+   471→            "files_carved": len(carved_files),
+   472→            "total_clusters_scanned": len(read_clusters),
+   473→            "scan_coverage_pct": len(read_clusters) / total_clusters if total_clusters else 0,
+   474→        }
+   475→
+   476→        return result
+   477→
+   478→    def _find_signature_matches(self, image: bytes, cluster_start: int,
+   479→                                 cluster_size: int, sig: FileSignature,
+   480→                                 image_len: int) -> List[int]:
+   481→        """
+   482→        Find all occurrences of a signature within a cluster.
+   483→
+   484→        Returns list of absolute offsets where the signature was found.
+   485→        """
+   486→        matches = []
+   487→
+   488→        # Check at the start of the cluster (most common)
+   489→        # and at a few key offsets within the first 512 bytes
+   490→        check_offsets = [0]
+   491→
+   492→        # Also check at sector-aligned offsets within the cluster
+   493→        for sector_offset in range(512, min(cluster_size, 4096), 512):
+   494→            check_offsets.append(sector_offset)
+   495→
+   496→        for offset_in_cluster in check_offsets:
+   497→            abs_offset = cluster_start + offset_in_cluster
+   498→            if abs_offset + sig.header_len > image_len:
+   499→                continue
+   500→
+   501→            # Check if header matches (with mask)
+   502→            candidate = image[abs_offset:abs_offset + sig.header_len]
+   503→            if self._matches_with_mask(candidate, sig.header, sig.header_mask):
+   504→                matches.append(abs_offset)
+   505→
+   506→        return matches
+   507→
+   508→    def _matches_with_mask(self, candidate: bytes, header: bytes,
+   509→                            mask: bytes) -> bool:
+   510→        """Check if candidate bytes match the header pattern with mask."""
+   511→        if len(candidate) < len(header):
+   512→            return False
+   513→        for i in range(len(header)):
+   514→            if mask[i] == 0xFF:  # Must match
+   515→                if candidate[i] != header[i]:
+   516→                    return False
+   517→            # 0x00 = don't care, skip
+   518→        return True
+   519→
+   520→    def _carve_file(self, image: bytes, start_offset: int,
+   521→                     sig: FileSignature, image_len: int,
+   522→                     cluster_size: int, total_clusters: int,
+   523→                     read_clusters: Set[int]) -> Optional[Dict]:
+   524→        """
+   525→        Extract a file from the image starting at the given offset.
+   526→
+   527→        Uses footer markers to determine file boundaries.
+   528→        If no footer is found, uses max-size heuristic.
+   529→        """
+   530→        # Check minimum size
+   531→        remaining = image_len - start_offset
+   532→        if remaining < sig.min_size:
+   533→            return None
+   534→
+   535→        # Determine file end
+   536→        file_data = None
+   537→        extra_clusters_read = 0
+   538→
+   539→        if sig.name == "JPEG":
+   540→            # JPEG-specific carving: parse structure to find the real EOI.
+   541→            # RC-002: simple footer search (first or last FFD9) fails because
+   542→            # the JPEG body can contain spurious FFD9 bytes. Structural parsing
+   543→            # correctly identifies the EOI by skipping entropy-coded data.
+   544→            file_data = self._carve_jpeg(
+   545→                image, start_offset, image_len, sig, cluster_size,
+   546→                total_clusters, read_clusters
+   547→            )
+   548→            if file_data is not None:
+   549→                extra_clusters_read = file_data.pop("extra_clusters_read", 0)
+   550→        elif sig.footer:
+   551→            # Search for footer after the header
+   552→            # Start searching from after the header
+   553→            footer_search_start = start_offset + sig.header_len
+   554→            max_search_end = min(start_offset + sig.max_size, image_len)
+   555→
+   556→            footer_offset = self._find_footer(
+   557→                image, footer_search_start, max_search_end, sig.footer
+   558→            )
+   559→
+   560→            if footer_offset is not None:
+   561→                # Found footer — extract file including footer
+   562→                file_end = footer_offset + len(sig.footer)
+   563→                file_data = image[start_offset:file_end]
+   564→
+   565→                # Track additional clusters read beyond the scan
+   566→                end_cluster = (file_end - 1) // cluster_size
+   567→                start_cluster = start_offset // cluster_size
+   568→                for c in range(start_cluster, end_cluster + 1):
+   569→                    if c not in read_clusters:
+   570→                        read_clusters.add(c)
+   571→                        extra_clusters_read += 1
+   572→            else:
+   573→                # No footer found — use max-size heuristic
+   574→                # But cap at a reasonable size
+   575→                heuristic_size = min(sig.max_size, remaining)
+   576→                file_data = image[start_offset:start_offset + heuristic_size]
+   577→        else:
+   578→            # No footer defined — use max-size heuristic
+   579→            # For MP4, try to parse the ftyp box to get the size
+   580→            if sig.name == "MP4":
+   581→                file_data = self._carve_mp4(image, start_offset, image_len, sig)
+   582→            else:
+   583→                heuristic_size = min(sig.max_size, remaining)
+   584→                file_data = image[start_offset:start_offset + heuristic_size]
+   585→
+   586→        if file_data is None or len(file_data) < sig.min_size:
+   587→            return None
+   588→
+   589→        # Validate: check if file is too large (likely a false positive)
+   590→        if len(file_data) > sig.max_size:
+   591→            file_data = file_data[:sig.max_size]
+   592→
+   593→        return {
+   594→            "data": file_data,
+   595→            "start_offset": start_offset,
+   596→            "start_cluster": start_offset // cluster_size,
+   597→            "extension": sig.extension,
+   598→            "format_name": sig.name,
+   599→            "extra_clusters_read": extra_clusters_read,
+   600→            "size": len(file_data),
+   601→        }
+   602→
+   603→    def _carve_jpeg(self, image: bytes, start_offset: int,
+   604→                     image_len: int, sig: FileSignature,
+   605→                     cluster_size: int, total_clusters: int,
+   606→                     read_clusters: Set[int]) -> Optional[Dict]:
+   607→        """
+   608→        Carve a JPEG file by parsing its structure to find the real EOI.
+   609→        
+   610→        RC-002 fix: three-tier strategy:
+   611→          1. Structural parsing (for real JPEGs with SOS marker)
+   612→          2. Last FFD9 before next JPEG signature (for synthetic/partial JPEGs)
+   613→          3. Last FFD9 within max_size (fallback if no other JPEGs nearby)
+   614→        
+   615→        The JPEG body can contain spurious FFD9 bytes (EXIF thumbnails,
+   616→        random byte coincidences in entropy data). Structural parsing
+   617→        correctly identifies EOI by skipping entropy-coded data (byte stuffing).
+   618→        For synthetic JPEGs without proper markers, we use the next JPEG
+   619→        signature as a boundary to avoid over-extension.
+   620→        """
+   621→        max_end = min(start_offset + sig.max_size, image_len)
+   622→        
+   623→        # Verify SOI
+   624→        if start_offset + 2 > image_len:
+   625→            return None
+   626→        if image[start_offset:start_offset + 2] != b'\xFF\xD8':
+   627→            return None
+   628→        
+   629→        # ─── Tier 1: Last FFD9 before next JPEG signature ──────────────
+   630→        # For most cases (multiple JPEGs in the image), this is the most
+   631→        # reliable approach. The next JPEG signature acts as a natural boundary.
+   632→        next_jpeg = self._find_next_jpeg_signature(
+   633→            image, start_offset + 4, max_end, cluster_size
+   634→        )
+   635→        
+   636→        if next_jpeg is not None:
+   637→            # Search for the last FFD9 before the next JPEG
+   638→            search_end = next_jpeg
+   639→            last_ffd9 = self._find_footer_last(
+   640→                image, start_offset + 4, search_end, b'\xFF\xD9'
+   641→            )
+   642→            if last_ffd9 is not None:
+   643→                file_end = last_ffd9 + 2
+   644→                return self._build_jpeg_result(
+   645→                    image, start_offset, file_end, sig, cluster_size,
+   646→                    total_clusters, read_clusters
+   647→                )
+   648→        
+   649→        # ─── Tier 2: Structural parsing (for real JPEGs with SOS) ──────
+   650→        # Only used when there's no next JPEG boundary. This works for
+   651→        # real JPEGs with proper markers (SOS, byte stuffing).
+   652→        # Not used first because synthetic JPEGs have random FF bytes
+   653→        # that create false SOS markers.
+   654→        eoi_offset = self._find_jpeg_eoi_structural(image, start_offset, max_end)
+   655→        
+   656→        if eoi_offset is not None:
+   657→            file_end = eoi_offset + 2  # Include the FFD9 bytes
+   658→            return self._build_jpeg_result(
+   659→                image, start_offset, file_end, sig, cluster_size,
+   660→                total_clusters, read_clusters
+   661→            )
+   662→        
+   663→        # ─── Tier 3: Last FFD9 within max_size ─────────────────────────
+   664→        # Fallback: no structural parsing success, no next JPEG boundary.
+   665→        # Use the last FFD9 within max_size.
+   666→        last_ffd9 = self._find_footer_last(
+   667→            image, start_offset + 4, max_end, b'\xFF\xD9'
+   668→        )
+   669→        if last_ffd9 is not None:
+   670→            file_end = last_ffd9 + 2
+   671→            return self._build_jpeg_result(
+   672→                image, start_offset, file_end, sig, cluster_size,
+   673→                total_clusters, read_clusters
+   674→            )
+   675→        
+   676→        # No EOI found — use max-size heuristic
+   677→        remaining = min(sig.max_size, image_len - start_offset)
+   678→        file_data = image[start_offset:start_offset + remaining]
+   679→        
+   680→        if len(file_data) < sig.min_size:
+   681→            return None
+   682→        
+   683→        return {
+   684→            "data": file_data,
+   685→            "start_offset": start_offset,
+   686→            "start_cluster": start_offset // cluster_size,
+   687→            "extension": sig.extension,
+   688→            "format_name": sig.name,
+   689→            "extra_clusters_read": 0,
+   690→            "size": len(file_data),
+   691→        }
+   692→
+   693→    def _find_jpeg_eoi_structural(self, image: bytes, start_offset: int,
+   694→                                   max_end: int) -> Optional[int]:
+   695→        """
+   696→        Find the real EOI of a JPEG by parsing its structure.
+   697→        
+   698→        Returns the offset of the FFD9 marker (not including the marker bytes),
+   699→        or None if structural parsing fails.
+   700→        """
+   701→        pos = start_offset + 2  # Skip SOI
+   702→        
+   703→        while pos < max_end - 1:
+   704→            if image[pos] != 0xFF:
+   705→                pos += 1
+   706→                continue
+   707→            
+   708→            marker_byte = image[pos + 1]
+   709→            
+   710→            # FF 00 = byte stuffing in entropy data (skip)
+   711→            # FF FF = padding (skip)
+   712→            if marker_byte == 0x00 or marker_byte == 0xFF:
+   713→                pos += 1
+   714→                continue
+   715→            
+   716→            # SOS marker (FF DA) — start of entropy-coded data
+   717→            if marker_byte == 0xDA:
+   718→                if pos + 4 > max_end:
+   719→                    return None
+   720→                sos_length = struct.unpack('>H', image[pos + 2:pos + 4])[0]
+   721→                pos += 2 + sos_length
+   722→                
+   723→                # Scan entropy data for real EOI
+   724→                while pos < max_end - 1:
+   725→                    if image[pos] == 0xFF:
+   726→                        next_byte = image[pos + 1]
+   727→                        if next_byte == 0x00:
+   728→                            pos += 2
+   729→                            continue
+   730→                        if next_byte == 0xFF:
+   731→                            pos += 1
+   732→                            continue
+   733→                        if next_byte == 0xD9:
+   734→                            return pos  # Found real EOI
+   735→                        # RST markers (D0-D7) — continue in entropy
+   736→                        if 0xD0 <= next_byte <= 0xD7:
+   737→                            pos += 2
+   738→                            continue
+   739→                        # Other marker — might be after entropy data
+   740→                        pos += 1
+   741→                        continue
+   742→                    else:
+   743→                        pos += 1
+   744→                return None  # Ran out of data
+   745→            
+   746→            # EOI before SOS (unusual but valid)
+   747→            if marker_byte == 0xD9:
+   748→                return pos
+   749→            
+   750→            # RST markers — no length field
+   751→            if marker_byte in (0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7):
+   752→                pos += 2
+   753→                continue
+   754→            
+   755→            # Other markers with length field
+   756→            if pos + 4 > max_end:
+   757→                return None
+   758→            marker_length = struct.unpack('>H', image[pos + 2:pos + 4])[0]
+   759→            pos += 2 + marker_length
+   760→        
+   761→        return None  # Structural parsing failed
+   762→
+   763→    def _find_next_jpeg_signature(self, image: bytes, start: int,
+   764→                                    end: int, cluster_size: int = 4096) -> Optional[int]:
+   765→        """
+   766→        Find the next JPEG signature (FFD8FF) after the given offset.
+   767→        
+   768→        Used as a boundary for JPEG carving: the last FFD9 before the
+   769→        next JPEG is likely the real EOI of the current file.
+   770→        
+   771→        IMPORTANT: Only accepts signatures at cluster boundaries to avoid
+   772→        false positives from random FFD8FF sequences in entropy data.
+   773→        In NTFS, files start at cluster boundaries, so a real JPEG signature
+   774→        should be aligned to a cluster boundary.
+   775→        """
+   776→        jpeg_sig = b'\xFF\xD8\xFF'
+   777→        pos = start
+   778→        
+   779→        while pos < end - len(jpeg_sig):
+   780→            idx = image.find(jpeg_sig, pos, end)
+   781→            if idx == -1:
+   782→                return None
+   783→            
+   784→            # Only accept signatures at cluster boundaries
+   785→            # This filters out false FFD8FF sequences in random data
+   786→            if idx % cluster_size == 0:
+   787→                return idx
+   788→            
+   789→            # Skip to the next cluster boundary
+   790→            next_cluster = ((idx // cluster_size) + 1) * cluster_size
+   791→            pos = next_cluster
+   792→        
+   793→        return None
+   794→
+   795→    def _build_jpeg_result(self, image: bytes, start_offset: int,
+   796→                            file_end: int, sig: FileSignature,
+   797→                            cluster_size: int, total_clusters: int,
+   798→                            read_clusters: Set[int]) -> Optional[Dict]:
+   799→        """Build a JPEG carving result dict."""
+   800→        file_data = image[start_offset:file_end]
+   801→        
+   802→        if len(file_data) < sig.min_size:
+   803→            return None
+   804→        
+   805→        if len(file_data) > sig.max_size:
+   806→            file_data = file_data[:sig.max_size]
+   807→        
+   808→        extra_clusters_read = 0
+   809→        end_cluster = (file_end - 1) // cluster_size
+   810→        start_cluster = start_offset // cluster_size
+   811→        for c in range(start_cluster, end_cluster + 1):
+   812→            if c not in read_clusters:
+   813→                read_clusters.add(c)
+   814→                extra_clusters_read += 1
+   815→        
+   816→        return {
+   817→            "data": file_data,
+   818→            "start_offset": start_offset,
+   819→            "start_cluster": start_offset // cluster_size,
+   820→            "extension": sig.extension,
+   821→            "format_name": sig.name,
+   822→            "extra_clusters_read": extra_clusters_read,
+   823→            "size": len(file_data),
+   824→        }
+   825→
+   826→    def _find_footer(self, image: bytes, start: int, end: int,
+   827→                      footer: bytes) -> Optional[int]:
+   828→        """
+   829→        Find the first occurrence of footer bytes in the image.
+   830→
+   831→        Uses a simple scan. For large images, this could be optimized
+   832→        with a Boyer-Moore search, but for our 10MB images it's fine.
+   833→        """
+   834→        footer_len = len(footer)
+   835→        if footer_len == 0:
+   836→            return None
+   837→
+   838→        # Search in chunks to avoid excessive memory usage
+   839→        chunk_size = 1024 * 1024  # 1MB chunks
+   840→        pos = start
+   841→
+   842→        while pos < end:
+   843→            chunk_end = min(pos + chunk_size + footer_len, end + footer_len)
+   844→            chunk = image[pos:chunk_end]
+   845→
+   846→            idx = chunk.find(footer)
+   847→            if idx != -1:
+   848→                return pos + idx
+   849→
+   850→            pos += chunk_size
+   851→
+   852→        return None
+   853→
+   854→    def _find_footer_last(self, image: bytes, start: int, end: int,
+   855→                          footer: bytes) -> Optional[int]:
+   856→        """
+   857→        Find the LAST occurrence of footer bytes in the image.
+   858→
+   859→        Used for JPEG delimitation where the body may contain multiple
+   860→        FFD9 sequences (EXIF thumbnails, random byte coincidences, or
+   861→        embedded JPEG data). The real EOI marker is the last FFD9, not
+   862→        the first one.
+   863→
+   864→        RC-002 fix: previous _find_footer() found the first FFD9, causing
+   865→        severe truncation when the JPEG body contained spurious FFD9 bytes.
+   866→        """
+   867→        footer_len = len(footer)
+   868→        if footer_len == 0:
+   869→            return None
+   870→
+   871→        last_found = None
+   872→        chunk_size = 1024 * 1024  # 1MB chunks
+   873→        pos = start
+   874→
+   875→        while pos < end:
+   876→            chunk_end = min(pos + chunk_size + footer_len, end + footer_len)
+   877→            chunk = image[pos:chunk_end]
+   878→
+   879→            # Find ALL occurrences in this chunk
+   880→            search_pos = 0
+   881→            while search_pos < len(chunk):
+   882→                idx = chunk.find(footer, search_pos)
+   883→                if idx == -1:
+   884→                    break
+   885→                last_found = pos + idx
+   886→                search_pos = idx + 1
+   887→
+   888→            pos += chunk_size
+   889→
+   890→        return last_found
+   891→
+   892→    def _carve_mp4(self, image: bytes, start_offset: int,
+   893→                    image_len: int, sig: FileSignature) -> Optional[bytes]:
+   894→        """
+   895→        Carve an MP4 file by parsing the ftyp box to determine size.
+   896→
+   897→        MP4 structure: a series of boxes (atoms), each with:
+   898→          [4 bytes size][4 bytes type][data...]
+   899→        The first box is typically 'ftyp'.
+   900→        """
+   901→        # The 'ftyp' is at offset 4 within the first box
+   902→        # So the first box starts at start_offset - 4
+   903→        box_start = start_offset - 4
+   904→
+   905→        if box_start < 0 or box_start + 8 > image_len:
+   906→            # Can't parse box header — use max-size heuristic
+   907→            remaining = min(sig.max_size, image_len - start_offset)
+   908→            return image[start_offset:start_offset + remaining]
+   909→
+   910→        # Read first box size
+   911→        try:
+   912→            box_size = struct.unpack('>I', image[box_start:box_start + 4])[0]
+   913→        except:
+   914→            remaining = min(sig.max_size, image_len - start_offset)
+   915→            return image[start_offset:start_offset + remaining]
+   916→
+   917→        if box_size == 0:
+   918→            # Box extends to end of file
+   919→            return image[box_start:image_len]
+   920→        elif box_size == 1:
+   921→            # 64-bit extended size
+   922→            if box_start + 16 > image_len:
+   923→                remaining = min(sig.max_size, image_len - start_offset)
+   924→                return image[start_offset:start_offset + remaining]
+   925→            box_size = struct.unpack('>Q', image[box_start + 8:box_start + 16])[0]
+   926→
+   927→        # Sanity check
+   928→        if box_size > sig.max_size or box_size < 8:
+   929→            remaining = min(sig.max_size, image_len - start_offset)
+   930→            return image[start_offset:start_offset + remaining]
+   931→
+   932→        end = box_start + box_size
+   933→        if end > image_len:
+   934→            end = image_len
+   935→
+   936→        return image[box_start:end]
+   937→
+   938→    def _resolve_zip_docx(self, carved_files: List[Dict]) -> List[Dict]:
+   939→        """
+   940→        Resolve ZIP/DOCX/XLSX ambiguity.
+   941→
+   942→        All three share the PK\x03\x04 header. We try to distinguish them
+   943→        by looking for internal structure markers:
+   944→          - DOCX contains "word/" or "word/document.xml"
+   945→          - XLSX contains "xl/" or "xl/workbook.xml"
+   946→          - ZIP contains other content
+   947→
+   948→        If we find multiple carves at the same offset (ZIP/DOCX/XLSX),
+   949→        we keep the one that matches best.
+   950→        """
+   951→        # Group by start offset
+   952→        by_offset: Dict[int, List[Dict]] = {}
+   953→        for cf in carved_files:
+   954→            offset = cf["start_offset"]
+   955→            if offset not in by_offset:
+   956→                by_offset[offset] = []
+   957→            by_offset[offset].append(cf)
+   958→
+   959→        resolved = []
+   960→        for offset, files in by_offset.items():
+   961→            if len(files) == 1:
+   962→                resolved.append(files[0])
+   963→                continue
+   964→
+   965→            # Multiple carves at same offset — likely ZIP/DOCX/XLSX overlap
+   966→            # Check internal content for format-specific markers
+   967→            data = files[0]["data"]
+   968→
+   969→            has_docx_markers = (
+   970→                b'word/' in data or
+   971→                b'word/document.xml' in data or
+   972→                b'Content_Types.xml' in data
+   973→            )
+   974→
+   975→            has_xlsx_markers = (
+   976→                b'xl/' in data or
+   977→                b'xl/workbook.xml' in data or
+   978→                b'xl/worksheets/' in data
+   979→            )
+   980→
+   981→            if has_xlsx_markers:
+   982→                # Keep the XLSX version
+   983→                for f in files:
+   984→                    if f["format_name"] == "XLSX":
+   985→                        resolved.append(f)
+   986→                        break
+   987→                else:
+   988→                    # No XLSX entry found — convert the first ZIP to XLSX
+   989→                    files[0]["extension"] = ".xlsx"
+   990→                    files[0]["format_name"] = "XLSX"
+   991→                    resolved.append(files[0])
+   992→            elif has_docx_markers:
+   993→                # Keep the DOCX version
+   994→                for f in files:
+   995→                    if f["format_name"] == "DOCX":
+   996→                        resolved.append(f)
+   997→                        break
+   998→                else:
+   999→                    # No DOCX entry found — convert the ZIP to DOCX
+  1000→                    files[0]["extension"] = ".docx"
+  1001→                    files[0]["format_name"] = "DOCX"
+  1002→                    resolved.append(files[0])
+  1003→            else:
+  1004→                # Keep the ZIP version
+  1005→                for f in files:
+  1006→                    if f["format_name"] == "ZIP":
+  1007→                        resolved.append(f)
+  1008→                        break
+  1009→                else:
+  1010→                    resolved.append(files[0])
+  1011→
+  1012→        return resolved
+  1013→
+  1014→    def _deduplicate_carves(self, carved_files: List[Dict]) -> List[Dict]:
+  1015→        """
+  1016→        Remove duplicate carves that overlap significantly.
+  1017→
+  1018→        If two carves overlap by >50% of the smaller one, keep the larger one.
+  1019→        """
+  1020→        if len(carved_files) <= 1:
+  1021→            return carved_files
+  1022→
+  1023→        # Sort by start offset
+  1024→        sorted_files = sorted(carved_files, key=lambda f: f["start_offset"])
+  1025→
+  1026→        deduped = []
+  1027→        for cf in sorted_files:
+  1028→            is_duplicate = False
+  1029→
+  1030→            for existing in deduped:
+  1031→                # Check overlap
+  1032→                overlap_start = max(cf["start_offset"], existing["start_offset"])
+  1033→                overlap_end = min(
+  1034→                    cf["start_offset"] + cf["size"],
+  1035→                    existing["start_offset"] + existing["size"]
+  1036→                )
+  1037→
+  1038→                if overlap_start < overlap_end:
+  1039→                    overlap_size = overlap_end - overlap_start
+  1040→                    smaller_size = min(cf["size"], existing["size"])
+  1041→
+  1042→                    if overlap_size > smaller_size * 0.5:
+  1043→                        # Significant overlap — keep the larger one
+  1044→                        if cf["size"] > existing["size"]:
+  1045→                            deduped.remove(existing)
+  1046→                            deduped.append(cf)
+  1047→                        is_duplicate = True
+  1048→                        break
+  1049→
+  1050→            if not is_duplicate:
+  1051→                deduped.append(cf)
+  1052→
+  1053→        return deduped
+  1054→

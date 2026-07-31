@@ -541,12 +541,17 @@ class MotorCarving(BaseMotor):
             # RC-002: simple footer search (first or last FFD9) fails because
             # the JPEG body can contain spurious FFD9 bytes. Structural parsing
             # correctly identifies the EOI by skipping entropy-coded data.
-            file_data = self._carve_jpeg(
+            #
+            # _carve_jpeg() returns a fully-formed result dict (with "data",
+            # "start_offset", etc.) — NOT raw bytes. We return it directly
+            # because the size validation is already done inside _carve_jpeg.
+            jpeg_result = self._carve_jpeg(
                 image, start_offset, image_len, sig, cluster_size,
                 total_clusters, read_clusters
             )
-            if file_data is not None:
-                extra_clusters_read = file_data.pop("extra_clusters_read", 0)
+            if jpeg_result is not None:
+                return jpeg_result  # Already validated inside _carve_jpeg
+            return None
         elif sig.footer:
             # Search for footer after the header
             # Start searching from after the header

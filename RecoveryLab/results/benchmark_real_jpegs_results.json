@@ -1,0 +1,106 @@
+{
+  "benchmark": "real_jpeg_benchmark_direct",
+  "sprint": 2,
+  "timestamp": "2026-07-31 22:15:32",
+  "config": {
+    "num_jpegs": 1000,
+    "batch_size": 100,
+    "cluster_size": 4096,
+    "seed": 42
+  },
+  "summary": {
+    "total_files": 1000,
+    "correct": 1000,
+    "corrupt": 0,
+    "missing": 0,
+    "false_positives": 0,
+    "recovery_rate": 1.0,
+    "corruption_rate": 0.0,
+    "missing_rate": 0.0,
+    "elapsed_seconds": 81.8
+  },
+  "per_batch": [
+    {
+      "batch": 0,
+      "correct": 100,
+      "corrupt": 0,
+      "missing": 0,
+      "false_positives": 0,
+      "total": 100
+    },
+    {
+      "batch": 1,
+      "correct": 100,
+      "corrupt": 0,
+      "missing": 0,
+      "false_positives": 0,
+      "total": 100
+    },
+    {
+      "batch": 2,
+      "correct": 100,
+      "corrupt": 0,
+      "missing": 0,
+      "false_positives": 0,
+      "total": 100
+    },
+    {
+      "batch": 3,
+      "correct": 100,
+      "corrupt": 0,
+      "missing": 0,
+      "false_positives": 0,
+      "total": 100
+    },
+    {
+      "batch": 4,
+      "correct": 100,
+      "corrupt": 0,
+      "missing": 0,
+      "false_positives": 0,
+      "total": 100
+    },
+    {
+      "batch": 5,
+      "correct": 100,
+      "corrupt": 0,
+      "missing": 0,
+      "false_positives": 0,
+      "total": 100
+    },
+    {
+      "batch": 6,
+      "correct": 100,
+      "corrupt": 0,
+      "missing": 0,
+      "false_positives": 0,
+      "total": 100
+    },
+    {
+      "batch": 7,
+      "correct": 100,
+      "corrupt": 0,
+      "missing": 0,
+      "false_positives": 0,
+      "total": 100
+    },
+    {
+      "batch": 8,
+      "correct": 100,
+      "corrupt": 0,
+      "missing": 0,
+      "false_positives": 0,
+      "total": 100
+    },
+    {
+      "batch": 9,
+      "correct": 100,
+      "corrupt": 0,
+      "missing": 0,
+      "false_positives": 0,
+      "total": 100
+    }
+  ],
+  "failures": [],
+  "verdict": "A"
+}
