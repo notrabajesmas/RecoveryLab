@@ -47,7 +47,28 @@
     "no_intervention": true,
     "pure_observation": true,
     "two_level_structure": true,
-    "description": "Ejecutar PhotoRec sobre exactamente las mismas imágenes NTFS sintéticas que usó EXP-JPEG-CAUSALITY. Registrar solo hechos observables en Nivel 1. Inferencias permitidas solo en Nivel 2, marcadas explícitamente como 'Compatible con la evidencia', nunca como 'Demostrado'."
+    "blind_interpretation_step": true,
+    "description": "Ejecutar PhotoRec sobre exactamente las mismas imágenes NTFS sintéticas que usó EXP-JPEG-CAUSALITY. Registrar solo hechos observables en Nivel 1. Inferencias permitidas solo en Nivel 2, marcadas explícitamente como 'Compatible con la evidencia', nunca como 'Demostrado'. Nivel 1 y Nivel 2 se producen en archivos separados para evitar que la interpretación contamine la observación."
+  },
+
+  "frozen_rules": {
+    "date_frozen": "2026-08-01",
+    "frozen_before_execution": true,
+    "rule_1": {
+      "statement": "El experimento no intenta reproducir el algoritmo de PhotoRec. El experimento intenta caracterizar su comportamiento observable.",
+      "rationale": "Evita la trampa clásica: 'PhotoRec recuperó el archivo → entonces debe usar el último FFD9'. Eso sería una explicación. La única observación válida es: 'PhotoRec recuperó el archivo íntegro.' Todo lo demás pertenece a la capa de hipótesis.",
+      "enforcement": "Ningún documento de Nivel 1 puede contener la palabra 'estrategia', 'algoritmo', 'usa', 'hace' en referencia a PhotoRec. Solo hechos observables."
+    },
+    "rule_2": {
+      "statement": "Nivel 1 y Nivel 2 se producen en archivos separados. No se agrega ni una sola línea interpretativa al archivo de observaciones.",
+      "rationale": "El Blind Interpretation Step evita que mientras se registran los datos alguien ya esté buscando confirmar una hipótesis. Es una práctica estándar para minimizar el sesgo de interpretación.",
+      "enforcement": "El archivo de Nivel 1 (val_jpeg_reference_observations.json) debe completarse antes de comenzar Nivel 2. El archivo de Nivel 2 (val_jpeg_reference_inferences.json) se produce en un paso completamente separado."
+    },
+    "rule_3": {
+      "statement": "La única observación válida sobre 'por qué PhotoRec recuperó el archivo' es: 'PhotoRec recuperó el archivo íntegro'. Cualquier explicación pertenece a la capa de hipótesis (Nivel 2).",
+      "rationale": "Protege contra el sesgo de confirmación: la tentación de buscar en los datos la evidencia que confirma la hipótesis preferida.",
+      "enforcement": "Cualquier oración en Nivel 1 que contenga 'porque', 'debido a', 'entonces' en referencia a PhotoRec es un error metodológico."
+    }
   },
 
   "two_level_protocol": {
@@ -114,11 +135,12 @@
   "protocol": {
     "step_1": "Generar exactamente la misma imagen NTFS que usó EXP-JPEG-CAUSALITY (misma semilla, mismos parámetros). Guardar la imagen como archivo .img para que PhotoRec pueda procesarla.",
     "step_2": "Ejecutar PhotoRec sobre la imagen .img con configuración estándar (formato predeterminado, o solo JPEG si se puede configurar).",
-    "step_3": "NIVEL 1 — Para cada JPEG recuperado por PhotoRec, registrar: tamaño, SHA-256, si abre correctamente, offset inicial, offset final, nombre generado. Para cada JPEG en ground truth, registrar si PhotoRec produjo un archivo correspondiente.",
-    "step_4": "NIVEL 1 — Registrar el Primary Outcome: ¿RecoveryLab y PhotoRec producen exactamente el mismo archivo (mismo SHA-256) para cada JPEG?",
-    "step_5": "NIVEL 1 — Calcular agregados: tasa de recuperación, tasa de SHA-256 match, cantidad de archivos donde ambas herramientas coinciden.",
-    "step_6": "NIVEL 2 — Solo después de completar Nivel 1, formular inferencias. Para cada archivo donde PhotoRec produce un resultado diferente a RecoveryLab: ¿El tamaño es compatible con 'último FFD9'? ¿Con parsing de segmentos? ¿Con heurísticas de longitud? ¿Es incompatible con 'primer FFD9'? Todas marcadas como 'Compatible con la evidencia'.",
-    "step_7": "NIVEL 2 — Si PhotoRec recupera archivos con SHA-256 correcto, registrar H_PhotoRecStrategy como hipótesis inferida (no observada). Requiere evidencia adicional para confirmar la naturaleza exacta de la estrategia."
+    "step_3": "NIVEL 1 — BLIND OBSERVATION — Para cada JPEG recuperado por PhotoRec, registrar: tamaño, SHA-256, si abre correctamente, offset inicial, offset final, nombre generado. Para cada JPEG en ground truth, registrar si PhotoRec produjo un archivo correspondiente. Ni una sola línea interpretativa. Guardar en val_jpeg_reference_observations.json.",
+    "step_4": "NIVEL 1 — BLIND OBSERVATION — Registrar el Primary Outcome: ¿RecoveryLab y PhotoRec producen exactamente el mismo archivo (mismo SHA-256) para cada JPEG? Guardar en val_jpeg_reference_observations.json.",
+    "step_5": "NIVEL 1 — BLIND OBSERVATION — Calcular agregados: tasa de recuperación, tasa de SHA-256 match, cantidad de archivos donde ambas herramientas coinciden. Guardar en val_jpeg_reference_observations.json.",
+    "step_6": "CHECKPOINT — Verificar que val_jpeg_reference_observations.json está completo y no contiene ni una sola línea interpretativa. Solo después de este checkpoint, comenzar Nivel 2.",
+    "step_7": "NIVEL 2 — INTERPRETATION — En un archivo SEPARADO (val_jpeg_reference_inferences.json), formular inferencias. Para cada archivo donde PhotoRec produce un resultado diferente a RecoveryLab: ¿El tamaño es compatible con 'último FFD9'? ¿Con parsing de segmentos? ¿Con heurísticas de longitud? ¿Es incompatible con 'primer FFD9'? Todas marcadas como 'Compatible con la evidencia'.",
+    "step_8": "NIVEL 2 — INTERPRETATION — Si PhotoRec recupera archivos con SHA-256 correcto, registrar H_PhotoRecStrategy como hipótesis inferida (no observada). Requiere evidencia adicional para confirmar la naturaleza exacta de la estrategia. Guardar en val_jpeg_reference_inferences.json."
   },
 
   "metrics": {
@@ -190,5 +212,5 @@
     "predicted_impact": "Si PhotoRec produce archivos idénticos al ground truth, RP-003 puede formular una predicción anclada en un comportamiento observado, no en una suposición sobre la estrategia correcta."
   },
 
-  "notes": "Este experimento es de calibración, no de validación del código. Calibra el comportamiento esperado de una herramienta de referencia madura contra el mismo dataset. La restricción observacional es deliberada: el laboratorio solo puede observar salidas (tamaño, SHA-256, offsets), no algoritmos internos. Cualquier inferencia sobre la estrategia de PhotoRec es una hipótesis inferida que requiere evidencia adicional. La estructura de dos niveles (observación primero, inferencias después) protege contra la tentación de confundir compatibilidad con demostración. El Primary Outcome binario ('¿producen exactamente el mismo archivo?') divide el espacio experimental antes de cualquier pregunta más fina."
+  "notes": "Este experimento es de calibración, no de validación del código. Calibra el comportamiento esperado de una herramienta de referencia madura contra el mismo dataset. La restricción observacional es deliberada: el laboratorio solo puede observar salidas (tamaño, SHA-256, offsets), no algoritmos internos. Cualquier inferencia sobre la estrategia de PhotoRec es una hipótesis inferida que requiere evidencia adicional. El Blind Interpretation Step (archivos separados para observación e inferencia) es la garantía estructural de que la separación es real, no solo declarativa. Las reglas congeladas se establecieron antes de la ejecución para evitar que el sesgo de confirmación se introduzca durante el análisis. El Primary Outcome binario ('¿producen exactamente el mismo archivo?') divide el espacio experimental antes de cualquier pregunta más fina. El árbol de decisión resultante es limpio: Sí → no hace falta explicar diferencias; No → ¿dónde difieren? → ¿qué hipótesis son compatibles con esa diferencia?"
 }

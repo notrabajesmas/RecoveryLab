@@ -967,3 +967,25 @@ Stage Summary:
 - La estructura de dos niveles (observación → inferencia) es consistente con la disciplina del laboratorio: no saltar de la observación a la conclusión.
 - El Primary Outcome binario es el primer filtro que divide el espacio experimental antes de preguntas más finas.
 - El experimento es de calibración, no de validación del código.
+
+---
+Task ID: 25
+Agent: Main
+Task: Blind Interpretation Step + reglas congeladas para VAL-JPEG-REFERENCE
+
+Work Log:
+- Revisión metodológica del usuario: dos adiciones antes de ejecutar VAL-JPEG-REFERENCE
+- 1. BLIND INTERPRETATION STEP: Nivel 1 y Nivel 2 se producen en archivos separados (val_jpeg_reference_observations.json y val_jpeg_reference_inferences.json). El archivo de observaciones no contiene ni una sola línea interpretativa. Solo después de completar y verificar el archivo de observaciones se comienza el archivo de inferencias. Esto evita que mientras se registran los datos alguien ya esté buscando confirmar una hipótesis.
+- 2. REGLAS CONGELADAS: tres reglas establecidas antes de la ejecución:
+  - Regla 1: "El experimento no intenta reproducir el algoritmo de PhotoRec. El experimento intenta caracterizar su comportamiento observable." Evita la trampa: 'PhotoRec recuperó → entonces debe usar el último FFD9'. La única observación válida es: 'PhotoRec recuperó el archivo íntegro.'
+  - Regla 2: Nivel 1 y Nivel 2 en archivos separados. El checkpoint (step 6) verifica que el archivo de observaciones no contiene interpretaciones antes de comenzar inferencias.
+  - Regla 3: La única observación válida sobre 'por qué' es: 'PhotoRec recuperó el archivo íntegro'. Cualquier explicación pertenece a la capa de hipótesis. Enforcement: las palabras 'porque', 'debido a', 'entonces' en referencia a PhotoRec en Nivel 1 son un error metodológico.
+- Actualizado protocolo: steps 3-5 marcados como "BLIND OBSERVATION", step 6 es checkpoint, steps 7-8 marcados como "INTERPRETATION" en archivo separado.
+- Agregado frozen_rules con date_frozen y frozen_before_execution: true.
+- Observación del usuario: el cambio metodológico más importante de Fase A es pasar de "¿Tenemos razón?" a "¿Qué podemos afirmar sin exceder la evidencia?"
+
+Stage Summary:
+- VAL-JPEG-REFERENCE tiene Blind Interpretation Step: la separación observación/inferencia es estructural (archivos separados), no solo declarativa.
+- Tres reglas congeladas antes de la ejecución protegen contra el sesgo de confirmación.
+- El árbol de decisión es limpio: Primary Outcome binario → ¿dónde difieren? → ¿qué hipótesis son compatibles?
+- El experimento está listo para ejecución.
