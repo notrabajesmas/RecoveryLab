@@ -922,3 +922,25 @@ Stage Summary:
 - RC-002 reformulado como "Delimitación JPEG prematura" — ROOT_CAUSE_CONFIRMED.
 - El experimento EXP-JPEG-CAUSALITY respondió 4 de 5 preguntas. Q5 (PhotoRec) pendiente.
 - Próximo paso: diseñar RP-003 con predicción falsable.
+
+---
+Task ID: 23
+Agent: Main
+Task: Cambio de fase — de CAUSALITY_INVESTIGATION a REFERENCE_VALIDATION
+
+Work Log:
+- Revisión metodológica del usuario: la causalidad inmediata del truncamiento JPEG está confirmada con una regularidad perfecta (15/15: carved_size = first_ffd9_offset + 2). La pregunta abierta ya no es "¿por qué se truncaron?" sino "¿cuál es el comportamiento correcto que debe imitar RecoveryLab?"
+- Tres decisiones metodológicas implementadas:
+  1. RENOMBRAR el siguiente experimento: de EXP-JPEG-CAUSALITY a VAL-JPEG-REFERENCE. La causalidad ya fue respondida. El nuevo experimento busca el comportamiento de referencia, no la causa del defecto.
+  2. REORDENAR los pasos: VAL-JPEG-REFERENCE → RP-003 → Prediction Ledger → Implementación. No porque se dude de la causa observada, sino porque el diseño de la solución todavía puede mejorar. Si PhotoRec recupera perfectamente, RP-003 puede formular una predicción mucho más fuerte: "Si RecoveryLab adopta una estrategia equivalente a la observada en PhotoRec, esperamos recuperar el 100% de los JPEG sintéticos sin afectar ZIP, PDF, PNG y DOCX."
+  3. REGISTRAR la pregunta abierta: "¿Buscar el último FFD9 es realmente la estrategia correcta?" PhotoRec podría usar: (a) el último FFD9, (b) parsing de segmentos JPEG, (c) descarte de archivos ambiguos, (d) heurísticas de longitud. Cada una conduciría a un RP distinto.
+- Actualizados artefactos:
+  - RC-002.json: status ROOT_CAUSE_CONFIRMED → ROOT_CAUSE_CONFIRMED — REFERENCE_VALIDATION_PENDING. Agregada phase_transition. Actualizadas design_options con Option 0 (VAL-JPEG-REFERENCE) como paso prioritario. Actualizada remediation_proposal. Actualizadas notas.
+  - VAL-JPEG-REFERENCE.json: creado como experimento de referencia con 6 posibles outcomes y protocolo detallado.
+  - prediction_ledger.json: actualizado meta.current_phase a REFERENCE_VALIDATION con hoja de ruta.
+
+Stage Summary:
+- Cambio de fase formalizado: el laboratorio ya no está tratando de descubrir qué falla, sino de descubrir cuál es el comportamiento correcto que debe imitar.
+- VAL-JPEG-REFERENCE es el siguiente experimento. Pregunta única: "¿Cómo resuelve una herramienta de referencia exactamente el mismo caso?"
+- Si PhotoRec recupera perfectamente, RP-003 puede formular una predicción anclada en comportamiento observado, no en suposición.
+- La cadena de evidencia es sólida: 15/15 regularidad perfecta + código inspeccionado + Dataset Builder validado.

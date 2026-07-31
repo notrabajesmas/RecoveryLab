@@ -6,7 +6,7 @@
   "date_identified": "2026-07-30",
   "date_reformulated": "2026-07-31",
   "severity": "HIGH",
-  "status": "ROOT_CAUSE_CONFIRMED",
+  "status": "ROOT_CAUSE_CONFIRMED — REFERENCE_VALIDATION_PENDING",
   "defect_type": "ALGORITHMIC_POLICY",
   "reformulation_rationale": {
     "original_title": "Heurística de deduplicación JPEG demasiado agresiva",
@@ -68,7 +68,15 @@
         "note": "Si PhotoRec también trunca, es un problema del formato JPEG; si no, es un problema de nuestro parser"
       }
     ],
-    "why_not_code_yet": "No se debe escribir código hasta que el experimento de causalidad identifique de forma inequívoca la causa. Seguir la disciplina: Observación → Hipótesis → Predicción → Cambio → Verificación. LA CAUSA YA ESTÁ IDENTIFICADA. El siguiente paso es diseñar RP-003 con predicción falsable."
+    "why_not_code_yet": "La causa está identificada. El siguiente paso NO es implementar un fix, sino validar el comportamiento de referencia antes de diseñar RP-003. La disciplina exige: Observación → Hipótesis → Predicción → Cambio → Verificación. La causalidad respondió 'qué falla'. El experimento de referencia responderá 'cuál es el comportamiento correcto a imitar'.",
+    "phase_transition": {
+      "date": "2026-07-31",
+      "from": "CAUSALITY_INVESTIGATION",
+      "to": "REFERENCE_VALIDATION",
+      "rationale": "EXP-JPEG-CAUSALITY respondió la pregunta de causalidad: 15/15 archivos confirman carved_size = first_ffd9_offset + 2. La causa inmediata está localizada con precisión. El laboratorio ya no está tratando de descubrir qué falla, sino de descubrir cuál es el comportamiento correcto que debe imitar. Ese es un cambio natural después de haber localizado el defecto.",
+      "open_question": "¿Buscar el último FFD9 es realmente la estrategia correcta? No lo sabemos. PhotoRec podría usar: (a) el último FFD9, (b) parsing de segmentos JPEG, (c) descarte de archivos ambiguos, (d) heurísticas de longitud. Cada una conduciría a un RP distinto.",
+      "consequence": "El orden correcto es: VAL-JPEG-REFERENCE → RP-003 → Prediction Ledger → Implementación. No porque se dude de la causa observada, sino porque el diseño de la solución todavía puede mejorar."
+    }
   },
 
   "experiment_design": {
@@ -115,38 +123,50 @@
     "H9 — H_JPEGExposure: delimitación defect expuesto por eliminación de BMP cascade"
   ],
 
-  "remediation_proposal": "RP-003 — Buscar el ÚLTIMO FFD9 en lugar del primero. La causa está identificada: _find_footer() busca la primera ocurrencia. El fix es buscar la última ocurrencia dentro del rango max_size. Esto requiere un RP con predicción falsable antes de implementar.",
+  "remediation_proposal": "RP-003 — A definir después de VAL-JPEG-REFERENCE. La causa está identificada pero la estrategia de solución aún no. El fix tentativo es buscar el último FFD9, pero antes debemos observar cómo resuelve una herramienta de referencia (PhotoRec) exactamente el mismo caso. Si PhotoRec recupera perfectamente los JPEG, RP-003 puede formular una predicción mucho más fuerte: 'Si RecoveryLab adopta una estrategia equivalente a la observada en PhotoRec, esperamos recuperar el 100% de los JPEG sintéticos sin afectar ZIP, PDF, PNG y DOCX.'",
 
   "design_options": [
+    {
+      "option": "0: VAL-JPEG-REFERENCE (PASO PRIORITARIO)",
+      "description": "Ejecutar PhotoRec sobre exactamente las mismas imágenes NTFS y observar cómo resuelve el mismo caso. Esto NO es un fix — es un experimento de referencia que informará el diseño de RP-003.",
+      "complexity": "LOW",
+      "risk": "N/A — es un experimento de observación, no una intervención",
+      "requires_experiment": true,
+      "status": "NEXT_STEP",
+      "possible_outcomes": {
+        "PhotoRec_recovers_perfectly": "RP-003 gana muchísimo peso: se puede formular una predicción fuerte basada en la estrategia observada",
+        "PhotoRec_uses_last_FFD9": "Confirmaría la opción A como estrategia correcta",
+        "PhotoRec_uses_segment_parsing": "Conduciría a la opción B como estrategia correcta",
+        "PhotoRec_discards_ambiguous_files": "Conduciría a un RP distinto: descarte en lugar de recuperación completa",
+        "PhotoRec_uses_length_heuristics": "Conduciría a un RP con heurísticas de longitud",
+        "PhotoRec_also_truncates": "El problema es del formato JPEG, no de nuestro parser — cambiaría radicalmente el alcance de RP-003"
+      }
+    },
     {
       "option": "A: Buscar el ÚLTIMO FFD9",
       "description": "En lugar del primer FFD9, buscar el último FFD9 antes del final del archivo",
       "complexity": "LOW",
       "risk": "Podría sobre-extender archivos si hay FFD9 en datos posteriores al JPEG real",
-      "requires_experiment": true
+      "requires_experiment": true,
+      "status": "TENTATIVE — pendiente de VAL-JPEG-REFERENCE"
     },
     {
       "option": "B: Validar estructura JPEG",
       "description": "Parsear la estructura JPEG (SOI, APP0/APP1, DQT, SOF, SOS, EOI) para identificar el EOI real",
       "complexity": "MEDIUM",
       "risk": "Podría no funcionar con archivos corruptos",
-      "requires_experiment": true
+      "requires_experiment": true,
+      "status": "TENTATIVE — pendiente de VAL-JPEG-REFERENCE"
     },
     {
       "option": "C: Usar tamaño del ground truth",
       "description": "No aplicable — carving no tiene acceso a ground truth",
       "complexity": "N/A",
       "risk": "N/A — viola la pureza del carving",
-      "requires_experiment": false
-    },
-    {
-      "option": "D: Validar con PhotoRec",
-      "description": "Verificar si PhotoRec también trunca estos JPEG — si sí, es un problema del formato; si no, es un problema de nuestro parser",
-      "complexity": "LOW",
-      "risk": "N/A — es un experimento, no un fix",
-      "requires_experiment": false
+      "requires_experiment": false,
+      "status": "REJECTED"
     }
   ],
 
-  "notes": "Este defecto fue reformulado de 'dedup agresiva' a 'delimitación prematura' después de que RP-002 eliminó el BMP cascade y expuso el verdadero problema. La deduplicación era un síntoma, no la causa. El cambio conceptual es importante: el Judge pasó de ser un sospechoso a ser un instrumento diagnóstico. La disciplina exige: no escribir código hasta que el experimento de causalidad identifique la causa exacta."
+  "notes": "Este defecto fue reformulado de 'dedup agresiva' a 'delimitación prematura' después de que RP-002 eliminó el BMP cascade y expuso el verdadero problema. La deduplicación era un síntoma, no la causa. El Judge pasó de ser un sospechoso a ser un instrumento diagnóstico. La causalidad inmediata está confirmada (15/15 match exacto: carved_size = first_ffd9_offset + 2). El laboratorio ya no está tratando de descubrir qué falla, sino de descubrir cuál es el comportamiento correcto que debe imitar. El siguiente experimento (VAL-JPEG-REFERENCE) responde a una pregunta distinta: '¿Cómo resuelve una herramienta de referencia exactamente el mismo caso?' No se llama EXP-JPEG-CAUSALITY porque la causalidad ya fue respondida. El orden de los pasos es: VAL-JPEG-REFERENCE → RP-003 → Prediction Ledger → Implementación."
 }

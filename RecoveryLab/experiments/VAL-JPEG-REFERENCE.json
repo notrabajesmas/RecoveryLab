@@ -1,0 +1,118 @@
+{
+  "experiment_id": "VAL-JPEG-REFERENCE",
+  "family": "VAL",
+  "family_description": "Validación de comportamiento contra herramientas de referencia externa. Los experimentos VAL no intentan descubrir qué falla. Intentan descubrir cuál es el comportamiento correcto que debe imitar RecoveryLab.",
+  "title": "Validación de referencia JPEG — ¿Cómo resuelve una herramienta de referencia exactamente el mismo caso?",
+  "date_defined": "2026-07-31",
+  "origin": "Revisión metodológica post-EXP-JPEG-CAUSALITY — la causalidad está confirmada, pero la estrategia de solución aún no",
+  "status": "DEFINED",
+
+  "question": "¿Cómo resuelve una herramienta de referencia (PhotoRec) exactamente el mismo caso de JPEG con múltiples FFD9 internos?",
+
+  "motivation": {
+    "why": "La causalidad inmediata del truncamiento JPEG está confirmada: 15/15 archivos cumplen carved_size = first_ffd9_offset + 2. El parser se detiene en el primer FFD9. Pero NO sabemos si buscar el último FFD9 es la estrategia correcta. PhotoRec podría usar: (a) el último FFD9, (b) parsing de segmentos JPEG, (c) descarte de archivos ambiguos, (d) heurísticas de longitud. Cada una conduciría a un RP distinto.",
+    "what_changes": "Si PhotoRec recupera perfectamente los JPEG, RP-003 gana muchísimo peso: se puede formular una predicción fuerte basada en la estrategia observada. Si PhotoRec también trunca, el problema es del formato JPEG, no de nuestro parser — cambiaría radicalmente el alcance de RP-003. Si PhotoRec usa una estrategia diferente a 'buscar el último FFD9', el diseño de RP-003 debe ajustarse.",
+    "why_not_exp_jpeg_causality": "No se llama EXP-JPEG-CAUSALITY porque la causalidad ya fue respondida. Ese experimento respondió '¿por qué se truncaron los JPEG?'. Este experimento responde una pregunta distinta: '¿cuál es el comportamiento correcto que debe imitar nuestro parser?'. Cambiar el nombre refleja el cambio de fase del laboratorio: de descubrir qué falla a descubrir cómo hacerlo correctamente."
+  },
+
+  "phase_context": {
+    "completed_phase": "CAUSALITY_INVESTIGATION",
+    "completed_experiment": "EXP-JPEG-CAUSALITY",
+    "completed_result": "15/15 archivos: carved_size = first_ffd9_offset + 2. El parser se detiene en el primer FFD9. Causa confirmada.",
+    "current_phase": "REFERENCE_VALIDATION",
+    "current_question": "¿Cuál es el comportamiento correcto que debe imitar RecoveryLab?",
+    "next_phases": {
+      "after_this": "RP-003 (diseñado con conocimiento del comportamiento de referencia)",
+      "after_rp003": "Prediction Ledger (predicción falsable basada en referencia)",
+      "after_prediction": "Implementación"
+    }
+  },
+
+  "design": {
+    "no_hypothesis": true,
+    "no_intervention": true,
+    "pure_observation": true,
+    "description": "Ejecutar PhotoRec sobre exactamente las mismas imágenes NTFS sintéticas que usó EXP-JPEG-CAUSALITY. Observar qué hace PhotoRec con los JPEG que contienen múltiples FFD9 internos. No se modifica ningún código de RecoveryLab."
+  },
+
+  "protocol": {
+    "step_1": "Generar exactamente la misma imagen NTFS que usó EXP-JPEG-CAUSALITY (misma semilla, mismos parámetros). Guardar la imagen como archivo .img para que PhotoRec pueda procesarla.",
+    "step_2": "Ejecutar PhotoRec sobre la imagen .img con configuración estándar (fileopt → only JPEG selected, o formato predeterminado).",
+    "step_3": "Recopilar los archivos recuperados por PhotoRec. Para cada archivo JPEG recuperado: (a) tamaño del archivo, (b) SHA-256, (c) comparar con ground truth.",
+    "step_4": "Si PhotoRec recupera JPEG completos: analizar CÓMO lo hace. Para cada archivo recuperado: (a) ¿El tamaño coincide con el último FFD9 + 2? (b) ¿El tamaño coincide con el ground truth? (c) ¿Hay evidencia de parsing de segmentos JPEG? (d) ¿Hay archivos que PhotoRec descarta?",
+    "step_5": "Si PhotoRec NO recupera JPEG completos: documentar exactamente qué hace. ¿Trunca igual que RecoveryLab? ¿Recupera parcialmente? ¿Descarta completamente?",
+    "step_6": "Clasificar la estrategia de PhotoRec en una de las categorías: (a) usa el último FFD9, (b) parsea segmentos JPEG, (c) descarta archivos ambiguos, (d) usa heurísticas de longitud, (e) otra estrategia, (f) no recupera estos JPEG."
+  },
+
+  "metrics": {
+    "photorec_recovery_rate": "Proporción de JPEG recuperados por PhotoRec (vs. ground truth)",
+    "photorec_completeness": "¿Los archivos recuperados por PhotoRec coinciden con ground truth (SHA-256)?",
+    "photorec_strategy": "Clasificación de la estrategia de delimitación JPEG usada por PhotoRec",
+    "recoverylab_vs_photorec_gap": "Diferencia de recuperación entre RecoveryLab y PhotoRec sobre los mismos datos"
+  },
+
+  "possible_outcomes": {
+    "outcome_1_photorec_perfect": {
+      "description": "PhotoRec recupera el 100% de los JPEG con SHA-256 correcto",
+      "probability": "ALTA — PhotoRec es una herramienta madura con parsing JPEG avanzado",
+      "consequence": "RP-003 puede formular una predicción muy fuerte: 'Si RecoveryLab adopta una estrategia equivalente a la observada en PhotoRec, esperamos recuperar el 100% de los JPEG sintéticos sin afectar ZIP, PDF, PNG y DOCX.'",
+      "next_step": "Analizar la estrategia de PhotoRec y diseñar RP-003 basado en ella"
+    },
+    "outcome_2_photorec_last_ffd9": {
+      "description": "PhotoRec busca el último FFD9",
+      "probability": "POSIBLE — PhotoRec podría usar esta estrategia simple",
+      "consequence": "Confirmaría la opción A (buscar el último FFD9) como la estrategia correcta. RP-003 sería simple: cambiar _find_footer() de first a last.",
+      "next_step": "Diseñar RP-003 con predicción falsable basada en último FFD9"
+    },
+    "outcome_3_photorec_segment_parsing": {
+      "description": "PhotoRec parsea la estructura JPEG (SOI → APPn → DQT → SOF → DHT → SOS → EOI)",
+      "probability": "ALTA — PhotoRec es conocido por su parsing estructural",
+      "consequence": "Conduciría a la opción B (validar estructura JPEG) como la estrategia correcta. RP-003 sería más complejo pero más robusto.",
+      "next_step": "Diseñar RP-003 con parsing de segmentos JPEG"
+    },
+    "outcome_4_photorec_discards": {
+      "description": "PhotoRec descarta archivos JPEG ambiguos (no los recupera)",
+      "probability": "BAJA — PhotoRec típicamente intenta recuperar todo",
+      "consequence": "Conduciría a un RP distinto: descarte en lugar de recuperación completa. Cambiaría la métrica de éxito.",
+      "next_step": "Replantear si la recuperación completa de JPEG ambiguos es el objetivo correcto"
+    },
+    "outcome_5_photorec_length_heuristics": {
+      "description": "PhotoRec usa heurísticas de longitud (ej: tamaño mínimo razonable para un JPEG)",
+      "probability": "POSIBLE — PhotoRec podría combinar heurísticas",
+      "consequence": "Conduciría a un RP con heurísticas de longitud. Menos elegante pero potencialmente más robusto.",
+      "next_step": "Diseñar RP-003 con heurísticas de longitud"
+    },
+    "outcome_6_photorec_also_truncates": {
+      "description": "PhotoRec también trunca estos JPEG (no los recupera completamente)",
+      "probability": "BAJA — PhotoRec tiene parsing JPEG avanzado",
+      "consequence": "El problema es del formato JPEG, no de nuestro parser. Cambiaría radicalmente el alcance de RP-003: la recuperación completa de JPEG con FFD9 internos podría ser inherentemente imposible sin parsing estructural.",
+      "next_step": "Replantear si el objetivo es realista. Posiblemente convertir a BLOCKER-002 (comparación con herramientas externas)."
+    }
+  },
+
+  "scope": {
+    "component": "PhotoRec (herramienta externa de referencia)",
+    "does_not_test": "RecoveryLab, algoritmos de carving, Judge, RVS, FQS",
+    "only_tests": "Comportamiento de PhotoRec sobre JPEG con múltiples FFD9 internos",
+    "input_data": "Exactamente las mismas imágenes NTFS sintéticas de EXP-JPEG-CAUSALITY"
+  },
+
+  "discrimination_power": {
+    "discriminates": "Estrategia correcta de delimitación JPEG (último FFD9 vs. parsing estructural vs. heurísticas vs. descarte)",
+    "does_not_discriminate": "Causa del truncamiento (ya confirmada por EXP-JPEG-CAUSALITY)"
+  },
+
+  "claims_affected": [
+    "RC-002 — design_options se resolverán con la evidencia de este experimento",
+    "BLOCKER-002 — validación contra herramientas externas",
+    "H9 (H_JPEGExposure) — la estrategia de referencia podría confirmar o refinar la hipótesis"
+  ],
+
+  "evidence_chain": {
+    "prerequisite": "EXP-JPEG-CAUSALITY (COMPLETED) — causalidad confirmada",
+    "feeds_into": "RP-003 — diseño de remedio informado por referencia",
+    "predicted_impact": "Si PhotoRec recupera perfectamente, RP-003 puede formular una predicción más fuerte que simplemente 'buscar el último FFD9'"
+  },
+
+  "notes": "Este experimento NO busca localizar el defecto. Busca localizar el comportamiento de referencia. El cambio de nombre respecto a EXP-JPEG-CAUSALITY es deliberado: refleja el cambio de fase del laboratorio. La causalidad ya está respondida. La pregunta abierta es: ¿cuál es el comportamiento correcto que debe imitar RecoveryLab? Si PhotoRec recupera perfectamente, la predicción de RP-003 puede ser mucho más fuerte: 'Si adoptamos una estrategia equivalente a la observada en PhotoRec, esperamos recuperar el 100% de los JPEG sintéticos sin afectar ZIP, PDF, PNG y DOCX.' Esa es una predicción más fuerte que simplemente 'buscar el último FFD9' porque está anclada en un comportamiento observado de referencia, no en una suposición sobre la estrategia correcta."
+}
