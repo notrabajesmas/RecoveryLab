@@ -6,7 +6,7 @@
   "date_identified": "2026-07-31",
   "date_reformulated": "2026-07-31",
   "severity": "HIGH",
-  "status": "ROOT_CAUSE_IDENTIFIED",
+  "status": "LOSS_STAGES_LOCALIZED",
   "classification": "RC-A",
   "classification_note": "Clasificado como RC-A (Algorithm) tentativamente. La hipótesis dominante apunta al algoritmo de deduplicación, pero hipótesis instrumentales (H6) no están descartadas. La clasificación puede cambiar según resultados de INST-0001.",
 
@@ -105,8 +105,8 @@
   },
 
   "root_cause_analysis": {
-    "status": "OPEN",
-    "note": "El root cause NO está determinado. El RC anterior (RC-003) afirmaba que la deduplicación era la causa. Eso era una hipótesis, no un hecho. Este RC reformulado registra la observación y lista las hipótesis compatibles sin preferencia.",
+    "status": "PARTIALLY RESOLVED — loss stages localized, causal hypotheses pending falsification",
+    "note": "INST-0002 localizó las etapas de pérdida (Dedup 44.6%, Judge 24.6%) pero no demostró las causas. Las explicaciones causales (falso positivo BMP, truncamiento PDF) son hipótesis consistentes con la evidencia, pendientes de confirmación mediante intervención controlada (RP-001, RP-002 con predicciones falsables). El RC anterior (RC-003) afirmaba que la deduplicación era la causa. Eso era una hipótesis, no un hecho.",
     "candidate_components": [
       "motors/motor_carving.py — _deduplicate_carves (H1, H4)",
       "motors/motor_carving.py — signature resolution (H5)",
@@ -122,38 +122,54 @@
     "DIAG-0001 — conclusiones sobre '3 parsers funcionan' son escala-dependientes"
   ],
 
-  "remediation_proposal": "PENDIENTE — No se puede proponer remedio sin determinar root cause. La próxima acción es INST-0002 (validación de Carving Parser) para discriminar entre hipótesis.",
+  "remediation_proposal": "RP-001 (PDF footer) y RP-002 (BMP signature) — ambos con predicciones falsables obligatorias. La intervención controlada confirmará o refutará las hipótesis causales. Orden: RP-001 → INST-0002 → verificar predicción → RP-002 → INST-0002 → verificar predicción → INST-0003.",
 
   "inst_0002_results": {
     "experiment": "INST-0002",
     "date": "2026-07-31",
-    "verdict": "ROOT CAUSE IDENTIFIED — Two distinct algorithmic defects, not a single scale-dependent phenomenon",
+    "verdict": "LOSS STAGES LOCALIZED — Dedup y Judge son las etapas de pérdida. Las causas son hipótesis pendientes de falsación.",
     "total_files_traced": 525,
     "loss_at_scan": 0,
     "loss_at_delimitation": 0,
     "loss_at_dedup": 234,
     "loss_at_judge": 129,
     "hypothesis_discrimination": {
-      "H1": "NOT SUPPORTED — scanner finds all signatures (0% loss)",
-      "H2": "NOT SUPPORTED — all signatures lead to valid carves (0% loss)",
-      "H3": "SUPPORTED — 44.6% of files eliminated by dedup (BMP false positive cascade)",
-      "H4": "SUPPORTED — 24.6% of files have SHA-256 mismatch (PDF truncation)",
-      "H5": "SUPPORTED — losses at 2 stages (Dedup + Judge)",
+      "H1": "NOT SUPPORTED — scanner finds all signatures (0% loss at scan)",
+      "H2": "NOT SUPPORTED — all signatures lead to valid carves (0% loss at delimitation)",
+      "H3": "SUPPORTED — 44.6% of files eliminated at dedup stage",
+      "H4": "SUPPORTED — 24.6% of files have SHA-256 mismatch at judge stage",
+      "H5": "SUPPORTED — losses occur at 2 different stages (Dedup + Judge)",
       "H6": "REFUTED by INST-0001"
     },
-    "root_cause_chain": {
-      "primary_defect": "BMP false positive — signature 'BM' (0x42 0x4D) is only 2 bytes and appears in random data within other files. Creates a 50MB carved 'BMP file' that overlaps with all other files, triggering dedup cascade.",
-      "secondary_defect": "PDF footer truncation — carving motor uses %%EOF (5 bytes) but file generator produces %%EOF\\n (6 bytes), making all carved PDFs 1 byte short.",
-      "scale_dependent_explanation": "The 'scale-dependent collapse' is an artifact: the BMP false positive's 50MB size overlaps with proportionally more files as N increases. At N=15, the BMP may not overlap with any file. At N=100, it overlaps with dozens. This is NOT a scale-dependent algorithmic property — it's a constant-size bug whose impact scales with N."
+    "observations": {
+      "loss_by_stage": "Scanner ✓, Delimitación ✓, Dedup ✗ 44.6%, Judge ✗ 24.6%, Recovered 30.9%",
+      "format_specific": {
+        "PDF": "100% loss at Judge — all carved PDFs differ from ground truth by exactly 1 byte (0x0A) at the end",
+        "JPEG": "91.1% loss at Dedup — files eliminated during dedup stage",
+        "PNG": "62.2% recovered, 37.8% lost at Dedup",
+        "ZIP": "33.8% recovered, 66.2% lost at Dedup",
+        "DOCX": "58.6% recovered, 41.4% lost at Dedup"
+      }
     },
-    "format_specific": {
-      "PDF": "100% loss at Judge — all files 1 byte short (footer bug)",
-      "JPEG": "91.1% loss at Dedup — eliminated by BMP false positive",
-      "PNG": "62.2% recovered, 37.8% lost at Dedup — same BMP issue",
-      "ZIP": "33.8% recovered at N>15, 66.2% lost at Dedup — same BMP issue",
-      "DOCX": "58.6% recovered at N>15, 41.4% lost at Dedup — same BMP issue"
+    "causal_hypotheses": {
+      "note": "Las siguientes son hipótesis causales consistentes con las observaciones. NO están demostradas. Requieren intervención controlada (RP-001, RP-002) con predicciones falsables.",
+      "H_BMP": {
+        "statement": "Los falsos positivos BMP (firma 'BM' de 2 bytes) generan candidatos carved de ~50MB que se superponen con archivos reales, y la deduplicación elimina los archivos reales porque se superponen con el candidato BMP.",
+        "evidence_consistent": true,
+        "evidence_sufficient": false,
+        "testable_via": "RP-002 — eliminar firma BMP y verificar si pérdidas en Dedup bajan significativamente",
+        "prediction": "Si se elimina la firma BMP del scanner: pérdidas en Dedup ↓ significativamente, firmas detectadas ↓, Judge ≈ igual, PDF ≈ igual"
+      },
+      "H_PDF": {
+        "statement": "El carving motor usa %%EOF como footer pero el generador produce %%EOF\\n, haciendo que los PDFs carved tengan 1 byte menos que el ground truth, causando SHA-256 mismatch en el Judge.",
+        "evidence_consistent": true,
+        "evidence_sufficient": false,
+        "testable_via": "RP-001 — incluir 0x0A después de %%EOF y verificar si pérdidas en Judge por PDF bajan",
+        "prediction": "Si el único cambio es incluir 0x0A después de %%EOF: pérdidas en Judge por PDF ↓, pérdidas en Dedup ≈ iguales, scanner ≈ igual, delimitación ≈ igual"
+      },
+      "scale_dependent": "La evidencia observada es consistente con la hipótesis de que el 'colapso escala-dependiente' es un artefacto: un candidato BMP falso positivo de tamaño fijo (~50MB) se superpone con más archivos a medida que N aumenta. Esto NO es una propiedad escala-dependiente del algoritmo — es un bug de tamaño constante cuyo impacto escala con N. Pero esta explicación requiere verificación mediante RP-002."
     },
-    "consequence": "RC-A-003 is now explained. The 'scale-dependent collapse' is not a fundamental property of the algorithm — it's a BMP false positive whose 50MB carved region overlaps with more files as N increases. Two targeted fixes would resolve most of the observed collapse: (1) remove or constrain BMP signature detection, and (2) fix PDF footer to include \\n."
+    "consequence": "INST-0002 establece un modelo causal observable: Scanner ✓, Delimitación ✓, Dedup ✗ 44.6%, Judge ✗ 24.6%, Recovered 30.9%. Las explicaciones causales (falso positivo BMP, truncamiento PDF) son hipótesis consistentes con la evidencia, pero no están demostradas. La intervención controlada mediante RP-001 y RP-002 con predicciones falsables confirmará o refutará estas hipótesis causales."
   },
 
   "reformulation_rationale": {

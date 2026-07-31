@@ -46,31 +46,30 @@
       "id": "INST-0002",
       "component": "motors/motor_carving.py",
       "role": "Motor de carving que detecta firmas y extrae archivos de imágenes sin MFT.",
-      "validation_status": "DIAGNOSED",
+      "validation_status": "LOSS_STAGES_LOCALIZED",
       "status_symbol": "🔬",
       "validation_date": "2026-07-31",
       "validation_experiment": "INST-0002",
       "validation_results": {
         "stage_1_scan": "PASS — scanner finds all signatures (0% loss)",
         "stage_2_delimitation": "PASS — all signatures lead to valid carves (0% loss)",
-        "stage_3_dedup": "FAIL — 234/525 files (44.6%) eliminated by dedup cascade from BMP false positive",
-        "stage_4_judge": "PARTIAL — 129/525 files (24.6%) have SHA-256 mismatch (PDF: 1 byte short, JPEG: truncated)"
+        "stage_3_dedup": "FAIL — 234/525 files (44.6%) eliminated at dedup stage. OBSERVACIÓN: pérdidas concentradas aquí. HIPÓTESIS CAUSAL: consistente con falso positivo BMP, pero NO demostrada.",
+        "stage_4_judge": "PARTIAL — 129/525 files (24.6%) have SHA-256 mismatch. OBSERVACIÓN: pérdidas concentradas aquí. HIPÓTESIS CAUSAL: consistente con truncamiento PDF 1 byte, pero NO demostrada."
       },
       "root_causes_identified": [
-        "RC-A-001: PDF footer truncation — %%EOF vs %%EOF\\n (1 byte short, all PDFs affected)",
-        "RC-A-002: BMP false positive — 'BM' (0x42 0x4D) appears in random data, creates 50MB false carve that eliminates real files via dedup",
-        "RC-A-003: Scale-dependent collapse is an ARTIFACT of BMP false positive's 50MB size overlapping with more files as N increases"
+        "OBSERVACIÓN: 44.6% de pérdidas en dedup, 24.6% en judge. HIPÓTESIS CAUSAL (NO demostrada): RC-A-001 (PDF footer truncation) y RC-A-002 (BMP false positive) son consistentes con la evidencia pero requieren intervención controlada (RP-001/RP-002 con predicciones falsables) para confirmación o refutación.",
+        "RC-A-003: La evidencia observada es CONSISTENTE con la hipótesis de que el 'colapso escala-dependiente' es un artefacto de un bug de tamaño constante, pero NO está demostrada."
       ],
       "concerns": [
-        "RC-A-001: PDF footer excluye newline (confirmed by INST-0002, bounded, fixable)",
-        "RC-A-002: BMP false positive causes dedup cascade (confirmed by INST-0002, needs design fix)",
-        "RC-A-003: Resolved — not a scale-dependent phenomenon per se, but BMP false positive artifact"
+        "RC-A-001: PDF footer excluye newline (observación: todos los PDFs carved difieren por 1 byte. Hipótesis causal pendiente de falsación via RP-001)",
+        "RC-A-002: BMP false positive (observación: 44.6% loss at dedup. Hipótesis causal pendiente de falsación via RP-002)",
+        "RC-A-003: Modelo observable establecido (Scanner ✓, Delimitación ✓, Dedup ✗ 44.6%, Judge ✗ 24.6%). Explicaciones causales son hipótesis, no hechos."
       ],
       "hypothesis_discrimination": {
         "H1_scanner_loss": "NOT SUPPORTED — 0% loss at scan stage",
         "H2_delimitation_loss": "NOT SUPPORTED — 0% loss at delimitation stage",
-        "H3_dedup_loss": "SUPPORTED — 44.6% of files eliminated by dedup (BMP false positive cascade)",
-        "H4_judge_loss": "SUPPORTED — 24.6% of files have SHA-256 mismatch (PDF 1-byte truncation)",
+        "H3_dedup_loss": "SUPPORTED — 44.6% of files eliminated at dedup stage",
+        "H4_judge_loss": "SUPPORTED — 24.6% of files have SHA-256 mismatch at judge stage",
         "H5_multi_stage": "SUPPORTED — losses at 2 stages (Dedup + Judge)",
         "H6_instrument_loss": "REFUTED by INST-0001 — Dataset Builder is not adversarial"
       },
@@ -80,7 +79,7 @@
         "EXP-0005 — external validation asume que carving es un strategy legítimo"
       ],
       "minimum_validation": "N=100 por formato, match exacto SHA-256, con y sin deduplicación, para discriminar H1-H6 de RC-A-003",
-      "next_step": "Apply RP-001 (PDF footer fix) and RP-002 (BMP false positive fix), then re-run to verify recovery improvement"
+      "next_step": "Apply RP-001 (PDF footer fix, with prediction) → re-run INST-0002 → verify prediction → RP-002 (BMP signature removal, with prediction) → re-run INST-0002 → verify prediction → INST-0003 (Judge validation after upstream stabilization)"
     },
     "Judge": {
       "id": "INST-0003",
@@ -157,7 +156,7 @@
 
   "summary_table": {
     "Dataset Builder": "✅ VALIDATED (INST-0001, 13/13 V1-V4, 3/3 V6, no adversarial indicators)",
-    "Carving Parser": "🔬 DIAGNOSED (INST-0002: BMP false positive → dedup cascade, PDF footer truncation)",
+    "Carving Parser": "🔬 LOSS_STAGES_LOCALIZED (INST-0002: 44.6% loss at dedup, 24.6% at judge. Causal hypotheses pending falsification via RP-001/RP-002)",
     "Judge": "❓ UNKNOWN",
     "RVS": "⚠️ PARTIAL (definido pero no calibrado con usuarios reales)",
     "FQS": "❓ UNKNOWN",
@@ -167,13 +166,15 @@
   "target_state": "Todos los instrumentos deben llegar a ✅ VALIDATED antes de que las claims sobre los motores tengan peso científico completo. El objetivo es tener una Instrument Validation Matrix completa que fortalezca toda la cadena de evidencia.",
 
   "priority_order": [
-    "1. INST-0001 (Dataset Builder) — foundational: si el generador es adverso, todo es cuestionable",
-    "2. INST-0002 (Carving Parser) — urgent: RC-A-003 necesita discriminación de hipótesis",
-    "3. INST-0003 (Judge) — critical: si el Judge tiene sesgo, todas las OU son cuestionables",
-    "4. INST-0004 (RVS) — important: CLAIM-003 depende de calibración",
-    "5. INST-0005 (FQS) — important: umbrales necesitan validación empírica",
-    "6. INST-0006 (Evidence Gate) — already validated"
+    "1. ✅ INST-0001 (Dataset Builder) — COMPLETED: foundational, H6 refuted",
+    "2. ✅ INST-0002 (Carving Parser) — COMPLETED: loss stages localized, causal hypotheses pending falsification",
+    "3. RP-001 (PDF footer, with prediction) → re-run INST-0002 → verify prediction (auditor r13 ordering)",
+    "4. RP-002 (BMP signature, with prediction) → re-run INST-0002 → verify prediction (auditor r13 ordering)",
+    "5. INST-0003 (Judge) — AFTER upstream stabilization (auditor r13: Judge sees contaminated inputs until upstream is fixed)",
+    "6. INST-0004 (RVS) — important: CLAIM-003 depende de calibración",
+    "7. INST-0005 (FQS) — important: umbrales necesitan validación empírica",
+    "8. INST-0006 (Evidence Gate) — already validated"
   ],
 
-  "notes": "Esta matriz fue creada por auditoría externa r11. VAL-0001 demostró que los instrumentos necesitan validación independiente. La matriz es el primer paso hacia un laboratorio donde las claims sobre los motores están respaldadas por instrumentos previamente validados."
+  "notes": "Esta matriz fue creada por auditoría externa r11. VAL-0001 demostró que los instrumentos necesitan validación independiente. La matriz es el primer paso hacia un laboratorio donde las claims sobre los motores están respaldadas por instrumentos previamente validados. Auditor r13 añadió la disciplina de predicciones falsables: todo RP debe incluir una predicción cuantitativa antes de ejecutarse, y la verificación de esa predicción confirma o refuta la hipótesis causal."
 }

@@ -42,8 +42,8 @@
     },
     "current_registry": {
       "RC-A-001": {"former": "RC-001", "title": "PDF footer inconsistency", "origin": "DIAG-0001", "status": "ROOT_CAUSE_CONFIRMED", "remediation": "RP-001"},
-      "RC-A-002": {"former": "RC-002", "title": "BMP false positive causes dedup cascade", "origin": "DIAG-0001 + INST-0002", "status": "ROOT_CAUSE_CONFIRMED", "remediation": "RP-002 (new)"},
-      "RC-A-003": {"former": "RC-003", "title": "Scale-dependent recovery collapse", "origin": "VAL-0001", "status": "ROOT_CAUSE_IDENTIFIED — explained by BMP false positive + PDF footer", "remediation": "RP-001 + RP-002"}
+      "RC-A-002": {"former": "RC-002", "title": "BMP false positive — dedup loss correlation", "origin": "DIAG-0001 + INST-0002", "status": "CAUSAL_HYPOTHESIS_PENDING_FALSIFICATION", "remediation": "RP-002 (with prediction)"},
+      "RC-A-003": {"former": "RC-003", "title": "Scale-dependent recovery collapse", "origin": "VAL-0001", "status": "LOSS_STAGES_LOCALIZED — Dedup 44.6%, Judge 24.6%. Causal hypotheses pending falsification via RP-001/RP-002.", "remediation": "RP-001 (with prediction) + RP-002 (with prediction)"}
     }
   },
 
@@ -52,7 +52,7 @@
     "file": "RecoveryLab/instrument_validation_matrix.json",
     "summary": {
       "Dataset Builder": "✅ VALIDATED (INST-0001, 13/13 V1-V4, 3/3 V6, H6 refuted)",
-      "Carving Parser": "🔬 DIAGNOSED (INST-0002: BMP false positive → dedup cascade, PDF footer truncation)",
+      "Carving Parser": "🔬 LOSS_STAGES_LOCALIZED (INST-0002: 44.6% loss at dedup, 24.6% at judge. Causal hypotheses pending falsification via RP-001/RP-002)",
       "Judge": "❓ UNKNOWN",
       "RVS": "⚠️ PARTIAL",
       "FQS": "❓ UNKNOWN",
@@ -196,14 +196,14 @@
       "name": "Carving Parser Pipeline Loss Localization",
       "status": "COMPLETED",
       "question": "¿En qué etapa exacta del pipeline desaparece cada archivo?",
-      "answer": "Two root causes identified: (1) BMP false positive (50MB) → dedup cascade eliminates real files (44.6% loss), (2) PDF footer truncation (1 byte) → SHA-256 mismatch (24.6% loss). Scanner and delimitation work correctly (0% loss).",
+      "answer": "OBSERVACIÓN: Scanner ✓, Delimitación ✓, Dedup ✗ 44.6%, Judge ✗ 24.6%, Recovered 30.9%. Las pérdidas se concentran en dos etapas. HIPÓTESIS CAUSAL: la evidencia es consistente con falso positivo BMP (dedup cascade) y truncamiento PDF (1 byte), pero NO está demostrada. Requiere intervención controlada (RP-001/RP-002 con predicciones falsables).",
       "discriminates": "H1-H5 of RC-A-003",
       "subsumes": "VAL-0001",
       "key_findings": {
         "H1_scanner_loss": "NOT SUPPORTED — 0% loss at scan",
         "H2_delimitation_loss": "NOT SUPPORTED — 0% loss at delimitation",
-        "H3_dedup_loss": "SUPPORTED — 44.6% eliminated by dedup (BMP false positive cascade)",
-        "H4_judge_loss": "SUPPORTED — 24.6% SHA-256 mismatch (PDF truncation)",
+        "H3_dedup_loss": "SUPPORTED — 44.6% eliminated at dedup stage",
+        "H4_judge_loss": "SUPPORTED — 24.6% SHA-256 mismatch at judge stage",
         "H5_multi_stage": "SUPPORTED — losses at 2 stages"
       }
     },
@@ -293,18 +293,20 @@
     "9. VAL-0001 invalidated a previous conclusion of the lab — exactly what a healthy scientific system should do (auditor r11)",
     "10. RC-A-003 is NOT a deduplication defect — it's a scale-dependent recovery collapse with multiple compatible hypotheses (auditor r11)",
     "11. The paradigm shifted from 'Motor → Result' to 'Instrument → Validation → Experiment → Evidence Ledger → Claim' (auditor r11)",
-    "12. INST-0002 localized the exact loss stage for every file: 0% at scan, 0% at delimitation, 44.6% at dedup, 24.6% at judge (INST-0002)",
-    "13. The BMP signature 'BM' (2 bytes) creates a 50MB false positive that eliminates real files via dedup cascade — this is the primary root cause of RC-A-003 (INST-0002)",
-    "14. RC-A-003 is NOT a scale-dependent algorithmic property — it's a constant-size bug whose impact scales with N because the BMP false positive overlaps with more files at higher density (INST-0002)"
+    "12. INST-0002 establece un modelo causal observable: Scanner ✓, Delimitación ✓, Dedup ✗ 44.6%, Judge ✗ 24.6%, Recovered 30.9%. Este modelo sobrevivirá incluso si las hipótesis causales resultan incorrectas (INST-0002, auditor r13)",
+    "13. La evidencia observada es CONSISTENTE con la hipótesis de que los falsos positivos BMP generan candidatos extensos que desencadenan eliminaciones posteriores, pero NO está demostrada. Requiere intervención controlada (RP-002) con predicción falsable (INST-0002, auditor r13)",
+    "14. La evidencia observada es CONSISTENTE con la hipótesis de que el 'colapso escala-dependiente' es un artefacto de un bug de tamaño constante cuyo impacto escala con N, pero NO está demostrada. Requiere verificación experimental (INST-0002, auditor r13)"
   ],
 
   "next_actions": [
     "1. ✅ INST-0001 COMPLETED — Dataset Builder validated, H6 refuted",
-    "2. ✅ INST-0002 COMPLETED — Pipeline loss localized: BMP false positive (dedup cascade) + PDF footer truncation",
-    "3. Apply RP-001 (PDF footer fix) + RP-002 (BMP false positive fix) — now justified by INST-0002 evidence",
-    "4. Re-run INST-0002 after fixes to verify recovery improvement (VAL-0002)",
-    "5. Execute INST-0003 (Judge validation) — critical: if the Judge has bias, all OUs are questionable",
-    "6. Execute EXP-0003 reproduction package on another machine (CRITICAL for RCR)",
-    "7. Execute INST-0004 (RVS calibration) and INST-0005 (FQS validation) — important but not urgent"
+    "2. ✅ INST-0002 COMPLETED — Loss stages localized: Dedup 44.6%, Judge 24.6%. Causal hypotheses pending falsification.",
+    "3. ✅ RP-001 APPROVED WITH PREDICTION — Apply PDF footer fix (0x0A after %%EOF). Predicción falsable: losses_at_judge_for_PDF ↓, losses_at_dedup ≈ iguales, scanner ≈ igual, delimitación ≈ igual",
+    "4. Re-ejecutar INST-0002 después de RP-001 → verificar predicción falsable",
+    "5. ✅ RP-002 APPROVED WITH PREDICTION — Apply BMP signature removal. Predicción falsable: losses_at_dedup ↓ significativamente, signatures_detected ↓, losses_at_judge ≈ igual, PDF ≈ igual",
+    "6. Re-ejecutar INST-0002 después de RP-002 → verificar predicción falsable",
+    "7. Recién entonces ejecutar INST-0003 (Judge validation) — después de estabilizar etapas upstream (auditor r13)",
+    "8. Execute EXP-0003 reproduction package on another machine (CRITICAL for RCR)",
+    "9. Execute INST-0004 (RVS calibration) and INST-0005 (FQS validation) — important but not urgent"
   ]
 }

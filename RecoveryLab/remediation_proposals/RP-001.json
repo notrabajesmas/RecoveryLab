@@ -2,10 +2,10 @@
   "proposal_id": "RP-001",
   "title": "Fix PDF footer extraction — incluir newline final en firma de cierre",
   "origin": "DIAG-0001",
-  "defect_ref": "RC-A-001",
+  "defect_ref": "RC-A-001 (primario), RC-A-003 (contribución a Judge loss)",
   "former_defect_ref": "RC-001",
   "date_proposed": "2026-07-31",
-  "status": "PROPOSED",
+  "status": "APPROVED_WITH_PREDICTION",
   "author": "RecoveryLab — derivado de auditoría externa",
 
   "problem_statement": {
@@ -14,10 +14,11 @@
   },
 
   "evidence": {
-    "experiment": "DIAG-0001",
-    "dataset": "C (PDF-only, 15 archivos)",
-    "finding": "15/15 PDFs difieren por exactamente 1 byte al final. Agregar b'\\n' restaura SHA-256 correcto en 15/15 casos.",
-    "confidence": "HIGH — evidencia directa y consistente"
+    "experiment": "DIAG-0001 + INST-0002",
+    "dataset": "DIAG-0001: C (PDF-only, 15 archivos). INST-0002: pipeline completo (525 archivos)",
+    "finding": "DIAG-0001: 15/15 PDFs difieren por exactamente 1 byte al final. INST-0002: 100% de pérdidas PDF ocurren en Judge stage, no en Dedup. Agregar b'\\n' restaura SHA-256 correcto en 15/15 casos (DIAG-0001).",
+    "confidence": "HIGH — evidencia directa, consistente, y localizada por INST-0002",
+    "note": "INST-0002 transformó este RP de intuición a hipótesis con respaldo experimental localizado. Antes de INST-0002, era una intuición. Después de INST-0002, está respaldado por evidencia de que las pérdidas PDF ocurren exclusivamente en Judge."
   },
 
   "root_cause": {
@@ -49,19 +50,35 @@
 
   "claims_affected": [],
 
+  "falsifiable_prediction": {
+    "mandatory": true,
+    "origin": "Auditoría externa r13 — todo RP debe incluir una predicción cuantitativa falsable antes de ejecutarse",
+    "prediction": "Si el único cambio realizado es incluir el byte LF (0x0A) después de %%EOF, entonces:",
+    "expected_changes": {
+      "losses_at_judge_for_PDF": "DEBERÍA BAJAR significativamente (de 100% a ~0% de PDFs con SHA-256 mismatch)",
+      "losses_at_dedup": "DEBERÍA PERMANECER ≈ IGUAL (cambio no afecta superposición de rangos)",
+      "scanner": "DEBERÍA PERMANECER ≈ IGUAL (cambio no afecta detección de firmas)",
+      "delimitation": "DEBERÍA PERMANECER ≈ IGUAL (cambio solo afecta delimitación de PDF, no de otros formatos)"
+    },
+    "falsification_criteria": "Si losses_at_judge_for_PDF no baja, o si losses_at_dedup/scanner/delimitation cambian significativamente, la hipótesis H_PDF queda refutada y el cambio debe revertirse.",
+    "verification_method": "Re-ejecutar INST-0002 después del cambio y comparar con baseline pre-fix."
+  },
+
   "validation_plan": {
-    "pre_fix": "DIAG-0001 ya establece el baseline: PDF OU = 0.0",
-    "post_fix": "Ejecutar VAL-0001 (validación de parsers) con PDFs. Esperado: PDF OU = 1.0.",
-    "regression": "Verificar que ZIP, DOCX, PNG, JPEG OU no cambian post-fix."
+    "pre_fix": "INST-0002 establece el baseline: PDF 100% loss at Judge, 0% loss at Dedup/Scanner/Delimitation",
+    "post_fix": "Re-ejecutar INST-0002. Verificar predicción falsable: losses_at_judge_for_PDF ↓, losses_at_dedup ≈ iguales, scanner ≈ igual, delimitación ≈ igual.",
+    "regression": "Verificar que ZIP, DOCX, PNG, JPEG OU no cambian post-fix. Verificar que no se introducen nuevas pérdidas en ninguna etapa."
   },
 
   "implementation_order": {
-    "step_1": "Aprobar RP-001",
-    "step_2": "Hacer el cambio en motor_carving.py",
-    "step_3": "Ejecutar VAL-0001 para validar",
-    "step_4": "Actualizar RC-001 status a FIXED",
-    "step_5": "Commit con referencia a RP-001 y RC-001"
+    "step_1": "Aprobar RP-001 (con predicción falsable)",
+    "step_2": "Hacer el cambio en motor_carving.py (1 línea)",
+    "step_3": "Re-ejecutar INST-0002 para verificar predicción falsable",
+    "step_4": "Verificar: losses_at_judge_for_PDF ↓, losses_at_dedup ≈ iguales, scanner ≈ igual, delimitación ≈ igual",
+    "step_5": "Si predicción se cumple: actualizar RC-A-001 status a FIXED, RC-A-003 status a PARTIALLY RESOLVED",
+    "step_6": "Si predicción no se cumple: revertir cambio, refutar H_PDF, investigar alternativa",
+    "step_7": "Proceder a RP-002"
   },
 
-  "notes": "Este RP fue creado ANTES de hacer el fix. Transforma una intuición en una modificación trazable. El protocolo exige que toda modificación al código tenga un RP asociado con evidencia, riesgo y plan de validación."
+  "notes": "Este RP fue creado ANTES de hacer el fix. Transforma una intuición en una modificación trazable. INST-0002 transformó su naturaleza: antes era intuición, ahora está respaldado por evidencia localizada. La predicción falsable (r13) asegura que si la hipótesis H_PDF es incorrecta, el experimento la refutará. El protocolo exige que toda modificación al código tenga un RP asociado con evidencia, predicción falsable, riesgo y plan de validación."
 }

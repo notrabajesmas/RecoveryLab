@@ -687,3 +687,38 @@ Stage Summary:
 - Remaining hypotheses for RC-A-003: H1-H5, all algorithmic
 - High signature conflict rate (78-96%) is a property of random data, not adversarial layout
 - Next priority: INST-0002 (Carving Parser validation) to discriminate H1-H5
+
+---
+Task ID: 19
+Agent: Main
+Task: R13 auditoría — Separación observación/explicación + Predicciones falsables en RP-001/RP-002
+
+Work Log:
+- Auditor r13 señaló distinción crítica: "BMP False Positive (causa primaria)" es explicación causal, no observación
+- INST-0002 OBSERVÓ: 44.6% loss at dedup, 24.6% loss at judge. Eso es un hecho.
+- La explicación causal (falso positivo BMP → dedup cascade) es una HIPÓTESIS consistente con la evidencia, no un hecho demostrado
+- Revisado INST-0002.json: reemplazado root_cause_chain con sections separadas (observations + causal_hypotheses)
+- Revisado RC-A-003.json: status cambiado de ROOT_CAUSE_IDENTIFIED a LOSS_STAGES_LOCALIZED
+- Revisado RC-A-003.json: inst_0002_results reformulado con observations + causal_hypotheses
+- Revisado RC-A-003.json: root_cause_analysis.status cambiado a "PARTIALLY RESOLVED — loss stages localized, causal hypotheses pending falsification"
+- Agregado sección "falsifiable_prediction" a RP-001.json:
+  - Predicción: Si incluir 0x0A después de %%EOF → losses_at_judge_for_PDF ↓, losses_at_dedup ≈ iguales, scanner ≈ igual, delimitación ≈ igual
+  - Criterio de falsación: si no se cumple, H_PDF queda refutada
+- Agregado sección "falsifiable_prediction" a RP-002.json:
+  - Predicción: Si eliminar firma BMP → losses_at_dedup ↓ significativamente, signatures_detected ↓, losses_at_judge ≈ igual, PDF ≈ igual
+  - Criterio de falsación: si no se cumple, H_BMP queda refutada
+- Actualizado orden de ejecución (auditor r13):
+  1. RP-001 (con predicción) → re-run INST-0002 → verificar predicción
+  2. RP-002 (con predicción) → re-run INST-0002 → verificar predicción
+  3. Recién entonces INST-0003 (Judge validation)
+- Motivo del orden: Judge ve entradas contaminadas por problemas upstream. Validarlo antes de estabilizar upstream sería invertir tiempo en un instrumento cuya aparente falla es consecuencia de datos defectuosos
+- Actualizado IVM: Carving Parser status de DIAGNOSED a LOSS_STAGES_LOCALIZED
+- Actualizado IVM: priority_order refleja nuevo orden RP-001 → RP-002 → INST-0003
+- Actualizado evidence_chain_manifest: key_insights 12-14 reformulados, next_actions actualizados
+- Actualizado RC-A-002 status: de ROOT_CAUSE_CONFIRMED a CAUSAL_HYPOTHESIS_PENDING_FALSIFICATION
+
+Stage Summary:
+- Principio metodológico establecido: observación ≠ explicación causal. El modelo observable (Scanner ✓, Delimitación ✓, Dedup ✗ 44.6%, Judge ✗ 24.6%) sobrevivirá incluso si las hipótesis causales resultan incorrectas
+- Todo RP ahora requiere predicción falsable obligatoria (r13). La predicción hace explícito qué se espera que cambie y qué debe permanecer igual
+- RP-001 y RP-002 aprobados con predicción. Próximo paso: aplicar RP-001, re-ejecutar INST-0002, verificar
+- El laboratorio ya no busca "qué arreglar" sino "qué predicción hace cada hipótesis y si esa predicción se cumple tras un cambio controlado"

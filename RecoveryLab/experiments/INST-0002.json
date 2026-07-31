@@ -97,19 +97,46 @@
       "H5_multi_stage": "SUPPORTED — losses occur at 2 different stages (Dedup + Judge)"
     },
 
-    "root_cause_chain": {
-      "primary": "BMP false positive → dedup eliminates real files",
-      "secondary": "PDF footer truncation (1 byte short → SHA-256 mismatch)",
-      "mechanism": "The BMP signature 'BM' (0x42 0x4D) is only 2 bytes long and appears in random data within other files. When the scanner finds 'BM' at a cluster start, it carves a 50MB 'BMP file' that overlaps with all other files. The dedup logic then eliminates real files because they overlap with the BMP false positive.",
+    "observations": {
+      "loss_by_stage": {
+        "scan": {"count": 0, "pct": "0%"},
+        "delimitation": {"count": 0, "pct": "0%"},
+        "dedup": {"count": 234, "pct": "44.6%"},
+        "judge": {"count": 129, "pct": "24.6%"},
+        "recovered": {"count": 162, "pct": "30.9%"}
+      },
       "format_specific": {
-        "PDF": "100% loss at Judge — all files 1 byte short (%%EOF vs %%EOF\\n footer bug)",
-        "JPEG": "91.1% loss at Dedup — eliminated by BMP false positive overlap",
-        "PNG": "62.2% recovered, 37.8% lost at Dedup — same BMP false positive issue",
-        "ZIP": "33.8% recovered, 66.2% lost at Dedup — same BMP false positive issue at N>15",
-        "DOCX": "58.6% recovered, 41.4% lost at Dedup — same BMP false positive issue at N>15"
+        "PDF": "100% loss at Judge — all carved PDFs differ from ground truth by exactly 1 byte (0x0A) at the end",
+        "JPEG": "91.1% loss at Dedup — files eliminated during dedup stage",
+        "PNG": "62.2% recovered, 37.8% lost at Dedup",
+        "ZIP": "33.8% recovered, 66.2% lost at Dedup",
+        "DOCX": "58.6% recovered, 41.4% lost at Dedup"
+      },
+      "correlates": {
+        "note": "Lo siguiente son correlaciones observadas, no cadenas causales demostradas. Las explicaciones causales requieren experimentos de intervención (RP-001, RP-002) con predicciones falsables.",
+        "correlate_1": "El 44.6% de las pérdidas ocurren inmediatamente después de la deduplicación. La evidencia observada es consistente con la hipótesis de que los falsos positivos BMP generan candidatos extensos que desencadenan eliminaciones posteriores.",
+        "correlate_2": "El 24.6% de las pérdidas ocurren en la etapa del Judge (SHA-256 mismatch). La evidencia observada es consistente con la hipótesis de que un truncamiento de 1 byte en el footer PDF produce la discrepancia."
       }
     },
 
-    "consequence": "RC-A-003 is explained by two distinct algorithmic defects: (1) BMP false positive in scanner causing dedup cascade, and (2) PDF footer truncation. These are NOT scale-dependent per se — they are format-specific bugs that become more visible at higher N because the BMP false positive covers more files. The 'scale-dependent collapse' is an artifact of the BMP false positive's 50MB size overlapping with proportionally more files as N increases."
+    "causal_hypotheses": {
+      "note": "Estas son hipótesis causales derivadas de las observaciones. NO están demostradas por INST-0002. Solo la intervención controlada (RP-001, RP-002) con predicciones falsables puede confirmarlas o refutarlas.",
+      "H_BMP": {
+        "statement": "Los falsos positivos BMP (firma 'BM' de 2 bytes en datos aleatorios) generan candidatos carved de ~50MB que se superponen con archivos reales, y la deduplicación elimina los archivos reales porque se superponen con el candidato BMP.",
+        "evidence_consistent": true,
+        "evidence_sufficient": false,
+        "testable_via": "RP-002 — eliminar firma BMP y verificar si pérdidas en Dedup bajan significativamente",
+        "prediction": "Si se elimina la firma BMP, pérdidas en Dedup deberían bajar significativamente. Scanner, delimitación y Judge deberían permanecer ≈ iguales."
+      },
+      "H_PDF": {
+        "statement": "El carving motor usa %%EOF como footer pero el generador produce %%EOF\\n, haciendo que los PDFs carved tengan 1 byte menos que el ground truth, causando SHA-256 mismatch en el Judge.",
+        "evidence_consistent": true,
+        "evidence_sufficient": false,
+        "testable_via": "RP-001 — incluir 0x0A después de %%EOF y verificar si pérdidas en Judge por PDF bajan",
+        "prediction": "Si el único cambio es incluir 0x0A después de %%EOF, pérdidas en Judge por PDF deberían bajar. Dedup, scanner y delimitación deberían permanecer ≈ iguales."
+      }
+    },
+
+    "consequence": "INST-0002 establece un modelo causal observable: Scanner ✓, Delimitación ✓, Dedup ✗ 44.6%, Judge ✗ 24.6%, Recovered 30.9%. Las pérdidas se concentran en dos etapas. Las explicaciones causales (falso positivo BMP, truncamiento PDF) son hipótesis consistentes con la evidencia, pero no están demostradas. La intervención controlada mediante RP-001 y RP-002 con predicciones falsables confirmará o refutará estas hipótesis causales. Este modelo observable sobrevivirá incluso si las hipótesis causales resultan incorrectas."
   }
 }

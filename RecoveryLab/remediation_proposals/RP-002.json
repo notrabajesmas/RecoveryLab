@@ -3,11 +3,11 @@
   "title": "Remove or constrain BMP signature detection",
   "origin": "INST-0002 — BMP false positive causes dedup cascade",
   "date_proposed": "2026-07-31",
-  "status": "PROPOSED",
+  "status": "APPROVED_WITH_PREDICTION",
   "priority": "HIGH",
-  "evidence_base": "INST-0002 traced 525 files through the pipeline and found that 234 (44.6%) were eliminated at the dedup stage, primarily because a BMP false positive carved a 50MB region that overlapped with real files.",
+  "evidence_base": "INST-0002 traced 525 files through the pipeline and found that 234 (44.6%) were eliminated at the dedup stage. La evidencia observada es consistente con la hipótesis de que los falsos positivos BMP generan candidatos extensos que desencadenan eliminaciones posteriores. NOTA: esto es una observación + hipótesis consistente, no una cadena causal demostrada. La predicción falsable de este RP confirmará o refutará H_BMP.",
 
-  "problem_statement": "The BMP signature 'BM' (0x42 0x4D) is only 2 bytes long. These bytes appear frequently in random data within other files (JPEG, PNG, ZIP, PDF, DOCX). When the scanner finds 'BM' at a cluster start, it carves a 50MB 'BMP file' using the max-size heuristic (BMP has no footer). This 50MB carved region overlaps with all other files in the image, causing the dedup logic to eliminate real files.",
+  "problem_statement": "El 44.6% de las pérdidas ocurren en la etapa de deduplicación. La evidencia observada es consistente con la hipótesis de que la firma BMP 'BM' (0x42 0x4D, solo 2 bytes) aparece en datos aleatorios dentro de otros archivos, generando candidatos carved de ~50MB que se superponen con archivos reales, y la deduplicación elimina los archivos reales porque se superponen con el candidato BMP. NOTA: esta es una hipótesis consistente, no una cadena causal demostrada.",
 
   "proposed_fix": {
     "option_A": "Remove BMP from SIGNATURES list entirely — simplest fix, removes the false positive entirely. BMP is a low-value format for carving (rare in forensic scenarios).",
@@ -17,26 +17,42 @@
   },
 
   "impact_analysis": {
-    "if_applied": "INST-0002 results suggest that removing BMP detection would eliminate 44.6% of file losses at the dedup stage. ZIP recovery would improve from 33.8% to near 100%, DOCX from 58.6% to near 100%, JPEG from 8.9% to near 100%, PNG from 62.2% to near 100%.",
+    "if_applied": "Si la hipótesis H_BMP es correcta, eliminar la firma BMP debería reducir las pérdidas en Dedup significativamente. La mejora esperada en recuperación sería: ZIP de 33.8% a ~100%, DOCX de 58.6% a ~100%, JPEG de 8.9% a ~100%, PNG de 62.2% a ~100%.",
+    "if_prediction_fails": "Si las pérdidas en Dedup NO bajan significativamente al eliminar la firma BMP, la hipótesis H_BMP queda refutada. El modelo observable (44.6% loss at Dedup) seguiría siendo válido, pero la explicación causal sería incorrecta.",
     "if_not_applied": "Carving motor will continue to produce incorrect results at scale. RC-A-003 will remain unresolved. All claims about carving performance are questionable.",
     "risk": "LOW — removing BMP detection only affects BMP file recovery, which is a low-priority format. No other functionality is affected."
   },
 
   "dependencies": {
-    "requires": "INST-0002 evidence (completed)",
+    "requires": "INST-0002 evidence (completed) + RP-001 applied and verified first (auditor r13 ordering)",
     "conflicts_with": "None",
     "must_be_applied_before": "Re-running INST-0002 or any carving experiment",
-    "must_be_applied_after": "INST-0002 (completed)"
+    "must_be_applied_after": "RP-001 applied + INST-0002 re-run to verify RP-001 prediction (auditor r13 ordering)"
+  },
+
+  "falsifiable_prediction": {
+    "mandatory": true,
+    "origin": "Auditoría externa r13 — todo RP debe incluir una predicción cuantitativa falsable antes de ejecutarse",
+    "prediction": "Si se elimina la firma BMP de dos bytes del scanner, entonces:",
+    "expected_changes": {
+      "losses_at_dedup": "DEBERÍA BAJAR significativamente (de 44.6% a una fracción menor)",
+      "signatures_detected": "DEBERÍA BAJAR (se eliminan las firmas BMP, que son falsos positivos)",
+      "losses_at_judge": "DEBERÍA PERMANECER ≈ IGUAL (cambio no afecta SHA-256 matching)",
+      "pdf_losses": "DEBERÍA PERMANECER ≈ IGUAL (cambio no afecta delimitación de PDF)"
+    },
+    "falsification_criteria": "Si losses_at_dedup no baja significativamente, o si losses_at_judge cambian significativamente, la hipótesis H_BMP queda refutada y el cambio debe revertirse.",
+    "verification_method": "Re-ejecutar INST-0002 después del cambio y comparar con baseline post-RP-001."
   },
 
   "verification_plan": {
-    "step_1": "Apply the fix (remove BMP from SIGNATURES or add validation)",
+    "step_1": "Apply the fix (remove BMP from SIGNATURES — Option A)",
     "step_2": "Re-run INST-0002 with the same configurations (N=15, 30, 100)",
-    "step_3": "Verify that dedup loss rate drops to near 0%",
-    "step_4": "Verify that recovery rates improve for all formats",
-    "step_5": "Update RC-A-002 status to RESOLVED",
-    "step_6": "Update IVM Carving Parser status to VALIDATED (if all stages pass)"
+    "step_3": "Verify falsifiable prediction: losses_at_dedup ↓ significativamente, signatures_detected ↓, losses_at_judge ≈ igual, PDF ≈ igual",
+    "step_4": "If prediction holds: verify that recovery rates improve for all formats",
+    "step_5": "If prediction fails: revert change, refute H_BMP, investigate alternative cause for 44.6% dedup loss",
+    "step_6": "Update RC-A-002 status to RESOLVED (if prediction holds) or re-open investigation (if prediction fails)",
+    "step_7": "Update IVM Carving Parser status accordingly"
   },
 
-  "relationship_to_rp_001": "RP-001 (PDF footer fix) and RP-002 (BMP false positive fix) are independent. They can be applied in any order. Together, they address both root causes identified by INST-0002: RP-001 fixes the Judge loss (PDF 1-byte truncation), RP-002 fixes the Dedup loss (BMP false positive cascade)."
+  "relationship_to_rp_001": "RP-001 (PDF footer fix) y RP-002 (BMP signature fix) son técnicamente independientes, pero el auditor r13 estableció el orden: RP-001 primero, verificar predicción, luego RP-002. Motivo: el Judge está viendo entradas contaminadas por problemas upstream. Validar el Judge (INST-0003) antes de estabilizar las etapas upstream podría invertir tiempo en un instrumento cuya aparente falla es consecuencia de datos defectuosos de entrada. Juntos, RP-001 y RP-002 abordan las dos etapas de pérdida identificadas por INST-0002: RP-001 actúa sobre Judge loss (PDF 1-byte), RP-002 actúa sobre Dedup loss (BMP false positive). Ambos con predicciones falsables obligatorias."
 }
