@@ -53,15 +53,16 @@
   "falsifiable_prediction": {
     "mandatory": true,
     "origin": "Auditoría externa r13 — todo RP debe incluir una predicción cuantitativa falsable antes de ejecutarse",
+    "prediction_ledger_ref": "prediction_ledger.json — PRED-001, PRED-002, PRED-003, PRED-004",
     "prediction": "Si el único cambio realizado es incluir el byte LF (0x0A) después de %%EOF, entonces:",
     "expected_changes": {
-      "losses_at_judge_for_PDF": "DEBERÍA BAJAR significativamente (de 100% a ~0% de PDFs con SHA-256 mismatch)",
-      "losses_at_dedup": "DEBERÍA PERMANECER ≈ IGUAL (cambio no afecta superposición de rangos)",
-      "scanner": "DEBERÍA PERMANECER ≈ IGUAL (cambio no afecta detección de firmas)",
-      "delimitation": "DEBERÍA PERMANECER ≈ IGUAL (cambio solo afecta delimitación de PDF, no de otros formatos)"
+      "losses_at_judge_for_PDF": "DEBERÍA BAJAR significativamente (de 100% a ~0% de PDFs con SHA-256 mismatch) [PRED-001]",
+      "losses_at_dedup": "DEBERÍA PERMANECER ≈ IGUAL (cambio no afecta superposición de rangos) [PRED-002]",
+      "scanner": "DEBERÍA PERMANECER ≈ IGUAL (cambio no afecta detección de firmas) [PRED-003]",
+      "delimitation": "DEBERÍA PERMANECER ≈ IGUAL (cambio solo afecta delimitación de PDF, no de otros formatos) [PRED-004]"
     },
     "falsification_criteria": "Si losses_at_judge_for_PDF no baja, o si losses_at_dedup/scanner/delimitation cambian significativamente, la hipótesis H_PDF queda refutada y el cambio debe revertirse.",
-    "verification_method": "Re-ejecutar INST-0002 después del cambio y comparar con baseline pre-fix."
+    "verification_method": "Re-ejecutar INST-0002 después del cambio y comparar con baseline pre-fix. Actualizar Prediction Ledger."
   },
 
   "validation_plan": {

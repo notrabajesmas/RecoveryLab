@@ -137,6 +137,46 @@
       }
     },
 
-    "consequence": "INST-0002 establece un modelo causal observable: Scanner ✓, Delimitación ✓, Dedup ✗ 44.6%, Judge ✗ 24.6%, Recovered 30.9%. Las pérdidas se concentran en dos etapas. Las explicaciones causales (falso positivo BMP, truncamiento PDF) son hipótesis consistentes con la evidencia, pero no están demostradas. La intervención controlada mediante RP-001 y RP-002 con predicciones falsables confirmará o refutará estas hipótesis causales. Este modelo observable sobrevivirá incluso si las hipótesis causales resultan incorrectas."
+    "open_alternatives": {
+      "note": "Hipótesis alternativas que son compatibles con las observaciones de INST-0002. No están refutadas ni confirmadas. Se listan aquí para evitar que una hipótesis desaparezca simplemente porque apareció otra más atractiva. Cada alternativa debe tener un experimento discriminador asignado.",
+      "H_BMP": {
+        "statement": "Los falsos positivos BMP generan candidatos extensos que desencadenan eliminaciones en dedup",
+        "compatible_with_observations": true,
+        "discriminating_experiment": "RP-002 + re-ejecutar INST-0002",
+        "prediction_ledger_refs": ["PRED-005", "PRED-006", "PRED-007", "PRED-008"]
+      },
+      "H_PDF": {
+        "statement": "El footer PDF truncado (1 byte) causa SHA-256 mismatch en el Judge",
+        "compatible_with_observations": true,
+        "discriminating_experiment": "RP-001 + re-ejecutar INST-0002",
+        "prediction_ledger_refs": ["PRED-001", "PRED-002", "PRED-003", "PRED-004"]
+      },
+      "H_DedupOverlap": {
+        "statement": "La deduplicación tiene un defecto de lógica de superposición que no depende de ningún formato específico — incluso sin BMP, los archivos con rangos naturalmente adyacentes se eliminan mutuamente",
+        "compatible_with_observations": true,
+        "discriminating_experiment": "RP-002 + re-ejecutar INST-0002 — si losses_at_dedup baja a ~0%, H_DedupOverlap queda refutada. Si baja parcialmente pero no a ~0%, H_DedupOverlap podría ser una causa contributiva.",
+        "prediction_ledger_refs": ["PRED-005"]
+      },
+      "H_FragmentationLayout": {
+        "statement": "Los archivos fragmentados en la imagen NTFS generan regiones carved que se superponen naturalmente, independientemente de la firma BMP",
+        "compatible_with_observations": true,
+        "discriminating_experiment": "RP-002 + re-ejecutar INST-0002 — si losses_at_dedup baja a ~0%, H_FragmentationLayout queda refutada. Si no baja, se necesita un experimento de layout controlado.",
+        "prediction_ledger_refs": ["PRED-005"]
+      },
+      "H_JudgeSensitivity": {
+        "statement": "El Judge tiene un umbral excesivamente estricto — archivos que difieren por 1 byte funcionalmente insignificante son clasificados como FAILED",
+        "compatible_with_observations": true,
+        "discriminating_experiment": "INST-0005 (FQS validation) — verificar si un 1-byte diff debería ser FUNCTIONAL en vez de FAILED",
+        "prediction_ledger_refs": []
+      },
+      "H_ScaleDependentAlgorithm": {
+        "statement": "El algoritmo de deduplicación tiene una complejidad que escala con N de forma no lineal, causando más eliminaciones a mayor densidad independientemente del formato",
+        "compatible_with_observations": true,
+        "discriminating_experiment": "RP-002 + re-ejecutar INST-0002 a múltiples N — si losses_at_dedup baja a ~0% a todo N, H_ScaleDependentAlgorithm queda refutada. Si el patrón de pérdida persiste pero cambia de forma, necesita investigación adicional.",
+        "prediction_ledger_refs": ["PRED-005"]
+      }
+    },
+
+    "consequence": "INST-0002 establece un modelo causal observable: Scanner ✓, Delimitación ✓, Dedup ✗ 44.6%, Judge ✗ 24.6%, Recovered 30.9%. Las pérdidas se concentran en dos etapas. Las explicaciones causales (falso positivo BMP, truncamiento PDF) son hipótesis consistentes con la evidencia, pero no están demostradas. Las alternativas abiertas (H_DedupOverlap, H_FragmentationLayout, H_JudgeSensitivity, H_ScaleDependentAlgorithm) coexisten y no deben descartarse sin experimento discriminador. La intervención controlada mediante RP-001 y RP-002 con predicciones falsables confirmará o refutará las hipótesis principales. Este modelo observable sobrevivirá incluso si las hipótesis causales resultan incorrectas."
   }
 }

@@ -722,3 +722,31 @@ Stage Summary:
 - Todo RP ahora requiere predicción falsable obligatoria (r13). La predicción hace explícito qué se espera que cambie y qué debe permanecer igual
 - RP-001 y RP-002 aprobados con predicción. Próximo paso: aplicar RP-001, re-ejecutar INST-0002, verificar
 - El laboratorio ya no busca "qué arreglar" sino "qué predicción hace cada hipótesis y si esa predicción se cumple tras un cambio controlado"
+
+---
+Task ID: 20
+Agent: Main
+Task: R14 auditoría — Prediction Ledger + Open Alternatives + Predicciones cuantificadas
+
+Work Log:
+- Auditor r14 propuso tres adiciones metodológicas:
+  1. Prediction Ledger — registro propio de predicciones, separado de los RPs
+  2. Predicciones cuantificadas — variable observada, dirección, magnitud esperada, confianza
+  3. Open Alternatives — hipótesis alternativas que no deben desaparecer por atracción de otra más llamativa
+- Creado prediction_ledger.json con 8 predicciones (PRED-001 a PRED-008):
+  - RP-001: PRED-001 (Judge PDF ↓, 90-100%, ★★★), PRED-002 (Dedup ≈ igual, ★★★), PRED-003 (Scanner ≈ igual, ★★★), PRED-004 (Delimitation ≈ igual, ★★★)
+  - RP-002: PRED-005 (Dedup ↓, 80-100%, ★★), PRED-006 (Signatures ↓, ★★★), PRED-007 (Judge ≈ igual, ★★★), PRED-008 (PDF ≈ igual, ★★★)
+- Cada predicción tiene: variable_observed, prediction (decrease/no_change), expected_magnitude, confidence (★), status (PENDING)
+- Agregado bloque "open_alternatives" a INST-0002.json con 6 hipótesis:
+  - H_BMP, H_PDF (principales, con PRED-001..008)
+  - H_DedupOverlap, H_FragmentationLayout, H_JudgeSensitivity, H_ScaleDependentAlgorithm (alternativas)
+  - Cada alternativa tiene: statement, compatible_with_observations, discriminating_experiment, prediction_ledger_refs
+- Actualizado RP-001: falsifiable_prediction ahora referencia PRED-001..004
+- Actualizado RP-002: falsifiable_prediction ahora referencia PRED-005..008
+- Actualizado evidence_chain_manifest: agregado sección prediction_ledger con resumen
+
+Stage Summary:
+- Prediction Ledger creado como artefacto propio. 8 predicciones, todas PENDING.
+- El laboratorio ahora mide capacidad predictiva, no solo capacidad explicativa.
+- Open alternatives evitan que hipótesis desaparezcan por atracción. H_DedupOverlap, H_FragmentationLayout, H_JudgeSensitivity, H_ScaleDependentAlgorithm son alternativas vivas con experimentos discriminadores asignados.
+- Hoja de ruta confirmada: RP-001 → INST-0002 → evaluar PRED-001..004 → RP-002 → INST-0002 → evaluar PRED-005..008 → INST-0003

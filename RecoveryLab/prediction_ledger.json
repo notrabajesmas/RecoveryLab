@@ -1,0 +1,152 @@
+{
+  "ledger_id": "PRED-LEDGER-001",
+  "title": "Prediction Ledger",
+  "date_created": "2026-07-31",
+  "origin": "Auditoría externa r14 — las predicciones falsables merecen un registro propio, no disperso dentro de cada RP",
+  "rationale": "El laboratorio ya no acumula 'mejoras' sino hipótesis que hacen predicciones y sobreviven a intentos de refutación. Este ledger registra cada predicción, su estado, y su resultado. La capacidad predictiva es una métrica distinta de la capacidad explicativa: explicar el pasado no garantiza predecir el futuro.",
+
+  "schema": {
+    "prediction_id": "Identificador único (PRED-NNN)",
+    "associated_rp": "RP que origina la predicción",
+    "associated_hypothesis": "Hipótesis causal que la predicción pone a prueba",
+    "variable_observed": "Variable del pipeline que se observa",
+    "prediction": "Dirección esperada del cambio (decrease / increase / no_change)",
+    "expected_magnitude": "Rango cuantitativo esperado (ej: '90-100% de reducción', '>±1% = sin cambio')",
+    "confidence": "★★★ = alta certeza lógica, ★★ = razonable, ★ = especulativa",
+    "status": "PENDING / CONFIRMED / REFUTED / INCONCLUSIVE",
+    "verification_method": "Cómo se verifica (experimento + métrica)",
+    "result": "Resultado observado tras la intervención (se completa post-ejecución)",
+    "date_verified": "Fecha de verificación"
+  },
+
+  "predictions": [
+    {
+      "prediction_id": "PRED-001",
+      "associated_rp": "RP-001",
+      "associated_hypothesis": "H_PDF — El carving motor usa %%EOF como footer pero el generador produce %%EOF\\n, causando 1 byte de truncamiento",
+      "variable_observed": "losses_at_judge_for_PDF",
+      "prediction": "decrease",
+      "expected_magnitude": "90-100% de reducción (de 100% PDFs con SHA-256 mismatch a ~0%)",
+      "confidence": "★★★",
+      "confidence_rationale": "El cambio es un literal de 1 byte. La evidencia DIAG-0001 mostró 15/15 PDFs fixeados agregando 0x0A. Es una predicción de alta certeza lógica.",
+      "status": "PENDING",
+      "verification_method": "Re-ejecutar INST-0002 después de RP-001. Comparar losses_at_judge_for_PDF con baseline (100%).",
+      "result": null,
+      "date_verified": null
+    },
+    {
+      "prediction_id": "PRED-002",
+      "associated_rp": "RP-001",
+      "associated_hypothesis": "H_PDF — El cambio de footer PDF no afecta otras etapas del pipeline",
+      "variable_observed": "losses_at_dedup",
+      "prediction": "no_change",
+      "expected_magnitude": "Sin cambios significativos (>±1% respecto al baseline de 44.6%)",
+      "confidence": "★★★",
+      "confidence_rationale": "El cambio de footer PDF no altera la superposición de rangos. Solo afecta la delimitación del final del archivo PDF.",
+      "status": "PENDING",
+      "verification_method": "Re-ejecutar INST-0002 después de RP-001. Comparar losses_at_dedup con baseline (44.6%).",
+      "result": null,
+      "date_verified": null
+    },
+    {
+      "prediction_id": "PRED-003",
+      "associated_rp": "RP-001",
+      "associated_hypothesis": "H_PDF — El cambio de footer PDF no afecta la detección de firmas",
+      "variable_observed": "losses_at_scan",
+      "prediction": "no_change",
+      "expected_magnitude": "Sin cambios (>±0% — scanner ya tiene 0% pérdida)",
+      "confidence": "★★★",
+      "confidence_rationale": "El cambio de footer no altera la firma de inicio (%%EOF es footer, no header). El scanner no se ve afectado.",
+      "status": "PENDING",
+      "verification_method": "Re-ejecutar INST-0002 después de RP-001. Verificar que losses_at_scan = 0%.",
+      "result": null,
+      "date_verified": null
+    },
+    {
+      "prediction_id": "PRED-004",
+      "associated_rp": "RP-001",
+      "associated_hypothesis": "H_PDF — El cambio de footer PDF no afecta la delimitación de otros formatos",
+      "variable_observed": "losses_at_delimitation",
+      "prediction": "no_change",
+      "expected_magnitude": "Sin cambios (>±0% — delimitación ya tiene 0% pérdida)",
+      "confidence": "★★★",
+      "confidence_rationale": "El cambio solo afecta PDF footer. Los otros formatos usan footers diferentes.",
+      "status": "PENDING",
+      "verification_method": "Re-ejecutar INST-0002 después de RP-001. Verificar que losses_at_delimitation = 0%.",
+      "result": null,
+      "date_verified": null
+    },
+    {
+      "prediction_id": "PRED-005",
+      "associated_rp": "RP-002",
+      "associated_hypothesis": "H_BMP — Los falsos positivos BMP generan candidatos carved de ~50MB que desencadenan eliminaciones en dedup",
+      "variable_observed": "losses_at_dedup",
+      "prediction": "decrease",
+      "expected_magnitude": "80-100% de reducción (de 44.6% a <10%)",
+      "confidence": "★★",
+      "confidence_rationale": "La evidencia observada es consistente con H_BMP, pero no está demostrada. Si hay otras causas de pérdida en dedup aparte del BMP, la reducción será parcial. La predicción asume que H_BMP es la causa dominante.",
+      "status": "PENDING",
+      "verification_method": "Re-ejecutar INST-0002 después de RP-002. Comparar losses_at_dedup con baseline post-RP-001.",
+      "result": null,
+      "date_verified": null
+    },
+    {
+      "prediction_id": "PRED-006",
+      "associated_rp": "RP-002",
+      "associated_hypothesis": "H_BMP — Eliminar la firma BMP reduce el número de firmas detectadas",
+      "variable_observed": "signatures_detected",
+      "prediction": "decrease",
+      "expected_magnitude": "Reducción de ~2-5 firmas BMP (falsos positivos) por imagen",
+      "confidence": "★★★",
+      "confidence_rationale": "Eliminar una firma del scanner reduce las detecciones. Las firmas BMP son falsos positivos en los datos actuales.",
+      "status": "PENDING",
+      "verification_method": "Re-ejecutar INST-0002 después de RP-002. Contar firmas BMP detectadas (debería ser 0).",
+      "result": null,
+      "date_verified": null
+    },
+    {
+      "prediction_id": "PRED-007",
+      "associated_rp": "RP-002",
+      "associated_hypothesis": "H_BMP — Eliminar la firma BMP no afecta la etapa del Judge",
+      "variable_observed": "losses_at_judge",
+      "prediction": "no_change",
+      "expected_magnitude": "Sin cambios significativos (>±2% respecto al baseline post-RP-001)",
+      "confidence": "★★★",
+      "confidence_rationale": "Eliminar firmas BMP no altera el SHA-256 matching de los archivos restantes.",
+      "status": "PENDING",
+      "verification_method": "Re-ejecutar INST-0002 después de RP-002. Comparar losses_at_judge con baseline post-RP-001.",
+      "result": null,
+      "date_verified": null
+    },
+    {
+      "prediction_id": "PRED-008",
+      "associated_rp": "RP-002",
+      "associated_hypothesis": "H_BMP — Eliminar la firma BMP no afecta las pérdidas de PDF",
+      "variable_observed": "pdf_losses",
+      "prediction": "no_change",
+      "expected_magnitude": "Sin cambios significativos (>±1% respecto al baseline post-RP-001)",
+      "confidence": "★★★",
+      "confidence_rationale": "Los PDFs no se ven afectados por la presencia o ausencia de la firma BMP. Sus pérdidas son causadas por el footer truncation (H_PDF).",
+      "status": "PENDING",
+      "verification_method": "Re-ejecutar INST-0002 después de RP-002. Comparar pdf_losses con baseline post-RP-001.",
+      "result": null,
+      "date_verified": null
+    }
+  ],
+
+  "summary": {
+    "total_predictions": 8,
+    "pending": 8,
+    "confirmed": 0,
+    "refuted": 0,
+    "inconclusive": 0,
+    "predictive_accuracy": "N/A — sin predicciones verificadas aún"
+  },
+
+  "meta": {
+    "principle": "El laboratorio ya no acumula 'mejoras' sino hipótesis que hacen predicciones y sobreviven a intentos de refutación. La capacidad predictiva es una métrica distinta de la capacidad explicativa.",
+    "origin_quote": "Ese registro termina siendo extremadamente valioso porque el laboratorio empieza a medir algo muy distinto: capacidad predictiva. No solo capacidad de explicar el pasado. (auditor r14)",
+    "falsification_rule": "Si una predicción no se cumple, la hipótesis asociada queda refutada. No se ajusta la predicción post-hoc para que encaje. Se revierte el cambio y se investiga la alternativa.",
+    "prediction_discipline": "Cada predicción debe ser cuantitativa (magnitud esperada), direccionada (decrease/increase/no_change), y verificable (método explícito). Las predicciones 'debería mejorar' sin magnitud NO son aceptables."
+  }
+}

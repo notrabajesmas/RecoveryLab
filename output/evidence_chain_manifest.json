@@ -47,6 +47,17 @@
     }
   },
 
+  "prediction_ledger": {
+    "status": "ACTIVE",
+    "file": "RecoveryLab/prediction_ledger.json",
+    "total_predictions": 8,
+    "pending": 8,
+    "confirmed": 0,
+    "refuted": 0,
+    "predictive_accuracy": "N/A — sin predicciones verificadas aún",
+    "principle": "El laboratorio mide capacidad predictiva, no solo capacidad explicativa. Explicar el pasado no garantiza predecir el futuro."
+  },
+
   "instrument_validation_matrix": {
     "status": "ACTIVE",
     "file": "RecoveryLab/instrument_validation_matrix.json",

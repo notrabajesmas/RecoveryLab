@@ -33,15 +33,16 @@
   "falsifiable_prediction": {
     "mandatory": true,
     "origin": "Auditoría externa r13 — todo RP debe incluir una predicción cuantitativa falsable antes de ejecutarse",
+    "prediction_ledger_ref": "prediction_ledger.json — PRED-005, PRED-006, PRED-007, PRED-008",
     "prediction": "Si se elimina la firma BMP de dos bytes del scanner, entonces:",
     "expected_changes": {
-      "losses_at_dedup": "DEBERÍA BAJAR significativamente (de 44.6% a una fracción menor)",
-      "signatures_detected": "DEBERÍA BAJAR (se eliminan las firmas BMP, que son falsos positivos)",
-      "losses_at_judge": "DEBERÍA PERMANECER ≈ IGUAL (cambio no afecta SHA-256 matching)",
-      "pdf_losses": "DEBERÍA PERMANECER ≈ IGUAL (cambio no afecta delimitación de PDF)"
+      "losses_at_dedup": "DEBERÍA BAJAR significativamente (de 44.6% a <10%) [PRED-005]",
+      "signatures_detected": "DEBERÍA BAJAR (se eliminan ~2-5 firmas BMP falsos positivos) [PRED-006]",
+      "losses_at_judge": "DEBERÍA PERMANECER ≈ IGUAL (cambio no afecta SHA-256 matching) [PRED-007]",
+      "pdf_losses": "DEBERÍA PERMANECER ≈ IGUAL (cambio no afecta delimitación de PDF) [PRED-008]"
     },
-    "falsification_criteria": "Si losses_at_dedup no baja significativamente, o si losses_at_judge cambian significativamente, la hipótesis H_BMP queda refutada y el cambio debe revertirse.",
-    "verification_method": "Re-ejecutar INST-0002 después del cambio y comparar con baseline post-RP-001."
+    "falsification_criteria": "Si losses_at_dedup no baja significativamente, o si losses_at_judge cambian significativamente, la hipótesis H_BMP queda refutada y el cambio debe revertirse. Las alternativas abiertas (H_DedupOverlap, H_FragmentationLayout, H_ScaleDependentAlgorithm) se activarían como líneas de investigación.",
+    "verification_method": "Re-ejecutar INST-0002 después del cambio y comparar con baseline post-RP-001. Actualizar Prediction Ledger."
   },
 
   "verification_plan": {
