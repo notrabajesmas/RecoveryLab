@@ -1,0 +1,148 @@
+{
+  "matrix_id": "IVM-001",
+  "title": "Instrument Validation Matrix",
+  "date_created": "2026-07-31",
+  "origin": "Auditoría externa r11 — VAL-0001 demostró que los instrumentos necesitan validación independiente",
+  "rationale": "Un laboratorio necesita demostrar que sus instrumentos son confiables antes de que sus claims tengan peso. Cada claim sobre los motores tendrá mucho más peso si antes podemos señalar una matriz de validación donde cada instrumento ya fue evaluado independientemente. Esto fortalece la credibilidad de toda la cadena de evidencia.",
+
+  "paradigm_shift": {
+    "before": "Motor → Resultado",
+    "after": "Instrumento → Validación → Experimento → Evidence Ledger → Claim",
+    "significance": "El proyecto pasó de medir resultados a validar los instrumentos de medición. Esto es la evolución natural del laboratorio."
+  },
+
+  "instruments": {
+    "Dataset Builder": {
+      "id": "INST-0001",
+      "component": "dataset_builder/",
+      "role": "Genera imágenes NTFS sintéticas con ground truth conocido. Misma semilla → misma imagen, bit por bit.",
+      "validation_status": "UNKNOWN",
+      "status_symbol": "❓",
+      "concerns": [
+        "¿Los layouts generados son representativos de imágenes reales?",
+        "¿La distribución de tamaños y posiciones de archivos es realista?",
+        "¿El Dataset Builder produce layouts particularmente adversos? (H6 de RC-A-003)",
+        "¿La fragmentación simulada corresponde a patrones reales de uso?"
+      ],
+      "critical_for": [
+        "Todos los experimentos — si el Dataset Builder genera artefactos, todas las conclusiones son cuestionables",
+        "RC-A-003 H6 — si los layouts son adversos, el colapso de recuperación podría ser un artefacto del generador"
+      ],
+      "validation_experiment": "INST-0001",
+      "minimum_validation": "N=100 archivos, verificar que los layouts no crean superposiciones de firmas anómalas, comparar con distribución de imágenes reales"
+    },
+    "Carving Parser": {
+      "id": "INST-0002",
+      "component": "motors/motor_carving.py",
+      "role": "Motor de carving que detecta firmas y extrae archivos de imágenes sin MFT.",
+      "validation_status": "PARTIAL",
+      "status_symbol": "⚠️",
+      "concerns": [
+        "RC-A-001: PDF footer excluye newline (confirmed, bounded)",
+        "RC-A-002: JPEG dedup demasiado agresiva (confirmed, needs design)",
+        "RC-A-003: Colapso de recuperación dependiente de escala (root cause abierto)",
+        "DIAG-0001 mostró 3/5 formatos funcionando a N=15, pero VAL-0001 mostró colapso a N=100"
+      ],
+      "critical_for": [
+        "CLAIM-001 — MFT-First > Carving depende de que el carving funcione correctamente",
+        "CLAIM-004 — crossover point depende de carving funcional",
+        "EXP-0005 — external validation asume que carving es un strategy legítimo"
+      ],
+      "validation_experiment": "INST-0002",
+      "minimum_validation": "N=100 por formato, match exacto SHA-256, con y sin deduplicación, para discriminar H1-H6 de RC-A-003"
+    },
+    "Judge": {
+      "id": "INST-0003",
+      "component": "recovery_judge/judge.py",
+      "role": "Juez imparcial que evalúa la calidad de la recuperación. Coordina 4 componentes: Identity Matcher (SHA-256), Functional Validator, Ground Truth Comparator, RVS Calculator.",
+      "validation_status": "UNKNOWN",
+      "status_symbol": "❓",
+      "concerns": [
+        "¿El Judge tiene sesgo sistemático hacia un motor?",
+        "¿SHA-256 es demasiado estricto? (archivos que difieren por 1 byte son FAILED)",
+        "¿El Functional Validator es consistente con juicio humano?",
+        "¿La composición RVS × FQS es la métrica correcta?"
+      ],
+      "critical_for": [
+        "CLAIM-001 — si el Judge tiene sesgo, la comparación es inválida",
+        "CLAIM-002 — si FQS no es consistente con juicio humano, la claim es cuestionable",
+        "Todas las OU — la métrica fundamental depende del Judge"
+      ],
+      "validation_experiment": "INST-0003",
+      "minimum_validation": "Conjunto de casos conocidos con veredicto esperado, verificar que el Judge produce los veredictos correctos"
+    },
+    "RVS": {
+      "id": "INST-0004",
+      "component": "recovery_judge/rvs.py",
+      "role": "Recovery Value Score — mide el VALOR de la recuperación (no solo la cantidad). 14 categorías de archivos con pesos intrínsecos.",
+      "validation_status": "PARTIAL",
+      "status_symbol": "⚠️",
+      "concerns": [
+        "Los pesos no están calibrados con usuarios reales (CLAIM-003 CRITICAL)",
+        "Los umbrales de categoría son arbitrarios (THESIS=0.9999, THUMBNAIL=0.01)",
+        "Los overrides por filename pattern son heuristic, no validados",
+        "La encuesta Bradley-Terry (rvs_calibration_experiment.py) NO se ha ejecutado"
+      ],
+      "critical_for": [
+        "CLAIM-003 — RVS value model es una claim sin calibración",
+        "Todas las OU — si RVS está mal calibrado, las OU son comparaciones relativas sin base absoluta"
+      ],
+      "validation_experiment": "INST-0004",
+      "minimum_validation": "Ejecutar rvs_calibration_experiment.py, comparar pesos con juicio humano, verificar que las categorías son mutuamente exclusivas y exhaustivas"
+    },
+    "FQS": {
+      "id": "INST-0005",
+      "component": "recovery_judge/fqs.py",
+      "role": "Functional Quality Score — mide QUÉ TAN BIEN fue recuperado cada archivo. 5 niveles: FULL(1.0), FUNCTIONAL(0.8), PARTIAL(0.5), DEGRADED(0.2), FAILED(0.0).",
+      "validation_status": "UNKNOWN",
+      "status_symbol": "❓",
+      "concerns": [
+        "Los umbrales (0.8/0.5/0.2) son arbitrarios — sin validación empírica",
+        "¿Un archivo que difiere por 1 byte debería ser FUNCTIONAL en vez de FAILED?",
+        "¿La ponderación por tamaño es correcta?",
+        "¿Los per-format validators son consistentes con la realidad?"
+      ],
+      "critical_for": [
+        "CLAIM-002 — si FQS no es consistente con juicio humano, la claim es cuestionable",
+        "OU = RVS × FQS — si FQS está mal, todas las OU están mal"
+      ],
+      "validation_experiment": "INST-0005",
+      "minimum_validation": "Conjunto de archivos con calidad conocida, verificar que FQS produce las categorías correctas, comparar con juicio humano"
+    },
+    "Evidence Gate": {
+      "id": "INST-0006",
+      "component": "evidence_gate.py",
+      "role": "Sistema de 5 niveles de progresión de evidencia. Controla el lenguaje permitido según el nivel de evidencia. En niveles 1-3, 'demuestra' está prohibido.",
+      "validation_status": "VALIDATED",
+      "status_symbol": "✅",
+      "concerns": [],
+      "critical_for": [
+        "Todo el sistema de claims — el Evidence Gate es el guardián de la integridad científica"
+      ],
+      "validation_experiment": "N/A — validado por diseño y uso continuo",
+      "validation_rationale": "El Evidence Gate ha funcionado correctamente durante 11 rondas de auditoría. Ha impedido lenguaje fuerte sin evidencia suficiente. Ha sido modificado solo para ser más restrictivo (nunca menos). Su lógica es determinista y auditable."
+    }
+  },
+
+  "summary_table": {
+    "Dataset Builder": "❓ UNKNOWN",
+    "Carving Parser": "⚠️ PARTIAL (DIAG-0001 + VAL-0001, pero RC-A-003 abierto)",
+    "Judge": "❓ UNKNOWN",
+    "RVS": "⚠️ PARTIAL (definido pero no calibrado con usuarios reales)",
+    "FQS": "❓ UNKNOWN",
+    "Evidence Gate": "✅ VALIDATED"
+  },
+
+  "target_state": "Todos los instrumentos deben llegar a ✅ VALIDATED antes de que las claims sobre los motores tengan peso científico completo. El objetivo es tener una Instrument Validation Matrix completa que fortalezca toda la cadena de evidencia.",
+
+  "priority_order": [
+    "1. INST-0001 (Dataset Builder) — foundational: si el generador es adverso, todo es cuestionable",
+    "2. INST-0002 (Carving Parser) — urgent: RC-A-003 necesita discriminación de hipótesis",
+    "3. INST-0003 (Judge) — critical: si el Judge tiene sesgo, todas las OU son cuestionables",
+    "4. INST-0004 (RVS) — important: CLAIM-003 depende de calibración",
+    "5. INST-0005 (FQS) — important: umbrales necesitan validación empírica",
+    "6. INST-0006 (Evidence Gate) — already validated"
+  ],
+
+  "notes": "Esta matriz fue creada por auditoría externa r11. VAL-0001 demostró que los instrumentos necesitan validación independiente. La matriz es el primer paso hacia un laboratorio donde las claims sobre los motores están respaldadas por instrumentos previamente validados."
+}

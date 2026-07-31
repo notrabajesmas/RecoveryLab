@@ -1,0 +1,61 @@
+{
+  "experiment_id": "INST-0003",
+  "family": "INST",
+  "family_description": "Validación de instrumentos de medición. Los experimentos INST no intentan demostrar nada sobre recuperación de datos. Intentan demostrar que las herramientas con las que medimos la recuperación son fiables.",
+  "title": "Validación del Judge",
+  "date_defined": "2026-07-31",
+  "origin": "Auditoría externa r11 — Instrument Validation Matrix",
+  "status": "DEFINED",
+
+  "question": "¿El Judge produce veredictos correctos? ¿Tiene sesgo sistemático hacia algún motor? ¿SHA-256 es demasiado estricto para evaluar recuperación funcional?",
+
+  "motivation": {
+    "why": "El Judge es el árbitro de todas las comparaciones. Si tiene sesgo, todas las OU son cuestionables. Si SHA-256 es demasiado estricto, archivos funcionalmente recuperados son contados como FAILED, subestimando la recuperación real.",
+    "what_changes": "Si el Judge tiene sesgo, hay que corregirlo antes de confiar en cualquier claim. Si SHA-256 es demasiado estricto, puede haber un RC-I (instrumento) que requiera un matcher más sofisticado."
+  },
+
+  "design": {
+    "no_hypothesis": true,
+    "no_mft": true,
+    "no_corruption": true,
+    "pure_observation": true,
+    "description": "Validación independiente del Judge. Se crea un conjunto de casos con veredicto esperado conocido y se verifica que el Judge produce los veredictos correctos."
+  },
+
+  "protocol": {
+    "step_1": "Crear un conjunto de 50+ casos de prueba con veredicto esperado conocido: (a) archivos idénticos (FULL), (b) archivos que difieren por 1 byte (¿FUNCTIONAL o FAILED?), (c) archivos truncados al 90% (¿FUNCTIONAL?), (d) archivos con datos corruptos (¿DEGRADED?), (e) archivos completamente diferentes (FAILED)",
+    "step_2": "Ejecutar el Judge sobre cada caso sin revelar el motor de origen",
+    "step_3": "Comparar veredicto del Judge con veredicto esperado",
+    "step_4": "Medir tasa de concordancia por categoría",
+    "step_5": "Verificar que el Judge no tiene sesgo: aplicar los mismos casos con etiquetas de motor A y motor B, verificar que los veredictos son idénticos",
+    "step_6": "Evaluar el caso 1-byte: ¿archivos que difieren por 1 byte son FAILED o FUNCTIONAL? (relevante para RC-A-001)"
+  },
+
+  "metrics": {
+    "concordance_rate": "Proporción de veredictos correctos",
+    "concordance_by_category": "Concordancia por categoría (FULL, FUNCTIONAL, PARTIAL, DEGRADED, FAILED)",
+    "bias_score": "¿El Judge produce veredictos diferentes cuando se cambia la etiqueta del motor?",
+    "one_byte_verdict": "¿Cómo clasifica el Judge a archivos que difieren por 1 byte?",
+    "edge_case_accuracy": "Concordancia en casos límite (1 byte, truncación, corrupción parcial)"
+  },
+
+  "expected_outcomes": {
+    "if_judge_is_impartial": "El Judge produce veredictos correctos e independientes del motor. No hay sesgo.",
+    "if_judge_has_bias": "CRÍTICO — hay que corregir el Judge antes de confiar en cualquier claim. Se abriría un RC-I.",
+    "if_one_byte_is_failed": "El Judge es consistente con SHA-256. Archivos que difieren por 1 byte son FAILED. RC-A-001 es un bug real.",
+    "if_one_byte_is_functional": "El Judge es más flexible que SHA-256. RC-A-001 podría ser menos severo de lo que parece. Se abriría un RC-I sobre el matcher."
+  },
+
+  "scope": {
+    "component": "recovery_judge/judge.py, functional_validator.py",
+    "does_not_test": "Motors, Dataset Builder, RVS, FQS",
+    "only_tests": "Judge como instrumento de medición"
+  },
+
+  "claims_affected": [
+    "CLAIM-001 — si el Judge tiene sesgo, la comparación es inválida",
+    "CLAIM-002 — si FQS no es consistente con juicio humano, la claim es cuestionable"
+  ],
+
+  "notes": "La validación del Judge es crítica porque todas las OU pasan por él. Si el Judge es imparcial y correcto, las OU son confiables. Si no, todo el sistema de claims es cuestionable."
+}

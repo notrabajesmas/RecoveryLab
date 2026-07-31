@@ -1,0 +1,68 @@
+{
+  "experiment_id": "INST-0001",
+  "family": "INST",
+  "family_description": "Validación de instrumentos de medición. Los experimentos INST no intentan demostrar nada sobre recuperación de datos. Intentan demostrar que las herramientas con las que medimos la recuperación son fiables.",
+  "title": "Validación del Dataset Builder",
+  "date_defined": "2026-07-31",
+  "origin": "Auditoría externa r11 — Instrument Validation Matrix",
+  "status": "DEFINED",
+
+  "question": "¿El Dataset Builder genera imágenes NTFS que son representativas de imágenes reales? ¿Los layouts producidos son adversos o neutros respecto a los algoritmos de carving?",
+
+  "motivation": {
+    "why": "El Dataset Builder es el instrumento foundational. Si genera layouts que no son representativos, o que son particularmente adversos para carving, todas las conclusiones del laboratorio son cuestionables. H6 de RC-A-003 plantea que el colapso de recuperación podría ser un artefacto del generador.",
+    "what_changes": "Si el Dataset Builder produce layouts adversos, RC-A-003 podría migrar a RC-I-003 (problema de instrumento, no de algoritmo). Si produce layouts neutros, H6 se descarta y las hipótesis algorítmicas (H1-H5) se refuerzan."
+  },
+
+  "design": {
+    "no_hypothesis": true,
+    "no_mft": true,
+    "no_corruption": true,
+    "no_rvs": true,
+    "no_judge": true,
+    "pure_observation": true,
+    "description": "Validación independiente del generador de imágenes. No se mide recuperación. Se mide si las imágenes generadas tienen propiedades esperadas."
+  },
+
+  "protocol": {
+    "step_1": "Generar N=100 imágenes con semillas variadas (42, 1337, 2026, 9999)",
+    "step_2": "Para cada imagen, medir: (a) distribución de posiciones de archivos, (b) densidad de firmas por sector, (c) tasa de superposición de rangos de firmas, (d) fragmentación promedio",
+    "step_3": "Comparar con distribución esperada de imágenes NTFS reales (si hay datos de referencia) o con distribución uniforme aleatoria",
+    "step_4": "Verificar determinismo: misma semilla → misma imagen (bit por bit)",
+    "step_5": "Verificar que el ground truth manifest es correcto: cada archivo en el manifest existe en la imagen y tiene el SHA-256 correcto",
+    "step_6": "Medir densidad de firmas conflictivas: cuántas firmas PK\\x03\\x04 hay por archivo ZIP/DOCX/XLSX, y cuántas superposiciones de rangos genera"
+  },
+
+  "metrics": {
+    "layout_realism": "Distribución de posiciones de archivos vs. distribución esperada",
+    "signature_density": "Firmas por sector — ¿es anómalamente alta?",
+    "overlap_rate": "Proporción de archivos cuyos rangos de firmas se superponen",
+    "determinism": "¿Misma semilla produce imagen idéntica?",
+    "manifest_accuracy": "¿Todos los archivos del manifest tienen SHA-256 correcto en la imagen?",
+    "adversarial_score": "¿El layout favorece o perjudica al carving respecto a una distribución uniforme?"
+  },
+
+  "expected_outcomes": {
+    "if_layouts_are_neutral": "H6 se descarta. RC-A-003 permanece como RC-A. Las hipótesis algorítmicas (H1-H5) se refuerzan.",
+    "if_layouts_are_adversarial": "H6 se confirma. RC-A-003 migra a RC-I-003. El colapso de recuperación es parcialmente un artefacto del generador. Requiere rediseño del Dataset Builder.",
+    "if_determinism_fails": "CRÍTICO — el Dataset Builder no es confiable. Todas las conclusiones son cuestionables."
+  },
+
+  "scope": {
+    "component": "dataset_builder/",
+    "does_not_test": "Recuperación de archivos, algoritmos de carving, Judge, RVS, FQS",
+    "only_tests": "Propiedades del generador de imágenes"
+  },
+
+  "discrimination_power": {
+    "discriminates": "H6 de RC-A-003 (Dataset Builder adverso vs. algoritmo defectuoso)",
+    "does_not_discriminate": "H1-H5 de RC-A-003 (requiere INST-0002)"
+  },
+
+  "claims_affected": [
+    "CLAIM-001 — si el Dataset Builder es adverso, la comparación MFT-First vs. Carving puede ser sesgada",
+    "RC-A-003 — H6 puede confirmarse o descartarse"
+  ],
+
+  "notes": "Este es el experimento foundational de la familia INST. Si el Dataset Builder no es confiable, nada más lo es. Prioridad máxima."
+}

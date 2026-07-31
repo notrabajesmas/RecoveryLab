@@ -1,0 +1,82 @@
+{
+  "experiment_id": "INST-0002",
+  "family": "INST",
+  "family_description": "Validación de instrumentos de medición. Los experimentos INST no intentan demostrar nada sobre recuperación de datos. Intentan demostrar que las herramientas con las que medimos la recuperación son fiables.",
+  "title": "Validación del Carving Parser",
+  "date_defined": "2026-07-31",
+  "origin": "Auditoría externa r11 — Instrument Validation Matrix + RC-A-003 discriminación de hipótesis",
+  "status": "DEFINED",
+
+  "question": "¿El Carving Parser funciona correctamente como instrumento de medición? ¿Cuál de las hipótesis H1-H5 de RC-A-003 explica el colapso de recuperación dependiente de escala?",
+
+  "motivation": {
+    "why": "RC-A-003 identifica un colapso de recuperación dependiente de escala pero no determina la causa. Seis hipótesis son compatibles. INST-0002 debe discriminar entre ellas. Además, el Carving Parser es un instrumento de medición: si no funciona correctamente, las OU de carving no son confiables.",
+    "what_changes": "Si se confirma H1 (deduplicación), el problema es algorítmico y requiere rediseño de _deduplicate_carves. Si se confirma H3 (límites), el problema es de delimitación y requiere mejor parsers. Si se confirma H5 (resolución ZIP/DOCX/XLSX), el problema es de ambigüedad de firmas y requiere desambiguación."
+  },
+
+  "design": {
+    "no_hypothesis": true,
+    "no_mft": true,
+    "no_corruption": true,
+    "no_rvs": true,
+    "no_judge": true,
+    "pure_observation": true,
+    "description": "Validación independiente del Carving Parser. Se ejecuta en múltiples configuraciones para aislar la contribución de cada componente al colapso de recuperación."
+  },
+
+  "protocol": {
+    "step_1": "Ejecutar carving con N=100 por formato, sin deduplicación (_deduplicate_carves deshabilitado). Medir: match exacto, firmas detectadas, archivos carved.",
+    "step_2": "Ejecutar carving con N=100 por formato, con deduplicación habilitada. Medir: mismos metrics.",
+    "step_3": "Comparar: ¿cuántos archivos se pierden por deduplicación? (discrimina H1)",
+    "step_4": "Analizar tamaños de regiones carved vs. ground truth. ¿Las regiones son excesivamente largas? (discrimina H2)",
+    "step_5": "Analizar offsets de inicio/fin carved vs. ground truth. ¿Los límites son correctos? (discrimina H3)",
+    "step_6": "Contar cuántas firmas apuntan al mismo rango. ¿Hay archivos compartiendo rangos? (discrimina H4)",
+    "step_7": "Ejecutar formato-único (solo ZIP) vs. formato-mixto (ZIP+DOCX+XLSX). ¿La ambigüedad de firmas PK amplifica el problema? (discrimina H5)"
+  },
+
+  "metrics": {
+    "signatures_detected": "Firmas por formato, con y sin deduplicación",
+    "files_carved_no_dedup": "Archivos carved sin deduplicación",
+    "files_carved_with_dedup": "Archivos carved con deduplicación",
+    "dedup_loss_rate": "Proporción de archivos eliminados por deduplicación",
+    "region_size_accuracy": "Tamaño carved vs. tamaño real (ground truth)",
+    "offset_accuracy": "Offset carved vs. offset real",
+    "range_sharing_count": "Número de firmas apuntando al mismo rango",
+    "format_ambiguity_factor": "Ratio de match rate formato-único vs. formato-mixto"
+  },
+
+  "discrimination_matrix": {
+    "H1_dedup_eliminina_demasiado": "Si dedup_loss_rate > 0 y files_carved_no_dedup ≈ 100, H1 se confirma",
+    "H2_regiones_excesivamente_largas": "Si region_size_accuracy muestra sesgo sistemático hacia regiones más largas, H2 se confirma",
+    "H3_limites_incorrectos": "Si offset_accuracy muestra errores sistemáticos, H3 se confirma",
+    "H4_archivos_compartiendo_rango": "Si range_sharing_count > 0, H4 se confirma",
+    "H5_ambiguedad_firmas": "Si format_ambiguity_factor > 1, H5 se confirma",
+    "note": "Las hipótesis no son mutuamente excluyentes. Pueden coexistir."
+  },
+
+  "expected_outcomes": {
+    "if_H1_confirmed": "La deduplicación es el problema dominante. Requiere rediseño de _deduplicate_carves. RC-A-003 se explica principalmente por H1.",
+    "if_H2_or_H3_confirmed": "El problema es de delimitación. Requiere mejor parsers con conocimiento de formato. RC-A-002 se amplifica.",
+    "if_H5_confirmed": "La ambigüedad de firmas PK es un factor amplificador. Requiere desambiguación por contenido (no solo por firma).",
+    "if_multiple_confirmed": "El colapso es multifactorial. Requiere un plan de remedición que aborde múltiples causas."
+  },
+
+  "scope": {
+    "component": "motors/motor_carving.py",
+    "does_not_test": "MFT-First, Judge, RVS, FQS, Dataset Builder",
+    "only_tests": "Carving Parser como instrumento de medición"
+  },
+
+  "discrimination_power": {
+    "discriminates": "H1-H5 de RC-A-003",
+    "does_not_discriminate": "H6 (requiere INST-0001)"
+  },
+
+  "claims_affected": [
+    "CLAIM-001 — si el carving parser no funciona correctamente, la comparación MFT-First vs. Carving es injusta",
+    "CLAIM-005 — si el parser no es golden, la claim es inválida a N=100",
+    "RC-A-003 — discriminación de hipótesis"
+  ],
+
+  "notes": "Este experimento es el más urgente de la familia INST. Discrimina entre las hipótesis de RC-A-003 y determina si el problema es algorítmico o de instrumento. Depende de INST-0001 para descartar H6 primero, pero puede ejecutarse en paralelo."
+}

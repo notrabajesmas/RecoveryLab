@@ -1,0 +1,83 @@
+{
+  "defect_id": "RC-A-002",
+  "former_id": "RC-002",
+  "title": "Heurística de deduplicación JPEG demasiado agresiva — elimina 12/15 archivos válidos",
+  "origin": "DIAG-0001",
+  "date_identified": "2026-07-30",
+  "date_reclassified": "2026-07-31",
+  "severity": "HIGH",
+  "status": "IDENTIFIED",
+  "classification": "RC-A",
+  "classification_rationale": "Problema del algoritmo de deduplicación del carving motor. La heurística _deduplicate_carves elimina archivos legítimos cuando sus rangos se superponen. Es una decisión algorítmica, no un problema del instrumento de medición ni del protocolo.",
+
+  "observation": {
+    "pure": "En DIAG-0001, el scanner de firmas detectó 15 firmas JPEG en el Dataset A (JPEG-only). Sin embargo, el motor de carving solo produjo 3 archivos carved. Los 12 archivos eliminados fueron removidos por la heurística de deduplicación/superposición (_deduplicate_carves). Los 3 archivos carved restantes son demasiado cortos (missing 865K-923K bytes cada uno).",
+    "context": "Los archivos JPEG son grandes (hasta ~1MB) y sus datos contienen firmas de otros formatos (BMP dentro de datos JPEG). La deduplicación interpreta estos rangos como superpuestos y elimina los archivos que deberían ser más largos."
+  },
+
+  "interpretation": "La heurística de deduplicación es una política algorítmica, no un bug simple. Elimina archivos legítimos cuando los rangos de datos de archivos grandes se superponen con las firmas de otros archivos. Esto requiere diseño, no un parche.",
+
+  "evidence": {
+    "experiment": "DIAG-0001",
+    "dataset": "A (JPEG-only, 15 archivos)",
+    "signatures_found": {"JPEG": 15, "BMP": 1},
+    "files_carved": 3,
+    "files_matched_ground_truth": 0,
+    "false_positives": 3,
+    "truncation_fixable": 2,
+    "carving_ou": 0.0,
+    "mft_first_ou": 1.0
+  },
+
+  "scope": {
+    "affected_component": "motors/motor_carving.py — _deduplicate_carves method",
+    "affected_formats": ["JPEG"],
+    "unaffected_formats": ["ZIP", "DOCX", "PNG", "PDF"],
+    "risk": "MEDIUM — cambiar la heurística podría afectar la calidad de otros formatos"
+  },
+
+  "root_cause_analysis": {
+    "location": "motor_carving.py, _deduplicate_carves()",
+    "mechanism": "Cuando dos firmas detectadas tienen rangos superpuestos (start_A < end_B), el método elimina la carve más corta. Con archivos JPEG grandes, esto elimina archivos legítimos porque sus datos contienen firmas de otros formatos.",
+    "why_it_matters": "La deduplicación es necesaria para evitar false positives, pero la política actual es demasiado agresiva para archivos grandes. No está claro cuál es la mejor política."
+  },
+
+  "claims_affected": [],
+
+  "remediation_proposal": "PENDIENTE — requiere diseño (no es un parche simple)",
+
+  "design_options": [
+    {
+      "option": "A: Cambiar deduplicación",
+      "description": "Modificación de la heurística para permitir superposición parcial cuando los archivos son grandes",
+      "complexity": "MEDIUM",
+      "risk": "Podría aumentar false positives"
+    },
+    {
+      "option": "B: Cambiar prioridad",
+      "description": "Priorizar firmas más confiables sobre las menos confiables",
+      "complexity": "LOW",
+      "risk": "Podría afectar otros formatos"
+    },
+    {
+      "option": "C: Cambiar orden de escaneo",
+      "description": "Escanear primero los formatos con firmas más específicas",
+      "complexity": "LOW",
+      "risk": "Podría afectar el rendimiento"
+    },
+    {
+      "option": "D: Dividir archivos superpuestos",
+      "description": "En vez de eliminar, dividir los archivos superpuestos en segmentos",
+      "complexity": "HIGH",
+      "risk": "Podría generar archivos parciales incorrectos"
+    },
+    {
+      "option": "E: Mejorar delimitación",
+      "description": "Usar conocimiento del formato para delimitar mejor los archivos (ej: IEND para PNG, EOI para JPEG)",
+      "complexity": "MEDIUM",
+      "risk": "Podría no funcionar con archivos corruptos"
+    }
+  ],
+
+  "notes": "Este defecto es más complejo que RC-A-001. No es un bug sino una decisión algorítmica. Requiere diseño antes de implementar. No se debe parchear sin entender las implicaciones. Reclassificado de RC-002 a RC-A-002 en r11 al introducir taxonomía RC-I/RC-A/RC-P. Nota: RC-A-003 (Colapso de recuperación dependiente de escala) puede subsumir este defecto si se confirma H1."
+}

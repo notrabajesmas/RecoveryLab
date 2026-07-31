@@ -566,3 +566,55 @@ Stage Summary:
 - CLAIM-001 amended with scale-dependence limitations
 - RC-003 is the most important new finding: deduplication is the primary problem, not just JPEG
 - The "3 parsers work" conclusion from DIAG-0001 is scale-dependent and only valid at N=15
+
+---
+Task ID: 15
+Agent: Main
+Task: Undécima ronda de auditoría — Reestructuración epistemológica del sistema de trazabilidad
+
+Work Log:
+- Reformulated RC-003 as RC-A-003: "Colapso de recuperación dependiente de escala"
+  - Changed from "Deduplicación escala-dependiente" (assumed cause) to neutral observation + 6 compatible hypotheses
+  - H1: deduplicación elimina demasiado (RC-A)
+  - H2: extractor genera regiones excesivamente largas (RC-A)
+  - H3: límites de archivos son incorrectos (RC-A)
+  - H4: archivos compartiendo el mismo rango (RC-A)
+  - H5: resolución ZIP/DOCX/XLSX genera múltiples candidatos (RC-A)
+  - H6: Dataset Builder produce layouts adversos (RC-I)
+  - RC-A-003 classified tentatively as RC-A — may migrate to RC-I if H6 confirmed
+  - Old RC-003 preserved as historical reference
+- Created RC Classification Taxonomy (RC-I/RC-A/RC-P)
+  - RC-I: Instrument — problems with measurement instruments (Dataset Builder, Judge, RVS, FQS)
+  - RC-A: Algorithm — problems with recovery algorithms (parsers, deduplication, delimitation)
+  - RC-P: Protocol — problems with experimental protocol (hypothesis, claim, threshold)
+  - Renumbered: RC-001 → RC-A-001, RC-002 → RC-A-002, RC-003 → RC-A-003
+  - Created RC_TAXONOMY.json with migration rules
+- Created Instrument Validation Matrix (IVM-001)
+  - 6 instruments tracked: Dataset Builder (❓), Carving Parser (⚠️), Judge (❓), RVS (⚠️), FQS (❓), Evidence Gate (✅)
+  - Target: all instruments at ✅ VALIDATED before motor claims have full scientific weight
+  - Priority order: INST-0001 > INST-0002 > INST-0003 > INST-0004 > INST-0005
+- Created INST experiment family (5 experiments)
+  - INST-0001: Dataset Builder validation (discriminates H6 of RC-A-003)
+  - INST-0002: Carving Parser validation (discriminates H1-H5 of RC-A-003, subsumes VAL-0001)
+  - INST-0003: Judge validation (bias, SHA-256 strictness, 1-byte verdict)
+  - INST-0004: RVS validation (Bradley-Terry calibration with human judgment)
+  - INST-0005: FQS validation (threshold validity, 1-byte classification)
+  - Created INST_FAMILY.json with design principles and relationship to other families
+- Updated evidence_chain_manifest.json to v2.0
+  - Added experiment families (EXP, DIAG, VAL, INST)
+  - Added RC classification section
+  - Added instrument validation matrix summary
+  - Added instrument_dependency to each claim
+  - Added ED-009 (instrument validation debt)
+  - Updated key insights (9, 10, 11 from r11)
+  - Updated next actions to prioritize INST experiments
+- Updated RP-001 defect reference from RC-001 to RC-A-001
+
+Stage Summary:
+- Paradigm shift: Motor→Resultado became Instrumento→Validación→Experimento→Evidence Ledger→Claim
+- VAL-0001 invalidated a previous conclusion of the lab — exactly what a healthy scientific system should do
+- RC-A-003 now records observation, not explanation — protects the record
+- RC taxonomy allows immediate identification of where each problem lives
+- INST family creates a structured path to validate all measurement instruments
+- 10 new documents created: RC-A-001.json, RC-A-002.json, RC-A-003.json, RC_TAXONOMY.json, instrument_validation_matrix.json, INST-0001 through INST-0005.json, INST_FAMILY.json
+- 2 documents updated: evidence_chain_manifest.json (v2.0), RP-001.json

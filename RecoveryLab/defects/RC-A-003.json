@@ -1,0 +1,118 @@
+{
+  "defect_id": "RC-A-003",
+  "former_id": "RC-003",
+  "title": "Colapso de recuperación dependiente de escala",
+  "origin": "VAL-0001",
+  "date_identified": "2026-07-31",
+  "date_reformulated": "2026-07-31",
+  "severity": "HIGH",
+  "status": "IDENTIFIED",
+  "classification": "RC-A",
+  "classification_note": "Clasificado como RC-A (Algorithm) tentativamente. La hipótesis dominante apunta al algoritmo de deduplicación, pero hipótesis instrumentales (H6) no están descartadas. La clasificación puede cambiar según resultados de INST-0001.",
+
+  "observation": {
+    "pure": "Al aumentar N de 15 a 100 archivos por formato, la recuperación por carving disminuye drásticamente para varios formatos. En DIAG-0001 (N=15): ZIP 15/15, DOCX 15/15. En VAL-0001 (N=100): ZIP 17/100, DOCX 40/100, PNG 70/100, PDF 0/100, JPEG 1/100.",
+    "context": "El scanner de firmas detecta correctamente 100 firmas por formato. La pérdida de archivos ocurre entre la detección y el resultado final carved. El fenómeno es proporcional a la densidad de archivos en la imagen."
+  },
+
+  "interpretation": "NO ESPECIFICADA — La observación es un hecho. La causa es una hipótesis abierta. Este RC registra el síntoma, no la explicación. Toda explicación debe ser listada como hipótesis compatible y verificada experimentalmente antes de ser promovida a interpretación.",
+
+  "compatible_hypotheses": {
+    "note": "Todas las hipótesis siguientes son compatibles con la observación. Ninguna ha sido confirmada ni refutada. El orden no implica probabilidad.",
+    "H1": {
+      "statement": "La deduplicación elimina demasiado",
+      "type": "RC-A (Algorithm)",
+      "description": "La heurística _deduplicate_carves remueve archivos legítimos cuando sus rangos se superponen. A mayor N, más superposiciones, más eliminaciones.",
+      "testable_via": "INST-0002 (Carving Parser) con deduplicación deshabilitada"
+    },
+    "H2": {
+      "statement": "El extractor genera regiones excesivamente largas",
+      "type": "RC-A (Algorithm)",
+      "description": "El carving motor puede estar asignando rangos demasiado grandes a algunos archivos, haciendo que se superpongan con otros innecesariamente.",
+      "testable_via": "INST-0002 con análisis de tamaños de regiones carved vs. ground truth"
+    },
+    "H3": {
+      "statement": "Los límites de archivos son incorrectos",
+      "type": "RC-A (Algorithm)",
+      "description": "Las firmas de cierre (footer) no delimitan correctamente el final de los archivos, causando que los rangos se extiendan más allá de lo necesario.",
+      "testable_via": "INST-0002 con comparación de offsets carved vs. ground truth offsets"
+    },
+    "H4": {
+      "statement": "Varios archivos terminan compartiendo el mismo rango",
+      "type": "RC-A (Algorithm)",
+      "description": "Cuando múltiples firmas apuntan al mismo rango de bytes, la deduplicación selecciona solo una, eliminando las demás.",
+      "testable_via": "INST-0002 con conteo de firmas por rango"
+    },
+    "H5": {
+      "statement": "La resolución ZIP/DOCX/XLSX genera múltiples candidatos para el mismo bloque",
+      "type": "RC-A (Algorithm)",
+      "description": "ZIP, DOCX y XLSX comparten la firma PK\\x03\\x04. Para 100 archivos, el scanner detecta 300 firmas (100 ZIP + 100 DOCX + 100 XLSX) compitiendo por los mismos rangos, amplificando las colisiones 3x.",
+      "testable_via": "INST-0002 con formato-único vs. formato-mixto"
+    },
+    "H6": {
+      "statement": "El Dataset Builder produce layouts particularmente adversos",
+      "type": "RC-I (Instrument)",
+      "description": "El generador de imágenes puede estar creando layouts donde los archivos están posicionados de forma que maximizan las superposiciones de firmas, produciendo un artefacto experimental que no existiría en imágenes reales.",
+      "testable_via": "INST-0001 (Dataset Builder) con validación de layouts"
+    }
+  },
+
+  "evidence": {
+    "experiment": "VAL-0001",
+    "comparison_with_DIAG": {
+      "DIAG-0001_N15": {
+        "ZIP": {"match_rate": 1.0, "carved": 15, "total": 15},
+        "DOCX": {"match_rate": 1.0, "carved": 15, "total": 15},
+        "PNG": {"match_rate": 0.933, "carved": 14, "total": 15},
+        "PDF": {"match_rate": 0.0, "carved": 15, "total": 15},
+        "JPEG": {"match_rate": 0.0, "carved": 3, "total": 15}
+      },
+      "VAL-0001_N100": {
+        "ZIP": {"match_rate": 0.17, "carved": 17, "total": 100},
+        "DOCX": {"match_rate": 0.40, "carved": 40, "total": 100},
+        "PNG": {"match_rate": 0.70, "carved": 70, "total": 100},
+        "PDF": {"match_rate": 0.0, "carved": 0, "total": 100},
+        "JPEG": {"match_rate": 0.01, "carved": 1, "total": 100}
+      }
+    },
+    "signatures_found": {
+      "ZIP": {"ZIP": 100, "DOCX": 100, "XLSX": 100, "BMP": 2},
+      "DOCX": {"ZIP": 100, "DOCX": 100, "XLSX": 100, "BMP": 2}
+    },
+    "key_observation": "El scanner detecta 100 firmas ZIP pero solo 17 archivos son carved. El fenómeno es escala-dependiente: funciona a N=15, colapsa a N=100."
+  },
+
+  "scope": {
+    "affected_component": "TBD — depende de cuál hipótesis se confirme",
+    "affected_formats": ["ALL — severity proportional to file density"],
+    "risk": "HIGH — invalida conclusiones extraídas a escala N=15"
+  },
+
+  "root_cause_analysis": {
+    "status": "OPEN",
+    "note": "El root cause NO está determinado. El RC anterior (RC-003) afirmaba que la deduplicación era la causa. Eso era una hipótesis, no un hecho. Este RC reformulado registra la observación y lista las hipótesis compatibles sin preferencia.",
+    "candidate_components": [
+      "motors/motor_carving.py — _deduplicate_carves (H1, H4)",
+      "motors/motor_carving.py — signature resolution (H5)",
+      "motors/motor_carving.py — footer delimitation (H3)",
+      "dataset_builder/ — layout generation (H6)",
+      "motors/motor_carving.py — region extraction (H2)"
+    ]
+  },
+
+  "claims_affected": [
+    "CLAIM-001 — conclusiones sobre carving son escala-dependientes",
+    "CLAIM-005 — parsers golden reference invalidado a N=100",
+    "DIAG-0001 — conclusiones sobre '3 parsers funcionan' son escala-dependientes"
+  ],
+
+  "remediation_proposal": "PENDIENTE — No se puede proponer remedio sin determinar root cause. La próxima acción es INST-0002 (validación de Carving Parser) para discriminar entre hipótesis.",
+
+  "reformulation_rationale": {
+    "original_title": "Deduplicación escala-dependiente — elimina archivos válidos proporcionalmente a N",
+    "why_changed": "El título original asumía que la deduplicación era la causa. VAL-0001 solo observó que la recuperación colapsa con la escala. La deduplicación es UNA hipótesis compatible, no la explicación confirmada. Reformular a 'Colapso de recuperación dependiente de escala' protege el registro: separa el hecho de la explicación.",
+    "principle": "Un RC debe registrar lo que se observó, no por qué se observó. El 'por qué' pertenece a las hipótesis compatibles, que deben ser verificadas experimentalmente antes de ser promovidas a interpretación."
+  },
+
+  "notes": "Este RC fue reformulado por auditoría externa (r11). La reforma sigue el principio de separación observación/explicación que el laboratorio ya aplica en otros dominios. El RC anterior (RC-003) será archivado como referencia histórica. La reclasificación de RC-003 a RC-A-003 es tentativa: si H6 se confirma, podría migrar a RC-I-003."
+}

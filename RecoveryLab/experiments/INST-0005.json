@@ -1,0 +1,62 @@
+{
+  "experiment_id": "INST-0005",
+  "family": "INST",
+  "family_description": "Validación de instrumentos de medición. Los experimentos INST no intentan demostrar nada sobre recuperación de datos. Intentan demostrar que las herramientas con las que medimos la recuperación son fiables.",
+  "title": "Validación del FQS (Functional Quality Score)",
+  "date_defined": "2026-07-31",
+  "origin": "Auditoría externa r11 — Instrument Validation Matrix",
+  "status": "DEFINED",
+
+  "question": "¿Los umbrales FQS (1.0/0.8/0.5/0.2/0.0) son empíricamente válidos? ¿Un archivo que difiere por 1 byte debería ser FUNCTIONAL o FAILED? ¿Los per-format validators son consistentes con juicio humano?",
+
+  "motivation": {
+    "why": "CLAIM-002 ('La recuperación funcional no es binaria') depende de que FQS sea una escala válida. Los umbrales (0.8/0.5/0.2) son arbitrarios sin validación empírica. Si FQS no es consistente con juicio humano, la claim es cuestionable y la composición OU = RVS × FQS pierde significado.",
+    "what_changes": "Si FQS es validado, CLAIM-002 se fortalece. Si FQS no es validado, se abriría un RC-I y las OU que dependen de FQS son cuestionables."
+  },
+
+  "design": {
+    "no_hypothesis": true,
+    "no_mft": true,
+    "no_corruption": true,
+    "no_carving": true,
+    "pure_observation": true,
+    "description": "Validación independiente del FQS. Se crea un conjunto de archivos con calidad conocida y se verifica que FQS produce las categorías correctas."
+  },
+
+  "protocol": {
+    "step_1": "Crear un conjunto de 50+ archivos con calidad conocida: (a) archivos perfectos (FULL), (b) archivos con 1 byte diferente (¿FUNCTIONAL o FAILED?), (c) archivos truncados al 90% (¿FUNCTIONAL?), (d) archivos con 50% de datos corruptos (¿PARTIAL?), (e) archivos con header corrupto pero datos intactos (¿DEGRADED?), (f) archivos completamente ilegibles (FAILED)",
+    "step_2": "Ejecutar FQS sobre cada archivo",
+    "step_3": "Comparar categoría FQS con categoría esperada",
+    "step_4": "Evaluar con ≥5 evaluadores humanos: '¿Este archivo sirve para su propósito original?'",
+    "step_5": "Medir concordancia FQS vs. juicio humano",
+    "step_6": "Verificar que los per-format validators son consistentes: un PDF que se abre correctamente debería ser FULL, independientemente de si difiere por 1 byte del original",
+    "step_7": "Evaluar el caso 1-byte: ¿un archivo que difiere por 1 byte de su original pero es funcionalmente idéntico debería ser FUNCTIONAL o FAILED?"
+  },
+
+  "metrics": {
+    "fqs_human_concordance": "Concordancia entre categoría FQS y juicio humano",
+    "one_byte_classification": "¿Cómo clasifica FQS a archivos que difieren por 1 byte?",
+    "per_format_consistency": "¿Los per-format validators son consistentes entre sí?",
+    "threshold_validity": "¿Los umbrales 0.8/0.5/0.2 son empíricamente significativos?",
+    "edge_case_accuracy": "Concordancia en casos límite (1 byte, truncación, header corrupto)"
+  },
+
+  "expected_outcomes": {
+    "if_fqs_is_valid": "FQS es un instrumento validado. CLAIM-002 se fortalece. La composición OU = RVS × FQS tiene significado.",
+    "if_fqs_is_not_valid": "FQS es un instrumento no validado. Se abriría un RC-I. Los umbrales podrían necesitar ajuste empírico.",
+    "if_one_byte_is_functional": "RC-A-001 es menos severo de lo que parece. Un archivo que difiere por 1 byte pero es funcionalmente idéntico debería ser FUNCTIONAL, no FAILED. Esto cambia la interpretación del bug PDF."
+  },
+
+  "scope": {
+    "component": "recovery_judge/fqs.py, functional_validator.py",
+    "does_not_test": "Motors, Dataset Builder, Judge, RVS (excepto composición)",
+    "only_tests": "FQS como instrumento de medición"
+  },
+
+  "claims_affected": [
+    "CLAIM-002 — directamente dependiente de la validación FQS",
+    "RC-A-001 — si FQS clasifica 1-byte diff como FUNCTIONAL, el bug PDF es menos severo"
+  ],
+
+  "notes": "La validación del FQS es importante porque afecta directamente la interpretación de RC-A-001 (PDF 1-byte bug). Si FQS clasifica 1-byte diff como FUNCTIONAL, el PDF parser bug es menos grave de lo que parece. Si FQS clasifica como FAILED, el bug es real y requiere fix. Este experimento tiene interacción con INST-0003 (Judge validation)."
+}

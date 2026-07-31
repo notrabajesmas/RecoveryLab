@@ -1,0 +1,86 @@
+{
+  "family_id": "INST",
+  "family_name": "Instrument Validation",
+  "date_established": "2026-07-31",
+  "origin": "Auditoría externa r11 — VAL-0001 demostró que los instrumentos necesitan validación independiente",
+  "replaces": "VAL (subsumido) — VAL-0001 se convierte en el primer experimento de la familia INST, pero renombrado como INST-0002 (Carving Parser) porque VALID-0001 validó parsers",
+
+  "philosophy": {
+    "statement": "Los experimentos INST no intentan demostrar nada sobre recuperación de datos. Intentan demostrar que las herramientas con las que medimos la recuperación son fiables.",
+    "paradigm_shift": {
+      "before": "Motor → Resultado",
+      "after": "Instrumento → Validación → Experimento → Evidence Ledger → Claim"
+    },
+    "significance": "Un laboratorio necesita demostrar que sus instrumentos son confiables antes de que sus claims tengan peso. Cada claim sobre los motores tendrá mucho más peso si antes podemos señalar una Instrument Validation Matrix donde cada instrumento ya fue evaluado independientemente."
+  },
+
+  "design_principles": {
+    "no_hypothesis": "Los experimentos INST no testean hipótesis. Solo observan propiedades de los instrumentos.",
+    "no_mft": "No se usa MFT-First como referencia.",
+    "no_corruption": "No se corrompen imágenes.",
+    "no_rvs": "No se calcula RVS (excepto INST-0004 que valida RVS).",
+    "no_judge": "No se usa el Judge (excepto INST-0003 que valida el Judge).",
+    "pure_observation": "Solo se observan propiedades del instrumento bajo validación."
+  },
+
+  "relationship_to_other_families": {
+    "EXP": "EXP testea claims sobre recuperación. INST testea los instrumentos que miden la recuperación. Un claim de EXP tiene más peso si los instrumentos ya fueron validados por INST.",
+    "DIAG": "DIAG localiza problemas en el sistema. INST certifica que los instrumentos funcionan. Un DIAG tiene más peso si los instrumentos ya fueron validados por INST.",
+    "VAL": "VAL es subsumido por INST. VAL-0001 (parser validation) se convierte en INST-0002 (Carving Parser validation). La familia INST generaliza la idea de VAL a todos los instrumentos."
+  },
+
+  "registry": {
+    "INST-0001": {
+      "title": "Validación del Dataset Builder",
+      "instrument": "Dataset Builder",
+      "status": "DEFINED",
+      "file": "experiments/INST-0001.json",
+      "discriminates": "H6 de RC-A-003"
+    },
+    "INST-0002": {
+      "title": "Validación del Carving Parser",
+      "instrument": "Carving Parser",
+      "status": "DEFINED",
+      "file": "experiments/INST-0002.json",
+      "discriminates": "H1-H5 de RC-A-003",
+      "note": "Subsume VAL-0001 (parser validation)"
+    },
+    "INST-0003": {
+      "title": "Validación del Judge",
+      "instrument": "Recovery Judge",
+      "status": "DEFINED",
+      "file": "experiments/INST-0003.json",
+      "discriminates": "Sesgo del Judge, severidad de SHA-256"
+    },
+    "INST-0004": {
+      "title": "Validación del RVS",
+      "instrument": "Recovery Value Score",
+      "status": "DEFINED",
+      "file": "experiments/INST-0004.json",
+      "discriminates": "Calibración de pesos RVS"
+    },
+    "INST-0005": {
+      "title": "Validación del FQS",
+      "instrument": "Functional Quality Score",
+      "status": "DEFINED",
+      "file": "experiments/INST-0005.json",
+      "discriminates": "Validez de umbrales FQS, caso 1-byte"
+    }
+  },
+
+  "execution_priority": [
+    "1. INST-0001 (Dataset Builder) — foundational: si el generador es adverso, todo es cuestionable",
+    "2. INST-0002 (Carving Parser) — urgent: RC-A-003 necesita discriminación de hipótesis",
+    "3. INST-0003 (Judge) — critical: si el Judge tiene sesgo, todas las OU son cuestionables",
+    "4. INST-0004 (RVS) — important: CLAIM-003 depende de calibración",
+    "5. INST-0005 (FQS) — important: umbrales necesitan validación empírica"
+  ],
+
+  "interaction_with_evidence_gate": {
+    "principle": "Un instrumento validado por INST fortalece la cadena de evidencia. Un instrumento no validado es una deuda de evidencia.",
+    "target": "Todos los instrumentos deben llegar a VALIDATED antes de que las claims sobre los motores tengan peso científico completo.",
+    "evidence_gate_impact": "Si un instrumento falla INST, todas las claims que dependen de ese instrumento bajan un nivel en el Evidence Gate."
+  },
+
+  "notes": "Esta familia fue establecida por auditoría externa r11. Representa la evolución natural del laboratorio: de medir resultados a validar los instrumentos de medición. El Evidence Gate ya está validado (✅) por diseño y uso continuo."
+}

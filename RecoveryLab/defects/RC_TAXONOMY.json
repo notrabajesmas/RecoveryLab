@@ -1,0 +1,88 @@
+{
+  "taxonomy_id": "RC-TAXONOMY-001",
+  "title": "Root Cause Classification Taxonomy — RC-I / RC-A / RC-P",
+  "date_established": "2026-07-31",
+  "origin": "Auditoría externa r11 — separación de dominios de defectos",
+  "rationale": "No todos los RC son iguales. Un problema del instrumento de medición, un problema del algoritmo, y un problema del protocolo tienen naturalezas diferentes, estrategias de remediación diferentes, y efectos diferentes sobre las claims. La taxonomía permite saber inmediatamente dónde vive cada problema.",
+
+  "categories": {
+    "RC-I": {
+      "code": "RC-I",
+      "name": "Instrument",
+      "description": "Problemas del instrumento experimental. El instrumento produce mediciones incorrectas, sesgadas, o no calibradas. Un defecto de instrumento invalida cualquier conclusión que dependa de sus mediciones.",
+      "examples": [
+        "Dataset Builder produce layouts que no representan imágenes reales",
+        "Judge tiene sesgo sistemático hacia un motor",
+        "RVS pesos no calibrados con usuarios reales",
+        "FQS umbrales arbitrarios (0.8/0.5/0.2) sin validación empírica"
+      ],
+      "impact_on_claims": "CRÍTICO — un defecto de instrumento puede invalidar todas las claims que dependen de ese instrumento",
+      "remediation_nature": "Requiere recalibración o rediseño del instrumento",
+      "validation_via": "Familia INST"
+    },
+    "RC-A": {
+      "code": "RC-A",
+      "name": "Algorithm",
+      "description": "Problemas del algoritmo de recuperación. El motor no funciona correctamente debido a un bug de implementación, una política algorítmica incorrecta, o una delimitación imprecisa. Un defecto algorítmico afecta la calidad de la recuperación pero no la validez de los instrumentos de medición.",
+      "examples": [
+        "Parser PDF excluye newline final (RC-A-001)",
+        "Deduplicación demasiado agresiva (RC-A-002)",
+        "Delimitación de archivos incorrecta",
+        "Firmas de cierre no detectadas"
+      ],
+      "impact_on_claims": "MODERADO — un defecto algorítmico puede debilitar claims sobre la eficacia de un motor, pero no invalida los instrumentos",
+      "remediation_nature": "Requiere fix del código (RP) o rediseño algorítmico",
+      "validation_via": "Familia VAL o INST-0002"
+    },
+    "RC-P": {
+      "code": "RC-P",
+      "name": "Protocol",
+      "description": "Problemas del protocolo experimental. La hipótesis estaba mal formulada, la claim era demasiado fuerte, el umbral era incorrecto, o el diseño experimental no controlaba las variables necesarias. Un defecto de protocolo invalida las conclusiones pero no los datos.",
+      "examples": [
+        "Hipótesis mal formulada — no testeable",
+        "Claim demasiado fuerte — dice 'demuestra' cuando solo puede decir 'es consistente con'",
+        "Umbral incorrecto — alpha sin justificación",
+        "Variable confundida no controlada"
+      ],
+      "impact_on_claims": "VARIABLE — un defecto de protocolo puede requerir reformular la claim, repetir el experimento, o descartar la conclusión",
+      "remediation_nature": "Requiere reformular la claim o rediseñar el experimento",
+      "validation_via": "Evidence Gate"
+    }
+  },
+
+  "current_registry": {
+    "RC-A-001": {
+      "former_id": "RC-001",
+      "title": "Terminación PDF inconsistente — footer excluye newline final",
+      "category": "RC-A",
+      "origin": "DIAG-0001",
+      "status": "IDENTIFIED",
+      "remediation": "RP-001"
+    },
+    "RC-A-002": {
+      "former_id": "RC-002",
+      "title": "Heurística de deduplicación JPEG demasiado agresiva",
+      "category": "RC-A",
+      "origin": "DIAG-0001",
+      "status": "IDENTIFIED",
+      "remediation": "PENDIENTE"
+    },
+    "RC-A-003": {
+      "former_id": "RC-003",
+      "title": "Colapso de recuperación dependiente de escala",
+      "category": "RC-A (tentativo — H6 podría migrar a RC-I)",
+      "origin": "VAL-0001",
+      "status": "IDENTIFIED — root cause abierto, hipótesis compatibles listadas",
+      "remediation": "PENDIENTE — requiere INST-0002 para discriminar hipótesis"
+    }
+  },
+
+  "migration_rules": {
+    "backward_compatibility": "Los IDs antiguos (RC-001, RC-002, RC-003) se preservan como 'former_id' en los nuevos documentos. Los archivos originales se archivan sin modificar.",
+    "cross_references": "Cualquier referencia a RC-001 debe actualizarse a RC-A-001, RC-002 a RC-A-002, RC-003 a RC-A-003. Los documentos antiguos se mantienen como referencia histórica.",
+    "reclassification": "Un RC puede migrar entre categorías si la evidencia lo justifica. Ejemplo: si H6 se confirma para RC-A-003, podría migrar a RC-I-003. La migración se registra con justificación.",
+    "new_numbering": "Dentro de cada categoría, los RC se numeran secuencialmente. El primer RC-I será RC-I-001, etc."
+  },
+
+  "notes": "Esta taxonomía fue establecida por auditoría externa r11. El principio fundamental: saber dónde vive cada problema permite priorizar correctamente y evaluar el impacto sobre las claims de forma inmediata."
+}

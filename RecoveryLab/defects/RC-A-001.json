@@ -1,0 +1,54 @@
+{
+  "defect_id": "RC-A-001",
+  "former_id": "RC-001",
+  "title": "Terminación PDF inconsistente — footer excluye newline final",
+  "origin": "DIAG-0001",
+  "date_identified": "2026-07-30",
+  "date_reclassified": "2026-07-31",
+  "severity": "HIGH",
+  "status": "IDENTIFIED",
+  "classification": "RC-A",
+  "classification_rationale": "Problema del algoritmo de parsing PDF. El footer del carving motor no incluye el newline final que el generador produce. Es un bug delimitado de implementación del parser, no un problema del instrumento de medición ni del protocolo.",
+
+  "observation": {
+    "pure": "En DIAG-0001, los 15/15 archivos PDF carved por Motor Carving difieren del ground truth por exactamente 1 byte: el byte 0x0A (newline) al final del archivo. El byte faltante es b'\\n' inmediatamente después de %%EOF.",
+    "context": "Motor Carving usa footer %%EOF (5 bytes) para delimitar PDFs. El Dataset Builder genera PDFs con %%EOF\\n (6 bytes). Esta discrepancia causa que todo PDF carved sea 1 byte corto, haciendo que SHA-256 no coincida."
+  },
+
+  "interpretation": "El footer del carving motor no incluye el newline final que el generador de PDFs produce. Esto es un bug delimitado de implementación, no un fallo conceptual del algoritmo de carving.",
+
+  "evidence": {
+    "experiment": "DIAG-0001",
+    "dataset": "C (PDF-only, 15 archivos)",
+    "affected_files": "15/15",
+    "carving_ou": 0.0,
+    "mft_first_ou": 1.0,
+    "fix_verification": "Agregar 1 byte (0x0A) al final de cada PDF carved restaura el SHA-256 correcto en 15/15 casos."
+  },
+
+  "scope": {
+    "affected_component": "motors/motor_carving.py — PDF_SIGNATURES footer",
+    "affected_formats": ["PDF"],
+    "unaffected_formats": ["ZIP", "DOCX", "PNG", "JPEG"],
+    "risk": "LOW — solo afecta PDF parser, sin impacto en otros componentes"
+  },
+
+  "root_cause_analysis": {
+    "location": "motor_carving.py, PDF_SIGNATURES dict, 'footer' field",
+    "current_value": "b'%%EOF'",
+    "expected_value": "b'%%EOF\\n'",
+    "why_it_matters": "El estándar PDF permite ambos (%%EOF con o sin newline final), pero el generador del laboratorio siempre produce %%EOF\\n. El carving motor debe ser consistente con el generador."
+  },
+
+  "claims_affected": [],
+
+  "remediation_proposal": "RP-001",
+
+  "alternative_hypotheses": [
+    "El generador podría cambiar a no producir newline final",
+    "El carving podría aceptar ambas variantes (%%EOF y %%EOF\\n)",
+    "El Judge podría considerar archivos que difieren por 1 byte como FUNCTIONAL en vez de FAILED"
+  ],
+
+  "notes": "Este defecto fue localizado SIN modificar ninguna línea de código. DIAG-0001 demostró que el valor diagnóstico de la localización supera al de la corrección inmediata. Reclassificado de RC-001 a RC-A-001 en r11 al introducir taxonomía RC-I/RC-A/RC-P."
+}

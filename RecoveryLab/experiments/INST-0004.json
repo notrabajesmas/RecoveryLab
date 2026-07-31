@@ -1,0 +1,62 @@
+{
+  "experiment_id": "INST-0004",
+  "family": "INST",
+  "family_description": "Validación de instrumentos de medición. Los experimentos INST no intentan demostrar nada sobre recuperación de datos. Intentan demostrar que las herramientas con las que medimos la recuperación son fiables.",
+  "title": "Validación del RVS (Recovery Value Score)",
+  "date_defined": "2026-07-31",
+  "origin": "Auditoría externa r11 — Instrument Validation Matrix",
+  "status": "DEFINED",
+
+  "question": "¿Los pesos RVS están calibrados con juicio humano? ¿Las 14 categorías son mutuamente exclusivas y exhaustivas? ¿Los overrides por filename pattern son correctos?",
+
+  "motivation": {
+    "why": "CLAIM-003 ('Tesis > 200 thumbnails en el modelo de valor RVS') es una claim OBSERVED que depende de que los pesos RVS sean correctos. Actualmente los pesos son arbitrarios (THESIS=0.9999, THUMBNAIL=0.01) sin validación con usuarios reales. La encuesta Bradley-Terry (rvs_calibration_experiment.py) nunca se ejecutó.",
+    "what_changes": "Si los pesos están calibrados, CLAIM-003 se fortalece. Si no están calibrados, RVS es un instrumento no validado y todas las OU que dependen de RVS son comparaciones relativas sin base absoluta."
+  },
+
+  "design": {
+    "no_hypothesis": true,
+    "no_mft": true,
+    "no_corruption": true,
+    "no_carving": true,
+    "pure_observation": true,
+    "description": "Validación independiente del RVS. Se compara la escala de valores RVS con juicio humano."
+  },
+
+  "protocol": {
+    "step_1": "Ejecutar rvs_calibration_experiment.py (encuesta Bradley-Terry con comparaciones por pares)",
+    "step_2": "Reclutar ≥10 evaluadores humanos para comparaciones por pares: '¿Qué archivo recuperaría primero: A o B?'",
+    "step_3": "Ajustar modelo Bradley-Terry con respuestas humanas",
+    "step_4": "Comparar pesos derivados con pesos RVS actuales",
+    "step_5": "Verificar que las 14 categorías son mutuamente exclusivas y exhaustivas",
+    "step_6": "Verificar que los overrides por filename pattern no contradicen las categorías base",
+    "step_7": "Verificar que la composición RVS × FQS tiene sentido: ¿un archivo de alto valor (RVS=0.9999) parcialmente recuperado (FQS=0.5) tiene más OU que un archivo de bajo valor (RVS=0.01) perfectamente recuperado (FQS=1.0)?"
+  },
+
+  "metrics": {
+    "human_rvs_correlation": "Correlación entre pesos RVS actuales y pesos derivados de encuesta Bradley-Terry",
+    "category_exclusivity": "¿Las 14 categorías son mutuamente exclusivas?",
+    "category_exhaustiveness": "¿Las 14 categorías cubren todos los tipos de archivos relevantes?",
+    "override_consistency": "¿Los overrides por filename son consistentes con las categorías base?",
+    "composition_sense": "¿La composición RVS × FQS produce resultados que tienen sentido intuitivo?"
+  },
+
+  "expected_outcomes": {
+    "if_weights_calibrated": "RVS es un instrumento validado. CLAIM-003 se fortalece. Las OU tienen base absoluta.",
+    "if_weights_uncalibrated": "RVS es un instrumento no validado. CLAIM-003 se debilita. Se abriría un RC-I. Las OU son comparaciones relativas sin base absoluta.",
+    "if_composition_problematic": "La composición RVS × FQS podría necesitar rediseño. Un archivo de alto valor parcialmente recuperado debería tener más peso que un archivo de bajo valor perfectamente recuperado."
+  },
+
+  "scope": {
+    "component": "recovery_judge/rvs.py",
+    "does_not_test": "Motors, Dataset Builder, Judge, FQS (excepto composición)",
+    "only_tests": "RVS como instrumento de medición"
+  },
+
+  "claims_affected": [
+    "CLAIM-003 — directamente dependiente de la calibración RVS",
+    "Todas las OU — si RVS no está calibrado, las OU son relativas, no absolutas"
+  ],
+
+  "notes": "La calibración del RVS con usuarios reales es un experimento de naturaleza diferente a los demás: requiere participantes humanos. El diseño experimental (rvs_calibration_experiment.py) ya existe pero nunca se ejecutó. Este experimento es importante pero no urgente — los pesos relativos pueden ser correctos aunque no estén calibrados."
+}
