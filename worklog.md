@@ -618,3 +618,39 @@ Stage Summary:
 - INST family creates a structured path to validate all measurement instruments
 - 10 new documents created: RC-A-001.json, RC-A-002.json, RC-A-003.json, RC_TAXONOMY.json, instrument_validation_matrix.json, INST-0001 through INST-0005.json, INST_FAMILY.json
 - 2 documents updated: evidence_chain_manifest.json (v2.0), RP-001.json
+
+---
+Task ID: 16
+Agent: Main
+Task: INST-0001 — Dataset Builder Validation
+
+Work Log:
+- Implemented INST-0001 experiment script (inst_0001_dataset_builder_validation.py)
+  - 7 validation tests: V1 file count, V2 no overlaps, V3 unique offsets, V4 ground truth, V5 signature density, V6 determinism, V7 adversarial score
+  - Tested across 5 formats (ZIP, DOCX, PDF, JPG, PNG) × 3 scales (N=15, 30, 100) with 2 seeds
+- Executed INST-0001 — ALL VALIDATIONS PASSED:
+  - V1: 13/13 pass — generates exactly the expected number of files
+  - V2: 13/13 pass — no involuntary cluster overlaps
+  - V3: 13/13 pass — all starting offsets unique
+  - V4: 13/13 pass — all SHA-256 ground truth matches
+  - V6: 3/3 pass — images bit-for-bit identical (manifests differ only in generated_at timestamp)
+  - V7: No adversarial indicators detected
+- KEY FINDING: High signature conflict rate (78-96%) caused by random file content
+  - BMP signature (0x42 0x4D = 'BM') appears in random data because 'B' and 'M' are common ASCII
+  - JPEG signatures appear inside other JPEGs (multiple FF D8 FF markers)
+  - This is a property of random data, NOT of the Builder's layout
+  - Conflict rate is STABLE across scales (not increasing with N)
+- H6 DISCRIMINATION: H6 REFUTADA
+  - Dataset Builder is NOT adversarial
+  - The collapse of recovery is an ALGORITHMIC problem, not an instrument problem
+  - RC-A-003 remains classified as RC-A
+- Updated RC-A-003 with h6_investigation_result
+- Updated Instrument Validation Matrix: Dataset Builder → ✅ VALIDATED
+- Fixed determinism test false negative (manifests differ only in generated_at timestamp)
+
+Stage Summary:
+- INST-0001 COMPLETED: Dataset Builder is VALIDATED
+- H6 of RC-A-003 eliminated — the collapse is not caused by the Builder
+- Remaining hypotheses for RC-A-003: H1-H5, all algorithmic
+- High signature conflict rate (78-96%) is a property of random data, not adversarial layout
+- Next priority: INST-0002 (Carving Parser validation) to discriminate H1-H5

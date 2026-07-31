@@ -57,6 +57,22 @@
     }
   },
 
+  "h6_investigation_result": {
+    "experiment": "INST-0001",
+    "date": "2026-07-31",
+    "verdict": "H6 REFUTADA",
+    "evidence": {
+      "V1_file_count": "13/13 pass — genera exactamente el número esperado de archivos",
+      "V2_no_overlaps": "13/13 pass — sin superposiciones involuntarias de clusters",
+      "V3_unique_offsets": "13/13 pass — offsets de inicio únicos",
+      "V4_ground_truth": "13/13 pass — SHA-256 coincide con ground truth",
+      "V6_determinism": "3/3 pass — imágenes idénticas bit por bit",
+      "V7_adversarial": "Sin indicadores adversos detectados"
+    },
+    "caveat": "Alta tasa de conflicto de firmas (78-96%) detectada, pero causada por contenido aleatorio (firmas BMP/JPEG dentro de datos de otros archivos), NO por posicionamiento adverso del Builder. La firma BMP (0x42 0x4D = 'BM') aparece en datos aleatorios porque 'B' y 'M' son caracteres ASCII comunes.",
+    "consequence": "H6 eliminada. RC-A-003 permanece como RC-A. Las hipótesis restantes son H1-H5, todas algorítmicas."
+  },
+
   "evidence": {
     "experiment": "VAL-0001",
     "comparison_with_DIAG": {

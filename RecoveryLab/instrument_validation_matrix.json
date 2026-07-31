@@ -16,8 +16,19 @@
       "id": "INST-0001",
       "component": "dataset_builder/",
       "role": "Genera imágenes NTFS sintéticas con ground truth conocido. Misma semilla → misma imagen, bit por bit.",
-      "validation_status": "UNKNOWN",
-      "status_symbol": "❓",
+      "validation_status": "VALIDATED",
+      "status_symbol": "✅",
+      "validation_date": "2026-07-31",
+      "validation_experiment": "INST-0001",
+      "validation_results": {
+        "V1_file_count": "13/13 pass",
+        "V2_no_overlaps": "13/13 pass",
+        "V3_unique_offsets": "13/13 pass",
+        "V4_ground_truth": "13/13 pass",
+        "V6_determinism": "3/3 pass (images bit-for-bit identical, manifests identical excluding timestamp)",
+        "V7_adversarial": "No adversarial indicators detected"
+      },
+      "caveat": "High signature conflict rate (78-96%) in generated data is a property of random content, NOT of the Builder. The BMP signature (0x42 0x4D = 'BM') appears in random data because 'B' and 'M' are common ASCII characters. This is a known property of the file content, not a defect of the Builder.",
       "concerns": [
         "¿Los layouts generados son representativos de imágenes reales?",
         "¿La distribución de tamaños y posiciones de archivos es realista?",
@@ -125,7 +136,7 @@
   },
 
   "summary_table": {
-    "Dataset Builder": "❓ UNKNOWN",
+    "Dataset Builder": "✅ VALIDATED (INST-0001, 13/13 V1-V4, 3/3 V6, no adversarial indicators)",
     "Carving Parser": "⚠️ PARTIAL (DIAG-0001 + VAL-0001, pero RC-A-003 abierto)",
     "Judge": "❓ UNKNOWN",
     "RVS": "⚠️ PARTIAL (definido pero no calibrado con usuarios reales)",

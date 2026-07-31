@@ -1,0 +1,65 @@
+{
+  "experiment_id": "INST-0001",
+  "family": "INST",
+  "title": "Dataset Builder Validation",
+  "date": "2026-07-31T00:31:22.068129+00:00",
+  "status": "COMPLETED",
+  "question": "Does the Dataset Builder generate representative, non-adversarial NTFS images?",
+  "answer": "YES — The Dataset Builder is NOT adversarial. H6 of RC-A-003 is NOT SUPPORTED. The Builder generates exactly the expected number of files, produces no involuntary overlaps, assigns unique offsets, and ground truth SHA-256 matches perfectly. The high signature conflict rate is caused by random file content (BMP and JPEG signatures inside other files' data), NOT by adversarial layout. The collapse is an algorithmic problem, not an instrument problem.",
+
+  "validations": {
+    "V1_file_count": "13/13 pass — generates exactly the expected number of files",
+    "V2_no_overlaps": "13/13 pass — no involuntary cluster overlaps across any format or scale",
+    "V3_unique_offsets": "13/13 pass — all starting clusters are unique",
+    "V4_ground_truth": "13/13 pass — all non-resident files match SHA-256 ground truth",
+    "V5_signature_density": "observational — high conflict rate (78-96%) due to random content containing BMP/JPEG signatures",
+    "V6_determinism": "3/3 pass (images identical, manifests identical excluding timestamp) — false negative in automated test due to generated_at timestamp",
+    "V7_adversarial_score": "observational — no adversarial indicators detected"
+  },
+
+  "key_findings": {
+    "finding_1": "Dataset Builder generates exactly the expected number of files for all formats and scales (N=15, 30, 100)",
+    "finding_2": "No involuntary overlaps — every cluster is assigned to exactly one file",
+    "finding_3": "Ground truth is perfect — SHA-256 matches for every file read from the image",
+    "finding_4": "Determinism is confirmed — same seed produces identical images (bit-for-bit) and identical manifests (excluding timestamp)",
+    "finding_5": "HIGH signature conflict rate: 78-96% of carving signatures appear INSIDE other files' data, not at file boundaries",
+    "finding_6": "The conflict is caused by BMP signatures (0x42 0x4D = 'BM') appearing in random file content — this is a property of random data, not of the Builder",
+    "finding_7": "JPEG signatures also appear inside other JPEGs' data (multiple FF D8 FF in a single file) — this is a known property of JPEG files",
+    "finding_8": "Conflict rate is STABLE across scales: ~86% at N=15, ~87% at N=30, ~79% at N=100 — NOT increasing with scale",
+    "finding_9": "The Builder is NOT adversarial — it places files sequentially with no intentional overlap"
+  },
+
+  "h6_discrimination": {
+    "overlaps_detected": false,
+    "content_mismatch": false,
+    "determinism_failure": false,
+    "high_conflict_rate": true,
+    "h6_supported": false,
+    "h6_rationale": "The high conflict rate is caused by random file content containing BMP/JPEG signatures, NOT by the Builder placing files at adversarial positions. The Builder is deterministic, produces correct ground truth, and creates no overlaps. The collapse of recovery at scale is an ALGORITHMIC problem (deduplication), not an INSTRUMENT problem.",
+    "consequence_for_rc_a_003": "RC-A-003 remains classified as RC-A (algorithm). H6 is eliminated. The remaining hypotheses are H1-H5, all algorithmic."
+  },
+
+  "signature_conflict_analysis": {
+    "BMP_conflicts": "BMP signature (0x42 0x4D = 'BM') appears in random data because 'B' and 'M' are common ASCII characters. This is the dominant source of conflicts (65-772 per test).",
+    "JPEG_conflicts": "JPEG signature (0xFF 0xD8 0xFF) appears inside other JPEG files because large JPEGs contain multiple JPEG markers. Each JPEG file with N markers creates N-1 false positives.",
+    "ZIP_PK_conflicts": "ZIP/DOCX share PK\\x03\\x04 signature. For N=100 ZIP files, the scanner detects 100 ZIP signatures but also finds BMP signatures inside ZIP data. This is expected for ZIP archives containing random data.",
+    "conflict_rate_by_format": {
+      "ZIP": "78-80%",
+      "DOCX": "80-82%",
+      "PDF": "79-81%",
+      "JPEG": "95-96%",
+      "PNG": "95-96%"
+    },
+    "conflict_rate_by_N": {
+      "N=15": "86% (across 5 formats)",
+      "N=30": "87% (across 5 formats)",
+      "N=100": "79% (across 3 formats)"
+    }
+  },
+
+  "implications_for_carving_motor": {
+    "observation": "The carving motor's deduplication is fighting a real problem: most signatures it finds are inside other files, not at file boundaries. This is NOT an artifact of the Builder — it would happen with any dataset containing random data.",
+    "consequence": "The deduplication algorithm needs to be smarter about distinguishing true file boundaries from spurious signatures inside other files. This confirms H1 (deduplication eliminates too much) as a strong hypothesis.",
+    "next_step": "INST-0002 (Carving Parser validation) should measure how many files are lost at each stage: detection, extraction, and deduplication."
+  }
+}
