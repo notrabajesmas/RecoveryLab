@@ -298,6 +298,6 @@
     "falsification_rule": "Si una predicción no se cumple, la hipótesis asociada queda refutada. No se ajusta la predicción post-hoc para que encaje. Se revierte el cambio y se investiga la alternativa.",
     "prediction_discipline": "Cada predicción debe ser cuantitativa (magnitud esperada), direccionada (decrease/increase/no_change), verificable (método explícito), y tener criterios explícitos de confirmación y refutación. Las predicciones 'debería mejorar' sin magnitud NI criterios NO son aceptables.",
     "architecture_freeze": "A partir de r15, la arquitectura de Fase A está estabilizada. Cualquier documento nuevo debe justificar por qué no puede expresarse con los artefactos existentes. El laboratorio deja de crecer en estructura y empieza a crecer únicamente en evidencia.",
-    "current_phase": "REFERENCE_VALIDATION — la causalidad del truncamiento JPEG está confirmada (EXP-JPEG-CAUSALITY). El siguiente experimento (VAL-JPEG-REFERENCE) busca el comportamiento correcto de referencia antes de diseñar RP-003. Hoja de ruta: VAL-JPEG-REFERENCE → RP-003 → Prediction Ledger → Implementación."
+    "current_phase": "REFERENCE_CALIBRATION — la causalidad del truncamiento JPEG está confirmada (EXP-JPEG-CAUSALITY). El siguiente experimento (VAL-JPEG-REFERENCE) calibra el comportamiento observable de referencia antes de diseñar RP-003. Hoja de ruta: VAL-JPEG-REFERENCE → RP-003 → Prediction Ledger → Implementación."
   }
 }

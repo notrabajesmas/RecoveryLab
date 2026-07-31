@@ -944,3 +944,26 @@ Stage Summary:
 - VAL-JPEG-REFERENCE es el siguiente experimento. Pregunta única: "¿Cómo resuelve una herramienta de referencia exactamente el mismo caso?"
 - Si PhotoRec recupera perfectamente, RP-003 puede formular una predicción anclada en comportamiento observado, no en suposición.
 - La cadena de evidencia es sólida: 15/15 regularidad perfecta + código inspeccionado + Dataset Builder validado.
+
+---
+Task ID: 24
+Agent: Main
+Task: Restricción observacional para VAL-JPEG-REFERENCE
+
+Work Log:
+- Revisión metodológica del usuario: el experimento no debe preguntar "¿Qué hace PhotoRec?" sino "¿Qué comportamiento observable produce PhotoRec sobre exactamente el mismo dataset?"
+- Tres decisiones implementadas en VAL-JPEG-REFERENCE.json:
+  1. RESTRICCIÓN OBSERVACIONAL: el laboratorio solo puede observar salidas (tamaño, SHA-256, offsets, cantidad de archivos), no algoritmos internos. Toda inferencia sobre la estrategia interna de PhotoRec es una hipótesis inferida, no un hecho observado.
+  2. ESTRUCTURA DE DOS NIVELES: Nivel 1 (solo hechos observables, sin interpretación) y Nivel 2 (inferencias marcadas como "Compatible con la evidencia", nunca "Demostrado"). Language enforcement explícito: permitido "Compatible con", "Consistente con", "Incompatible con"; prohibido "Demostrado", "Confirmado", "PhotoRec usa X".
+  3. PRIMARY OUTCOME BINARIO: "¿RecoveryLab y PhotoRec producen exactamente el mismo archivo?" (Sí/No). Divide el espacio experimental en dos mitades antes de cualquier pregunta más fina.
+- Agregado H_PhotoRecStrategy como hipótesis inferida (no observada) en Nivel 2.
+- Actualizado family_description: de "descubrir comportamiento correcto" a "registrar qué comportamiento observable produce la herramienta de referencia".
+- Actualizado title: de "Validación de referencia" a "Calibración de referencia" — el experimento calibra, no valida.
+- Agregado per_file_template para Nivel 1 con campos observables específicos.
+- Agregado language_enforcement para Nivel 2.
+
+Stage Summary:
+- VAL-JPEG-REFERENCE ahora tiene una restricción observacional explícita que protege contra confundir compatibilidad con demostración.
+- La estructura de dos niveles (observación → inferencia) es consistente con la disciplina del laboratorio: no saltar de la observación a la conclusión.
+- El Primary Outcome binario es el primer filtro que divide el espacio experimental antes de preguntas más finas.
+- El experimento es de calibración, no de validación del código.

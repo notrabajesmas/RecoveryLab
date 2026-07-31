@@ -6,7 +6,7 @@
   "date_identified": "2026-07-30",
   "date_reformulated": "2026-07-31",
   "severity": "HIGH",
-  "status": "ROOT_CAUSE_CONFIRMED — REFERENCE_VALIDATION_PENDING",
+  "status": "ROOT_CAUSE_CONFIRMED — REFERENCE_CALIBRATION_PENDING",
   "defect_type": "ALGORITHMIC_POLICY",
   "reformulation_rationale": {
     "original_title": "Heurística de deduplicación JPEG demasiado agresiva",
@@ -72,7 +72,7 @@
     "phase_transition": {
       "date": "2026-07-31",
       "from": "CAUSALITY_INVESTIGATION",
-      "to": "REFERENCE_VALIDATION",
+      "to": "REFERENCE_CALIBRATION",
       "rationale": "EXP-JPEG-CAUSALITY respondió la pregunta de causalidad: 15/15 archivos confirman carved_size = first_ffd9_offset + 2. La causa inmediata está localizada con precisión. El laboratorio ya no está tratando de descubrir qué falla, sino de descubrir cuál es el comportamiento correcto que debe imitar. Ese es un cambio natural después de haber localizado el defecto.",
       "open_question": "¿Buscar el último FFD9 es realmente la estrategia correcta? No lo sabemos. PhotoRec podría usar: (a) el último FFD9, (b) parsing de segmentos JPEG, (c) descarte de archivos ambiguos, (d) heurísticas de longitud. Cada una conduciría a un RP distinto.",
       "consequence": "El orden correcto es: VAL-JPEG-REFERENCE → RP-003 → Prediction Ledger → Implementación. No porque se dude de la causa observada, sino porque el diseño de la solución todavía puede mejorar."
@@ -168,5 +168,5 @@
     }
   ],
 
-  "notes": "Este defecto fue reformulado de 'dedup agresiva' a 'delimitación prematura' después de que RP-002 eliminó el BMP cascade y expuso el verdadero problema. La deduplicación era un síntoma, no la causa. El Judge pasó de ser un sospechoso a ser un instrumento diagnóstico. La causalidad inmediata está confirmada (15/15 match exacto: carved_size = first_ffd9_offset + 2). El laboratorio ya no está tratando de descubrir qué falla, sino de descubrir cuál es el comportamiento correcto que debe imitar. El siguiente experimento (VAL-JPEG-REFERENCE) responde a una pregunta distinta: '¿Cómo resuelve una herramienta de referencia exactamente el mismo caso?' No se llama EXP-JPEG-CAUSALITY porque la causalidad ya fue respondida. El orden de los pasos es: VAL-JPEG-REFERENCE → RP-003 → Prediction Ledger → Implementación."
+  "notes": "Este defecto fue reformulado de 'dedup agresiva' a 'delimitación prematura' después de que RP-002 eliminó el BMP cascade y expuso el verdadero problema. La deduplicación era un síntoma, no la causa. El Judge pasó de ser un sospechoso a ser un instrumento diagnóstico. La causalidad inmediata está confirmada (15/15 match exacto: carved_size = first_ffd9_offset + 2). El laboratorio ya no está tratando de descubrir qué falla, sino de calibrar el comportamiento observable de referencia. El siguiente experimento (VAL-JPEG-REFERENCE) es de calibración, no de validación: pregunta '¿Qué comportamiento observable produce PhotoRec sobre exactamente el mismo dataset?' no '¿Qué hace PhotoRec?'. La distinción es metodológica: el laboratorio solo puede observar salidas, no algoritmos internos. El orden de los pasos es: VAL-JPEG-REFERENCE → RP-003 → Prediction Ledger → Implementación."
 }
