@@ -536,13 +536,23 @@ class MotorCarving(BaseMotor):
         file_data = None
         extra_clusters_read = 0
 
-        if sig.footer:
+        if sig.name == "JPEG":
+            # JPEG-specific carving: parse structure to find the real EOI.
+            # RC-002: simple footer search (first or last FFD9) fails because
+            # the JPEG body can contain spurious FFD9 bytes. Structural parsing
+            # correctly identifies the EOI by skipping entropy-coded data.
+            file_data = self._carve_jpeg(
+                image, start_offset, image_len, sig, cluster_size,
+                total_clusters, read_clusters
+            )
+            if file_data is not None:
+                extra_clusters_read = file_data.pop("extra_clusters_read", 0)
+        elif sig.footer:
             # Search for footer after the header
             # Start searching from after the header
             footer_search_start = start_offset + sig.header_len
             max_search_end = min(start_offset + sig.max_size, image_len)
 
-            # Search for footer
             footer_offset = self._find_footer(
                 image, footer_search_start, max_search_end, sig.footer
             )
@@ -590,6 +600,229 @@ class MotorCarving(BaseMotor):
             "size": len(file_data),
         }
 
+    def _carve_jpeg(self, image: bytes, start_offset: int,
+                     image_len: int, sig: FileSignature,
+                     cluster_size: int, total_clusters: int,
+                     read_clusters: Set[int]) -> Optional[Dict]:
+        """
+        Carve a JPEG file by parsing its structure to find the real EOI.
+        
+        RC-002 fix: three-tier strategy:
+          1. Structural parsing (for real JPEGs with SOS marker)
+          2. Last FFD9 before next JPEG signature (for synthetic/partial JPEGs)
+          3. Last FFD9 within max_size (fallback if no other JPEGs nearby)
+        
+        The JPEG body can contain spurious FFD9 bytes (EXIF thumbnails,
+        random byte coincidences in entropy data). Structural parsing
+        correctly identifies EOI by skipping entropy-coded data (byte stuffing).
+        For synthetic JPEGs without proper markers, we use the next JPEG
+        signature as a boundary to avoid over-extension.
+        """
+        max_end = min(start_offset + sig.max_size, image_len)
+        
+        # Verify SOI
+        if start_offset + 2 > image_len:
+            return None
+        if image[start_offset:start_offset + 2] != b'\xFF\xD8':
+            return None
+        
+        # ─── Tier 1: Last FFD9 before next JPEG signature ──────────────
+        # For most cases (multiple JPEGs in the image), this is the most
+        # reliable approach. The next JPEG signature acts as a natural boundary.
+        next_jpeg = self._find_next_jpeg_signature(
+            image, start_offset + 4, max_end, cluster_size
+        )
+        
+        if next_jpeg is not None:
+            # Search for the last FFD9 before the next JPEG
+            search_end = next_jpeg
+            last_ffd9 = self._find_footer_last(
+                image, start_offset + 4, search_end, b'\xFF\xD9'
+            )
+            if last_ffd9 is not None:
+                file_end = last_ffd9 + 2
+                return self._build_jpeg_result(
+                    image, start_offset, file_end, sig, cluster_size,
+                    total_clusters, read_clusters
+                )
+        
+        # ─── Tier 2: Structural parsing (for real JPEGs with SOS) ──────
+        # Only used when there's no next JPEG boundary. This works for
+        # real JPEGs with proper markers (SOS, byte stuffing).
+        # Not used first because synthetic JPEGs have random FF bytes
+        # that create false SOS markers.
+        eoi_offset = self._find_jpeg_eoi_structural(image, start_offset, max_end)
+        
+        if eoi_offset is not None:
+            file_end = eoi_offset + 2  # Include the FFD9 bytes
+            return self._build_jpeg_result(
+                image, start_offset, file_end, sig, cluster_size,
+                total_clusters, read_clusters
+            )
+        
+        # ─── Tier 3: Last FFD9 within max_size ─────────────────────────
+        # Fallback: no structural parsing success, no next JPEG boundary.
+        # Use the last FFD9 within max_size.
+        last_ffd9 = self._find_footer_last(
+            image, start_offset + 4, max_end, b'\xFF\xD9'
+        )
+        if last_ffd9 is not None:
+            file_end = last_ffd9 + 2
+            return self._build_jpeg_result(
+                image, start_offset, file_end, sig, cluster_size,
+                total_clusters, read_clusters
+            )
+        
+        # No EOI found — use max-size heuristic
+        remaining = min(sig.max_size, image_len - start_offset)
+        file_data = image[start_offset:start_offset + remaining]
+        
+        if len(file_data) < sig.min_size:
+            return None
+        
+        return {
+            "data": file_data,
+            "start_offset": start_offset,
+            "start_cluster": start_offset // cluster_size,
+            "extension": sig.extension,
+            "format_name": sig.name,
+            "extra_clusters_read": 0,
+            "size": len(file_data),
+        }
+
+    def _find_jpeg_eoi_structural(self, image: bytes, start_offset: int,
+                                   max_end: int) -> Optional[int]:
+        """
+        Find the real EOI of a JPEG by parsing its structure.
+        
+        Returns the offset of the FFD9 marker (not including the marker bytes),
+        or None if structural parsing fails.
+        """
+        pos = start_offset + 2  # Skip SOI
+        
+        while pos < max_end - 1:
+            if image[pos] != 0xFF:
+                pos += 1
+                continue
+            
+            marker_byte = image[pos + 1]
+            
+            # FF 00 = byte stuffing in entropy data (skip)
+            # FF FF = padding (skip)
+            if marker_byte == 0x00 or marker_byte == 0xFF:
+                pos += 1
+                continue
+            
+            # SOS marker (FF DA) — start of entropy-coded data
+            if marker_byte == 0xDA:
+                if pos + 4 > max_end:
+                    return None
+                sos_length = struct.unpack('>H', image[pos + 2:pos + 4])[0]
+                pos += 2 + sos_length
+                
+                # Scan entropy data for real EOI
+                while pos < max_end - 1:
+                    if image[pos] == 0xFF:
+                        next_byte = image[pos + 1]
+                        if next_byte == 0x00:
+                            pos += 2
+                            continue
+                        if next_byte == 0xFF:
+                            pos += 1
+                            continue
+                        if next_byte == 0xD9:
+                            return pos  # Found real EOI
+                        # RST markers (D0-D7) — continue in entropy
+                        if 0xD0 <= next_byte <= 0xD7:
+                            pos += 2
+                            continue
+                        # Other marker — might be after entropy data
+                        pos += 1
+                        continue
+                    else:
+                        pos += 1
+                return None  # Ran out of data
+            
+            # EOI before SOS (unusual but valid)
+            if marker_byte == 0xD9:
+                return pos
+            
+            # RST markers — no length field
+            if marker_byte in (0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7):
+                pos += 2
+                continue
+            
+            # Other markers with length field
+            if pos + 4 > max_end:
+                return None
+            marker_length = struct.unpack('>H', image[pos + 2:pos + 4])[0]
+            pos += 2 + marker_length
+        
+        return None  # Structural parsing failed
+
+    def _find_next_jpeg_signature(self, image: bytes, start: int,
+                                    end: int, cluster_size: int = 4096) -> Optional[int]:
+        """
+        Find the next JPEG signature (FFD8FF) after the given offset.
+        
+        Used as a boundary for JPEG carving: the last FFD9 before the
+        next JPEG is likely the real EOI of the current file.
+        
+        IMPORTANT: Only accepts signatures at cluster boundaries to avoid
+        false positives from random FFD8FF sequences in entropy data.
+        In NTFS, files start at cluster boundaries, so a real JPEG signature
+        should be aligned to a cluster boundary.
+        """
+        jpeg_sig = b'\xFF\xD8\xFF'
+        pos = start
+        
+        while pos < end - len(jpeg_sig):
+            idx = image.find(jpeg_sig, pos, end)
+            if idx == -1:
+                return None
+            
+            # Only accept signatures at cluster boundaries
+            # This filters out false FFD8FF sequences in random data
+            if idx % cluster_size == 0:
+                return idx
+            
+            # Skip to the next cluster boundary
+            next_cluster = ((idx // cluster_size) + 1) * cluster_size
+            pos = next_cluster
+        
+        return None
+
+    def _build_jpeg_result(self, image: bytes, start_offset: int,
+                            file_end: int, sig: FileSignature,
+                            cluster_size: int, total_clusters: int,
+                            read_clusters: Set[int]) -> Optional[Dict]:
+        """Build a JPEG carving result dict."""
+        file_data = image[start_offset:file_end]
+        
+        if len(file_data) < sig.min_size:
+            return None
+        
+        if len(file_data) > sig.max_size:
+            file_data = file_data[:sig.max_size]
+        
+        extra_clusters_read = 0
+        end_cluster = (file_end - 1) // cluster_size
+        start_cluster = start_offset // cluster_size
+        for c in range(start_cluster, end_cluster + 1):
+            if c not in read_clusters:
+                read_clusters.add(c)
+                extra_clusters_read += 1
+        
+        return {
+            "data": file_data,
+            "start_offset": start_offset,
+            "start_cluster": start_offset // cluster_size,
+            "extension": sig.extension,
+            "format_name": sig.name,
+            "extra_clusters_read": extra_clusters_read,
+            "size": len(file_data),
+        }
+
     def _find_footer(self, image: bytes, start: int, end: int,
                       footer: bytes) -> Optional[int]:
         """
@@ -617,6 +850,44 @@ class MotorCarving(BaseMotor):
             pos += chunk_size
 
         return None
+
+    def _find_footer_last(self, image: bytes, start: int, end: int,
+                          footer: bytes) -> Optional[int]:
+        """
+        Find the LAST occurrence of footer bytes in the image.
+
+        Used for JPEG delimitation where the body may contain multiple
+        FFD9 sequences (EXIF thumbnails, random byte coincidences, or
+        embedded JPEG data). The real EOI marker is the last FFD9, not
+        the first one.
+
+        RC-002 fix: previous _find_footer() found the first FFD9, causing
+        severe truncation when the JPEG body contained spurious FFD9 bytes.
+        """
+        footer_len = len(footer)
+        if footer_len == 0:
+            return None
+
+        last_found = None
+        chunk_size = 1024 * 1024  # 1MB chunks
+        pos = start
+
+        while pos < end:
+            chunk_end = min(pos + chunk_size + footer_len, end + footer_len)
+            chunk = image[pos:chunk_end]
+
+            # Find ALL occurrences in this chunk
+            search_pos = 0
+            while search_pos < len(chunk):
+                idx = chunk.find(footer, search_pos)
+                if idx == -1:
+                    break
+                last_found = pos + idx
+                search_pos = idx + 1
+
+            pos += chunk_size
+
+        return last_found
 
     def _carve_mp4(self, image: bytes, start_offset: int,
                     image_len: int, sig: FileSignature) -> Optional[bytes]:

@@ -25,6 +25,7 @@ import os
 import json
 import csv
 import hashlib
+import struct
 import time
 from pathlib import Path
 from datetime import datetime, timezone
@@ -152,7 +153,29 @@ def _carve_file_instrumented(image: bytes, start_offset: int,
     file_data = None
     footer_found = False
     
-    if sig.footer:
+    if sig.name == "JPEG":
+        # JPEG-specific carving: parse structure to find the real EOI.
+        # RC-002 fix: structural parsing correctly identifies EOI by skipping
+        # entropy-coded data (byte stuffing FF 00).
+        carved = _carve_jpeg_instrumented(
+            image, start_offset, image_len, sig, cluster_size
+        )
+        if carved is not None:
+            return carved
+        # Fallback: if structural parsing fails, use max-size heuristic
+        heuristic_size = min(sig.max_size, remaining)
+        file_data = image[start_offset:start_offset + heuristic_size]
+        if len(file_data) < sig.min_size:
+            return None
+        return {
+            "data": file_data,
+            "start_offset": start_offset,
+            "start_cluster": start_offset // cluster_size,
+            "size": len(file_data),
+            "footer_found": False,
+            "sha256": hashlib.sha256(file_data).hexdigest(),
+        }
+    elif sig.footer:
         footer_search_start = start_offset + sig.header_len
         max_search_end = min(start_offset + sig.max_size, image_len)
         
@@ -187,6 +210,145 @@ def _carve_file_instrumented(image: bytes, start_offset: int,
     }
 
 
+def _carve_jpeg_instrumented(image: bytes, start_offset: int,
+                              image_len: int, sig: FileSignature,
+                              cluster_size: int) -> Optional[Dict]:
+    """
+    Carve a JPEG file by parsing its structure to find the real EOI.
+    
+    RC-002 fix: three-tier strategy:
+      1. Structural parsing (for real JPEGs with SOS marker)
+      2. Last FFD9 before next JPEG signature (for synthetic/partial JPEGs)
+      3. Last FFD9 within max_size (fallback)
+    """
+    max_end = min(start_offset + sig.max_size, image_len)
+    
+    if start_offset + 2 > image_len:
+        return None
+    if image[start_offset:start_offset + 2] != b'\xFF\xD8':
+        return None
+    
+    # Tier 1: Last FFD9 before next JPEG signature (most reliable for multi-JPEG images)
+    next_jpeg = _find_next_jpeg_sig(image, start_offset + 4, max_end)
+    if next_jpeg is not None:
+        last_ffd9 = _find_footer_last_instrumented(
+            image, start_offset + 4, next_jpeg, b'\xFF\xD9'
+        )
+        if last_ffd9 is not None:
+            file_end = last_ffd9 + 2
+            file_data = image[start_offset:file_end]
+            if len(file_data) >= sig.min_size:
+                return {
+                    "data": file_data,
+                    "start_offset": start_offset,
+                    "start_cluster": start_offset // cluster_size,
+                    "size": len(file_data),
+                    "footer_found": True,
+                    "sha256": hashlib.sha256(file_data).hexdigest(),
+                }
+    
+    # Tier 2: Structural parsing (for real JPEGs with SOS, when no next JPEG boundary)
+    eoi_offset = _find_jpeg_eoi_structured(image, start_offset, max_end)
+    if eoi_offset is not None:
+        file_end = eoi_offset + 2
+        file_data = image[start_offset:file_end]
+        if len(file_data) >= sig.min_size:
+            return {
+                "data": file_data,
+                "start_offset": start_offset,
+                "start_cluster": start_offset // cluster_size,
+                "size": len(file_data),
+                "footer_found": True,
+                "sha256": hashlib.sha256(file_data).hexdigest(),
+            }
+    
+    # Tier 3: Last FFD9 within max_size
+    last_ffd9 = _find_footer_last_instrumented(
+        image, start_offset + 4, max_end, b'\xFF\xD9'
+    )
+    if last_ffd9 is not None:
+        file_end = last_ffd9 + 2
+        file_data = image[start_offset:file_end]
+        if len(file_data) >= sig.min_size:
+            return {
+                "data": file_data,
+                "start_offset": start_offset,
+                "start_cluster": start_offset // cluster_size,
+                "size": len(file_data),
+                "footer_found": True,
+                "sha256": hashlib.sha256(file_data).hexdigest(),
+            }
+    
+    return None  # Structural parsing failed
+
+
+def _find_jpeg_eoi_structured(image: bytes, start_offset: int,
+                               max_end: int) -> Optional[int]:
+    """Find the real EOI of a JPEG by parsing its structure."""
+    pos = start_offset + 2  # Skip SOI
+    
+    while pos < max_end - 1:
+        if image[pos] != 0xFF:
+            pos += 1
+            continue
+        marker_byte = image[pos + 1]
+        if marker_byte == 0x00 or marker_byte == 0xFF:
+            pos += 1
+            continue
+        if marker_byte == 0xDA:  # SOS
+            if pos + 4 > max_end:
+                return None
+            sos_length = struct.unpack('>H', image[pos + 2:pos + 4])[0]
+            pos += 2 + sos_length
+            while pos < max_end - 1:
+                if image[pos] == 0xFF:
+                    next_byte = image[pos + 1]
+                    if next_byte == 0x00:
+                        pos += 2
+                        continue
+                    if next_byte == 0xFF:
+                        pos += 1
+                        continue
+                    if next_byte == 0xD9:
+                        return pos
+                    if 0xD0 <= next_byte <= 0xD7:
+                        pos += 2
+                        continue
+                    pos += 1
+                    continue
+                else:
+                    pos += 1
+            return None
+        if marker_byte == 0xD9:  # EOI before SOS
+            return pos
+        if marker_byte in (0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7):
+            pos += 2
+            continue
+        if pos + 4 > max_end:
+            return None
+        marker_length = struct.unpack('>H', image[pos + 2:pos + 4])[0]
+        pos += 2 + marker_length
+    return None
+
+
+def _find_next_jpeg_sig(image: bytes, start: int, end: int,
+                        cluster_size: int = 4096) -> Optional[int]:
+    """Find the next JPEG signature (FFD8FF) at a cluster boundary after the given offset."""
+    jpeg_sig = b'\xFF\xD8\xFF'
+    pos = start
+    
+    while pos < end - len(jpeg_sig):
+        idx = image.find(jpeg_sig, pos, end)
+        if idx == -1:
+            return None
+        if idx % cluster_size == 0:
+            return idx
+        next_cluster = ((idx // cluster_size) + 1) * cluster_size
+        pos = next_cluster
+    
+    return None
+
+
 def _find_footer_instrumented(image: bytes, start: int, end: int,
                                footer: bytes) -> Optional[int]:
     """Find the first occurrence of footer bytes in the image."""
@@ -206,6 +368,38 @@ def _find_footer_instrumented(image: bytes, start: int, end: int,
         pos += chunk_size
     
     return None
+
+
+def _find_footer_last_instrumented(image: bytes, start: int, end: int,
+                                    footer: bytes) -> Optional[int]:
+    """Find the LAST occurrence of footer bytes in the image.
+    
+    RC-002 fix: JPEG body may contain spurious FFD9 bytes. The real EOI
+    is the last FFD9, not the first one.
+    """
+    footer_len = len(footer)
+    if footer_len == 0:
+        return None
+    
+    last_found = None
+    chunk_size = 1024 * 1024
+    pos = start
+    
+    while pos < end:
+        chunk_end = min(pos + chunk_size + footer_len, end + footer_len)
+        chunk = image[pos:chunk_end]
+        
+        search_pos = 0
+        while search_pos < len(chunk):
+            idx = chunk.find(footer, search_pos)
+            if idx == -1:
+                break
+            last_found = pos + idx
+            search_pos = idx + 1
+        
+        pos += chunk_size
+    
+    return last_found
 
 
 # ═══════════════════════════════════════════════════════════════════════════

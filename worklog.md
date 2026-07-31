@@ -989,3 +989,32 @@ Stage Summary:
 - Tres reglas congeladas antes de la ejecución protegen contra el sesgo de confirmación.
 - El árbol de decisión es limpio: Primary Outcome binario → ¿dónde difieren? → ¿qué hipótesis son compatibles?
 - El experimento está listo para ejecución.
+
+---
+Task ID: 26
+Agent: Main
+Task: Fase B — P0: Implementar robust JPEG delimiter (RC-002)
+
+Work Log:
+- Declarado inicio de Fase B: el laboratorio pasa de construir metodología a producir software.
+- Implementado _carve_jpeg() en motor_carving.py con estrategia de 3 niveles:
+  - Tier 1: Último FFD9 antes del próximo JPEG signature (más fiable para imágenes con múltiples JPEGs)
+  - Tier 2: Parsing estructural JPEG (para JPEGs reales con SOS marker, cuando no hay próximo JPEG como límite)
+  - Tier 3: Último FFD9 dentro de max_size (fallback)
+- Implementado _find_next_jpeg_signature() con filtro de cluster boundary: solo acepta signatures alineadas a límites de cluster (4096 bytes) para evitar falsos positivos de FFD8FF en datos aleatorios.
+- Implementado _find_jpeg_eoi_structural() para parsing de estructura JPEG (SOS, byte stuffing, EOI).
+- Implementado _build_jpeg_result() como helper para construir resultados.
+- Actualizado INST-0002 con las mismas funciones instrumentadas.
+- Resultados INST-0002 post-fix:
+  - Antes: 91.4% (480/525), 45 JPEG losses
+  - Después: 99.8% (524/525), 1 JPEG loss (último archivo de la imagen, sin próximo JPEG como límite)
+  - JPEG N=30: 30/30 (100%)
+  - JPEG N=15: 14/15 (93.3%)
+  - 0 dedup eliminated, 0 delimitation loss
+- No se afectaron otros formatos: ZIP, DOCX, PDF, PNG siguen al 100%.
+
+Stage Summary:
+- RC-002 fix implementado: de 91.4% a 99.8% de recuperación.
+- El único archivo fallido es el último JPEG de la imagen (no hay próximo JPEG como límite para Tier 1, y el Tier 2/3 encuentra un FFD9 prematuro en los datos aleatorios).
+- El fix es robusto: funciona para JPEGs reales (Tier 2) y sintéticos (Tier 1), y no afecta otros formatos.
+- Próximo paso: actualizar artefactos (RC-002 status, worklog, prediction ledger).

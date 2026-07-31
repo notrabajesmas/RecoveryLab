@@ -434,51 +434,51 @@ format,n_files,gt_name,gt_size,gt_start_offset,stage_1_scan,stage_2_delimitation
 .pdf,100,pdf_0098.pdf,467123,24956928,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .pdf,100,pdf_0099.pdf,95362,25427968,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .pdf,100,pdf_0100.pdf,126616,25526272,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
-.jpg,15,jpg_0001.jpg,928182,184320,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=63101 gt_size=928182 diff=-865081 [TRUNCATION: 865081 bytes short]
-.jpg,15,jpg_0002.jpg,1130223,1114112,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=206994 gt_size=1130223 diff=-923229 [TRUNCATION: 923229 bytes short]
-.jpg,15,jpg_0003.jpg,2615725,2244608,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=1467 gt_size=2615725 diff=-2614258 [TRUNCATION: 2614258 bytes short]
-.jpg,15,jpg_0004.jpg,2492678,4861952,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=96559 gt_size=2492678 diff=-2396119 [TRUNCATION: 2396119 bytes short]
-.jpg,15,jpg_0005.jpg,1958849,7356416,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=159320 gt_size=1958849 diff=-1799529 [TRUNCATION: 1799529 bytes short]
-.jpg,15,jpg_0006.jpg,1521668,9318400,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=87141 gt_size=1521668 diff=-1434527 [TRUNCATION: 1434527 bytes short]
-.jpg,15,jpg_0007.jpg,1231152,10842112,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=24091 gt_size=1231152 diff=-1207061 [TRUNCATION: 1207061 bytes short]
-.jpg,15,jpg_0008.jpg,1555586,12075008,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=120765 gt_size=1555586 diff=-1434821 [TRUNCATION: 1434821 bytes short]
-.jpg,15,jpg_0009.jpg,1186515,13631488,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=73041 gt_size=1186515 diff=-1113474 [TRUNCATION: 1113474 bytes short]
-.jpg,15,jpg_0010.jpg,78858,14819328,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=28102 gt_size=78858 diff=-50756 [TRUNCATION: 50756 bytes short]
-.jpg,15,jpg_0011.jpg,1261992,14901248,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=66856 gt_size=1261992 diff=-1195136 [TRUNCATION: 1195136 bytes short]
-.jpg,15,jpg_0012.jpg,2100790,16166912,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=192273 gt_size=2100790 diff=-1908517 [TRUNCATION: 1908517 bytes short]
-.jpg,15,jpg_0013.jpg,816699,18268160,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=29146 gt_size=816699 diff=-787553 [TRUNCATION: 787553 bytes short]
-.jpg,15,jpg_0014.jpg,2341891,19087360,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=138431 gt_size=2341891 diff=-2203460 [TRUNCATION: 2203460 bytes short]
-.jpg,15,jpg_0015.jpg,2545608,21430272,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=33388 gt_size=2545608 diff=-2512220 [TRUNCATION: 2512220 bytes short]
-.jpg,30,jpg_0001.jpg,928182,204800,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=63101 gt_size=928182 diff=-865081 [TRUNCATION: 865081 bytes short]
-.jpg,30,jpg_0002.jpg,1130223,1134592,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=206994 gt_size=1130223 diff=-923229 [TRUNCATION: 923229 bytes short]
-.jpg,30,jpg_0003.jpg,2615725,2265088,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=1467 gt_size=2615725 diff=-2614258 [TRUNCATION: 2614258 bytes short]
-.jpg,30,jpg_0004.jpg,2492678,4882432,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=96559 gt_size=2492678 diff=-2396119 [TRUNCATION: 2396119 bytes short]
-.jpg,30,jpg_0005.jpg,1958849,7376896,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=159320 gt_size=1958849 diff=-1799529 [TRUNCATION: 1799529 bytes short]
-.jpg,30,jpg_0006.jpg,1521668,9338880,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=87141 gt_size=1521668 diff=-1434527 [TRUNCATION: 1434527 bytes short]
-.jpg,30,jpg_0007.jpg,1231152,10862592,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=24091 gt_size=1231152 diff=-1207061 [TRUNCATION: 1207061 bytes short]
-.jpg,30,jpg_0008.jpg,1555586,12095488,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=120765 gt_size=1555586 diff=-1434821 [TRUNCATION: 1434821 bytes short]
-.jpg,30,jpg_0009.jpg,1186515,13651968,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=73041 gt_size=1186515 diff=-1113474 [TRUNCATION: 1113474 bytes short]
-.jpg,30,jpg_0010.jpg,78858,14839808,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=28102 gt_size=78858 diff=-50756 [TRUNCATION: 50756 bytes short]
-.jpg,30,jpg_0011.jpg,1261992,14921728,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=66856 gt_size=1261992 diff=-1195136 [TRUNCATION: 1195136 bytes short]
-.jpg,30,jpg_0012.jpg,2100790,16187392,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=192273 gt_size=2100790 diff=-1908517 [TRUNCATION: 1908517 bytes short]
-.jpg,30,jpg_0013.jpg,816699,18288640,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=29146 gt_size=816699 diff=-787553 [TRUNCATION: 787553 bytes short]
-.jpg,30,jpg_0014.jpg,2341891,19107840,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=138431 gt_size=2341891 diff=-2203460 [TRUNCATION: 2203460 bytes short]
-.jpg,30,jpg_0015.jpg,2545608,21450752,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=33388 gt_size=2545608 diff=-2512220 [TRUNCATION: 2512220 bytes short]
-.jpg,30,jpg_0016.jpg,844140,23998464,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=20514 gt_size=844140 diff=-823626 [TRUNCATION: 823626 bytes short]
-.jpg,30,jpg_0017.jpg,948220,24846336,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=11159 gt_size=948220 diff=-937061 [TRUNCATION: 937061 bytes short]
-.jpg,30,jpg_0018.jpg,2489663,25796608,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=28442 gt_size=2489663 diff=-2461221 [TRUNCATION: 2461221 bytes short]
-.jpg,30,jpg_0019.jpg,1522547,28286976,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=31231 gt_size=1522547 diff=-1491316 [TRUNCATION: 1491316 bytes short]
-.jpg,30,jpg_0020.jpg,1470213,29810688,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=80175 gt_size=1470213 diff=-1390038 [TRUNCATION: 1390038 bytes short]
-.jpg,30,jpg_0021.jpg,2550486,31281152,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=2420 gt_size=2550486 diff=-2548066 [TRUNCATION: 2548066 bytes short]
-.jpg,30,jpg_0022.jpg,1752510,33832960,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=112540 gt_size=1752510 diff=-1639970 [TRUNCATION: 1639970 bytes short]
-.jpg,30,jpg_0023.jpg,634656,35586048,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=323426 gt_size=634656 diff=-311230 [TRUNCATION: 311230 bytes short]
-.jpg,30,jpg_0024.jpg,1107157,36220928,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=168311 gt_size=1107157 diff=-938846 [TRUNCATION: 938846 bytes short]
-.jpg,30,jpg_0025.jpg,2041528,37330944,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=73498 gt_size=2041528 diff=-1968030 [TRUNCATION: 1968030 bytes short]
-.jpg,30,jpg_0026.jpg,2548873,39374848,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=34363 gt_size=2548873 diff=-2514510 [TRUNCATION: 2514510 bytes short]
-.jpg,30,jpg_0027.jpg,2844183,41926656,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=43760 gt_size=2844183 diff=-2800423 [TRUNCATION: 2800423 bytes short]
-.jpg,30,jpg_0028.jpg,443498,44773376,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=4910 gt_size=443498 diff=-438588 [TRUNCATION: 438588 bytes short]
-.jpg,30,jpg_0029.jpg,2521944,45219840,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=12156 gt_size=2521944 diff=-2509788 [TRUNCATION: 2509788 bytes short]
-.jpg,30,jpg_0030.jpg,2813223,47742976,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=1428 gt_size=2813223 diff=-2811795 [TRUNCATION: 2811795 bytes short]
+.jpg,15,jpg_0001.jpg,928182,184320,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0002.jpg,1130223,1114112,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0003.jpg,2615725,2244608,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0004.jpg,2492678,4861952,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0005.jpg,1958849,7356416,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0006.jpg,1521668,9318400,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0007.jpg,1231152,10842112,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0008.jpg,1555586,12075008,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0009.jpg,1186515,13631488,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0010.jpg,78858,14819328,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0011.jpg,1261992,14901248,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0012.jpg,2100790,16166912,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0013.jpg,816699,18268160,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0014.jpg,2341891,19087360,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,15,jpg_0015.jpg,2545608,21430272,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=2041132 gt_size=2545608 diff=-504476 [TRUNCATION: 504476 bytes short]
+.jpg,30,jpg_0001.jpg,928182,204800,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0002.jpg,1130223,1134592,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0003.jpg,2615725,2265088,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0004.jpg,2492678,4882432,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0005.jpg,1958849,7376896,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0006.jpg,1521668,9338880,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0007.jpg,1231152,10862592,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0008.jpg,1555586,12095488,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0009.jpg,1186515,13651968,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0010.jpg,78858,14839808,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0011.jpg,1261992,14921728,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0012.jpg,2100790,16187392,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0013.jpg,816699,18288640,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0014.jpg,2341891,19107840,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0015.jpg,2545608,21450752,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0016.jpg,844140,23998464,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0017.jpg,948220,24846336,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0018.jpg,2489663,25796608,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0019.jpg,1522547,28286976,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0020.jpg,1470213,29810688,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0021.jpg,2550486,31281152,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0022.jpg,1752510,33832960,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0023.jpg,634656,35586048,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0024.jpg,1107157,36220928,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0025.jpg,2041528,37330944,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0026.jpg,2548873,39374848,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0027.jpg,2844183,41926656,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0028.jpg,443498,44773376,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0029.jpg,2521944,45219840,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.jpg,30,jpg_0030.jpg,2813223,47742976,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .png,15,png_0001.png,928182,184320,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .png,15,png_0002.png,1130223,1114112,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .png,15,png_0003.png,2615725,2244608,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages

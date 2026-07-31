@@ -2,7 +2,7 @@
   "experiment_id": "INST-0002",
   "family": "INST",
   "title": "Pipeline Loss Localization",
-  "date": "2026-07-31T03:19:06.511008+00:00",
+  "date": "2026-07-31T21:23:21.310730+00:00",
   "status": "COMPLETED",
   "question": "¿En qué etapa exacta del pipeline desaparece cada archivo?",
   "pipeline_stages": [
@@ -12,8 +12,8 @@
     "STAGE_4_JUDGE: SHA-256 matching against ground truth"
   ],
   "aggregate_loss_by_stage": {
-    "NONE": 480,
-    "STAGE_4_JUDGE": 45
+    "NONE": 524,
+    "STAGE_4_JUDGE": 1
   },
   "format_loss_by_stage": {
     ".zip": {
@@ -26,7 +26,8 @@
       "NONE": 145
     },
     ".jpg": {
-      "STAGE_4_JUDGE": 45
+      "NONE": 44,
+      "STAGE_4_JUDGE": 1
     },
     ".png": {
       "NONE": 45
@@ -36,7 +37,7 @@
     "H1_scanner_loss": 0,
     "H2_delimitation_loss": 0,
     "H3_dedup_loss": 0,
-    "H4_judge_loss": 45,
+    "H4_judge_loss": 1,
     "H5_multi_stage": false
   },
   "full_results": {
@@ -62,7 +63,7 @@
       "stage_4_sha_matches": 15,
       "stage_4_sha_mismatches": 0,
       "timing": {
-        "scan": 1.013,
+        "scan": 1.023,
         "delimitation": 0.026,
         "dedup": 0.01,
         "judge": 0.0
@@ -336,9 +337,9 @@
       "stage_4_sha_matches": 30,
       "stage_4_sha_mismatches": 0,
       "timing": {
-        "scan": 1.153,
-        "delimitation": 0.045,
-        "dedup": 0.022,
+        "scan": 1.159,
+        "delimitation": 0.046,
+        "dedup": 0.018,
         "judge": 0.0
       },
       "loss_by_stage": {
@@ -850,8 +851,8 @@
       "stage_4_sha_matches": 100,
       "stage_4_sha_mismatches": 0,
       "timing": {
-        "scan": 1.792,
-        "delimitation": 0.122,
+        "scan": 1.845,
+        "delimitation": 0.124,
         "dedup": 0.055,
         "judge": 0.0
       },
@@ -2484,9 +2485,9 @@
       "stage_4_sha_matches": 15,
       "stage_4_sha_mismatches": 0,
       "timing": {
-        "scan": 1.016,
-        "delimitation": 0.02,
-        "dedup": 0.01,
+        "scan": 1.031,
+        "delimitation": 0.021,
+        "dedup": 0.011,
         "judge": 0.0
       },
       "loss_by_stage": {
@@ -2758,8 +2759,8 @@
       "stage_4_sha_matches": 30,
       "stage_4_sha_mismatches": 0,
       "timing": {
-        "scan": 1.144,
-        "delimitation": 0.037,
+        "scan": 1.164,
+        "delimitation": 0.04,
         "dedup": 0.019,
         "judge": 0.0
       },
@@ -3272,9 +3273,9 @@
       "stage_4_sha_matches": 100,
       "stage_4_sha_mismatches": 0,
       "timing": {
-        "scan": 1.805,
-        "delimitation": 0.121,
-        "dedup": 0.055,
+        "scan": 1.837,
+        "delimitation": 0.125,
+        "dedup": 0.054,
         "judge": 0.0
       },
       "loss_by_stage": {
@@ -4904,8 +4905,8 @@
       "stage_4_sha_matches": 15,
       "stage_4_sha_mismatches": 0,
       "timing": {
-        "scan": 1.014,
-        "delimitation": 0.007,
+        "scan": 1.04,
+        "delimitation": 0.008,
         "dedup": 0.0,
         "judge": 0.0
       },
@@ -5176,7 +5177,7 @@
       "stage_4_sha_matches": 30,
       "stage_4_sha_mismatches": 0,
       "timing": {
-        "scan": 1.167,
+        "scan": 1.162,
         "delimitation": 0.014,
         "dedup": 0.0,
         "judge": 0.0
@@ -5688,8 +5689,8 @@
       "stage_4_sha_matches": 100,
       "stage_4_sha_mismatches": 0,
       "timing": {
-        "scan": 1.77,
-        "delimitation": 0.039,
+        "scan": 1.796,
+        "delimitation": 0.04,
         "dedup": 0.002,
         "judge": 0.0
       },
@@ -7317,16 +7318,17 @@
       "stage_2_footer_found": 15,
       "stage_3_survived": 15,
       "stage_3_eliminated": 0,
-      "stage_4_sha_matches": 0,
-      "stage_4_sha_mismatches": 15,
+      "stage_4_sha_matches": 14,
+      "stage_4_sha_mismatches": 1,
       "timing": {
-        "scan": 1.691,
-        "delimitation": 0.004,
+        "scan": 1.716,
+        "delimitation": 0.086,
         "dedup": 0.0,
         "judge": 0.0
       },
       "loss_by_stage": {
-        "STAGE_4_JUDGE": 15
+        "NONE": 14,
+        "STAGE_4_JUDGE": 1
       },
       "per_file_traces": [
         {
@@ -7337,13 +7339,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=63101 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=928182 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=63101",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=63101 gt_size=928182 diff=-865081 [TRUNCATION: 865081 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=63101 gt_size=928182 diff=-865081 [TRUNCATION: 865081 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=928182",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0001.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0002.jpg",
@@ -7353,13 +7355,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=206994 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1130223 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=206994",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=206994 gt_size=1130223 diff=-923229 [TRUNCATION: 923229 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=206994 gt_size=1130223 diff=-923229 [TRUNCATION: 923229 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1130223",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0002.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0003.jpg",
@@ -7369,13 +7371,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=1467 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2615725 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=1467",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=1467 gt_size=2615725 diff=-2614258 [TRUNCATION: 2614258 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=1467 gt_size=2615725 diff=-2614258 [TRUNCATION: 2614258 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2615725",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0003.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0004.jpg",
@@ -7385,13 +7387,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=96559 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2492678 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=96559",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=96559 gt_size=2492678 diff=-2396119 [TRUNCATION: 2396119 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=96559 gt_size=2492678 diff=-2396119 [TRUNCATION: 2396119 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2492678",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0004.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0005.jpg",
@@ -7401,13 +7403,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=159320 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1958849 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=159320",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=159320 gt_size=1958849 diff=-1799529 [TRUNCATION: 1799529 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=159320 gt_size=1958849 diff=-1799529 [TRUNCATION: 1799529 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1958849",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0005.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0006.jpg",
@@ -7417,13 +7419,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=87141 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1521668 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=87141",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=87141 gt_size=1521668 diff=-1434527 [TRUNCATION: 1434527 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=87141 gt_size=1521668 diff=-1434527 [TRUNCATION: 1434527 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1521668",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0006.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0007.jpg",
@@ -7433,13 +7435,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=24091 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1231152 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=24091",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=24091 gt_size=1231152 diff=-1207061 [TRUNCATION: 1207061 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=24091 gt_size=1231152 diff=-1207061 [TRUNCATION: 1207061 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1231152",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0007.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0008.jpg",
@@ -7449,13 +7451,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=120765 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1555586 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=120765",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=120765 gt_size=1555586 diff=-1434821 [TRUNCATION: 1434821 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=120765 gt_size=1555586 diff=-1434821 [TRUNCATION: 1434821 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1555586",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0008.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0009.jpg",
@@ -7465,13 +7467,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=73041 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1186515 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=73041",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=73041 gt_size=1186515 diff=-1113474 [TRUNCATION: 1113474 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=73041 gt_size=1186515 diff=-1113474 [TRUNCATION: 1113474 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1186515",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0009.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0010.jpg",
@@ -7481,13 +7483,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=28102 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=78858 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=28102",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=28102 gt_size=78858 diff=-50756 [TRUNCATION: 50756 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=28102 gt_size=78858 diff=-50756 [TRUNCATION: 50756 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=78858",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0010.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0011.jpg",
@@ -7497,13 +7499,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=66856 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1261992 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=66856",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=66856 gt_size=1261992 diff=-1195136 [TRUNCATION: 1195136 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=66856 gt_size=1261992 diff=-1195136 [TRUNCATION: 1195136 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1261992",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0011.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0012.jpg",
@@ -7513,13 +7515,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=192273 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2100790 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=192273",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=192273 gt_size=2100790 diff=-1908517 [TRUNCATION: 1908517 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=192273 gt_size=2100790 diff=-1908517 [TRUNCATION: 1908517 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2100790",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0012.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0013.jpg",
@@ -7529,13 +7531,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=29146 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=816699 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=29146",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=29146 gt_size=816699 diff=-787553 [TRUNCATION: 787553 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=29146 gt_size=816699 diff=-787553 [TRUNCATION: 787553 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=816699",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0013.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0014.jpg",
@@ -7545,13 +7547,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=138431 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2341891 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=138431",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=138431 gt_size=2341891 diff=-2203460 [TRUNCATION: 2203460 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=138431 gt_size=2341891 diff=-2203460 [TRUNCATION: 2203460 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2341891",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0014.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0015.jpg",
@@ -7561,13 +7563,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=33388 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2041132 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=33388",
+          "stage_3_dedup_detail": "Survived: JPEG size=2041132",
           "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=33388 gt_size=2545608 diff=-2512220 [TRUNCATION: 2512220 bytes short]",
+          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=2041132 gt_size=2545608 diff=-504476 [TRUNCATION: 504476 bytes short]",
           "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=33388 gt_size=2545608 diff=-2512220 [TRUNCATION: 2512220 bytes short]"
+          "loss_detail": "SHA-256 mismatch: carved_size=2041132 gt_size=2545608 diff=-504476 [TRUNCATION: 504476 bytes short]"
         }
       ],
       "elimination_details": {}
@@ -7589,16 +7591,16 @@
       "stage_2_footer_found": 30,
       "stage_3_survived": 30,
       "stage_3_eliminated": 0,
-      "stage_4_sha_matches": 0,
-      "stage_4_sha_mismatches": 30,
+      "stage_4_sha_matches": 30,
+      "stage_4_sha_mismatches": 0,
       "timing": {
-        "scan": 2.488,
-        "delimitation": 0.006,
+        "scan": 2.543,
+        "delimitation": 3.67,
         "dedup": 0.0,
         "judge": 0.0
       },
       "loss_by_stage": {
-        "STAGE_4_JUDGE": 30
+        "NONE": 30
       },
       "per_file_traces": [
         {
@@ -7609,13 +7611,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=63101 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=928182 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=63101",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=63101 gt_size=928182 diff=-865081 [TRUNCATION: 865081 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=63101 gt_size=928182 diff=-865081 [TRUNCATION: 865081 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=928182",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0001.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0002.jpg",
@@ -7625,13 +7627,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=206994 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1130223 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=206994",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=206994 gt_size=1130223 diff=-923229 [TRUNCATION: 923229 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=206994 gt_size=1130223 diff=-923229 [TRUNCATION: 923229 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1130223",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0002.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0003.jpg",
@@ -7641,13 +7643,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=1467 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2615725 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=1467",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=1467 gt_size=2615725 diff=-2614258 [TRUNCATION: 2614258 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=1467 gt_size=2615725 diff=-2614258 [TRUNCATION: 2614258 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2615725",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0003.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0004.jpg",
@@ -7657,13 +7659,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=96559 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2492678 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=96559",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=96559 gt_size=2492678 diff=-2396119 [TRUNCATION: 2396119 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=96559 gt_size=2492678 diff=-2396119 [TRUNCATION: 2396119 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2492678",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0004.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0005.jpg",
@@ -7673,13 +7675,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=159320 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1958849 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=159320",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=159320 gt_size=1958849 diff=-1799529 [TRUNCATION: 1799529 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=159320 gt_size=1958849 diff=-1799529 [TRUNCATION: 1799529 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1958849",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0005.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0006.jpg",
@@ -7689,13 +7691,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=87141 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1521668 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=87141",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=87141 gt_size=1521668 diff=-1434527 [TRUNCATION: 1434527 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=87141 gt_size=1521668 diff=-1434527 [TRUNCATION: 1434527 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1521668",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0006.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0007.jpg",
@@ -7705,13 +7707,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=24091 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1231152 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=24091",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=24091 gt_size=1231152 diff=-1207061 [TRUNCATION: 1207061 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=24091 gt_size=1231152 diff=-1207061 [TRUNCATION: 1207061 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1231152",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0007.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0008.jpg",
@@ -7721,13 +7723,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=120765 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1555586 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=120765",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=120765 gt_size=1555586 diff=-1434821 [TRUNCATION: 1434821 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=120765 gt_size=1555586 diff=-1434821 [TRUNCATION: 1434821 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1555586",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0008.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0009.jpg",
@@ -7737,13 +7739,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=73041 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1186515 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=73041",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=73041 gt_size=1186515 diff=-1113474 [TRUNCATION: 1113474 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=73041 gt_size=1186515 diff=-1113474 [TRUNCATION: 1113474 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1186515",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0009.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0010.jpg",
@@ -7753,13 +7755,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=28102 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=78858 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=28102",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=28102 gt_size=78858 diff=-50756 [TRUNCATION: 50756 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=28102 gt_size=78858 diff=-50756 [TRUNCATION: 50756 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=78858",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0010.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0011.jpg",
@@ -7769,13 +7771,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=66856 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1261992 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=66856",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=66856 gt_size=1261992 diff=-1195136 [TRUNCATION: 1195136 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=66856 gt_size=1261992 diff=-1195136 [TRUNCATION: 1195136 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1261992",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0011.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0012.jpg",
@@ -7785,13 +7787,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=192273 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2100790 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=192273",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=192273 gt_size=2100790 diff=-1908517 [TRUNCATION: 1908517 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=192273 gt_size=2100790 diff=-1908517 [TRUNCATION: 1908517 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2100790",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0012.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0013.jpg",
@@ -7801,13 +7803,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=29146 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=816699 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=29146",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=29146 gt_size=816699 diff=-787553 [TRUNCATION: 787553 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=29146 gt_size=816699 diff=-787553 [TRUNCATION: 787553 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=816699",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0013.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0014.jpg",
@@ -7817,13 +7819,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=138431 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2341891 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=138431",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=138431 gt_size=2341891 diff=-2203460 [TRUNCATION: 2203460 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=138431 gt_size=2341891 diff=-2203460 [TRUNCATION: 2203460 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2341891",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0014.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0015.jpg",
@@ -7833,13 +7835,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=33388 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2545608 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=33388",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=33388 gt_size=2545608 diff=-2512220 [TRUNCATION: 2512220 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=33388 gt_size=2545608 diff=-2512220 [TRUNCATION: 2512220 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2545608",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0015.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0016.jpg",
@@ -7849,13 +7851,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=20514 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=844140 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=20514",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=20514 gt_size=844140 diff=-823626 [TRUNCATION: 823626 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=20514 gt_size=844140 diff=-823626 [TRUNCATION: 823626 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=844140",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0016.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0017.jpg",
@@ -7865,13 +7867,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=11159 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=948220 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=11159",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=11159 gt_size=948220 diff=-937061 [TRUNCATION: 937061 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=11159 gt_size=948220 diff=-937061 [TRUNCATION: 937061 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=948220",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0017.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0018.jpg",
@@ -7881,13 +7883,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=28442 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2489663 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=28442",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=28442 gt_size=2489663 diff=-2461221 [TRUNCATION: 2461221 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=28442 gt_size=2489663 diff=-2461221 [TRUNCATION: 2461221 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2489663",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0018.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0019.jpg",
@@ -7897,13 +7899,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=31231 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1522547 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=31231",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=31231 gt_size=1522547 diff=-1491316 [TRUNCATION: 1491316 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=31231 gt_size=1522547 diff=-1491316 [TRUNCATION: 1491316 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1522547",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0019.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0020.jpg",
@@ -7913,13 +7915,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=80175 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1470213 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=80175",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=80175 gt_size=1470213 diff=-1390038 [TRUNCATION: 1390038 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=80175 gt_size=1470213 diff=-1390038 [TRUNCATION: 1390038 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1470213",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0020.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0021.jpg",
@@ -7929,13 +7931,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=2420 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2550486 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=2420",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=2420 gt_size=2550486 diff=-2548066 [TRUNCATION: 2548066 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=2420 gt_size=2550486 diff=-2548066 [TRUNCATION: 2548066 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2550486",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0021.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0022.jpg",
@@ -7945,13 +7947,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=112540 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1752510 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=112540",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=112540 gt_size=1752510 diff=-1639970 [TRUNCATION: 1639970 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=112540 gt_size=1752510 diff=-1639970 [TRUNCATION: 1639970 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1752510",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0022.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0023.jpg",
@@ -7961,13 +7963,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=323426 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=634656 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=323426",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=323426 gt_size=634656 diff=-311230 [TRUNCATION: 311230 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=323426 gt_size=634656 diff=-311230 [TRUNCATION: 311230 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=634656",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0023.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0024.jpg",
@@ -7977,13 +7979,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=168311 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=1107157 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=168311",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=168311 gt_size=1107157 diff=-938846 [TRUNCATION: 938846 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=168311 gt_size=1107157 diff=-938846 [TRUNCATION: 938846 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=1107157",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0024.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0025.jpg",
@@ -7993,13 +7995,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=73498 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2041528 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=73498",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=73498 gt_size=2041528 diff=-1968030 [TRUNCATION: 1968030 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=73498 gt_size=2041528 diff=-1968030 [TRUNCATION: 1968030 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2041528",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0025.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0026.jpg",
@@ -8009,13 +8011,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=34363 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2548873 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=34363",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=34363 gt_size=2548873 diff=-2514510 [TRUNCATION: 2514510 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=34363 gt_size=2548873 diff=-2514510 [TRUNCATION: 2514510 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2548873",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0026.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0027.jpg",
@@ -8025,13 +8027,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=43760 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2844183 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=43760",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=43760 gt_size=2844183 diff=-2800423 [TRUNCATION: 2800423 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=43760 gt_size=2844183 diff=-2800423 [TRUNCATION: 2800423 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2844183",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0027.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0028.jpg",
@@ -8041,13 +8043,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=4910 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=443498 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=4910",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=4910 gt_size=443498 diff=-438588 [TRUNCATION: 438588 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=4910 gt_size=443498 diff=-438588 [TRUNCATION: 438588 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=443498",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0028.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0029.jpg",
@@ -8057,13 +8059,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=12156 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2521944 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=12156",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=12156 gt_size=2521944 diff=-2509788 [TRUNCATION: 2509788 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=12156 gt_size=2521944 diff=-2509788 [TRUNCATION: 2509788 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2521944",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0029.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         },
         {
           "gt_name": "jpg_0030.jpg",
@@ -8073,13 +8075,13 @@
           "stage_1_scan": "PASS",
           "stage_1_scan_detail": "Signature found: JPEG",
           "stage_2_delimitation": "PASS",
-          "stage_2_delimitation_detail": "Carved: JPEG size=1428 footer=found",
+          "stage_2_delimitation_detail": "Carved: JPEG size=2813223 footer=found",
           "stage_3_dedup": "PASS",
-          "stage_3_dedup_detail": "Survived: JPEG size=1428",
-          "stage_4_judge": "FAIL",
-          "stage_4_judge_detail": "SHA-256 mismatch: carved_size=1428 gt_size=2813223 diff=-2811795 [TRUNCATION: 2811795 bytes short]",
-          "loss_stage": "STAGE_4_JUDGE",
-          "loss_detail": "SHA-256 mismatch: carved_size=1428 gt_size=2813223 diff=-2811795 [TRUNCATION: 2811795 bytes short]"
+          "stage_3_dedup_detail": "Survived: JPEG size=2813223",
+          "stage_4_judge": "PASS",
+          "stage_4_judge_detail": "SHA-256 match: jpg_0030.jpg",
+          "loss_stage": "NONE",
+          "loss_detail": "File fully recovered through all stages"
         }
       ],
       "elimination_details": {}
@@ -8104,8 +8106,8 @@
       "stage_4_sha_matches": 15,
       "stage_4_sha_mismatches": 0,
       "timing": {
-        "scan": 1.686,
-        "delimitation": 0.034,
+        "scan": 1.717,
+        "delimitation": 0.033,
         "dedup": 0.0,
         "judge": 0.0
       },
@@ -8376,8 +8378,8 @@
       "stage_4_sha_matches": 30,
       "stage_4_sha_mismatches": 0,
       "timing": {
-        "scan": 2.487,
-        "delimitation": 0.078,
+        "scan": 2.549,
+        "delimitation": 0.08,
         "dedup": 0.0,
         "judge": 0.0
       },
