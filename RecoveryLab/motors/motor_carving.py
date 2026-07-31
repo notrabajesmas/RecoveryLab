@@ -111,7 +111,7 @@ SIGNATURES: List[FileSignature] = [
         extension=".pdf",
         header=b'%PDF-',
         header_mask=b'\xFF\xFF\xFF\xFF\xFF',
-        footer=b'%%EOF',
+        footer=b'%%EOF\n',
         max_size=100 * 1024 * 1024,   # 100 MB
         min_size=500,
     ),
@@ -233,18 +233,21 @@ SIGNATURES: List[FileSignature] = [
         min_size=100,
     ),
 
-    # BMP — Bitmap image
-    # Header: BM
-    # Footer: No reliable footer
-    FileSignature(
-        name="BMP",
-        extension=".bmp",
-        header=b'BM',
-        header_mask=b'\xFF\xFF',
-        footer=b'',
-        max_size=50 * 1024 * 1024,
-        min_size=100,
-    ),
+    # BMP — REMOVED per RP-002 (2026-07-31)
+    # The 2-byte 'BM' signature produces massive false positives in random data,
+    # creating ~50MB carved candidates that trigger dedup cascade elimination of
+    # legitimate files. BMP is a low-priority format for carving scenarios.
+    # If BMP detection is needed later, add header validation (Option B).
+    # Original entry:
+    # FileSignature(
+    #     name="BMP",
+    #     extension=".bmp",
+    #     header=b'BM',
+    #     header_mask=b'\xFF\xFF',
+    #     footer=b'',
+    #     max_size=50 * 1024 * 1024,
+    #     min_size=100,
+    # ),
 
     # RAR — RAR archive
     # Header: Rar!\x1A\x07

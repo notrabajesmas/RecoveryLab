@@ -5,7 +5,7 @@
   "defect_ref": "RC-A-001 (primario), RC-A-003 (contribución a Judge loss)",
   "former_defect_ref": "RC-001",
   "date_proposed": "2026-07-31",
-  "status": "APPROVED_WITH_PREDICTION",
+  "status": "VERIFIED",
   "author": "RecoveryLab — derivado de auditoría externa",
 
   "problem_statement": {

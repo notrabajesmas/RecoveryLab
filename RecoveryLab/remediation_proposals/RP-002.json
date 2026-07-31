@@ -3,7 +3,7 @@
   "title": "Remove or constrain BMP signature detection",
   "origin": "INST-0002 — BMP false positive causes dedup cascade",
   "date_proposed": "2026-07-31",
-  "status": "APPROVED_WITH_PREDICTION",
+  "status": "VERIFIED",
   "priority": "HIGH",
   "evidence_base": "INST-0002 traced 525 files through the pipeline and found that 234 (44.6%) were eliminated at the dedup stage. La evidencia observada es consistente con la hipótesis de que los falsos positivos BMP generan candidatos extensos que desencadenan eliminaciones posteriores. NOTA: esto es una observación + hipótesis consistente, no una cadena causal demostrada. La predicción falsable de este RP confirmará o refutará H_BMP.",
 

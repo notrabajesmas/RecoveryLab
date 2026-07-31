@@ -1,0 +1,1049 @@
+     1→#!/usr/bin/env python3
+     2→"""
+     3→INST-0002 — Pipeline Loss Localization
+     4→========================================
+     5→Familia: INST (Instrument Validation)
+     6→Origen: Auditoría externa r12
+     7→
+     8→Pregunta: ¿En qué etapa exacta del pipeline desaparece cada archivo?
+     9→
+    10→Pipeline instrumentado:
+    11→  Scanner → Firma encontrada → Delimitación → Candidato → Dedup → Carved → Judge
+    12→
+    13→Para cada archivo del ground truth, se registra:
+    14→  - stage_1_scan: ¿Se encontró la firma del archivo en el scanner?
+    15→  - stage_2_delimitation: ¿Se extrajo el archivo del imagen?
+    16→  - stage_3_dedup: ¿Sobrevivió a la deduplicación?
+    17→  - stage_4_judge: ¿El SHA-256 coincide con el ground truth?
+    18→
+    19→El resultado es una cadena causal completa por archivo, que permite
+    20→discriminar entre las hipótesis H1-H5 de RC-A-003.
+    21→"""
+    22→
+    23→import sys
+    24→import os
+    25→import json
+    26→import csv
+    27→import hashlib
+    28→import time
+    29→from pathlib import Path
+    30→from datetime import datetime, timezone
+    31→from typing import Dict, List, Tuple, Any, Optional, Set
+    32→from collections import defaultdict
+    33→from dataclasses import dataclass, field, asdict
+    34→
+    35→# ─── Project root ─────────────────────────────────────────────────────────
+    36→PROJECT_ROOT = Path(__file__).resolve().parent
+    37→sys.path.insert(0, str(PROJECT_ROOT))
+    38→
+    39→# ─── Imports ──────────────────────────────────────────────────────────────
+    40→from dataset_builder.builder import DatasetBuilder
+    41→from dataset_builder.manifest import load_manifest, save_manifest
+    42→from motors.motor_carving import MotorCarving, SIGNATURES, FileSignature
+    43→from motors.motor_b_mft_first import MotorBMFTFirst
+    44→from recovery_judge.judge import RecoveryJudge
+    45→from recovery_judge.fqs import compute_overall_utility
+    46→
+    47→
+    48→# ═══════════════════════════════════════════════════════════════════════════
+    49→# STAGE 1: Instrumented Scanner
+    50→# ═══════════════════════════════════════════════════════════════════════════
+    51→
+    52→def run_instrumented_scan(image: bytes, cluster_size: int, total_clusters: int) -> List[Dict]:
+    53→    """
+    54→    Run the carving scanner and return ALL signature matches found,
+    55→    with their offsets and format names.
+    56→    
+    57→    This is Stage 1 of the pipeline: detection.
+    58→    """
+    59→    image_len = len(image)
+    60→    all_matches = []
+    61→    
+    62→    for cluster_num in range(total_clusters):
+    63→        cluster_start = cluster_num * cluster_size
+    64→        if cluster_start + cluster_size > image_len:
+    65→            break
+    66→        
+    67→        for sig in SIGNATURES:
+    68→            # Check at start of cluster
+    69→            check_offsets = [0]
+    70→            for sector_offset in range(512, min(cluster_size, 4096), 512):
+    71→                check_offsets.append(sector_offset)
+    72→            
+    73→            for offset_in_cluster in check_offsets:
+    74→                abs_offset = cluster_start + offset_in_cluster
+    75→                if abs_offset + sig.header_len > image_len:
+    76→                    continue
+    77→                
+    78→                candidate = image[abs_offset:abs_offset + sig.header_len]
+    79→                if _matches_with_mask(candidate, sig.header, sig.header_mask):
+    80→                    all_matches.append({
+    81→                        "offset": abs_offset,
+    82→                        "cluster": cluster_num,
+    83→                        "format_name": sig.name,
+    84→                        "extension": sig.extension,
+    85→                        "header": sig.header.hex(),
+    86→                    })
+    87→    
+    88→    return all_matches
+    89→
+    90→
+    91→def _matches_with_mask(candidate: bytes, header: bytes, mask: bytes) -> bool:
+    92→    """Check if candidate bytes match the header pattern with mask."""
+    93→    if len(candidate) < len(header):
+    94→        return False
+    95→    for i in range(len(header)):
+    96→        if mask[i] == 0xFF:
+    97→            if candidate[i] != header[i]:
+    98→                return False
+    99→    return True
+   100→
+   101→
+   102→# ═══════════════════════════════════════════════════════════════════════════
+   103→# STAGE 2: Instrumented Delimitation
+   104→# ═══════════════════════════════════════════════════════════════════════════
+   105→
+   106→def run_instrumented_delimitation(image: bytes, scan_matches: List[Dict],
+   107→                                   cluster_size: int, total_clusters: int) -> List[Dict]:
+   108→    """
+   109→    For each signature match found in Stage 1, try to carve the file.
+   110→    
+   111→    This is Stage 2: delimitation/extraction.
+   112→    
+   113→    Returns the list of carved candidates with their data.
+   114→    """
+   115→    image_len = len(image)
+   116→    carved_candidates = []
+   117→    
+   118→    # Build a lookup from format name to signature
+   119→    sig_by_name = {s.name: s for s in SIGNATURES}
+   120→    
+   121→    for match in scan_matches:
+   122→        sig = sig_by_name.get(match["format_name"])
+   123→        if sig is None:
+   124→            continue
+   125→        
+   126→        start_offset = match["offset"]
+   127→        
+   128→        # Try to carve the file using the same logic as MotorCarving
+   129→        carved = _carve_file_instrumented(
+   130→            image, start_offset, sig, image_len, cluster_size
+   131→        )
+   132→        
+   133→        if carved is not None:
+   134→            carved_candidates.append({
+   135→                **carved,
+   136→                "format_name": match["format_name"],
+   137→                "extension": match["extension"],
+   138→                "from_scan_match": match,
+   139→            })
+   140→    
+   141→    return carved_candidates
+   142→
+   143→
+   144→def _carve_file_instrumented(image: bytes, start_offset: int,
+   145→                              sig: FileSignature, image_len: int,
+   146→                              cluster_size: int) -> Optional[Dict]:
+   147→    """Extract a file from the image starting at the given offset (instrumented)."""
+   148→    remaining = image_len - start_offset
+   149→    if remaining < sig.min_size:
+   150→        return None
+   151→    
+   152→    file_data = None
+   153→    footer_found = False
+   154→    
+   155→    if sig.footer:
+   156→        footer_search_start = start_offset + sig.header_len
+   157→        max_search_end = min(start_offset + sig.max_size, image_len)
+   158→        
+   159→        footer_offset = _find_footer_instrumented(
+   160→            image, footer_search_start, max_search_end, sig.footer
+   161→        )
+   162→        
+   163→        if footer_offset is not None:
+   164→            file_end = footer_offset + len(sig.footer)
+   165→            file_data = image[start_offset:file_end]
+   166→            footer_found = True
+   167→        else:
+   168→            heuristic_size = min(sig.max_size, remaining)
+   169→            file_data = image[start_offset:start_offset + heuristic_size]
+   170→    else:
+   171→        heuristic_size = min(sig.max_size, remaining)
+   172→        file_data = image[start_offset:start_offset + heuristic_size]
+   173→    
+   174→    if file_data is None or len(file_data) < sig.min_size:
+   175→        return None
+   176→    
+   177→    if len(file_data) > sig.max_size:
+   178→        file_data = file_data[:sig.max_size]
+   179→    
+   180→    return {
+   181→        "data": file_data,
+   182→        "start_offset": start_offset,
+   183→        "start_cluster": start_offset // cluster_size,
+   184→        "size": len(file_data),
+   185→        "footer_found": footer_found,
+   186→        "sha256": hashlib.sha256(file_data).hexdigest(),
+   187→    }
+   188→
+   189→
+   190→def _find_footer_instrumented(image: bytes, start: int, end: int,
+   191→                               footer: bytes) -> Optional[int]:
+   192→    """Find the first occurrence of footer bytes in the image."""
+   193→    footer_len = len(footer)
+   194→    if footer_len == 0:
+   195→        return None
+   196→    
+   197→    chunk_size = 1024 * 1024
+   198→    pos = start
+   199→    
+   200→    while pos < end:
+   201→        chunk_end = min(pos + chunk_size + footer_len, end + footer_len)
+   202→        chunk = image[pos:chunk_end]
+   203→        idx = chunk.find(footer)
+   204→        if idx != -1:
+   205→            return pos + idx
+   206→        pos += chunk_size
+   207→    
+   208→    return None
+   209→
+   210→
+   211→# ═══════════════════════════════════════════════════════════════════════════
+   212→# STAGE 3: Instrumented Deduplication
+   213→# ═══════════════════════════════════════════════════════════════════════════
+   214→
+   215→def run_instrumented_dedup(carved_candidates: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
+   216→    """
+   217→    Apply the same deduplication logic as MotorCarving, but track
+   218→    which files were eliminated and why.
+   219→    
+   220→    Returns (survived, eliminated) where eliminated contains the reason.
+   221→    """
+   222→    # First, resolve ZIP/DOCX/XLSX ambiguity
+   223→    resolved = _resolve_zip_docx_instrumented(carved_candidates)
+   224→    
+   225→    if len(resolved) <= 1:
+   226→        return resolved, []
+   227→    
+   228→    # Apply deduplication
+   229→    sorted_files = sorted(resolved, key=lambda f: f["start_offset"])
+   230→    
+   231→    survived = []
+   232→    eliminated = []
+   233→    
+   234→    for cf in sorted_files:
+   235→        is_duplicate = False
+   236→        eliminated_by = None
+   237→        overlap_amount = 0
+   238→        
+   239→        for existing in survived:
+   240→            overlap_start = max(cf["start_offset"], existing["start_offset"])
+   241→            overlap_end = min(
+   242→                cf["start_offset"] + cf["size"],
+   243→                existing["start_offset"] + existing["size"]
+   244→            )
+   245→            
+   246→            if overlap_start < overlap_end:
+   247→                overlap_size = overlap_end - overlap_start
+   248→                smaller_size = min(cf["size"], existing["size"])
+   249→                
+   250→                if overlap_size > smaller_size * 0.5:
+   251→                    # Significant overlap
+   252→                    if cf["size"] > existing["size"]:
+   253→                        # New file is larger — remove existing
+   254→                        eliminated.append({
+   255→                            **existing,
+   256→                            "eliminated_by": "dedup_overlap",
+   257→                            "eliminated_by_file_offset": cf["start_offset"],
+   258→                            "eliminated_by_file_format": cf.get("format_name", "?"),
+   259→                            "eliminated_by_file_size": cf["size"],
+   260→                            "overlap_amount": overlap_size,
+   261→                        })
+   262→                        survived.remove(existing)
+   263→                        survived.append(cf)
+   264→                    else:
+   265→                        # Existing is larger — remove new file
+   266→                        eliminated_by = existing
+   267→                        overlap_amount = overlap_size
+   268→                    is_duplicate = True
+   269→                    break
+   270→        
+   271→        if is_duplicate and eliminated_by is not None:
+   272→            eliminated.append({
+   273→                **cf,
+   274→                "eliminated_by": "dedup_overlap",
+   275→                "eliminated_by_file_offset": eliminated_by["start_offset"],
+   276→                "eliminated_by_file_format": eliminated_by.get("format_name", "?"),
+   277→                "eliminated_by_file_size": eliminated_by["size"],
+   278→                "overlap_amount": overlap_amount,
+   279→            })
+   280→        elif not is_duplicate:
+   281→            survived.append(cf)
+   282→    
+   283→    return survived, eliminated
+   284→
+   285→
+   286→def _resolve_zip_docx_instrumented(carved_files: List[Dict]) -> List[Dict]:
+   287→    """Resolve ZIP/DOCX/XLSX ambiguity (same logic as MotorCarving)."""
+   288→    by_offset: Dict[int, List[Dict]] = {}
+   289→    for cf in carved_files:
+   290→        offset = cf["start_offset"]
+   291→        if offset not in by_offset:
+   292→            by_offset[offset] = []
+   293→        by_offset[offset].append(cf)
+   294→    
+   295→    resolved = []
+   296→    for offset, files in by_offset.items():
+   297→        if len(files) == 1:
+   298→            resolved.append(files[0])
+   299→            continue
+   300→        
+   301→        data = files[0]["data"]
+   302→        
+   303→        has_docx_markers = (
+   304→            b'word/' in data or
+   305→            b'word/document.xml' in data or
+   306→            b'Content_Types.xml' in data
+   307→        )
+   308→        
+   309→        has_xlsx_markers = (
+   310→            b'xl/' in data or
+   311→            b'xl/workbook.xml' in data or
+   312→            b'xl/worksheets/' in data
+   313→        )
+   314→        
+   315→        if has_xlsx_markers:
+   316→            for f in files:
+   317→                if f["format_name"] == "XLSX":
+   318→                    resolved.append(f)
+   319→                    break
+   320→            else:
+   321→                files[0]["extension"] = ".xlsx"
+   322→                files[0]["format_name"] = "XLSX"
+   323→                resolved.append(files[0])
+   324→        elif has_docx_markers:
+   325→            for f in files:
+   326→                if f["format_name"] == "DOCX":
+   327→                    resolved.append(f)
+   328→                    break
+   329→            else:
+   330→                files[0]["extension"] = ".docx"
+   331→                files[0]["format_name"] = "DOCX"
+   332→                resolved.append(files[0])
+   333→        else:
+   334→            for f in files:
+   335→                if f["format_name"] == "ZIP":
+   336→                    resolved.append(f)
+   337→                    break
+   338→            else:
+   339→                resolved.append(files[0])
+   340→    
+   341→    return resolved
+   342→
+   343→
+   344→# ═══════════════════════════════════════════════════════════════════════════
+   345→# STAGE 4: Instrumented Judge
+   346→# ═══════════════════════════════════════════════════════════════════════════
+   347→
+   348→def run_instrumented_judge(carved_files: List[Dict], manifest: Dict) -> List[Dict]:
+   349→    """
+   350→    For each carved file, check if it matches ground truth by SHA-256.
+   351→    
+   352→    This is Stage 4: matching.
+   353→    
+   354→    Returns the carved files with judge results appended.
+   355→    """
+   356→    # Build ground truth lookup by SHA-256
+   357→    gt_by_sha = {}
+   358→    gt_by_offset = {}
+   359→    gt_files = [f for f in manifest.get("files", []) if not f.get("is_directory", False)]
+   360→    
+   361→    cluster_size = manifest.get("cluster_size", 4096)
+   362→    
+   363→    for f in gt_files:
+   364→        if f.get("sha256"):
+   365→            gt_by_sha[f["sha256"]] = f
+   366→        # Also build offset lookup from clusters
+   367→        clusters = f.get("clusters", [])
+   368→        if clusters:
+   369→            start_byte = clusters[0] * cluster_size
+   370→            gt_by_offset[start_byte] = f
+   371→    
+   372→    results = []
+   373→    for cf in carved_files:
+   374→        sha256 = cf.get("sha256", "")
+   375→        gt_match = gt_by_sha.get(sha256)
+   376→        
+   377→        # If no SHA match, check if the carved file is at the same offset
+   378→        # as a ground truth file (then it's a near-miss)
+   379→        offset_match = gt_by_offset.get(cf["start_offset"])
+   380→        
+   381→        judge_result = {
+   382→            **cf,
+   383→            "sha256_match": gt_match is not None,
+   384→            "matched_gt_name": gt_match.get("name", "") if gt_match else "",
+   385→            "offset_match_name": offset_match.get("name", "") if offset_match else "",
+   386→        }
+   387→        
+   388→        # If no SHA match but offset matches, check size difference
+   389→        if not gt_match and offset_match:
+   390→            gt_size = offset_match.get("size", 0)
+   391→            carved_size = cf.get("size", 0)
+   392→            size_diff = carved_size - gt_size
+   393→            judge_result["size_diff"] = size_diff
+   394→            judge_result["gt_size"] = gt_size
+   395→            judge_result["carved_size"] = carved_size
+   396→            
+   397→            # Check if adding missing bytes fixes SHA
+   398→            if size_diff < 0:
+   399→                # Carved file is shorter than ground truth
+   400→                gt_sha = offset_match.get("sha256", "")
+   401→                # Try to check if the carved data matches the beginning of the GT file
+   402→                # by checking if the carved SHA matches the first carved_size bytes
+   403→                # We need the actual GT data for this
+   404→                pass
+   405→        
+   406→        results.append(judge_result)
+   407→    
+   408→    return results
+   409→
+   410→
+   411→# ═══════════════════════════════════════════════════════════════════════════
+   412→# PER-FILE TRACE: Build the causal chain for each ground truth file
+   413→# ═══════════════════════════════════════════════════════════════════════════
+   414→
+   415→def build_per_file_trace(
+   416→    manifest: Dict,
+   417→    scan_matches: List[Dict],
+   418→    carved_candidates: List[Dict],
+   419→    dedup_survived: List[Dict],
+   420→    dedup_eliminated: List[Dict],
+   421→    judge_results: List[Dict],
+   422→    image: bytes,
+   423→) -> List[Dict]:
+   424→    """
+   425→    For each ground truth file, determine its fate at each pipeline stage.
+   426→    
+   427→    Returns a list of per-file traces, one per ground truth file.
+   428→    """
+   429→    cluster_size = manifest.get("cluster_size", 4096)
+   430→    gt_files = [f for f in manifest.get("files", []) if not f.get("is_directory", False)]
+   431→    
+   432→    # Build lookup structures
+   433→    # Scan matches by offset
+   434→    scan_by_offset = defaultdict(list)
+   435→    for m in scan_matches:
+   436→        scan_by_offset[m["offset"]].append(m)
+   437→    
+   438→    # Carved candidates by offset
+   439→    carved_by_offset = defaultdict(list)
+   440→    for c in carved_candidates:
+   441→        carved_by_offset[c["start_offset"]].append(c)
+   442→    
+   443→    # Dedup survived by offset
+   444→    survived_by_offset = defaultdict(list)
+   445→    for s in dedup_survived:
+   446→        survived_by_offset[s["start_offset"]].append(s)
+   447→    
+   448→    # Dedup eliminated by offset
+   449→    eliminated_by_offset = defaultdict(list)
+   450→    for e in dedup_eliminated:
+   451→        eliminated_by_offset[e["start_offset"]].append(e)
+   452→    
+   453→    # Judge results by offset
+   454→    judge_by_offset = defaultdict(list)
+   455→    for j in judge_results:
+   456→        judge_by_offset[j["start_offset"]].append(j)
+   457→    
+   458→    traces = []
+   459→    
+   460→    for gt_file in gt_files:
+   461→        clusters = gt_file.get("clusters", [])
+   462→        if not clusters:
+   463→            # Resident file (data in MFT) — carving can't find these
+   464→            trace = {
+   465→                "gt_name": gt_file.get("name", ""),
+   466→                "gt_sha256": gt_file.get("sha256", ""),
+   467→                "gt_size": gt_file.get("size", 0),
+   468→                "gt_start_offset": None,
+   469→                "stage_1_scan": "SKIP",
+   470→                "stage_1_scan_detail": "Resident file — no clusters to scan",
+   471→                "stage_2_delimitation": "SKIP",
+   472→                "stage_2_delimitation_detail": "Resident file — carving inapplicable",
+   473→                "stage_3_dedup": "SKIP",
+   474→                "stage_3_dedup_detail": "Resident file — never reached",
+   475→                "stage_4_judge": "FAIL",
+   476→                "stage_4_judge_detail": "Resident file — carving cannot recover",
+   477→                "loss_stage": "N/A_RESIDENT",
+   478→                "loss_detail": "File is resident (stored in MFT, not in data area)",
+   479→            }
+   480→            traces.append(trace)
+   481→            continue
+   482→        
+   483→        start_byte = clusters[0] * cluster_size
+   484→        gt_sha256 = gt_file.get("sha256", "")
+   485→        gt_size = gt_file.get("size", 0)
+   486→        gt_name = gt_file.get("name", "")
+   487→        
+   488→        trace = {
+   489→            "gt_name": gt_name,
+   490→            "gt_sha256": gt_sha256[:16] + "..." if gt_sha256 else "",
+   491→            "gt_size": gt_size,
+   492→            "gt_start_offset": start_byte,
+   493→        }
+   494→        
+   495→        # ─── Stage 1: Scan ──────────────────────────────────────────
+   496→        scan_matches_at_offset = scan_by_offset.get(start_byte, [])
+   497→        # Also check nearby offsets (within cluster)
+   498→        nearby_matches = []
+   499→        for offset in range(max(0, start_byte - cluster_size), start_byte + cluster_size):
+   500→            nearby_matches.extend(scan_by_offset.get(offset, []))
+   501→        
+   502→        if scan_matches_at_offset:
+   503→            trace["stage_1_scan"] = "PASS"
+   504→            sig_names = [m["format_name"] for m in scan_matches_at_offset]
+   505→            trace["stage_1_scan_detail"] = f"Signature found: {', '.join(sig_names)}"
+   506→        elif nearby_matches:
+   507→            trace["stage_1_scan"] = "PASS_NEARBY"
+   508→            trace["stage_1_scan_detail"] = f"Signature found nearby: {nearby_matches[0]['format_name']} at offset {nearby_matches[0]['offset']}"
+   509→        else:
+   510→            trace["stage_1_scan"] = "FAIL"
+   511→            trace["stage_1_scan_detail"] = "No signature found at this file's start offset"
+   512→            # Check if the file has a signature that should be detectable
+   513→            # Read the first few bytes of the file from the image
+   514→            if start_byte + 16 <= len(image):
+   515→                file_header = image[start_byte:start_byte + 16]
+   516→                trace["stage_1_scan_detail"] += f" | File header: {file_header[:8].hex()}"
+   517→        
+   518→        # ─── Stage 2: Delimitation ──────────────────────────────────
+   519→        carved_at_offset = carved_by_offset.get(start_byte, [])
+   520→        # Also check nearby carved
+   521→        nearby_carved = []
+   522→        for offset in range(max(0, start_byte - cluster_size), start_byte + cluster_size):
+   523→            nearby_carved.extend(carved_by_offset.get(offset, []))
+   524→        
+   525→        if carved_at_offset:
+   526→            trace["stage_2_delimitation"] = "PASS"
+   527→            c = carved_at_offset[0]
+   528→            trace["stage_2_delimitation_detail"] = (
+   529→                f"Carved: {c.get('format_name', '?')} size={c.get('size', 0)} "
+   530→                f"footer={'found' if c.get('footer_found') else 'not found'}"
+   531→            )
+   532→        elif nearby_carved:
+   533→            trace["stage_2_delimitation"] = "PASS_NEARBY"
+   534→            c = nearby_carved[0]
+   535→            trace["stage_2_delimitation_detail"] = f"Carved nearby: offset={c['start_offset']}"
+   536→        else:
+   537→            trace["stage_2_delimitation"] = "FAIL"
+   538→            trace["stage_2_delimitation_detail"] = "File not extracted from image"
+   539→            if trace["stage_1_scan"] == "FAIL":
+   540→                trace["stage_2_delimitation_detail"] += " (upstream: no signature found)"
+   541→        
+   542→        # ─── Stage 3: Dedup ─────────────────────────────────────────
+   543→        survived_at_offset = survived_by_offset.get(start_byte, [])
+   544→        eliminated_at_offset = eliminated_by_offset.get(start_byte, [])
+   545→        
+   546→        if survived_at_offset:
+   547→            trace["stage_3_dedup"] = "PASS"
+   548→            s = survived_at_offset[0]
+   549→            trace["stage_3_dedup_detail"] = f"Survived: {s.get('format_name', '?')} size={s.get('size', 0)}"
+   550→        elif eliminated_at_offset:
+   551→            trace["stage_3_dedup"] = "FAIL"
+   552→            e = eliminated_at_offset[0]
+   553→            trace["stage_3_dedup_detail"] = (
+   554→                f"Eliminated by overlap with {e.get('eliminated_by_file_format', '?')} "
+   555→                f"at offset {e.get('eliminated_by_file_offset', '?')} "
+   556→                f"(overlap: {e.get('overlap_amount', 0)} bytes)"
+   557→            )
+   558→        else:
+   559→            trace["stage_3_dedup"] = "N/A"
+   560→            trace["stage_3_dedup_detail"] = "File not found in either survived or eliminated"
+   561→            if trace["stage_2_delimitation"] == "FAIL":
+   562→                trace["stage_3_dedup_detail"] += " (upstream: not carved)"
+   563→        
+   564→        # ─── Stage 4: Judge ─────────────────────────────────────────
+   565→        judge_at_offset = judge_by_offset.get(start_byte, [])
+   566→        nearby_judge = []
+   567→        for offset in range(max(0, start_byte - cluster_size), start_byte + cluster_size):
+   568→            nearby_judge.extend(judge_by_offset.get(offset, []))
+   569→        
+   570→        # Also check by SHA-256 match
+   571→        sha_match = None
+   572→        for j in judge_results:
+   573→            if j.get("sha256_match") and j.get("matched_gt_name") == gt_name:
+   574→                sha_match = j
+   575→                break
+   576→        
+   577→        if sha_match:
+   578→            trace["stage_4_judge"] = "PASS"
+   579→            trace["stage_4_judge_detail"] = f"SHA-256 match: {sha_match.get('matched_gt_name', '')}"
+   580→        elif judge_at_offset:
+   581→            j = judge_at_offset[0]
+   582→            if j.get("sha256_match"):
+   583→                trace["stage_4_judge"] = "PASS"
+   584→                trace["stage_4_judge_detail"] = f"SHA-256 match (different GT file)"
+   585→            else:
+   586→                trace["stage_4_judge"] = "FAIL"
+   587→                size_diff = j.get("size_diff", j.get("size", 0) - gt_size)
+   588→                trace["stage_4_judge_detail"] = (
+   589→                    f"SHA-256 mismatch: carved_size={j.get('size', 0)} gt_size={gt_size} "
+   590→                    f"diff={size_diff}"
+   591→                )
+   592→                # Check if it's a truncation fixable
+   593→                if size_diff == -1:
+   594→                    trace["stage_4_judge_detail"] += " [TRUNCATION FIXABLE: 1 byte short]"
+   595→                elif size_diff < 0:
+   596→                    trace["stage_4_judge_detail"] += f" [TRUNCATION: {abs(size_diff)} bytes short]"
+   597→        elif nearby_judge:
+   598→            j = nearby_judge[0]
+   599→            if j.get("sha256_match"):
+   600→                trace["stage_4_judge"] = "PASS"
+   601→                trace["stage_4_judge_detail"] = f"SHA-256 match at nearby offset"
+   602→            else:
+   603→                trace["stage_4_judge"] = "FAIL"
+   604→                trace["stage_4_judge_detail"] = f"SHA-256 mismatch at nearby offset"
+   605→        else:
+   606→            trace["stage_4_judge"] = "N/A"
+   607→            trace["stage_4_judge_detail"] = "File not in judge results"
+   608→            if trace["stage_3_dedup"] == "FAIL":
+   609→                trace["stage_4_judge_detail"] += " (upstream: eliminated by dedup)"
+   610→            elif trace["stage_2_delimitation"] == "FAIL":
+   611→                trace["stage_4_judge_detail"] += " (upstream: not carved)"
+   612→        
+   613→        # ─── Determine loss stage ────────────────────────────────────
+   614→        loss_stage = "NONE"  # File survived all stages
+   615→        loss_detail = ""
+   616→        
+   617→        if trace["stage_4_judge"] == "PASS":
+   618→            loss_stage = "NONE"
+   619→            loss_detail = "File fully recovered through all stages"
+   620→        elif trace["stage_4_judge"] == "FAIL":
+   621→            loss_stage = "STAGE_4_JUDGE"
+   622→            loss_detail = trace["stage_4_judge_detail"]
+   623→        elif trace["stage_3_dedup"] == "FAIL":
+   624→            loss_stage = "STAGE_3_DEDUP"
+   625→            loss_detail = trace["stage_3_dedup_detail"]
+   626→        elif trace["stage_2_delimitation"] == "FAIL":
+   627→            loss_stage = "STAGE_2_DELIMITATION"
+   628→            loss_detail = trace["stage_2_delimitation_detail"]
+   629→        elif trace["stage_1_scan"] == "FAIL":
+   630→            loss_stage = "STAGE_1_SCAN"
+   631→            loss_detail = trace["stage_1_scan_detail"]
+   632→        elif trace["stage_3_dedup"] == "N/A" and trace["stage_2_delimitation"] == "FAIL":
+   633→            loss_stage = "STAGE_2_DELIMITATION"
+   634→            loss_detail = trace["stage_2_delimitation_detail"]
+   635→        else:
+   636→            loss_stage = "UNKNOWN"
+   637→            loss_detail = f"Scan={trace['stage_1_scan']} Delim={trace['stage_2_delimitation']} Dedup={trace['stage_3_dedup']} Judge={trace['stage_4_judge']}"
+   638→        
+   639→        trace["loss_stage"] = loss_stage
+   640→        trace["loss_detail"] = loss_detail
+   641→        
+   642→        traces.append(trace)
+   643→    
+   644→    return traces
+   645→
+   646→
+   647→# ═══════════════════════════════════════════════════════════════════════════
+   648→# MAIN EXPERIMENT RUNNER
+   649→# ═══════════════════════════════════════════════════════════════════════════
+   650→
+   651→def _volume_for(ext, n):
+   652→    """Calculate appropriate volume size for a given format and file count."""
+   653→    if ext in (".jpg", ".png"):
+   654→        return max(50*1024*1024, n * 3 * 1024 * 1024 + 50 * 1024 * 1024)
+   655→    else:
+   656→        return max(50*1024*1024, n * 500_000 + 50 * 1024 * 1024)
+   657→
+   658→
+   659→def run_single_format(ext: str, n: int, seed: int = 42) -> Dict:
+   660→    """
+   661→    Run the full instrumented pipeline for a single format and file count.
+   662→    
+   663→    Returns a comprehensive result dict with per-file traces and aggregate metrics.
+   664→    """
+   665→    print(f"\n  {'─' * 60}")
+   666→    print(f"  Format: {ext} | N={n}")
+   667→    print(f"  {'─' * 60}")
+   668→    
+   669→    # ─── Build dataset ────────────────────────────────────────────────
+   670→    vol = _volume_for(ext, n)
+   671→    builder = DatasetBuilder(seed=seed, volume_size=vol, files_per_image=n)
+   672→    image_bytes, manifest = builder.build_single_format_dataset(extension=ext, n_files=n)
+   673→    
+   674→    cluster_size = manifest.get("cluster_size", 4096)
+   675→    total_clusters = manifest.get("total_clusters", len(image_bytes) // cluster_size)
+   676→    
+   677→    gt_files = [f for f in manifest.get("files", []) if not f.get("is_directory", False)]
+   678→    non_resident = [f for f in gt_files if f.get("clusters", [])]
+   679→    
+   680→    print(f"  Built: {len(gt_files)} files ({len(non_resident)} non-resident), "
+   681→          f"image={len(image_bytes)/(1024*1024):.1f}MB")
+   682→    
+   683→    # ─── Stage 1: Scan ────────────────────────────────────────────────
+   684→    t0 = time.time()
+   685→    scan_matches = run_instrumented_scan(image_bytes, cluster_size, total_clusters)
+   686→    t_scan = time.time() - t0
+   687→    
+   688→    sig_counts = defaultdict(int)
+   689→    for m in scan_matches:
+   690→        sig_counts[m["format_name"]] += 1
+   691→    
+   692→    print(f"  Stage 1 (Scan): {len(scan_matches)} matches in {t_scan:.2f}s")
+   693→    for name, count in sorted(sig_counts.items()):
+   694→        print(f"    {name}: {count}")
+   695→    
+   696→    # ─── Stage 2: Delimitation ────────────────────────────────────────
+   697→    t0 = time.time()
+   698→    carved_candidates = run_instrumented_delimitation(
+   699→        image_bytes, scan_matches, cluster_size, total_clusters
+   700→    )
+   701→    t_delim = time.time() - t0
+   702→    
+   703→    # Count how many have footer found
+   704→    footer_found_count = sum(1 for c in carved_candidates if c.get("footer_found"))
+   705→    
+   706→    print(f"  Stage 2 (Delimitation): {len(carved_candidates)} carved "
+   707→          f"({footer_found_count} with footer) in {t_delim:.2f}s")
+   708→    
+   709→    # ─── Stage 3: Dedup ───────────────────────────────────────────────
+   710→    t0 = time.time()
+   711→    survived, eliminated = run_instrumented_dedup(carved_candidates)
+   712→    t_dedup = time.time() - t0
+   713→    
+   714→    print(f"  Stage 3 (Dedup): {len(survived)} survived, {len(eliminated)} eliminated in {t_dedup:.2f}s")
+   715→    
+   716→    # Show elimination details
+   717→    elim_by_format = defaultdict(int)
+   718→    elim_reasons = defaultdict(list)
+   719→    for e in eliminated:
+   720→        fmt = e.get("format_name", "?")
+   721→        elim_by_format[fmt] += 1
+   722→        elim_reasons[fmt].append({
+   723→            "offset": e["start_offset"],
+   724→            "size": e.get("size", 0),
+   725→            "eliminated_by": e.get("eliminated_by_file_format", "?"),
+   726→            "eliminated_by_size": e.get("eliminated_by_file_size", 0),
+   727→            "overlap": e.get("overlap_amount", 0),
+   728→        })
+   729→    
+   730→    for fmt, count in sorted(elim_by_format.items()):
+   731→        print(f"    {fmt}: {count} eliminated")
+   732→        for r in elim_reasons[fmt][:3]:
+   733→            print(f"      offset={r['offset']} size={r['size']} "
+   734→                  f"→ eliminated by {r['eliminated_by']} (size={r['eliminated_by_size']}, "
+   735→                  f"overlap={r['overlap']})")
+   736→    
+   737→    # ─── Stage 4: Judge ───────────────────────────────────────────────
+   738→    t0 = time.time()
+   739→    judge_results = run_instrumented_judge(survived, manifest)
+   740→    t_judge = time.time() - t0
+   741→    
+   742→    sha_matches = sum(1 for j in judge_results if j.get("sha256_match"))
+   743→    sha_mismatches = sum(1 for j in judge_results if not j.get("sha256_match"))
+   744→    
+   745→    print(f"  Stage 4 (Judge): {sha_matches} SHA-256 matches, {sha_mismatches} mismatches in {t_judge:.2f}s")
+   746→    
+   747→    # ─── Build per-file trace ─────────────────────────────────────────
+   748→    traces = build_per_file_trace(
+   749→        manifest, scan_matches, carved_candidates, survived, eliminated,
+   750→        judge_results, image_bytes
+   751→    )
+   752→    
+   753→    # ─── Aggregate loss analysis ──────────────────────────────────────
+   754→    loss_by_stage = defaultdict(int)
+   755→    for t in traces:
+   756→        loss_by_stage[t["loss_stage"]] += 1
+   757→    
+   758→    print(f"\n  Per-file trace summary:")
+   759→    for stage, count in sorted(loss_by_stage.items()):
+   760→        print(f"    {stage}: {count} files")
+   761→    
+   762→    # ─── Build result ─────────────────────────────────────────────────
+   763→    result = {
+   764→        "format": ext,
+   765→        "n_files": n,
+   766→        "seed": seed,
+   767→        "image_size_mb": round(len(image_bytes) / (1024*1024), 1),
+   768→        "cluster_size": cluster_size,
+   769→        "total_clusters": total_clusters,
+   770→        "gt_files": len(gt_files),
+   771→        "non_resident_files": len(non_resident),
+   772→        
+   773→        # Stage counts
+   774→        "stage_1_scan_matches": len(scan_matches),
+   775→        "stage_1_sig_counts": dict(sig_counts),
+   776→        "stage_2_carved_candidates": len(carved_candidates),
+   777→        "stage_2_footer_found": footer_found_count,
+   778→        "stage_3_survived": len(survived),
+   779→        "stage_3_eliminated": len(eliminated),
+   780→        "stage_4_sha_matches": sha_matches,
+   781→        "stage_4_sha_mismatches": sha_mismatches,
+   782→        
+   783→        # Timing
+   784→        "timing": {
+   785→            "scan": round(t_scan, 3),
+   786→            "delimitation": round(t_delim, 3),
+   787→            "dedup": round(t_dedup, 3),
+   788→            "judge": round(t_judge, 3),
+   789→        },
+   790→        
+   791→        # Loss analysis
+   792→        "loss_by_stage": dict(loss_by_stage),
+   793→        
+   794→        # Per-file traces
+   795→        "per_file_traces": traces,
+   796→        
+   797→        # Elimination details
+   798→        "elimination_details": {fmt: reasons for fmt, reasons in elim_reasons.items()},
+   799→    }
+   800→    
+   801→    return result
+   802→
+   803→
+   804→def run_inst_0002():
+   805→    """Run the full INST-0002 experiment."""
+   806→    print("=" * 70)
+   807→    print("INST-0002: Pipeline Loss Localization")
+   808→    print("=" * 70)
+   809→    print(f"Familia: INST (Instrument Validation)")
+   810→    print(f"Origen: Auditoría externa r12")
+   811→    print(f"Fecha: {datetime.now(timezone.utc).isoformat()}")
+   812→    print()
+   813→    print("Pregunta: ¿En qué etapa exacta del pipeline desaparece cada archivo?")
+   814→    print()
+   815→    print("Pipeline instrumentado:")
+   816→    print("  Scanner → Firma encontrada → Delimitación → Candidato → Dedup → Carved → Judge")
+   817→    print()
+   818→    
+   819→    all_results = {}
+   820→    
+   821→    # ─── Test configurations ──────────────────────────────────────────
+   822→    configs = [
+   823→        (".zip",  [15, 30, 100]),
+   824→        (".docx", [15, 30, 100]),
+   825→        (".pdf",  [15, 30, 100]),
+   826→        (".jpg",  [15, 30]),
+   827→        (".png",  [15, 30]),
+   828→    ]
+   829→    
+   830→    # ─── Run all configurations ───────────────────────────────────────
+   831→    for ext, n_values in configs:
+   832→        for n in n_values:
+   833→            key = f"N={n}_{ext[1:]}"
+   834→            print(f"\n{'═' * 70}")
+   835→            print(f"  Running: {key}")
+   836→            print(f"{'═' * 70}")
+   837→            
+   838→            try:
+   839→                result = run_single_format(ext, n)
+   840→                all_results[key] = result
+   841→            except Exception as e:
+   842→                print(f"  ERROR: {e}")
+   843→                import traceback
+   844→                traceback.print_exc()
+   845→                all_results[key] = {"error": str(e)}
+   846→    
+   847→    # ─── Cross-format analysis ────────────────────────────────────────
+   848→    print("\n" + "=" * 70)
+   849→    print("CROSS-FORMAT ANALYSIS")
+   850→    print("=" * 70)
+   851→    
+   852→    # Aggregate loss by stage across all formats
+   853→    total_loss_by_stage = defaultdict(int)
+   854→    format_loss_by_stage = defaultdict(lambda: defaultdict(int))
+   855→    
+   856→    for key, result in all_results.items():
+   857→        if "error" in result:
+   858→            continue
+   859→        fmt = result.get("format", "?")
+   860→        for stage, count in result.get("loss_by_stage", {}).items():
+   861→            total_loss_by_stage[stage] += count
+   862→            format_loss_by_stage[fmt][stage] += count
+   863→    
+   864→    print("\nTotal loss by stage (across all formats and N values):")
+   865→    for stage, count in sorted(total_loss_by_stage.items()):
+   866→        print(f"  {stage:30s}: {count:4d} files")
+   867→    
+   868→    print("\nLoss by stage per format (aggregated across N):")
+   869→    for fmt in sorted(format_loss_by_stage.keys()):
+   870→        stages = format_loss_by_stage[fmt]
+   871→        total = sum(stages.values())
+   872→        print(f"\n  {fmt}:")
+   873→        for stage, count in sorted(stages.items()):
+   874→            pct = count / total * 100 if total > 0 else 0
+   875→            print(f"    {stage:30s}: {count:4d} ({pct:5.1f}%)")
+   876→    
+   877→    # ─── H1-H5 discrimination ────────────────────────────────────────
+   878→    print("\n" + "=" * 70)
+   879→    print("HYPOTHESIS DISCRIMINATION (H1-H5 from RC-A-003)")
+   880→    print("=" * 70)
+   881→    
+   882→    # Count losses at each stage
+   883→    scan_losses = total_loss_by_stage.get("STAGE_1_SCAN", 0)
+   884→    delim_losses = total_loss_by_stage.get("STAGE_2_DELIMITATION", 0)
+   885→    dedup_losses = total_loss_by_stage.get("STAGE_3_DEDUP", 0)
+   886→    judge_losses = total_loss_by_stage.get("STAGE_4_JUDGE", 0)
+   887→    no_losses = total_loss_by_stage.get("NONE", 0)
+   888→    total_files = sum(total_loss_by_stage.values())
+   889→    
+   890→    print(f"\n  Total files across all experiments: {total_files}")
+   891→    print(f"  Files fully recovered (NONE): {no_losses} ({no_losses/total_files*100:.1f}%)")
+   892→    print(f"  Loss at Stage 1 (Scan): {scan_losses} ({scan_losses/total_files*100:.1f}%)")
+   893→    print(f"  Loss at Stage 2 (Delimitation): {delim_losses} ({delim_losses/total_files*100:.1f}%)")
+   894→    print(f"  Loss at Stage 3 (Dedup): {dedup_losses} ({dedup_losses/total_files*100:.1f}%)")
+   895→    print(f"  Loss at Stage 4 (Judge): {judge_losses} ({judge_losses/total_files*100:.1f}%)")
+   896→    
+   897→    print("\n  Hypothesis assessment:")
+   898→    
+   899→    # H1: Loss during scanning (signatures not found)
+   900→    if scan_losses > 0:
+   901→        print(f"  H1 (Scanner loss): SUPPORTED — {scan_losses} files lost at scan stage")
+   902→    else:
+   903→        print(f"  H1 (Scanner loss): NOT SUPPORTED — scanner finds all signatures")
+   904→    
+   905→    # H2: Loss during delimitation (footer issues)
+   906→    if delim_losses > 0:
+   907→        print(f"  H2 (Delimitation loss): SUPPORTED — {delim_losses} files lost at delimitation")
+   908→    else:
+   909→        print(f"  H2 (Delimitation loss): NOT SUPPORTED — all signatures lead to valid carves")
+   910→    
+   911→    # H3: Loss during deduplication
+   912→    if dedup_losses > 0:
+   913→        print(f"  H3 (Dedup loss): SUPPORTED — {dedup_losses} files eliminated by dedup")
+   914→    else:
+   915→        print(f"  H3 (Dedup loss): NOT SUPPORTED — dedup doesn't eliminate valid files")
+   916→    
+   917→    # H4: Loss during Judge matching (SHA-256 mismatch)
+   918→    if judge_losses > 0:
+   919→        print(f"  H4 (Judge loss): SUPPORTED — {judge_losses} files have SHA-256 mismatch")
+   920→    else:
+   921→        print(f"  H4 (Judge loss): NOT SUPPORTED — all carved files match ground truth")
+   922→    
+   923→    # H5: Multiple stages
+   924→    multi_stage = sum(1 for stage, count in total_loss_by_stage.items() 
+   925→                      if count > 0 and stage.startswith("STAGE_"))
+   926→    if multi_stage > 1:
+   927→        print(f"  H5 (Multi-stage loss): SUPPORTED — losses occur at {multi_stage} different stages")
+   928→    else:
+   929→        print(f"  H5 (Multi-stage loss): NOT SUPPORTED — losses concentrated at single stage")
+   930→    
+   931→    # ─── Format-specific diagnosis ────────────────────────────────────
+   932→    print("\n" + "=" * 70)
+   933→    print("FORMAT-SPECIFIC DIAGNOSIS")
+   934→    print("=" * 70)
+   935→    
+   936→    for ext in [".pdf", ".jpg", ".png", ".zip", ".docx"]:
+   937→        # Find the N=15 result for this format
+   938→        key = f"N=15_{ext[1:]}"
+   939→        result = all_results.get(key, {})
+   940→        if "error" in result or not result:
+   941→            continue
+   942→        
+   943→        loss = result.get("loss_by_stage", {})
+   944→        total = sum(loss.values())
+   945→        if total == 0:
+   946→            continue
+   947→        
+   948→        print(f"\n  {ext[1:].upper()} (N=15):")
+   949→        for stage, count in sorted(loss.items()):
+   950→            pct = count / total * 100 if total > 0 else 0
+   951→            print(f"    {stage:30s}: {count:3d} ({pct:5.1f}%)")
+   952→        
+   953→        # Show sample traces for lost files
+   954→        lost_traces = [t for t in result.get("per_file_traces", []) 
+   955→                       if t.get("loss_stage", "NONE") != "NONE"]
+   956→        if lost_traces:
+   957→            print(f"    Sample loss traces (first 3):")
+   958→            for t in lost_traces[:3]:
+   959→                print(f"      {t['gt_name']:30s}: loss at {t['loss_stage']}")
+   960→                print(f"        {t['loss_detail']}")
+   961→    
+   962→    # ─── Save output ──────────────────────────────────────────────────
+   963→    output_dir = PROJECT_ROOT / "output" / "inst_0002"
+   964→    output_dir.mkdir(parents=True, exist_ok=True)
+   965→    
+   966→    # Save full results
+   967→    ledger_entry = {
+   968→        "experiment_id": "INST-0002",
+   969→        "family": "INST",
+   970→        "title": "Pipeline Loss Localization",
+   971→        "date": datetime.now(timezone.utc).isoformat(),
+   972→        "status": "COMPLETED",
+   973→        "question": "¿En qué etapa exacta del pipeline desaparece cada archivo?",
+   974→        "pipeline_stages": [
+   975→            "STAGE_1_SCAN: Signature detection",
+   976→            "STAGE_2_DELIMITATION: File extraction with footer",
+   977→            "STAGE_3_DEDUP: Overlap removal",
+   978→            "STAGE_4_JUDGE: SHA-256 matching against ground truth",
+   979→        ],
+   980→        "aggregate_loss_by_stage": dict(total_loss_by_stage),
+   981→        "format_loss_by_stage": {k: dict(v) for k, v in format_loss_by_stage.items()},
+   982→        "hypothesis_assessment": {
+   983→            "H1_scanner_loss": scan_losses,
+   984→            "H2_delimitation_loss": delim_losses,
+   985→            "H3_dedup_loss": dedup_losses,
+   986→            "H4_judge_loss": judge_losses,
+   987→            "H5_multi_stage": multi_stage > 1,
+   988→        },
+   989→        "full_results": all_results,
+   990→    }
+   991→    
+   992→    ledger_path = output_dir / "ledger_entry.json"
+   993→    with open(ledger_path, 'w') as f:
+   994→        json.dump(ledger_entry, f, indent=2, ensure_ascii=False, default=str)
+   995→    
+   996→    # Save per-file trace CSV
+   997→    csv_path = output_dir / "inst_0002_per_file_trace.csv"
+   998→    with open(csv_path, 'w', newline='') as f:
+   999→        writer = csv.writer(f)
+  1000→        writer.writerow([
+  1001→            "format", "n_files", "gt_name", "gt_size", "gt_start_offset",
+  1002→            "stage_1_scan", "stage_2_delimitation", "stage_3_dedup", "stage_4_judge",
+  1003→            "loss_stage", "loss_detail"
+  1004→        ])
+  1005→        for key, result in all_results.items():
+  1006→            if "error" in result:
+  1007→                continue
+  1008→            fmt = result.get("format", "?")
+  1009→            n = result.get("n_files", 0)
+  1010→            for t in result.get("per_file_traces", []):
+  1011→                writer.writerow([
+  1012→                    fmt, n, t.get("gt_name", ""), t.get("gt_size", 0),
+  1013→                    t.get("gt_start_offset", ""),
+  1014→                    t.get("stage_1_scan", ""), t.get("stage_2_delimitation", ""),
+  1015→                    t.get("stage_3_dedup", ""), t.get("stage_4_judge", ""),
+  1016→                    t.get("loss_stage", ""), t.get("loss_detail", ""),
+  1017→                ])
+  1018→    
+  1019→    # Save summary
+  1020→    summary = {
+  1021→        "experiment_id": "INST-0002",
+  1022→        "date": datetime.now(timezone.utc).isoformat(),
+  1023→        "total_files_traced": total_files,
+  1024→        "fully_recovered": no_losses,
+  1025→        "loss_at_scan": scan_losses,
+  1026→        "loss_at_delimitation": delim_losses,
+  1027→        "loss_at_dedup": dedup_losses,
+  1028→        "loss_at_judge": judge_losses,
+  1029→        "formats_tested": [ext for ext, _ in configs],
+  1030→        "n_values_tested": list(set(n for _, ns in configs for n in ns)),
+  1031→    }
+  1032→    
+  1033→    summary_path = output_dir / "inst_0002_summary.json"
+  1034→    with open(summary_path, 'w') as f:
+  1035→        json.dump(summary, f, indent=2, ensure_ascii=False, default=str)
+  1036→    
+  1037→    print(f"\n  Output directory: {output_dir}")
+  1038→    print(f"  Ledger: {ledger_path}")
+  1039→    print(f"  Per-file trace: {csv_path}")
+  1040→    print(f"  Summary: {summary_path}")
+  1041→    
+  1042→    print(f"\n  INST-0002 COMPLETE")
+  1043→    
+  1044→    return ledger_entry
+  1045→
+  1046→
+  1047→if __name__ == "__main__":
+  1048→    run_inst_0002()
+  1049→

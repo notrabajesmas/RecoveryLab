@@ -1,12 +1,12 @@
 {
   "experiment_id": "INST-0002",
-  "date": "2026-07-31T00:54:58.926782+00:00",
+  "date": "2026-07-31T03:19:06.520661+00:00",
   "total_files_traced": 525,
-  "fully_recovered": 162,
+  "fully_recovered": 480,
   "loss_at_scan": 0,
   "loss_at_delimitation": 0,
-  "loss_at_dedup": 234,
-  "loss_at_judge": 129,
+  "loss_at_dedup": 0,
+  "loss_at_judge": 45,
   "formats_tested": [
     ".zip",
     ".docx",

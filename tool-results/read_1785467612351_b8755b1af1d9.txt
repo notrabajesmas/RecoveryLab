@@ -688,3 +688,120 @@
    688→- High signature conflict rate (78-96%) is a property of random data, not adversarial layout
    689→- Next priority: INST-0002 (Carving Parser validation) to discriminate H1-H5
    690→
+   691→---
+   692→Task ID: 19
+   693→Agent: Main
+   694→Task: R13 auditoría — Separación observación/explicación + Predicciones falsables en RP-001/RP-002
+   695→
+   696→Work Log:
+   697→- Auditor r13 señaló distinción crítica: "BMP False Positive (causa primaria)" es explicación causal, no observación
+   698→- INST-0002 OBSERVÓ: 44.6% loss at dedup, 24.6% loss at judge. Eso es un hecho.
+   699→- La explicación causal (falso positivo BMP → dedup cascade) es una HIPÓTESIS consistente con la evidencia, no un hecho demostrado
+   700→- Revisado INST-0002.json: reemplazado root_cause_chain con sections separadas (observations + causal_hypotheses)
+   701→- Revisado RC-A-003.json: status cambiado de ROOT_CAUSE_IDENTIFIED a LOSS_STAGES_LOCALIZED
+   702→- Revisado RC-A-003.json: inst_0002_results reformulado con observations + causal_hypotheses
+   703→- Revisado RC-A-003.json: root_cause_analysis.status cambiado a "PARTIALLY RESOLVED — loss stages localized, causal hypotheses pending falsification"
+   704→- Agregado sección "falsifiable_prediction" a RP-001.json:
+   705→  - Predicción: Si incluir 0x0A después de %%EOF → losses_at_judge_for_PDF ↓, losses_at_dedup ≈ iguales, scanner ≈ igual, delimitación ≈ igual
+   706→  - Criterio de falsación: si no se cumple, H_PDF queda refutada
+   707→- Agregado sección "falsifiable_prediction" a RP-002.json:
+   708→  - Predicción: Si eliminar firma BMP → losses_at_dedup ↓ significativamente, signatures_detected ↓, losses_at_judge ≈ igual, PDF ≈ igual
+   709→  - Criterio de falsación: si no se cumple, H_BMP queda refutada
+   710→- Actualizado orden de ejecución (auditor r13):
+   711→  1. RP-001 (con predicción) → re-run INST-0002 → verificar predicción
+   712→  2. RP-002 (con predicción) → re-run INST-0002 → verificar predicción
+   713→  3. Recién entonces INST-0003 (Judge validation)
+   714→- Motivo del orden: Judge ve entradas contaminadas por problemas upstream. Validarlo antes de estabilizar upstream sería invertir tiempo en un instrumento cuya aparente falla es consecuencia de datos defectuosos
+   715→- Actualizado IVM: Carving Parser status de DIAGNOSED a LOSS_STAGES_LOCALIZED
+   716→- Actualizado IVM: priority_order refleja nuevo orden RP-001 → RP-002 → INST-0003
+   717→- Actualizado evidence_chain_manifest: key_insights 12-14 reformulados, next_actions actualizados
+   718→- Actualizado RC-A-002 status: de ROOT_CAUSE_CONFIRMED a CAUSAL_HYPOTHESIS_PENDING_FALSIFICATION
+   719→
+   720→Stage Summary:
+   721→- Principio metodológico establecido: observación ≠ explicación causal. El modelo observable (Scanner ✓, Delimitación ✓, Dedup ✗ 44.6%, Judge ✗ 24.6%) sobrevivirá incluso si las hipótesis causales resultan incorrectas
+   722→- Todo RP ahora requiere predicción falsable obligatoria (r13). La predicción hace explícito qué se espera que cambie y qué debe permanecer igual
+   723→- RP-001 y RP-002 aprobados con predicción. Próximo paso: aplicar RP-001, re-ejecutar INST-0002, verificar
+   724→- El laboratorio ya no busca "qué arreglar" sino "qué predicción hace cada hipótesis y si esa predicción se cumple tras un cambio controlado"
+   725→
+   726→---
+   727→Task ID: 20
+   728→Agent: Main
+   729→Task: R14 auditoría — Prediction Ledger + Open Alternatives + Predicciones cuantificadas
+   730→
+   731→Work Log:
+   732→- Auditor r14 propuso tres adiciones metodológicas:
+   733→  1. Prediction Ledger — registro propio de predicciones, separado de los RPs
+   734→  2. Predicciones cuantificadas — variable observada, dirección, magnitud esperada, confianza
+   735→  3. Open Alternatives — hipótesis alternativas que no deben desaparecer por atracción de otra más llamativa
+   736→- Creado prediction_ledger.json con 8 predicciones (PRED-001 a PRED-008):
+   737→  - RP-001: PRED-001 (Judge PDF ↓, 90-100%, ★★★), PRED-002 (Dedup ≈ igual, ★★★), PRED-003 (Scanner ≈ igual, ★★★), PRED-004 (Delimitation ≈ igual, ★★★)
+   738→  - RP-002: PRED-005 (Dedup ↓, 80-100%, ★★), PRED-006 (Signatures ↓, ★★★), PRED-007 (Judge ≈ igual, ★★★), PRED-008 (PDF ≈ igual, ★★★)
+   739→- Cada predicción tiene: variable_observed, prediction (decrease/no_change), expected_magnitude, confidence (★), status (PENDING)
+   740→- Agregado bloque "open_alternatives" a INST-0002.json con 6 hipótesis:
+   741→  - H_BMP, H_PDF (principales, con PRED-001..008)
+   742→  - H_DedupOverlap, H_FragmentationLayout, H_JudgeSensitivity, H_ScaleDependentAlgorithm (alternativas)
+   743→  - Cada alternativa tiene: statement, compatible_with_observations, discriminating_experiment, prediction_ledger_refs
+   744→- Actualizado RP-001: falsifiable_prediction ahora referencia PRED-001..004
+   745→- Actualizado RP-002: falsifiable_prediction ahora referencia PRED-005..008
+   746→- Actualizado evidence_chain_manifest: agregado sección prediction_ledger con resumen
+   747→
+   748→Stage Summary:
+   749→- Prediction Ledger creado como artefacto propio. 8 predicciones, todas PENDING.
+   750→- El laboratorio ahora mide capacidad predictiva, no solo capacidad explicativa.
+   751→- Open alternatives evitan que hipótesis desaparezcan por atracción. H_DedupOverlap, H_FragmentationLayout, H_JudgeSensitivity, H_ScaleDependentAlgorithm son alternativas vivas con experimentos discriminadores asignados.
+   752→- Hoja de ruta confirmada: RP-001 → INST-0002 → evaluar PRED-001..004 → RP-002 → INST-0002 → evaluar PRED-005..008 → INST-0003
+   753→
+   754→---
+   755→Task ID: 21
+   756→Agent: Main
+   757→Task: R15 auditoría — Criterios de éxito/refutación, Freeze, History, PA
+   758→
+   759→Work Log:
+   760→- Auditor r15 propuso cuatro adiciones finales antes de congelar la arquitectura:
+   761→  1. Success/Refutation/Inconclusive criteria en cada predicción
+   762→  2. Freeze de predicciones cuando el RP entra en ejecución
+   763→  3. Prediction History (append-only, transiciones, no overwrites)
+   764→  4. Predictive Accuracy (PA) como KPI complementario al RCR
+   765→- Reescrito prediction_ledger.json con las 8 predicciones actualizadas:
+   766→  - Cada predicción tiene: success_criterion, refutation_criterion, inconclusive_zone
+   767→  - Cada predicción tiene: frozen (bool), frozen_date, history (array de transiciones)
+   768→  - Ejemplo PRED-001: success >=90%, refutation <50%, inconclusive 50-89%
+   769→  - Ejemplo PRED-005: success >=80%, refutation <30%, inconclusive 30-79%
+   770→- Agregado freeze_policy: "Una vez que el RP asociado entra en ejecución, las predicciones no pueden modificarse"
+   771→- Agregado history_policy: "Nunca se sobrescribe una entrada. Solo se agregan transiciones de estado"
+   772→- Transiciones válidas: PENDING → CONFIRMED/REFUTED/INCONCLUSIVE → ARCHIVED
+   773→- Agregado PA (Predictive Accuracy) al evidence_chain_manifest:
+   774→  - PA = confirmed / evaluated
+   775→  - KPI complementario: RCR mide supervivencia de claims, PA mide capacidad predictiva
+   776→- Agregado kpi_summary con 4 KPIs: RCR, PA, confidence_distribution, evidence_debt_open
+   777→- Agregado architecture_freeze al manifest:
+   778→  - Status: FROZEN
+   779→  - Rule: "Cualquier documento nuevo debe justificar por qué no puede expresarse con los artefactos existentes"
+   780→  - Lista de artefactos existentes que cubren todas las necesidades
+   781→- Agregado key_insight #15 sobre arquitectura congelada
+   782→
+   783→Stage Summary:
+   784→- Arquitectura de Fase A FROZEN. El laboratorio crece solo en evidencia, no en estructura.
+   785→- Prediction Ledger tiene 8 predicciones con criterios explícitos, freeze, e historial.
+   786→- PA es el tercer KPI del laboratorio (junto a RCR y evidence debt).
+   787→- Próximo paso: ejecutar RP-001 (cambio de 1 byte), re-ejecutar INST-0002, evaluar PRED-001..004.
+   788→
+   789→---
+   790→Task ID: 22
+   791→Agent: Main
+   792→Task: R16 auditoría — Cierre formal de la arquitectura de Fase A
+   793→
+   794→Work Log:
+   795→- Auditor r16 declaró la arquitectura de Fase A CERRADA
+   796→- Checklist de cierre: todos los 11 ítems ✅ (protocolo, hipótesis, Judge API, Evidence Gate, Evidence Ledger, Prediction Ledger, Decision Log, Evidence Debt, RC/RP, INST framework, KPIs)
+   797→- Regla de sustitución agregada a GOLDEN_RULE.txt: "Toda nueva estructura debe justificar la eliminación de una estructura existente"
+   798→- Architecture freeze status: FROZEN → CLOSED
+   799→- Flujo de artefactos permitido: Experimento → Evidence Ledger → Prediction Ledger (update) → Claims. Nada más.
+   800→- El auditor explicitó: "El riesgo ya no es la falta de rigor, sino el sobre-diseño"
+   801→- El auditor explicitó: "La disciplina más importante a partir de ahora no es inventar mejores procesos, sino resistir la tentación de hacerlo"
+   802→
+   803→Stage Summary:
+   804→- ARQUITECTURA DE FASE A CERRADA. No más documentos, métricas, registros o protocolos.
+   805→- El laboratorio crece únicamente en evidencia: experimentos, evaluaciones de predicciones, claims.
+   806→- Próximo paso: ejecutar RP-001 → INST-0002 → evaluar PRED-001..004.
+   807→

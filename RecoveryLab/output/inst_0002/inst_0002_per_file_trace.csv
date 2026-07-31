@@ -31,19 +31,19 @@ format,n_files,gt_name,gt_size,gt_start_offset,stage_1_scan,stage_2_delimitation
 .zip,30,zip_0015.zip,312951,4870144,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .zip,30,zip_0016.zip,100267,5185536,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .zip,30,zip_0017.zip,113277,5287936,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
-.zip,30,zip_0018.zip,305957,5402624,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5379072 (overlap: 305957 bytes)
-.zip,30,zip_0019.zip,185068,5709824,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5379072 (overlap: 185068 bytes)
-.zip,30,zip_0020.zip,178526,5898240,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5379072 (overlap: 178526 bytes)
-.zip,30,zip_0021.zip,437432,6078464,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5379072 (overlap: 437432 bytes)
-.zip,30,zip_0022.zip,213813,6516736,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5379072 (overlap: 213813 bytes)
-.zip,30,zip_0023.zip,74082,6733824,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5379072 (overlap: 74082 bytes)
-.zip,30,zip_0024.zip,133144,6811648,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5379072 (overlap: 133144 bytes)
-.zip,30,zip_0025.zip,249941,6946816,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5379072 (overlap: 249941 bytes)
-.zip,30,zip_0026.zip,313359,7200768,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5379072 (overlap: 313359 bytes)
-.zip,30,zip_0027.zip,350272,7516160,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5379072 (overlap: 350272 bytes)
-.zip,30,zip_0028.zip,447254,7868416,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5379072 (overlap: 447254 bytes)
-.zip,30,zip_0029.zip,454130,8318976,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5379072 (overlap: 454130 bytes)
-.zip,30,zip_0030.zip,346402,8773632,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5379072 (overlap: 346402 bytes)
+.zip,30,zip_0018.zip,305957,5402624,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,30,zip_0019.zip,185068,5709824,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,30,zip_0020.zip,178526,5898240,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,30,zip_0021.zip,437432,6078464,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,30,zip_0022.zip,213813,6516736,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,30,zip_0023.zip,74082,6733824,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,30,zip_0024.zip,133144,6811648,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,30,zip_0025.zip,249941,6946816,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,30,zip_0026.zip,313359,7200768,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,30,zip_0027.zip,350272,7516160,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,30,zip_0028.zip,447254,7868416,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,30,zip_0029.zip,454130,8318976,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,30,zip_0030.zip,346402,8773632,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .zip,100,zip_0001.zip,480668,270336,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .zip,100,zip_0002.zip,458352,753664,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .zip,100,zip_0003.zip,321715,1212416,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
@@ -61,89 +61,89 @@ format,n_files,gt_name,gt_size,gt_start_offset,stage_1_scan,stage_2_delimitation
 .zip,100,zip_0015.zip,312951,4939776,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .zip,100,zip_0016.zip,100267,5255168,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .zip,100,zip_0017.zip,113277,5357568,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
-.zip,100,zip_0018.zip,305957,5472256,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 305957 bytes)
-.zip,100,zip_0019.zip,185068,5779456,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 185068 bytes)
-.zip,100,zip_0020.zip,178526,5967872,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 178526 bytes)
-.zip,100,zip_0021.zip,437432,6148096,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 437432 bytes)
-.zip,100,zip_0022.zip,213813,6586368,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 213813 bytes)
-.zip,100,zip_0023.zip,74082,6803456,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 74082 bytes)
-.zip,100,zip_0024.zip,133144,6881280,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 133144 bytes)
-.zip,100,zip_0025.zip,249941,7016448,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 249941 bytes)
-.zip,100,zip_0026.zip,313359,7270400,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 313359 bytes)
-.zip,100,zip_0027.zip,350272,7585792,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 350272 bytes)
-.zip,100,zip_0028.zip,447254,7938048,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 447254 bytes)
-.zip,100,zip_0029.zip,454130,8388608,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 454130 bytes)
-.zip,100,zip_0030.zip,346402,8843264,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 346402 bytes)
-.zip,100,zip_0031.zip,210658,9191424,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 210658 bytes)
-.zip,100,zip_0032.zip,231873,9404416,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 231873 bytes)
-.zip,100,zip_0033.zip,12971,9637888,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 12971 bytes)
-.zip,100,zip_0034.zip,183035,9654272,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 183035 bytes)
-.zip,100,zip_0035.zip,345855,9838592,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 345855 bytes)
-.zip,100,zip_0036.zip,308091,10186752,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 308091 bytes)
-.zip,100,zip_0037.zip,168137,10498048,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 168137 bytes)
-.zip,100,zip_0038.zip,116593,10670080,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 116593 bytes)
-.zip,100,zip_0039.zip,26781,10788864,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 26781 bytes)
-.zip,100,zip_0040.zip,285663,10817536,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 285663 bytes)
-.zip,100,zip_0041.zip,251640,11104256,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 251640 bytes)
-.zip,100,zip_0042.zip,345660,11358208,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 345660 bytes)
-.zip,100,zip_0043.zip,66344,11706368,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 66344 bytes)
-.zip,100,zip_0044.zip,389197,11776000,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 389197 bytes)
-.zip,100,zip_0045.zip,440204,12169216,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 440204 bytes)
-.zip,100,zip_0046.zip,474013,12611584,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 474013 bytes)
-.zip,100,zip_0047.zip,243969,13086720,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 243969 bytes)
-.zip,100,zip_0048.zip,226255,13332480,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 226255 bytes)
-.zip,100,zip_0049.zip,167767,13561856,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 167767 bytes)
-.zip,100,zip_0050.zip,151907,13729792,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 151907 bytes)
-.zip,100,zip_0051.zip,74395,13885440,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 74395 bytes)
-.zip,100,zip_0052.zip,427764,13963264,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 427764 bytes)
-.zip,100,zip_0053.zip,157514,14393344,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 157514 bytes)
-.zip,100,zip_0054.zip,117304,14553088,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 117304 bytes)
-.zip,100,zip_0055.zip,195804,14671872,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 195804 bytes)
-.zip,100,zip_0056.zip,36956,14868480,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 36956 bytes)
-.zip,100,zip_0057.zip,401479,14909440,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 401479 bytes)
-.zip,100,zip_0058.zip,255298,15314944,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 255298 bytes)
-.zip,100,zip_0059.zip,236491,15572992,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 236491 bytes)
-.zip,100,zip_0060.zip,262055,15810560,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 262055 bytes)
-.zip,100,zip_0061.zip,311808,16072704,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 311808 bytes)
-.zip,100,zip_0062.zip,5728,16388096,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 5728 bytes)
-.zip,100,zip_0063.zip,123519,16396288,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 123519 bytes)
-.zip,100,zip_0064.zip,289355,16523264,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 289355 bytes)
-.zip,100,zip_0065.zip,115231,16814080,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 115231 bytes)
-.zip,100,zip_0066.zip,248880,16932864,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 248880 bytes)
-.zip,100,zip_0067.zip,139501,17182720,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 139501 bytes)
-.zip,100,zip_0068.zip,254065,17326080,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 254065 bytes)
-.zip,100,zip_0069.zip,135806,17584128,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 135806 bytes)
-.zip,100,zip_0070.zip,166936,17723392,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 166936 bytes)
-.zip,100,zip_0071.zip,218577,17891328,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 218577 bytes)
-.zip,100,zip_0072.zip,475916,18112512,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 475916 bytes)
-.zip,100,zip_0073.zip,275795,18591744,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 275795 bytes)
-.zip,100,zip_0074.zip,57511,18870272,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 57511 bytes)
-.zip,100,zip_0075.zip,379510,18931712,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 379510 bytes)
-.zip,100,zip_0076.zip,263333,19312640,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 263333 bytes)
-.zip,100,zip_0077.zip,396336,19578880,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 396336 bytes)
-.zip,100,zip_0078.zip,450417,19976192,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 450417 bytes)
-.zip,100,zip_0079.zip,130078,20426752,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 130078 bytes)
-.zip,100,zip_0080.zip,362620,20557824,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 362620 bytes)
-.zip,100,zip_0081.zip,337502,20922368,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 337502 bytes)
-.zip,100,zip_0082.zip,120086,21262336,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 120086 bytes)
-.zip,100,zip_0083.zip,461057,21385216,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 461057 bytes)
-.zip,100,zip_0084.zip,41594,21848064,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 41594 bytes)
-.zip,100,zip_0085.zip,275543,21893120,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 275543 bytes)
-.zip,100,zip_0086.zip,179489,22171648,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 179489 bytes)
-.zip,100,zip_0087.zip,1379,22351872,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 1379 bytes)
-.zip,100,zip_0088.zip,381822,22355968,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 381822 bytes)
-.zip,100,zip_0089.zip,323333,22740992,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 323333 bytes)
-.zip,100,zip_0090.zip,96973,23064576,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 96973 bytes)
-.zip,100,zip_0091.zip,408048,23162880,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 408048 bytes)
-.zip,100,zip_0092.zip,423371,23572480,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 423371 bytes)
-.zip,100,zip_0093.zip,96414,23998464,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 96414 bytes)
-.zip,100,zip_0094.zip,482261,24096768,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 482261 bytes)
-.zip,100,zip_0095.zip,181417,24580096,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 181417 bytes)
-.zip,100,zip_0096.zip,113860,24764416,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 113860 bytes)
-.zip,100,zip_0097.zip,75647,24879104,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 75647 bytes)
-.zip,100,zip_0098.zip,467123,24956928,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 467123 bytes)
-.zip,100,zip_0099.zip,95362,25427968,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 95362 bytes)
-.zip,100,zip_0100.zip,126616,25526272,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 5448704 (overlap: 126616 bytes)
+.zip,100,zip_0018.zip,305957,5472256,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0019.zip,185068,5779456,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0020.zip,178526,5967872,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0021.zip,437432,6148096,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0022.zip,213813,6586368,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0023.zip,74082,6803456,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0024.zip,133144,6881280,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0025.zip,249941,7016448,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0026.zip,313359,7270400,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0027.zip,350272,7585792,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0028.zip,447254,7938048,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0029.zip,454130,8388608,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0030.zip,346402,8843264,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0031.zip,210658,9191424,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0032.zip,231873,9404416,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0033.zip,12971,9637888,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0034.zip,183035,9654272,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0035.zip,345855,9838592,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0036.zip,308091,10186752,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0037.zip,168137,10498048,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0038.zip,116593,10670080,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0039.zip,26781,10788864,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0040.zip,285663,10817536,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0041.zip,251640,11104256,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0042.zip,345660,11358208,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0043.zip,66344,11706368,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0044.zip,389197,11776000,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0045.zip,440204,12169216,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0046.zip,474013,12611584,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0047.zip,243969,13086720,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0048.zip,226255,13332480,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0049.zip,167767,13561856,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0050.zip,151907,13729792,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0051.zip,74395,13885440,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0052.zip,427764,13963264,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0053.zip,157514,14393344,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0054.zip,117304,14553088,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0055.zip,195804,14671872,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0056.zip,36956,14868480,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0057.zip,401479,14909440,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0058.zip,255298,15314944,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0059.zip,236491,15572992,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0060.zip,262055,15810560,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0061.zip,311808,16072704,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0062.zip,5728,16388096,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0063.zip,123519,16396288,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0064.zip,289355,16523264,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0065.zip,115231,16814080,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0066.zip,248880,16932864,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0067.zip,139501,17182720,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0068.zip,254065,17326080,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0069.zip,135806,17584128,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0070.zip,166936,17723392,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0071.zip,218577,17891328,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0072.zip,475916,18112512,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0073.zip,275795,18591744,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0074.zip,57511,18870272,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0075.zip,379510,18931712,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0076.zip,263333,19312640,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0077.zip,396336,19578880,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0078.zip,450417,19976192,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0079.zip,130078,20426752,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0080.zip,362620,20557824,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0081.zip,337502,20922368,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0082.zip,120086,21262336,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0083.zip,461057,21385216,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0084.zip,41594,21848064,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0085.zip,275543,21893120,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0086.zip,179489,22171648,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0087.zip,1379,22351872,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0088.zip,381822,22355968,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0089.zip,323333,22740992,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0090.zip,96973,23064576,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0091.zip,408048,23162880,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0092.zip,423371,23572480,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0093.zip,96414,23998464,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0094.zip,482261,24096768,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0095.zip,181417,24580096,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0096.zip,113860,24764416,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0097.zip,75647,24879104,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0098.zip,467123,24956928,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0099.zip,95362,25427968,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.zip,100,zip_0100.zip,126616,25526272,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .docx,15,docx_0001.docx,480668,184320,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .docx,15,docx_0002.docx,458352,667648,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .docx,15,docx_0003.docx,321715,1126400,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
@@ -229,256 +229,256 @@ format,n_files,gt_name,gt_size,gt_start_offset,stage_1_scan,stage_2_delimitation
 .docx,100,docx_0038.docx,116593,10670080,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .docx,100,docx_0039.docx,26781,10788864,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .docx,100,docx_0040.docx,285663,10817536,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
-.docx,100,docx_0041.docx,251640,11104256,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 144632 bytes)
-.docx,100,docx_0042.docx,345660,11358208,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 345660 bytes)
-.docx,100,docx_0043.docx,66344,11706368,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 66344 bytes)
-.docx,100,docx_0044.docx,389197,11776000,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 389197 bytes)
-.docx,100,docx_0045.docx,440204,12169216,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 440204 bytes)
-.docx,100,docx_0046.docx,474013,12611584,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 474013 bytes)
-.docx,100,docx_0047.docx,243969,13086720,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 243969 bytes)
-.docx,100,docx_0048.docx,226255,13332480,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 226255 bytes)
-.docx,100,docx_0049.docx,167767,13561856,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 167767 bytes)
-.docx,100,docx_0050.docx,151907,13729792,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 151907 bytes)
-.docx,100,docx_0051.docx,74395,13885440,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 74395 bytes)
-.docx,100,docx_0052.docx,427764,13963264,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 427764 bytes)
-.docx,100,docx_0053.docx,157514,14393344,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 157514 bytes)
-.docx,100,docx_0054.docx,117304,14553088,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 117304 bytes)
-.docx,100,docx_0055.docx,195804,14671872,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 195804 bytes)
-.docx,100,docx_0056.docx,36956,14868480,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 36956 bytes)
-.docx,100,docx_0057.docx,401479,14909440,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 401479 bytes)
-.docx,100,docx_0058.docx,255298,15314944,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 255298 bytes)
-.docx,100,docx_0059.docx,236491,15572992,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 236491 bytes)
-.docx,100,docx_0060.docx,262055,15810560,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 262055 bytes)
-.docx,100,docx_0061.docx,311808,16072704,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 311808 bytes)
-.docx,100,docx_0062.docx,5728,16388096,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 5728 bytes)
-.docx,100,docx_0063.docx,123519,16396288,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 123519 bytes)
-.docx,100,docx_0064.docx,289355,16523264,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 289355 bytes)
-.docx,100,docx_0065.docx,115231,16814080,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 115231 bytes)
-.docx,100,docx_0066.docx,248880,16932864,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 248880 bytes)
-.docx,100,docx_0067.docx,139501,17182720,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 139501 bytes)
-.docx,100,docx_0068.docx,254065,17326080,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 254065 bytes)
-.docx,100,docx_0069.docx,135806,17584128,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 135806 bytes)
-.docx,100,docx_0070.docx,166936,17723392,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 166936 bytes)
-.docx,100,docx_0071.docx,218577,17891328,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 218577 bytes)
-.docx,100,docx_0072.docx,475916,18112512,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 475916 bytes)
-.docx,100,docx_0073.docx,275795,18591744,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 275795 bytes)
-.docx,100,docx_0074.docx,57511,18870272,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 57511 bytes)
-.docx,100,docx_0075.docx,379510,18931712,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 379510 bytes)
-.docx,100,docx_0076.docx,263333,19312640,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 263333 bytes)
-.docx,100,docx_0077.docx,396336,19578880,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 396336 bytes)
-.docx,100,docx_0078.docx,450417,19976192,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 450417 bytes)
-.docx,100,docx_0079.docx,130078,20426752,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 130078 bytes)
-.docx,100,docx_0080.docx,362620,20557824,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 362620 bytes)
-.docx,100,docx_0081.docx,337502,20922368,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 337502 bytes)
-.docx,100,docx_0082.docx,120086,21262336,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 120086 bytes)
-.docx,100,docx_0083.docx,461057,21385216,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 461057 bytes)
-.docx,100,docx_0084.docx,41594,21848064,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 41594 bytes)
-.docx,100,docx_0085.docx,275543,21893120,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 275543 bytes)
-.docx,100,docx_0086.docx,179489,22171648,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 179489 bytes)
-.docx,100,docx_0087.docx,1379,22351872,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 1379 bytes)
-.docx,100,docx_0088.docx,381822,22355968,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 381822 bytes)
-.docx,100,docx_0089.docx,323333,22740992,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 323333 bytes)
-.docx,100,docx_0090.docx,96973,23064576,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 96973 bytes)
-.docx,100,docx_0091.docx,408048,23162880,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 408048 bytes)
-.docx,100,docx_0092.docx,423371,23572480,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 423371 bytes)
-.docx,100,docx_0093.docx,96414,23998464,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 96414 bytes)
-.docx,100,docx_0094.docx,482261,24096768,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 482261 bytes)
-.docx,100,docx_0095.docx,181417,24580096,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 181417 bytes)
-.docx,100,docx_0096.docx,113860,24764416,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 113860 bytes)
-.docx,100,docx_0097.docx,75647,24879104,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 75647 bytes)
-.docx,100,docx_0098.docx,467123,24956928,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 467123 bytes)
-.docx,100,docx_0099.docx,95362,25427968,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 95362 bytes)
-.docx,100,docx_0100.docx,126616,25526272,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 11211264 (overlap: 126616 bytes)
-.pdf,15,pdf_0001.pdf,480668,184320,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=480667 gt_size=480668 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0002.pdf,458352,667648,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=458351 gt_size=458352 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0003.pdf,321715,1126400,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=321714 gt_size=321715 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0004.pdf,306334,1449984,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=306333 gt_size=306334 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0005.pdf,415176,1757184,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=415175 gt_size=415176 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0006.pdf,184958,2174976,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=184957 gt_size=184958 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0007.pdf,373575,2363392,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=373574 gt_size=373575 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0008.pdf,410962,2740224,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=410961 gt_size=410962 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0009.pdf,143064,3153920,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=143063 gt_size=143064 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0010.pdf,475344,3297280,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=475343 gt_size=475344 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0011.pdf,152499,3776512,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=152498 gt_size=152499 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0012.pdf,383546,3932160,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=383545 gt_size=383546 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0013.pdf,96837,4317184,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=96836 gt_size=96837 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0014.pdf,435963,4415488,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=435962 gt_size=435963 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,15,pdf_0015.pdf,312951,4853760,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=312950 gt_size=312951 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0001.pdf,480668,200704,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=480667 gt_size=480668 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0002.pdf,458352,684032,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=458351 gt_size=458352 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0003.pdf,321715,1142784,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=321714 gt_size=321715 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0004.pdf,306334,1466368,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=306333 gt_size=306334 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0005.pdf,415176,1773568,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=415175 gt_size=415176 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0006.pdf,184958,2191360,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=184957 gt_size=184958 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0007.pdf,373575,2379776,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=373574 gt_size=373575 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0008.pdf,410962,2756608,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=410961 gt_size=410962 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0009.pdf,143064,3170304,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=143063 gt_size=143064 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0010.pdf,475344,3313664,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=475343 gt_size=475344 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0011.pdf,152499,3792896,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=152498 gt_size=152499 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0012.pdf,383546,3948544,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=383545 gt_size=383546 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0013.pdf,96837,4333568,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=96836 gt_size=96837 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0014.pdf,435963,4431872,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=435962 gt_size=435963 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0015.pdf,312951,4870144,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=312950 gt_size=312951 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0016.pdf,100267,5185536,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=100266 gt_size=100267 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0017.pdf,113277,5287936,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=113276 gt_size=113277 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0018.pdf,305957,5402624,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=305956 gt_size=305957 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0019.pdf,185068,5709824,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=185067 gt_size=185068 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0020.pdf,178526,5898240,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=178525 gt_size=178526 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0021.pdf,437432,6078464,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=437431 gt_size=437432 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0022.pdf,213813,6516736,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=213812 gt_size=213813 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0023.pdf,74082,6733824,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=74081 gt_size=74082 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0024.pdf,133144,6811648,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=133143 gt_size=133144 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0025.pdf,249941,6946816,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=249940 gt_size=249941 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0026.pdf,313359,7200768,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=313358 gt_size=313359 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0027.pdf,350272,7516160,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=350271 gt_size=350272 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0028.pdf,447254,7868416,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=447253 gt_size=447254 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0029.pdf,454130,8318976,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=454129 gt_size=454130 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,30,pdf_0030.pdf,346402,8773632,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=346401 gt_size=346402 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0001.pdf,480668,270336,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=480667 gt_size=480668 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0002.pdf,458352,753664,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=458351 gt_size=458352 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0003.pdf,321715,1212416,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=321714 gt_size=321715 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0004.pdf,306334,1536000,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=306333 gt_size=306334 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0005.pdf,415176,1843200,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=415175 gt_size=415176 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0006.pdf,184958,2260992,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=184957 gt_size=184958 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0007.pdf,373575,2449408,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=373574 gt_size=373575 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0008.pdf,410962,2826240,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=410961 gt_size=410962 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0009.pdf,143064,3239936,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=143063 gt_size=143064 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0010.pdf,475344,3383296,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=475343 gt_size=475344 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0011.pdf,152499,3862528,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=152498 gt_size=152499 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0012.pdf,383546,4018176,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=383545 gt_size=383546 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0013.pdf,96837,4403200,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=96836 gt_size=96837 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0014.pdf,435963,4501504,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=435962 gt_size=435963 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0015.pdf,312951,4939776,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=312950 gt_size=312951 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0016.pdf,100267,5255168,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=100266 gt_size=100267 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0017.pdf,113277,5357568,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=113276 gt_size=113277 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0018.pdf,305957,5472256,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=305956 gt_size=305957 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0019.pdf,185068,5779456,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=185067 gt_size=185068 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0020.pdf,178526,5967872,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=178525 gt_size=178526 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0021.pdf,437432,6148096,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=437431 gt_size=437432 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0022.pdf,213813,6586368,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=213812 gt_size=213813 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0023.pdf,74082,6803456,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=74081 gt_size=74082 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0024.pdf,133144,6881280,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=133143 gt_size=133144 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0025.pdf,249941,7016448,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=249940 gt_size=249941 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0026.pdf,313359,7270400,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=313358 gt_size=313359 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0027.pdf,350272,7585792,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=350271 gt_size=350272 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0028.pdf,447254,7938048,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=447253 gt_size=447254 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0029.pdf,454130,8388608,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=454129 gt_size=454130 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0030.pdf,346402,8843264,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=346401 gt_size=346402 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0031.pdf,210658,9191424,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=210657 gt_size=210658 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0032.pdf,231873,9404416,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=231872 gt_size=231873 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0033.pdf,12971,9637888,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=12970 gt_size=12971 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0034.pdf,183035,9654272,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=183034 gt_size=183035 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0035.pdf,345855,9838592,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=345854 gt_size=345855 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0036.pdf,308091,10186752,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=308090 gt_size=308091 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0037.pdf,168137,10498048,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=168136 gt_size=168137 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0038.pdf,116593,10670080,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=116592 gt_size=116593 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0039.pdf,26781,10788864,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=26780 gt_size=26781 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0040.pdf,285663,10817536,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=285662 gt_size=285663 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0041.pdf,251640,11104256,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=251639 gt_size=251640 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0042.pdf,345660,11358208,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=345659 gt_size=345660 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0043.pdf,66344,11706368,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=66343 gt_size=66344 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0044.pdf,389197,11776000,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=389196 gt_size=389197 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0045.pdf,440204,12169216,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=440203 gt_size=440204 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0046.pdf,474013,12611584,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=474012 gt_size=474013 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0047.pdf,243969,13086720,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=243968 gt_size=243969 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0048.pdf,226255,13332480,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=226254 gt_size=226255 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0049.pdf,167767,13561856,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=167766 gt_size=167767 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0050.pdf,151907,13729792,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=151906 gt_size=151907 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0051.pdf,74395,13885440,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=74394 gt_size=74395 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0052.pdf,427764,13963264,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=427763 gt_size=427764 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0053.pdf,157514,14393344,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=157513 gt_size=157514 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0054.pdf,117304,14553088,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=117303 gt_size=117304 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0055.pdf,195804,14671872,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=195803 gt_size=195804 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0056.pdf,36956,14868480,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=36955 gt_size=36956 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0057.pdf,401479,14909440,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=401478 gt_size=401479 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0058.pdf,255298,15314944,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=255297 gt_size=255298 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0059.pdf,236491,15572992,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=236490 gt_size=236491 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0060.pdf,262055,15810560,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=262054 gt_size=262055 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0061.pdf,311808,16072704,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=311807 gt_size=311808 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0062.pdf,5728,16388096,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=5727 gt_size=5728 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0063.pdf,123519,16396288,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=123518 gt_size=123519 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0064.pdf,289355,16523264,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=289354 gt_size=289355 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0065.pdf,115231,16814080,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=115230 gt_size=115231 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0066.pdf,248880,16932864,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=248879 gt_size=248880 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0067.pdf,139501,17182720,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=139500 gt_size=139501 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0068.pdf,254065,17326080,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=254064 gt_size=254065 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0069.pdf,135806,17584128,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=135805 gt_size=135806 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0070.pdf,166936,17723392,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=166935 gt_size=166936 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0071.pdf,218577,17891328,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=218576 gt_size=218577 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0072.pdf,475916,18112512,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=475915 gt_size=475916 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0073.pdf,275795,18591744,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=275794 gt_size=275795 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0074.pdf,57511,18870272,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=57510 gt_size=57511 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0075.pdf,379510,18931712,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=379509 gt_size=379510 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0076.pdf,263333,19312640,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=263332 gt_size=263333 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0077.pdf,396336,19578880,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=396335 gt_size=396336 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0078.pdf,450417,19976192,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=450416 gt_size=450417 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0079.pdf,130078,20426752,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=130077 gt_size=130078 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0080.pdf,362620,20557824,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=362619 gt_size=362620 diff=-1 [TRUNCATION FIXABLE: 1 byte short]
-.pdf,100,pdf_0081.pdf,337502,20922368,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 337501 bytes)
-.pdf,100,pdf_0082.pdf,120086,21262336,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 120085 bytes)
-.pdf,100,pdf_0083.pdf,461057,21385216,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 461056 bytes)
-.pdf,100,pdf_0084.pdf,41594,21848064,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 41593 bytes)
-.pdf,100,pdf_0085.pdf,275543,21893120,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 275542 bytes)
-.pdf,100,pdf_0086.pdf,179489,22171648,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 179488 bytes)
-.pdf,100,pdf_0087.pdf,1379,22351872,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 1378 bytes)
-.pdf,100,pdf_0088.pdf,381822,22355968,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 381821 bytes)
-.pdf,100,pdf_0089.pdf,323333,22740992,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 323332 bytes)
-.pdf,100,pdf_0090.pdf,96973,23064576,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 96972 bytes)
-.pdf,100,pdf_0091.pdf,408048,23162880,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 408047 bytes)
-.pdf,100,pdf_0092.pdf,423371,23572480,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 423370 bytes)
-.pdf,100,pdf_0093.pdf,96414,23998464,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 96413 bytes)
-.pdf,100,pdf_0094.pdf,482261,24096768,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 482260 bytes)
-.pdf,100,pdf_0095.pdf,181417,24580096,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 181416 bytes)
-.pdf,100,pdf_0096.pdf,113860,24764416,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 113859 bytes)
-.pdf,100,pdf_0097.pdf,75647,24879104,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 75646 bytes)
-.pdf,100,pdf_0098.pdf,467123,24956928,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 467122 bytes)
-.pdf,100,pdf_0099.pdf,95362,25427968,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 95361 bytes)
-.pdf,100,pdf_0100.pdf,126616,25526272,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20758528 (overlap: 126615 bytes)
+.docx,100,docx_0041.docx,251640,11104256,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0042.docx,345660,11358208,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0043.docx,66344,11706368,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0044.docx,389197,11776000,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0045.docx,440204,12169216,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0046.docx,474013,12611584,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0047.docx,243969,13086720,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0048.docx,226255,13332480,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0049.docx,167767,13561856,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0050.docx,151907,13729792,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0051.docx,74395,13885440,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0052.docx,427764,13963264,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0053.docx,157514,14393344,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0054.docx,117304,14553088,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0055.docx,195804,14671872,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0056.docx,36956,14868480,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0057.docx,401479,14909440,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0058.docx,255298,15314944,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0059.docx,236491,15572992,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0060.docx,262055,15810560,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0061.docx,311808,16072704,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0062.docx,5728,16388096,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0063.docx,123519,16396288,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0064.docx,289355,16523264,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0065.docx,115231,16814080,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0066.docx,248880,16932864,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0067.docx,139501,17182720,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0068.docx,254065,17326080,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0069.docx,135806,17584128,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0070.docx,166936,17723392,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0071.docx,218577,17891328,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0072.docx,475916,18112512,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0073.docx,275795,18591744,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0074.docx,57511,18870272,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0075.docx,379510,18931712,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0076.docx,263333,19312640,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0077.docx,396336,19578880,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0078.docx,450417,19976192,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0079.docx,130078,20426752,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0080.docx,362620,20557824,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0081.docx,337502,20922368,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0082.docx,120086,21262336,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0083.docx,461057,21385216,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0084.docx,41594,21848064,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0085.docx,275543,21893120,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0086.docx,179489,22171648,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0087.docx,1379,22351872,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0088.docx,381822,22355968,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0089.docx,323333,22740992,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0090.docx,96973,23064576,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0091.docx,408048,23162880,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0092.docx,423371,23572480,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0093.docx,96414,23998464,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0094.docx,482261,24096768,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0095.docx,181417,24580096,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0096.docx,113860,24764416,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0097.docx,75647,24879104,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0098.docx,467123,24956928,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0099.docx,95362,25427968,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.docx,100,docx_0100.docx,126616,25526272,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0001.pdf,480668,184320,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0002.pdf,458352,667648,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0003.pdf,321715,1126400,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0004.pdf,306334,1449984,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0005.pdf,415176,1757184,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0006.pdf,184958,2174976,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0007.pdf,373575,2363392,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0008.pdf,410962,2740224,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0009.pdf,143064,3153920,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0010.pdf,475344,3297280,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0011.pdf,152499,3776512,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0012.pdf,383546,3932160,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0013.pdf,96837,4317184,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0014.pdf,435963,4415488,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,15,pdf_0015.pdf,312951,4853760,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0001.pdf,480668,200704,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0002.pdf,458352,684032,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0003.pdf,321715,1142784,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0004.pdf,306334,1466368,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0005.pdf,415176,1773568,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0006.pdf,184958,2191360,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0007.pdf,373575,2379776,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0008.pdf,410962,2756608,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0009.pdf,143064,3170304,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0010.pdf,475344,3313664,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0011.pdf,152499,3792896,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0012.pdf,383546,3948544,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0013.pdf,96837,4333568,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0014.pdf,435963,4431872,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0015.pdf,312951,4870144,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0016.pdf,100267,5185536,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0017.pdf,113277,5287936,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0018.pdf,305957,5402624,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0019.pdf,185068,5709824,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0020.pdf,178526,5898240,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0021.pdf,437432,6078464,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0022.pdf,213813,6516736,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0023.pdf,74082,6733824,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0024.pdf,133144,6811648,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0025.pdf,249941,6946816,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0026.pdf,313359,7200768,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0027.pdf,350272,7516160,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0028.pdf,447254,7868416,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0029.pdf,454130,8318976,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,30,pdf_0030.pdf,346402,8773632,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0001.pdf,480668,270336,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0002.pdf,458352,753664,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0003.pdf,321715,1212416,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0004.pdf,306334,1536000,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0005.pdf,415176,1843200,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0006.pdf,184958,2260992,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0007.pdf,373575,2449408,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0008.pdf,410962,2826240,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0009.pdf,143064,3239936,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0010.pdf,475344,3383296,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0011.pdf,152499,3862528,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0012.pdf,383546,4018176,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0013.pdf,96837,4403200,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0014.pdf,435963,4501504,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0015.pdf,312951,4939776,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0016.pdf,100267,5255168,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0017.pdf,113277,5357568,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0018.pdf,305957,5472256,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0019.pdf,185068,5779456,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0020.pdf,178526,5967872,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0021.pdf,437432,6148096,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0022.pdf,213813,6586368,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0023.pdf,74082,6803456,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0024.pdf,133144,6881280,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0025.pdf,249941,7016448,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0026.pdf,313359,7270400,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0027.pdf,350272,7585792,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0028.pdf,447254,7938048,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0029.pdf,454130,8388608,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0030.pdf,346402,8843264,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0031.pdf,210658,9191424,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0032.pdf,231873,9404416,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0033.pdf,12971,9637888,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0034.pdf,183035,9654272,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0035.pdf,345855,9838592,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0036.pdf,308091,10186752,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0037.pdf,168137,10498048,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0038.pdf,116593,10670080,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0039.pdf,26781,10788864,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0040.pdf,285663,10817536,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0041.pdf,251640,11104256,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0042.pdf,345660,11358208,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0043.pdf,66344,11706368,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0044.pdf,389197,11776000,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0045.pdf,440204,12169216,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0046.pdf,474013,12611584,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0047.pdf,243969,13086720,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0048.pdf,226255,13332480,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0049.pdf,167767,13561856,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0050.pdf,151907,13729792,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0051.pdf,74395,13885440,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0052.pdf,427764,13963264,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0053.pdf,157514,14393344,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0054.pdf,117304,14553088,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0055.pdf,195804,14671872,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0056.pdf,36956,14868480,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0057.pdf,401479,14909440,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0058.pdf,255298,15314944,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0059.pdf,236491,15572992,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0060.pdf,262055,15810560,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0061.pdf,311808,16072704,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0062.pdf,5728,16388096,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0063.pdf,123519,16396288,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0064.pdf,289355,16523264,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0065.pdf,115231,16814080,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0066.pdf,248880,16932864,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0067.pdf,139501,17182720,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0068.pdf,254065,17326080,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0069.pdf,135806,17584128,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0070.pdf,166936,17723392,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0071.pdf,218577,17891328,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0072.pdf,475916,18112512,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0073.pdf,275795,18591744,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0074.pdf,57511,18870272,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0075.pdf,379510,18931712,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0076.pdf,263333,19312640,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0077.pdf,396336,19578880,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0078.pdf,450417,19976192,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0079.pdf,130078,20426752,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0080.pdf,362620,20557824,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0081.pdf,337502,20922368,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0082.pdf,120086,21262336,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0083.pdf,461057,21385216,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0084.pdf,41594,21848064,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0085.pdf,275543,21893120,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0086.pdf,179489,22171648,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0087.pdf,1379,22351872,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0088.pdf,381822,22355968,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0089.pdf,323333,22740992,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0090.pdf,96973,23064576,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0091.pdf,408048,23162880,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0092.pdf,423371,23572480,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0093.pdf,96414,23998464,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0094.pdf,482261,24096768,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0095.pdf,181417,24580096,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0096.pdf,113860,24764416,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0097.pdf,75647,24879104,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0098.pdf,467123,24956928,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0099.pdf,95362,25427968,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.pdf,100,pdf_0100.pdf,126616,25526272,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .jpg,15,jpg_0001.jpg,928182,184320,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=63101 gt_size=928182 diff=-865081 [TRUNCATION: 865081 bytes short]
 .jpg,15,jpg_0002.jpg,1130223,1114112,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=206994 gt_size=1130223 diff=-923229 [TRUNCATION: 923229 bytes short]
-.jpg,15,jpg_0003.jpg,2615725,2244608,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1586688 (overlap: 1467 bytes)
-.jpg,15,jpg_0004.jpg,2492678,4861952,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1586688 (overlap: 96559 bytes)
-.jpg,15,jpg_0005.jpg,1958849,7356416,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1586688 (overlap: 159320 bytes)
-.jpg,15,jpg_0006.jpg,1521668,9318400,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1586688 (overlap: 87141 bytes)
-.jpg,15,jpg_0007.jpg,1231152,10842112,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1586688 (overlap: 24091 bytes)
-.jpg,15,jpg_0008.jpg,1555586,12075008,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1586688 (overlap: 120765 bytes)
-.jpg,15,jpg_0009.jpg,1186515,13631488,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1586688 (overlap: 73041 bytes)
-.jpg,15,jpg_0010.jpg,78858,14819328,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1586688 (overlap: 28102 bytes)
-.jpg,15,jpg_0011.jpg,1261992,14901248,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1586688 (overlap: 66856 bytes)
-.jpg,15,jpg_0012.jpg,2100790,16166912,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1586688 (overlap: 192273 bytes)
-.jpg,15,jpg_0013.jpg,816699,18268160,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1586688 (overlap: 29146 bytes)
-.jpg,15,jpg_0014.jpg,2341891,19087360,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1586688 (overlap: 138431 bytes)
-.jpg,15,jpg_0015.jpg,2545608,21430272,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1586688 (overlap: 33388 bytes)
+.jpg,15,jpg_0003.jpg,2615725,2244608,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=1467 gt_size=2615725 diff=-2614258 [TRUNCATION: 2614258 bytes short]
+.jpg,15,jpg_0004.jpg,2492678,4861952,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=96559 gt_size=2492678 diff=-2396119 [TRUNCATION: 2396119 bytes short]
+.jpg,15,jpg_0005.jpg,1958849,7356416,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=159320 gt_size=1958849 diff=-1799529 [TRUNCATION: 1799529 bytes short]
+.jpg,15,jpg_0006.jpg,1521668,9318400,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=87141 gt_size=1521668 diff=-1434527 [TRUNCATION: 1434527 bytes short]
+.jpg,15,jpg_0007.jpg,1231152,10842112,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=24091 gt_size=1231152 diff=-1207061 [TRUNCATION: 1207061 bytes short]
+.jpg,15,jpg_0008.jpg,1555586,12075008,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=120765 gt_size=1555586 diff=-1434821 [TRUNCATION: 1434821 bytes short]
+.jpg,15,jpg_0009.jpg,1186515,13631488,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=73041 gt_size=1186515 diff=-1113474 [TRUNCATION: 1113474 bytes short]
+.jpg,15,jpg_0010.jpg,78858,14819328,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=28102 gt_size=78858 diff=-50756 [TRUNCATION: 50756 bytes short]
+.jpg,15,jpg_0011.jpg,1261992,14901248,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=66856 gt_size=1261992 diff=-1195136 [TRUNCATION: 1195136 bytes short]
+.jpg,15,jpg_0012.jpg,2100790,16166912,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=192273 gt_size=2100790 diff=-1908517 [TRUNCATION: 1908517 bytes short]
+.jpg,15,jpg_0013.jpg,816699,18268160,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=29146 gt_size=816699 diff=-787553 [TRUNCATION: 787553 bytes short]
+.jpg,15,jpg_0014.jpg,2341891,19087360,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=138431 gt_size=2341891 diff=-2203460 [TRUNCATION: 2203460 bytes short]
+.jpg,15,jpg_0015.jpg,2545608,21430272,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=33388 gt_size=2545608 diff=-2512220 [TRUNCATION: 2512220 bytes short]
 .jpg,30,jpg_0001.jpg,928182,204800,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=63101 gt_size=928182 diff=-865081 [TRUNCATION: 865081 bytes short]
 .jpg,30,jpg_0002.jpg,1130223,1134592,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=206994 gt_size=1130223 diff=-923229 [TRUNCATION: 923229 bytes short]
-.jpg,30,jpg_0003.jpg,2615725,2265088,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 1467 bytes)
-.jpg,30,jpg_0004.jpg,2492678,4882432,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 96559 bytes)
-.jpg,30,jpg_0005.jpg,1958849,7376896,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 159320 bytes)
-.jpg,30,jpg_0006.jpg,1521668,9338880,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 87141 bytes)
-.jpg,30,jpg_0007.jpg,1231152,10862592,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 24091 bytes)
-.jpg,30,jpg_0008.jpg,1555586,12095488,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 120765 bytes)
-.jpg,30,jpg_0009.jpg,1186515,13651968,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 73041 bytes)
-.jpg,30,jpg_0010.jpg,78858,14839808,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 28102 bytes)
-.jpg,30,jpg_0011.jpg,1261992,14921728,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 66856 bytes)
-.jpg,30,jpg_0012.jpg,2100790,16187392,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 192273 bytes)
-.jpg,30,jpg_0013.jpg,816699,18288640,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 29146 bytes)
-.jpg,30,jpg_0014.jpg,2341891,19107840,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 138431 bytes)
-.jpg,30,jpg_0015.jpg,2545608,21450752,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 33388 bytes)
-.jpg,30,jpg_0016.jpg,844140,23998464,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 20514 bytes)
-.jpg,30,jpg_0017.jpg,948220,24846336,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 11159 bytes)
-.jpg,30,jpg_0018.jpg,2489663,25796608,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 28442 bytes)
-.jpg,30,jpg_0019.jpg,1522547,28286976,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 31231 bytes)
-.jpg,30,jpg_0020.jpg,1470213,29810688,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 80175 bytes)
-.jpg,30,jpg_0021.jpg,2550486,31281152,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 2420 bytes)
-.jpg,30,jpg_0022.jpg,1752510,33832960,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 112540 bytes)
-.jpg,30,jpg_0023.jpg,634656,35586048,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 323426 bytes)
-.jpg,30,jpg_0024.jpg,1107157,36220928,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 168311 bytes)
-.jpg,30,jpg_0025.jpg,2041528,37330944,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 73498 bytes)
-.jpg,30,jpg_0026.jpg,2548873,39374848,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 34363 bytes)
-.jpg,30,jpg_0027.jpg,2844183,41926656,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 43760 bytes)
-.jpg,30,jpg_0028.jpg,443498,44773376,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 4910 bytes)
-.jpg,30,jpg_0029.jpg,2521944,45219840,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 12156 bytes)
-.jpg,30,jpg_0030.jpg,2813223,47742976,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 1607168 (overlap: 1428 bytes)
+.jpg,30,jpg_0003.jpg,2615725,2265088,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=1467 gt_size=2615725 diff=-2614258 [TRUNCATION: 2614258 bytes short]
+.jpg,30,jpg_0004.jpg,2492678,4882432,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=96559 gt_size=2492678 diff=-2396119 [TRUNCATION: 2396119 bytes short]
+.jpg,30,jpg_0005.jpg,1958849,7376896,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=159320 gt_size=1958849 diff=-1799529 [TRUNCATION: 1799529 bytes short]
+.jpg,30,jpg_0006.jpg,1521668,9338880,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=87141 gt_size=1521668 diff=-1434527 [TRUNCATION: 1434527 bytes short]
+.jpg,30,jpg_0007.jpg,1231152,10862592,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=24091 gt_size=1231152 diff=-1207061 [TRUNCATION: 1207061 bytes short]
+.jpg,30,jpg_0008.jpg,1555586,12095488,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=120765 gt_size=1555586 diff=-1434821 [TRUNCATION: 1434821 bytes short]
+.jpg,30,jpg_0009.jpg,1186515,13651968,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=73041 gt_size=1186515 diff=-1113474 [TRUNCATION: 1113474 bytes short]
+.jpg,30,jpg_0010.jpg,78858,14839808,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=28102 gt_size=78858 diff=-50756 [TRUNCATION: 50756 bytes short]
+.jpg,30,jpg_0011.jpg,1261992,14921728,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=66856 gt_size=1261992 diff=-1195136 [TRUNCATION: 1195136 bytes short]
+.jpg,30,jpg_0012.jpg,2100790,16187392,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=192273 gt_size=2100790 diff=-1908517 [TRUNCATION: 1908517 bytes short]
+.jpg,30,jpg_0013.jpg,816699,18288640,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=29146 gt_size=816699 diff=-787553 [TRUNCATION: 787553 bytes short]
+.jpg,30,jpg_0014.jpg,2341891,19107840,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=138431 gt_size=2341891 diff=-2203460 [TRUNCATION: 2203460 bytes short]
+.jpg,30,jpg_0015.jpg,2545608,21450752,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=33388 gt_size=2545608 diff=-2512220 [TRUNCATION: 2512220 bytes short]
+.jpg,30,jpg_0016.jpg,844140,23998464,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=20514 gt_size=844140 diff=-823626 [TRUNCATION: 823626 bytes short]
+.jpg,30,jpg_0017.jpg,948220,24846336,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=11159 gt_size=948220 diff=-937061 [TRUNCATION: 937061 bytes short]
+.jpg,30,jpg_0018.jpg,2489663,25796608,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=28442 gt_size=2489663 diff=-2461221 [TRUNCATION: 2461221 bytes short]
+.jpg,30,jpg_0019.jpg,1522547,28286976,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=31231 gt_size=1522547 diff=-1491316 [TRUNCATION: 1491316 bytes short]
+.jpg,30,jpg_0020.jpg,1470213,29810688,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=80175 gt_size=1470213 diff=-1390038 [TRUNCATION: 1390038 bytes short]
+.jpg,30,jpg_0021.jpg,2550486,31281152,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=2420 gt_size=2550486 diff=-2548066 [TRUNCATION: 2548066 bytes short]
+.jpg,30,jpg_0022.jpg,1752510,33832960,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=112540 gt_size=1752510 diff=-1639970 [TRUNCATION: 1639970 bytes short]
+.jpg,30,jpg_0023.jpg,634656,35586048,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=323426 gt_size=634656 diff=-311230 [TRUNCATION: 311230 bytes short]
+.jpg,30,jpg_0024.jpg,1107157,36220928,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=168311 gt_size=1107157 diff=-938846 [TRUNCATION: 938846 bytes short]
+.jpg,30,jpg_0025.jpg,2041528,37330944,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=73498 gt_size=2041528 diff=-1968030 [TRUNCATION: 1968030 bytes short]
+.jpg,30,jpg_0026.jpg,2548873,39374848,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=34363 gt_size=2548873 diff=-2514510 [TRUNCATION: 2514510 bytes short]
+.jpg,30,jpg_0027.jpg,2844183,41926656,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=43760 gt_size=2844183 diff=-2800423 [TRUNCATION: 2800423 bytes short]
+.jpg,30,jpg_0028.jpg,443498,44773376,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=4910 gt_size=443498 diff=-438588 [TRUNCATION: 438588 bytes short]
+.jpg,30,jpg_0029.jpg,2521944,45219840,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=12156 gt_size=2521944 diff=-2509788 [TRUNCATION: 2509788 bytes short]
+.jpg,30,jpg_0030.jpg,2813223,47742976,PASS,PASS,PASS,FAIL,STAGE_4_JUDGE,SHA-256 mismatch: carved_size=1428 gt_size=2813223 diff=-2811795 [TRUNCATION: 2811795 bytes short]
 .png,15,png_0001.png,928182,184320,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .png,15,png_0002.png,1130223,1114112,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .png,15,png_0003.png,2615725,2244608,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
@@ -493,7 +493,7 @@ format,n_files,gt_name,gt_size,gt_start_offset,stage_1_scan,stage_2_delimitation
 .png,15,png_0012.png,2100790,16166912,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .png,15,png_0013.png,816699,18268160,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .png,15,png_0014.png,2341891,19087360,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
-.png,15,png_0015.png,2545608,21430272,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20839424 (overlap: 2545608 bytes)
+.png,15,png_0015.png,2545608,21430272,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .png,30,png_0001.png,928182,204800,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .png,30,png_0002.png,1130223,1134592,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .png,30,png_0003.png,2615725,2265088,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
@@ -508,19 +508,19 @@ format,n_files,gt_name,gt_size,gt_start_offset,stage_1_scan,stage_2_delimitation
 .png,30,png_0012.png,2100790,16187392,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .png,30,png_0013.png,816699,18288640,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
 .png,30,png_0014.png,2341891,19107840,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
-.png,30,png_0015.png,2545608,21450752,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 2545608 bytes)
-.png,30,png_0016.png,844140,23998464,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 844140 bytes)
-.png,30,png_0017.png,948220,24846336,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 948220 bytes)
-.png,30,png_0018.png,2489663,25796608,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 2489663 bytes)
-.png,30,png_0019.png,1522547,28286976,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 1522547 bytes)
-.png,30,png_0020.png,1470213,29810688,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 1470213 bytes)
-.png,30,png_0021.png,2550486,31281152,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 2550486 bytes)
-.png,30,png_0022.png,1752510,33832960,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 1752510 bytes)
-.png,30,png_0023.png,634656,35586048,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 634656 bytes)
-.png,30,png_0024.png,1107157,36220928,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 1107157 bytes)
-.png,30,png_0025.png,2041528,37330944,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 2041528 bytes)
-.png,30,png_0026.png,2548873,39374848,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 2548873 bytes)
-.png,30,png_0027.png,2844183,41926656,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 2844183 bytes)
-.png,30,png_0028.png,443498,44773376,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 443498 bytes)
-.png,30,png_0029.png,2521944,45219840,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 2521944 bytes)
-.png,30,png_0030.png,2813223,47742976,PASS,PASS,FAIL,N/A,STAGE_3_DEDUP,Eliminated by overlap with BMP at offset 20859904 (overlap: 2813223 bytes)
+.png,30,png_0015.png,2545608,21450752,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0016.png,844140,23998464,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0017.png,948220,24846336,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0018.png,2489663,25796608,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0019.png,1522547,28286976,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0020.png,1470213,29810688,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0021.png,2550486,31281152,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0022.png,1752510,33832960,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0023.png,634656,35586048,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0024.png,1107157,36220928,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0025.png,2041528,37330944,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0026.png,2548873,39374848,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0027.png,2844183,41926656,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0028.png,443498,44773376,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0029.png,2521944,45219840,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
+.png,30,png_0030.png,2813223,47742976,PASS,PASS,PASS,PASS,NONE,File fully recovered through all stages
