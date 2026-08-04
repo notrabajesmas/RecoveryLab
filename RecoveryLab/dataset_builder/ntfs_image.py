@@ -27,6 +27,7 @@ References:
 import struct
 import hashlib
 import os
+import time as _time
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple, Dict
@@ -64,6 +65,9 @@ MFT_RECORD_DIRECTORY = 0x0002
 ATTR_COMPRESSED = 0x0001
 ATTR_ENCRYPTED  = 0x4000
 ATTR_SPARSE     = 0x8000
+
+# NTFS Epoch for timestamp conversion (100ns intervals between 1601-01-01 and 1970-01-01)
+NTFS_EPOCH = 116444736000000000
 
 # NTFS File Name Flags
 FILE_NAME_NTFS   = 0x01  # POSIX
@@ -151,6 +155,13 @@ class NTFSImageBuilder:
         self._image: bytearray = bytearray(volume_size)
         self._allocated_clusters: set = set()
 
+        # $UsnJrnl (USN Change Journal) state
+        self._usnjrnl_record_number: int = -1
+        self._usnjrnl_j_data: bytes = b""
+        self._usnjrnl_max_data: bytes = b""
+        self._usnjrnl_j_runs: List[DataRun] = []
+        self._next_available_cluster: int = 0
+
     def add_file(self, name: str, data: bytes,
                  parent_record: int = 5,
                  created: float = 0.0,
@@ -195,6 +206,10 @@ class NTFSImageBuilder:
         # 3. Allocate clusters for user data
         self._allocate_user_data()
 
+        # 3.5. Build USN Change Journal data
+        self._build_usn_records()
+        self._allocate_usnjrnl_data()
+
         # 4. Write MFT records
         self._write_mft()
 
@@ -212,6 +227,9 @@ class NTFSImageBuilder:
 
         # 9. Write user file data
         self._write_user_data()
+
+        # 9.5. Write $UsnJrnl $J stream data
+        self._write_usnjrnl_data()
 
         # 10. Write bootstrap code
         self._write_bootstrap()
@@ -231,7 +249,7 @@ class NTFSImageBuilder:
 
         # We need system records (0-11) + user files + user directories
         total_user_items = len(self._files) + len(self._directories)
-        total_records = 12 + total_user_items   # 12 system + user items
+        total_records = 12 + total_user_items + 1  # 12 system + user items + $UsnJrnl
         mft_clusters = (total_records * MFT_RECORD_SIZE + cs - 1) // cs
 
         # MFT Mirror: first 4 MFT records (4 * 1024 = 4096 = 1 cluster)
@@ -265,6 +283,9 @@ class NTFSImageBuilder:
         for f in self._files:
             f.record_number = record_num
             record_num += 1
+
+        # $UsnJrnl gets the record after all user items
+        self._usnjrnl_record_number = record_num
 
         self._layout = NTFSLayout(
             volume_size=self.volume_size,
@@ -718,8 +739,11 @@ class NTFSImageBuilder:
         ]
         mft_rec = self._make_mft_record(0, True, False, mft_attrs)
 
+        # $UsnJrnl MFT record
+        usnjrnl_rec = self._build_usnjrnl_entry()
+
         # Write all records
-        all_records = [mft_rec] + system_records[1:] + dir_records + file_records
+        all_records = [mft_rec] + system_records[1:] + dir_records + file_records + [usnjrnl_rec]
         for i, rec in enumerate(all_records):
             offset = mft_offset + i * MFT_RECORD_SIZE
             self._image[offset:offset+MFT_RECORD_SIZE] = rec
@@ -965,6 +989,7 @@ class NTFSImageBuilder:
                 f.cluster_runs = [DataRun(length=clusters_needed, offset=start)]
                 for c in range(start, start + clusters_needed):
                     self._allocated_clusters.add(c)
+            self._next_available_cluster = next_cluster
             return
 
         # Second pass: decide which files to fragment
@@ -1026,6 +1051,8 @@ class NTFSImageBuilder:
                     self._allocated_clusters.add(c)
                 next_cluster += clusters_needed
 
+        self._next_available_cluster = next_cluster
+
     def _write_user_data(self):
         """Write actual file data to the image."""
         for f in self._files:
@@ -1046,6 +1073,199 @@ class NTFSImageBuilder:
                     self._image[offset:offset + run_data_size] = chunk[:run_data_size]
                     data_offset += run_data_size
             # Resident data is written inside the MFT record itself
+
+    # ─── USN Change Journal ($UsnJrnl) ────────────────────────────────────
+
+    def _build_usn_records(self):
+        """
+        Build USN_RECORD_V2 entries for each user file and directory.
+
+        Each record documents the creation of a file/directory in the
+        USN Change Journal ($J stream of $UsnJrnl).
+
+        USN_RECORD_V2 layout (60 bytes fixed + variable filename):
+          0x00: RecordLength     (uint32)
+          0x04: MajorVersion     (uint16) = 2
+          0x06: MinorVersion     (uint16) = 0
+          0x08: FileReferenceNumber  (uint64)
+          0x10: ParentFileReferenceNumber (uint64)
+          0x18: Usn              (int64) = byte offset in journal
+          0x20: TimeStamp        (FILETIME)
+          0x28: Reason           (uint32) = 0x80000100 (FILE_CREATE + CLOSE)
+          0x2C: SourceInfo       (uint32) = 0
+          0x30: SecurityId       (uint32) = 0
+          0x34: FileAttributes   (uint32)
+          0x38: FileNameLength   (uint16) = len(filename_bytes)
+          0x3A: FileNameOffset   (uint16) = 0x3C
+          0x3C: FileName         (wchar[], UTF-16LE)
+        """
+        journal_data = bytearray()
+        usn_offset = 0
+
+        # Current time as NTFS timestamp
+        now = _time.time()
+
+        # Generate a USN_RECORD_V2 for each user file and directory
+        all_items = self._files + self._directories
+        for item in all_items:
+            name_bytes = item.name.encode('utf-16-le')
+            record_length = 60 + len(name_bytes)
+            # Pad to 8-byte alignment
+            record_length = ((record_length + 7) // 8) * 8
+
+            rec = bytearray(record_length)
+
+            struct.pack_into('<I', rec, 0x00, record_length)        # RecordLength
+            struct.pack_into('<H', rec, 0x04, 2)                    # MajorVersion
+            struct.pack_into('<H', rec, 0x06, 0)                    # MinorVersion
+            struct.pack_into('<Q', rec, 0x08, item.record_number & 0xFFFFFFFFFFFFFFFF)   # FileReferenceNumber
+            parent_ref = item.parent_record if item.parent_record >= 0 else 5  # Default to root
+            struct.pack_into('<Q', rec, 0x10, parent_ref & 0xFFFFFFFFFFFFFFFF)   # ParentFileReferenceNumber
+            struct.pack_into('<q', rec, 0x18, usn_offset)           # Usn (byte offset)
+
+            # Timestamp: use item's creation time, or current time if unset
+            item_ts = item.created if item.created > 0 else now
+            ntfs_ts = int(item_ts * 10_000_000) + NTFS_EPOCH
+            struct.pack_into('<Q', rec, 0x20, ntfs_ts)              # TimeStamp
+
+            struct.pack_into('<I', rec, 0x28, 0x80000100)           # Reason (FILE_CREATE + CLOSE)
+            struct.pack_into('<I', rec, 0x2C, 0)                    # SourceInfo
+            struct.pack_into('<I', rec, 0x30, 0)                    # SecurityId
+
+            file_attrs = 0x10 if item.is_directory else 0x20        # Directory or Archive
+            struct.pack_into('<I', rec, 0x34, file_attrs)           # FileAttributes
+            struct.pack_into('<H', rec, 0x38, len(name_bytes))      # FileNameLength (bytes)
+            struct.pack_into('<H', rec, 0x3A, 0x3C)                 # FileNameOffset
+            rec[0x3C:0x3C + len(name_bytes)] = name_bytes           # FileName (UTF-16LE)
+
+            journal_data.extend(rec)
+            usn_offset += record_length
+
+        self._usnjrnl_j_data = bytes(journal_data)
+
+        # Build $Max data (USN_JOURNAL_DATA, 48 bytes)
+        #   0x00: UsnJournalID   (uint64)
+        #   0x08: FirstUsn       (uint64)
+        #   0x10: NextUsn        (uint64)
+        #   0x18: LowestValidUsn (uint64)
+        #   0x20: MinUsn         (uint64)
+        #   0x28: MaxUsn         (uint64)
+        max_data = bytearray(48)
+        journal_id = 0x1234567890ABCDEF  # Fixed unique journal ID
+        struct.pack_into('<Q', max_data, 0x00, journal_id)     # UsnJournalID
+        struct.pack_into('<Q', max_data, 0x08, 0)              # FirstUsn
+        struct.pack_into('<Q', max_data, 0x10, usn_offset)     # NextUsn
+        struct.pack_into('<Q', max_data, 0x18, 0)              # LowestValidUsn
+        struct.pack_into('<Q', max_data, 0x20, 0)              # MinUsn
+        struct.pack_into('<Q', max_data, 0x28, usn_offset)     # MaxUsn
+
+        self._usnjrnl_max_data = bytes(max_data)
+
+    def _allocate_usnjrnl_data(self):
+        """Allocate clusters for the $UsnJrnl $J stream data."""
+        if len(self._usnjrnl_j_data) == 0:
+            self._usnjrnl_j_runs = []
+            return
+
+        next_cluster = self._next_available_cluster
+        clusters_needed = (len(self._usnjrnl_j_data) + self.cluster_size - 1) // self.cluster_size
+
+        if next_cluster + clusters_needed > self.total_clusters:
+            # Not enough space — skip UsnJrnl $J data (keep as resident fallback)
+            self._usnjrnl_j_runs = []
+            return
+
+        self._usnjrnl_j_runs = [DataRun(length=clusters_needed, offset=next_cluster)]
+        for c in range(next_cluster, next_cluster + clusters_needed):
+            self._allocated_clusters.add(c)
+
+        self._next_available_cluster = next_cluster + clusters_needed
+
+    def _write_usnjrnl_data(self):
+        """Write $UsnJrnl $J stream data to the image."""
+        if not self._usnjrnl_j_runs or len(self._usnjrnl_j_data) == 0:
+            return
+
+        data_offset = 0
+        for run in self._usnjrnl_j_runs:
+            offset = run.offset * self.cluster_size
+            run_size = run.length * self.cluster_size
+
+            chunk = self._usnjrnl_j_data[data_offset:data_offset + run_size]
+            # Pad to cluster boundary if needed
+            if len(chunk) < run_size:
+                chunk = chunk + b'\x00' * (run_size - len(chunk))
+
+            self._image[offset:offset + run_size] = chunk[:run_size]
+            data_offset += run_size
+
+    def _make_attr_data_resident_named(self, data: bytes, name: str,
+                                        attr_id: int = 3) -> bytes:
+        """Build a resident $DATA attribute with a name (e.g., $Max for $UsnJrnl)."""
+        name_bytes = name.encode('utf-16-le')
+        name_chars = len(name)
+
+        # Resident attribute header with name:
+        #   24 bytes header + name (UTF-16LE) + data
+        name_offset = 24  # Name starts right after standard resident header
+        data_offset_pos = name_offset + len(name_bytes)
+        total_size = data_offset_pos + len(data)
+        total_size = ((total_size + 7) // 8) * 8  # 8-byte alignment
+
+        attr = bytearray(total_size)
+
+        struct.pack_into('<I', attr, 0, AttrType.DATA)
+        struct.pack_into('<I', attr, 4, total_size)
+        attr[8] = 0                                   # Non-resident = 0
+        attr[9] = name_chars                          # Name length in chars
+        struct.pack_into('<H', attr, 10, name_offset) # Offset to name
+        struct.pack_into('<H', attr, 12, 0)           # Flags
+        struct.pack_into('<H', attr, 14, attr_id)     # Attribute ID
+        struct.pack_into('<I', attr, 16, len(data))    # Data length
+        struct.pack_into('<H', attr, 20, data_offset_pos)  # Offset to data
+        attr[22] = 0                                  # Indexed flag
+        attr[23] = 0                                  # Padding
+
+        # Name (UTF-16LE)
+        attr[name_offset:name_offset + len(name_bytes)] = name_bytes
+
+        # Data
+        attr[data_offset_pos:data_offset_pos + len(data)] = data
+
+        return bytes(attr)
+
+    def _build_usnjrnl_entry(self) -> bytes:
+        """Build the MFT record for $UsnJrnl (USN Change Journal).
+
+        $UsnJrnl is entry 11+$Extend's children, placed after all user
+        file records.  It contains:
+          - $STANDARD_INFORMATION
+          - $FILE_NAME (name="$UsnJrnl", parent=$Extend entry 11)
+          - Unnamed $DATA ($J stream) — the change journal
+          - Named $DATA "$Max"       — USN_JOURNAL_DATA (48 bytes)
+        """
+        attrs = [
+            self._make_attr_standard_information(),
+            self._make_attr_file_name("$UsnJrnl", 11, False, 0, 0, 0),
+        ]
+
+        # Unnamed $DATA attribute ($J stream)
+        if self._usnjrnl_j_runs:
+            # Non-resident: journal data allocated on disk
+            j_attr = self._make_attr_data_nonresident(
+                self._usnjrnl_j_runs, len(self._usnjrnl_j_data))
+        else:
+            # Resident fallback for empty or small journal
+            j_attr = self._make_attr_data_resident(self._usnjrnl_j_data)
+        attrs.append(j_attr)
+
+        # Named $DATA attribute "$Max" — resident (48 bytes of USN_JOURNAL_DATA)
+        max_attr = self._make_attr_data_resident_named(
+            self._usnjrnl_max_data, "$Max", attr_id=4)
+        attrs.append(max_attr)
+
+        return self._make_mft_record(
+            self._usnjrnl_record_number, True, False, attrs)
 
     # ─── Bootstrap Code ───────────────────────────────────────────────────
 
@@ -1129,6 +1349,16 @@ class NTFSImageBuilder:
                 "start_cluster": L.logfile_start_cluster,
                 "clusters": list(range(L.logfile_start_cluster,
                                        L.logfile_start_cluster + L.logfile_clusters)),
+            },
+            "usnjrnl": {
+                "record_number": self._usnjrnl_record_number,
+                "parent_record": 11,  # Child of $Extend
+                "name": "$UsnJrnl",
+                "j_size": len(self._usnjrnl_j_data),
+                "max_size": len(self._usnjrnl_max_data),
+                "j_clusters": [c for run in self._usnjrnl_j_runs
+                               for c in range(run.offset, run.offset + run.length)],
+                "record_count": len(self._files) + len(self._directories),
             },
             "data_area_start": L.data_start_cluster,
         }

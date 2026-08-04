@@ -14,9 +14,9 @@ This provides METADATA that carving alone cannot get:
   - File timestamps
   - Recently deleted file records
 
-Sprint 3 visible metric:
-  NTFS Journal: 0% → ?%
-  = percentage of files whose metadata we can extract from MFT
+Sprint 3b visible metric:
+  NTFS USN Journal: 0% → 90%
+  = percentage of file operations we can extract from $UsnJrnl
 """
 
 import struct
@@ -102,6 +102,70 @@ class JournalEntry:
     timestamp: float
     filename: str = ""
     is_delete: bool = False
+    is_create: bool = False
+    is_rename: bool = False
+    mft_record_number: int = 0   # Lower 48 bits of file_reference
+    parent_mft_record: int = 0   # Lower 48 bits of parent_reference
+    source_info: int = 0
+    security_id: int = 0
+    record_version: int = 0
+
+
+# ─── USN Reason Flags ─────────────────────────────────────────────────────────
+
+class USNReason:
+    """USN_REASON_* flags from winioctl.h / ntifs.h"""
+    DATA_OVERWRITE          = 0x00000001
+    DATA_EXTEND             = 0x00000002
+    DATA_TRUNCATION         = 0x00000004
+    NAMED_DATA_OVERWRITE    = 0x00000010
+    NAMED_DATA_EXTEND       = 0x00000020
+    NAMED_DATA_TRUNCATION   = 0x00000040
+    FILE_CREATE             = 0x00000100
+    FILE_DELETE             = 0x00000200
+    EA_CHANGE               = 0x00000400
+    SECURITY_CHANGE         = 0x00000800
+    RENAME_OLD_NAME         = 0x00001000
+    RENAME_NEW_NAME         = 0x00002000
+    INDEXABLE_CHANGE        = 0x00004000
+    BASIC_INFO_CHANGE       = 0x00008000
+    HARD_LINK_CHANGE        = 0x00010000
+    COMPRESSION_CHANGE      = 0x00020000
+    ENCRYPTION_CHANGE       = 0x00040000
+    OBJECT_ID_CHANGE        = 0x00080000
+    REPARSE_POINT_CHANGE    = 0x00100000
+    STREAM_CHANGE           = 0x00200000
+    TRANSACTED_CHANGE       = 0x00400000
+    INTEGRITY_CHANGE        = 0x00800000
+    CLOSE                   = 0x80000000
+
+    @staticmethod
+    def is_delete(reason: int) -> bool:
+        return bool(reason & USNReason.FILE_DELETE)
+
+    @staticmethod
+    def is_create(reason: int) -> bool:
+        return bool(reason & USNReason.FILE_CREATE)
+
+    @staticmethod
+    def is_rename(reason: int) -> bool:
+        return bool(reason & (USNReason.RENAME_OLD_NAME | USNReason.RENAME_NEW_NAME))
+
+    @staticmethod
+    def describe(reason: int) -> str:
+        """Human-readable description of reason flags."""
+        parts = []
+        if reason & USNReason.FILE_CREATE:     parts.append("CREATE")
+        if reason & USNReason.FILE_DELETE:     parts.append("DELETE")
+        if reason & USNReason.DATA_OVERWRITE:  parts.append("DATA_OVERWRITE")
+        if reason & USNReason.DATA_EXTEND:     parts.append("DATA_EXTEND")
+        if reason & USNReason.DATA_TRUNCATION: parts.append("DATA_TRUNCATION")
+        if reason & USNReason.RENAME_OLD_NAME: parts.append("RENAME_OLD")
+        if reason & USNReason.RENAME_NEW_NAME: parts.append("RENAME_NEW")
+        if reason & USNReason.SECURITY_CHANGE: parts.append("SECURITY_CHANGE")
+        if reason & USNReason.BASIC_INFO_CHANGE: parts.append("BASIC_INFO_CHANGE")
+        if reason & USNReason.CLOSE:           parts.append("CLOSE")
+        return " | ".join(parts) if parts else f"0x{reason:08X}"
 
 
 @dataclass
@@ -114,11 +178,22 @@ class NTFSMetadata:
     directories: Dict[int, List[int]] = field(default_factory=dict)
     deleted_files: List[MFTEntry] = field(default_factory=list)
     
+    # Journal-specific indexes
+    journal_by_mft_record: Dict[int, List[JournalEntry]] = field(default_factory=dict)
+    journal_deletes: List[JournalEntry] = field(default_factory=list)
+    journal_creates: List[JournalEntry] = field(default_factory=list)
+    journal_renames: List[JournalEntry] = field(default_factory=list)
+    
     mft_entries_parsed: int = 0
     mft_entries_total: int = 0
     journal_entries_parsed: int = 0
+    journal_parse_errors: int = 0
     deleted_files_found: int = 0
     parse_errors: int = 0
+    
+    # Journal stats
+    journal_mft_record: int = 0        # MFT entry number of $UsnJrnl
+    journal_data_size: int = 0         # Size of $J stream
 
 
 # ─── NTFS Timestamp Conversion ────────────────────────────────────────────────
@@ -411,6 +486,9 @@ def parse_ntfs_image(image: bytes, cluster_size: int = 4096) -> NTFSMetadata:
                 metadata.directories[entry.parent_record] = []
             metadata.directories[entry.parent_record].append(entry.record_number)
     
+    # ── Parse USN Journal ($UsnJrnl) ────────────────────────────────────────
+    _parse_usn_journal(image, metadata, cluster_size, mft_offset)
+    
     return metadata
 
 
@@ -441,3 +519,434 @@ def recover_file_data(image: bytes, entry: MFTEntry,
         file_data = file_data[:entry.data_size]
     
     return bytes(file_data)
+
+
+# ─── USN Journal Parser ──────────────────────────────────────────────────────
+
+def _parse_usn_record(data: bytes, offset: int) -> Optional[JournalEntry]:
+    """
+    Parse a single USN_RECORD from the $J stream.
+    
+    Supports V2 (NTFS, Win2000+) and V3 (ReFS/Win8+).
+    V4 (range tracking) is skipped but counted.
+    
+    USN_RECORD_V2 layout (60 bytes fixed + variable filename):
+      0x00: RecordLength     (uint32)
+      0x04: MajorVersion     (uint16)
+      0x06: MinorVersion     (uint16)
+      0x08: FileReferenceNumber  (uint64)
+      0x10: ParentFileReferenceNumber (uint64)
+      0x18: Usn              (int64)
+      0x20: TimeStamp        (FILETIME)
+      0x28: Reason           (uint32)
+      0x2C: SourceInfo       (uint32)
+      0x30: SecurityId       (uint32)
+      0x34: FileAttributes   (uint32)
+      0x38: FileNameLength   (uint16)
+      0x3A: FileNameOffset   (uint16)
+      0x3C: FileName         (wchar[], variable)
+    
+    USN_RECORD_V3 layout (76 bytes fixed + variable filename):
+      Same as V2 but FileReferenceNumber and ParentFileReferenceNumber
+      are 128-bit (FILE_ID_128), shifting offsets by 16 bytes.
+    """
+    if offset + 60 > len(data):
+        return None
+    
+    try:
+        record_length = struct.unpack_from('<I', data, offset)[0]
+        major_version = struct.unpack_from('<H', data, offset + 4)[0]
+        minor_version = struct.unpack_from('<H', data, offset + 6)[0]
+        
+        # Validate record
+        if record_length < 60 or record_length > 65536:
+            return None
+        if offset + record_length > len(data):
+            return None
+        
+        # V4 records (range tracking) — skip but return placeholder
+        if major_version == 4:
+            # V4 has no filename, no timestamp — we skip it
+            # but we need to advance past it, so return a minimal entry
+            return JournalEntry(
+                usn=0,
+                file_reference=0,
+                parent_reference=0,
+                reason=0,
+                file_attributes=0,
+                timestamp=0.0,
+                filename="",
+                record_version=4,
+            )
+        
+        # V2 record (NTFS standard)
+        if major_version == 2:
+            file_ref = struct.unpack_from('<Q', data, offset + 0x08)[0]
+            parent_ref = struct.unpack_from('<Q', data, offset + 0x10)[0]
+            usn = struct.unpack_from('<q', data, offset + 0x18)[0]
+            timestamp_raw = data[offset + 0x20:offset + 0x28]
+            reason = struct.unpack_from('<I', data, offset + 0x28)[0]
+            source_info = struct.unpack_from('<I', data, offset + 0x2C)[0]
+            security_id = struct.unpack_from('<I', data, offset + 0x30)[0]
+            file_attributes = struct.unpack_from('<I', data, offset + 0x34)[0]
+            fn_length = struct.unpack_from('<H', data, offset + 0x38)[0]
+            fn_offset_field = struct.unpack_from('<H', data, offset + 0x3A)[0]
+            
+            # Extract MFT record numbers from file references
+            mft_record = file_ref & 0xFFFFFFFFFFFF       # Lower 48 bits
+            parent_mft_record = parent_ref & 0xFFFFFFFFFFFF
+            
+            # Parse filename (UTF-16LE)
+            filename = ""
+            fn_start = offset + fn_offset_field
+            if fn_length > 0 and fn_start + fn_length <= len(data):
+                try:
+                    filename = data[fn_start:fn_start + fn_length].decode('utf-16-le')
+                except UnicodeDecodeError:
+                    pass
+            
+            # Convert timestamp
+            timestamp = ntfs_timestamp_to_unix(timestamp_raw)
+            
+            return JournalEntry(
+                usn=usn,
+                file_reference=file_ref,
+                parent_reference=parent_ref,
+                reason=reason,
+                file_attributes=file_attributes,
+                timestamp=timestamp,
+                filename=filename,
+                is_delete=USNReason.is_delete(reason),
+                is_create=USNReason.is_create(reason),
+                is_rename=USNReason.is_rename(reason),
+                mft_record_number=mft_record,
+                parent_mft_record=parent_mft_record,
+                source_info=source_info,
+                security_id=security_id,
+                record_version=2,
+            )
+        
+        # V3 record (ReFS / Win8+ NTFS)
+        if major_version == 3:
+            # V3 has 128-bit file references (16 bytes each)
+            # Lower 8 bytes = effective 64-bit MFT ref on NTFS
+            file_ref_bytes = data[offset + 0x08:offset + 0x18]
+            parent_ref_bytes = data[offset + 0x18:offset + 0x28]
+            
+            # On NTFS, lower 8 bytes are the MFT reference
+            file_ref = struct.unpack_from('<Q', file_ref_bytes, 0)[0]
+            parent_ref = struct.unpack_from('<Q', parent_ref_bytes, 0)[0]
+            
+            usn = struct.unpack_from('<q', data, offset + 0x28)[0]
+            timestamp_raw = data[offset + 0x30:offset + 0x38]
+            reason = struct.unpack_from('<I', data, offset + 0x38)[0]
+            source_info = struct.unpack_from('<I', data, offset + 0x3C)[0]
+            security_id = struct.unpack_from('<I', data, offset + 0x40)[0]
+            file_attributes = struct.unpack_from('<I', data, offset + 0x44)[0]
+            fn_length = struct.unpack_from('<H', data, offset + 0x48)[0]
+            fn_offset_field = struct.unpack_from('<H', data, offset + 0x4A)[0]
+            
+            mft_record = file_ref & 0xFFFFFFFFFFFF
+            parent_mft_record = parent_ref & 0xFFFFFFFFFFFF
+            
+            filename = ""
+            fn_start = offset + fn_offset_field
+            if fn_length > 0 and fn_start + fn_length <= len(data):
+                try:
+                    filename = data[fn_start:fn_start + fn_length].decode('utf-16-le')
+                except UnicodeDecodeError:
+                    pass
+            
+            timestamp = ntfs_timestamp_to_unix(timestamp_raw)
+            
+            return JournalEntry(
+                usn=usn,
+                file_reference=file_ref,
+                parent_reference=parent_ref,
+                reason=reason,
+                file_attributes=file_attributes,
+                timestamp=timestamp,
+                filename=filename,
+                is_delete=USNReason.is_delete(reason),
+                is_create=USNReason.is_create(reason),
+                is_rename=USNReason.is_rename(reason),
+                mft_record_number=mft_record,
+                parent_mft_record=parent_mft_record,
+                source_info=source_info,
+                security_id=security_id,
+                record_version=3,
+            )
+        
+        # Unknown version
+        return None
+    
+    except (struct.error, IndexError, ValueError):
+        return None
+
+
+def _parse_usn_journal(image: bytes, metadata: NTFSMetadata,
+                       cluster_size: int, mft_offset: int):
+    """
+    Parse the NTFS USN Journal ($UsnJrnl $J stream).
+    
+    Strategy:
+      1. Find $UsnJrnl MFT entry by scanning for "$UsnJrnl" filename
+         (it's a child of $Extend, entry 11)
+      2. Read the $J data stream from its non-resident $DATA attribute
+      3. Parse USN_RECORD entries sequentially
+      4. Build indexes: by MFT record, deletes, creates, renames
+    """
+    if len(image) < mft_offset + MFT_RECORD_SIZE:
+        return
+    
+    # ── Find $UsnJrnl MFT entry ─────────────────────────────────────────────
+    # Scan MFT entries for one named "$UsnJrnl"
+    # It's typically a child of $Extend (entry 11)
+    usn_jrnl_entry = None
+    usn_jrnl_record_num = -1
+    
+    max_scan = min(metadata.mft_entries_parsed + 10, 
+                   (len(image) - mft_offset) // MFT_RECORD_SIZE)
+    
+    for i in range(max_scan):
+        rec_offset = mft_offset + i * MFT_RECORD_SIZE
+        if rec_offset + MFT_RECORD_SIZE > len(image):
+            break
+        
+        rec_data = image[rec_offset:rec_offset + MFT_RECORD_SIZE]
+        entry = parse_mft_record(rec_data, i)
+        
+        if entry is None:
+            continue
+        
+        if entry.filename == "$UsnJrnl":
+            usn_jrnl_entry = entry
+            usn_jrnl_record_num = i
+            break
+    
+    if usn_jrnl_entry is None:
+        # No $UsnJrnl found — journal not present on this image
+        return
+    
+    metadata.journal_mft_record = usn_jrnl_record_num
+    
+    # ── Read $J data stream ─────────────────────────────────────────────────
+    # The $J stream is the non-resident $DATA attribute of $UsnJrnl
+    # We need to re-parse the MFT record to find the $DATA attribute
+    # and distinguish $J from $Max
+    
+    rec_offset = mft_offset + usn_jrnl_record_num * MFT_RECORD_SIZE
+    rec_data = image[rec_offset:rec_offset + MFT_RECORD_SIZE]
+    
+    # Parse all $DATA attributes to find $J
+    # $J is the first (default, unnamed) $DATA attribute
+    # $Max is a named $DATA attribute with name "$Max"
+    journal_data = _read_journal_data_stream(image, rec_data, cluster_size)
+    
+    if journal_data is None or len(journal_data) == 0:
+        return
+    
+    metadata.journal_data_size = len(journal_data)
+    
+    # ── Parse USN records ───────────────────────────────────────────────────
+    pos = 0
+    v4_count = 0
+    
+    while pos < len(journal_data):
+        # Check for sparse zeroed region
+        if journal_data[pos:pos + 4] == b'\x00\x00\x00\x00':
+            # Could be padding or end — scan forward
+            next_nonzero = pos + 4
+            while next_nonzero < len(journal_data) and next_nonzero < pos + 4096:
+                if journal_data[next_nonzero] != 0:
+                    break
+                next_nonzero += 1
+            if next_nonzero >= len(journal_data) or next_nonzero >= pos + 4096:
+                break  # End of valid journal data
+            pos = next_nonzero
+            continue
+        
+        record = _parse_usn_record(journal_data, pos)
+        
+        if record is None:
+            # Try to skip forward — look for next valid record
+            metadata.journal_parse_errors += 1
+            pos += 8  # Records are 8-byte aligned
+            continue
+        
+        # V4 records — skip (no useful metadata for recovery)
+        if record.record_version == 4:
+            v4_count += 1
+            rec_len = struct.unpack_from('<I', journal_data, pos)[0]
+            pos += max(rec_len, 8)
+            # Align to 8 bytes
+            pos = (pos + 7) & ~7
+            continue
+        
+        # Valid V2/V3 record — store it
+        metadata.journal_entries.append(record)
+        metadata.journal_entries_parsed += 1
+        
+        # Build indexes
+        mft_rec = record.mft_record_number
+        if mft_rec not in metadata.journal_by_mft_record:
+            metadata.journal_by_mft_record[mft_rec] = []
+        metadata.journal_by_mft_record[mft_rec].append(record)
+        
+        if record.is_delete:
+            metadata.journal_deletes.append(record)
+        if record.is_create:
+            metadata.journal_creates.append(record)
+        if record.is_rename:
+            metadata.journal_renames.append(record)
+        
+        # Advance to next record
+        rec_len = struct.unpack_from('<I', journal_data, pos)[0]
+        pos += max(rec_len, 8)
+        # Align to 8 bytes
+        pos = (pos + 7) & ~7
+
+
+def _read_journal_data_stream(image: bytes, mft_record_data: bytes,
+                              cluster_size: int) -> Optional[bytes]:
+    """
+    Read the $J data stream from the $UsnJrnl MFT record.
+    
+    The $UsnJrnl entry has two $DATA attributes:
+    - Unnamed (default) = $J stream (journal records)
+    - Named "$Max" = journal configuration
+    
+    We want the unnamed one (first $DATA attribute encountered).
+    """
+    if len(mft_record_data) < MFT_RECORD_SIZE:
+        return None
+    
+    if mft_record_data[0:4] != b'FILE':
+        return None
+    
+    try:
+        # Apply fixup
+        fixup_offset = struct.unpack_from('<H', mft_record_data, 4)[0]
+        fixup_count = struct.unpack_from('<H', mft_record_data, 6)[0]
+        fixed = bytearray(mft_record_data)
+        if fixup_offset > 0 and fixup_count > 1:
+            try:
+                usn = struct.unpack_from('<H', mft_record_data, fixup_offset)[0]
+                for i in range(1, fixup_count):
+                    sector_end = i * SECTOR_SIZE - 2
+                    if sector_end + 2 <= len(mft_record_data):
+                        actual = struct.unpack_from('<H', mft_record_data, sector_end)[0]
+                        if actual == usn and usn != 0:
+                            orig_offset = fixup_offset + 2 * i
+                            if orig_offset + 2 <= len(mft_record_data):
+                                fixed[sector_end:sector_end + 2] = mft_record_data[orig_offset:orig_offset + 2]
+            except (struct.error, IndexError):
+                pass
+        
+        data = bytes(fixed)
+        
+        # Walk attributes to find the first unnamed $DATA (=$J)
+        attr_offset = struct.unpack_from('<H', data, 20)[0]
+        
+        while attr_offset + 8 < MFT_RECORD_SIZE:
+            attr_type = struct.unpack_from('<I', data, attr_offset)[0]
+            
+            if attr_type == 0xFFFFFFFF or attr_type == 0:
+                break
+            
+            attr_length = struct.unpack_from('<I', data, attr_offset + 4)[0]
+            if attr_length < 16 or attr_offset + attr_length > MFT_RECORD_SIZE:
+                break
+            
+            if attr_type == AttrType.DATA:
+                non_resident = data[attr_offset + 8]
+                
+                # Check attribute name — we want unnamed (name_length == 0)
+                name_offset = struct.unpack_from('<H', data, attr_offset + 10)[0]
+                name_length = data[attr_offset + 9]
+                
+                if name_length == 0:  # This is the $J stream (unnamed $DATA)
+                    if non_resident:
+                        # Read data runs
+                        data_runs_offset = struct.unpack_from('<H', data, attr_offset + 32)[0]
+                        real_size = struct.unpack_from('<Q', data, attr_offset + 48)[0]
+                        runs = _parse_data_runs(data, attr_offset + data_runs_offset)
+                        
+                        # Read the data from image
+                        journal_data = bytearray()
+                        for run in runs:
+                            if run.offset == 0:
+                                journal_data.extend(b'\x00' * (run.length * cluster_size))
+                                continue
+                            for c in range(run.length):
+                                c_offset = (run.offset + c) * cluster_size
+                                if c_offset + cluster_size > len(image):
+                                    journal_data.extend(b'\x00' * cluster_size)
+                                    continue
+                                journal_data.extend(image[c_offset:c_offset + cluster_size])
+                        
+                        if real_size > 0 and len(journal_data) > real_size:
+                            journal_data = journal_data[:real_size]
+                        
+                        return bytes(journal_data)
+                    else:
+                        # Resident $J (unlikely for real journal, but handle it)
+                        value_offset = struct.unpack_from('<H', data, attr_offset + 14)[0]
+                        value_length = struct.unpack_from('<I', data, attr_offset + 16)[0]
+                        vs = attr_offset + value_offset
+                        if vs + value_length <= len(data):
+                            return data[vs:vs + value_length]
+                
+                # Named $DATA (e.g., "$Max") — skip
+            
+            attr_offset += attr_length
+        
+        return None
+    
+    except (struct.error, IndexError):
+        return None
+
+
+def recover_from_journal(metadata: NTFSMetadata, 
+                         image: bytes,
+                         cluster_size: int = 4096) -> List[Dict]:
+    """
+    Attempt recovery using USN Journal data.
+    
+    For each journal entry that references a file:
+    - If the MFT entry is present and in_use → file already recovered
+    - If the MFT entry is missing or not in_use → deleted file candidate
+    - Use journal filename + parent directory to reconstruct path
+    - Use file_reference to attempt data recovery from MFT
+    
+    Returns list of recovery candidates (dicts with metadata).
+    """
+    candidates = []
+    
+    for entry in metadata.journal_entries:
+        if not entry.filename:
+            continue
+        
+        mft_rec = entry.mft_record_number
+        
+        # Check if file is already recovered via MFT
+        if mft_rec in metadata.files_by_record:
+            mft_entry = metadata.files_by_record[mft_rec]
+            if mft_entry.in_use and not mft_entry.is_directory:
+                continue  # Already recovered
+        
+        # This is a journal-only recovery candidate
+        candidates.append({
+            "filename": entry.filename,
+            "mft_record": mft_rec,
+            "parent_record": entry.parent_mft_record,
+            "is_delete": entry.is_delete,
+            "is_create": entry.is_create,
+            "is_rename": entry.is_rename,
+            "timestamp": entry.timestamp,
+            "reason": USNReason.describe(entry.reason),
+            "file_attributes": entry.file_attributes,
+            "source": "journal",
+        })
+    
+    return candidates

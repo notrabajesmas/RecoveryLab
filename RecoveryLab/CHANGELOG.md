@@ -1,5 +1,34 @@
 # RecoveryLab — Changelog
 
+## v0.4 (2026-08-05)
+
+**NTFS USN Journal Parser: 0% → 100%**
+
+Sprint 3b — USN Journal Parser:
+
+| Files  | Journal | Filenames | MFT Xref | Creates | Time   | RAM   |
+|-------:|--------:|----------:|---------:|--------:|-------:|------:|
+|    100 |   100%  |    100%   |   100%   |  100%   | 0.02s  | 0 MB  |
+|    500 |   100%  |    100%   |   100%   |  100%   | 0.10s  | 1 MB  |
+|  1,000 |   100%  |    100%   |   100%   |  100%   | 0.20s  | 1 MB  |
+|  5,000 |   100%  |    100%   |   100%   |  100%   | 1.02s  | 6 MB  |
+
+- ✔ USN_RECORD V2 parser (NTFS, Windows 2000+)
+- ✔ USN_RECORD V3 parser (ReFS / Windows# Windows 8+)
+- ✔ USN_RECORD V4 skip (range tracking, no metadata)
+- ✔ 24 USN_REASON flags decoded (CREATE, DELETE, RENAME, DATA_OVERWRITE, etc.)
+- ✔ MFT cross-reference (journal entry → MFT record number)
+- ✔ Deleted file detection via USN_REASON_FILE_DELETE
+- ✔ Historical metadata recovery (timestamps, parent directories)
+- ✔ $UsnJrnl generation in NTFSImageBuilder (synthetic images now have real journal)
+- ✔ 0 parse errors across all scale points
+
+**Architecture:**
+- `ntfs_parser/parser.py`: `_parse_usn_record()`, `_parse_usn_journal()`, `_read_journal_data_stream()`, `recover_from_journal()`, `USNReason` class
+- `dataset_builder/ntfs_image.py`: `_build_usn_records()`, `_build_usnjrnl_entry()`, `$UsnJrnl` MFT entry with $J and $Max streams
+
+---
+
 ## v0.3.1 (2026-08-05)
 
 **MFT Parser Scale Benchmark: 100% SHA-256 at 10,000 files**

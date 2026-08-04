@@ -1121,3 +1121,41 @@ Stage Summary:
 - Scaling: sub-quadratic time, linear RAM, 8000 files/sec throughput
 - Parser is production-ready for scale
 - Next: Sprint 3b — Journal Parser (0% → 90%)
+
+---
+Task ID: 30
+Agent: Main
+Task: Sprint 3b — USN Journal Parser (0% → 100%)
+
+Work Log:
+- Researched NTFS $UsnJrnl binary format via web search (USN_RECORD V2/V3/V4)
+- Saved spec to NTFS_USN_JOURNAL_SPEC.md (646 lines)
+- Implemented USN Journal Parser in ntfs_parser/parser.py:
+  - USNReason class with 24 flags and describe() method
+  - _parse_usn_record() supporting V2 (NTFS), V3 (ReFS/Win8+), V4 (skip)
+  - _parse_usn_journal() finding $UsnJrnl MFT entry, reading $J stream, parsing records
+  - _read_journal_data_stream() distinguishing $J from $Max
+  - recover_from_journal() for journal-based recovery candidates
+  - JournalEntry dataclass expanded with mft_record_number, is_create, is_rename, etc.
+  - NTFSMetadata expanded with journal_by_mft_record, journal_deletes/creates/renames indexes
+- Added $UsnJrnl generation to NTFSImageBuilder:
+  - _build_usn_records() generates one USN_RECORD_V2 per file (CREATE + CLOSE)
+  - _build_usnjrnl_entry() creates $UsnJrnl MFT entry with $J and $Max streams
+  - _allocate_usnjrnl_data() allocates clusters for journal data
+  - _write_usnjrnl_data() writes journal data to disk
+- Created benchmark_usn_journal.py: 100, 500, 1000, 5000 scale points
+- Benchmark results: 100% across all metrics at all scale points
+  - Journal entries = files: 100%
+  - Filename extraction: 100%
+  - MFT cross-reference: 100%
+  - CREATE detection: 100%
+  - Parse errors: 0
+- Updated CHANGELOG.md with v0.4
+- Updated PROJECT_STATUS.md with Sprint 3b results
+
+Stage Summary:
+- USN Journal Parser: 0% → 100% at all scale points (100-5000 files)
+- $UsnJrnl generation in NTFSImageBuilder — synthetic images have real journal
+- V2/V3 parsing, V4 skip, MFT cross-reference, delete detection
+- Sprint 3b SUCCESS
+- Next: Sprint 4 — Fragmentación (0% → 50%)

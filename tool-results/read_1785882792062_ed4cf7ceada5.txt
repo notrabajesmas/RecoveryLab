@@ -1,0 +1,646 @@
+     1→# NTFS USN Journal ($UsnJrnl) Binary Format Specification
+     2→
+     3→> **Authoritative sources**: Microsoft Win32 `winioctl.h` docs, Microsoft NT kernel driver `ntifs.h` docs,
+     4→> libyal/libfsntfs NTFS specification, forefst ReFS reference, and cross-validated forensic sources.
+     5→> Last verified: 2026-03-05
+     6→
+     7→---
+     8→
+     9→## 1. $UsnJrnl Location & MFT Entry
+    10→
+    11→| Property | Value |
+    12→|----------|-------|
+    13→| **Path** | `$Extend\$UsnJrnl` (child of MFT entry 11, the `$Extend` directory) |
+    14→| **MFT entry number** | **Not fixed.** The first 24 MFT entries (0–23) are reserved for core system files. `$UsnJrnl` is allocated dynamically as a child of `$Extend` — typically MFT entry **24** or **25** on a fresh volume, but this is **not guaranteed** and must be resolved by reading the `$Extend` directory index. |
+    15→| **Data streams** | Two Alternate Data Streams (ADS): **`$J`** and **`$Max`** |
+    16→
+    17→### System MFT entries (first 24, for reference)
+    18→
+    19→| Entry | Name | Entry | Name |
+    20→|-------|------|-------|------|
+    21→| 0 | $MFT | 12 | $Quota |
+    22→| 1 | $MFTMirr | 13 | $ObjId |
+    23→| 2 | $LogFile | 14 | ? |
+    24→| 3 | $Volume | 15–16 | ? |
+    25→| 4 | $AttrDef | 17 | ? |
+    26→| 5 | $Root | 18–23 | Reserved |
+    27→| 6 | $Bitmap | | |
+    28→| 7 | $Boot | | |
+    29→| 8 | $BadClus | | |
+    30→| 9 | $Secure | | |
+    31→| 10 | $UpCase | | |
+    32→| 11 | $Extend | | |
+    33→
+    34→> `$UsnJrnl`, `$ObjId`, and `$Quota` are children of `$Extend` (entry 11). Their specific MFT entry numbers are allocated sequentially and vary.
+    35→
+    36→---
+    37→
+    38→## 2. $J vs $Max Streams
+    39→
+    40→| Stream | Purpose | Content |
+    41→|--------|---------|---------|
+    42→| **`$J`** | **Journal data** — the actual change log records | Sequential `USN_RECORD_V2` (NTFS) or `USN_RECORD_V3` (ReFS) entries, plus `USN_RECORD_V4` extent records if range tracking is enabled. Stored as a **sparse file** — old records are zeroed out when the journal wraps. |
+    43→| **`$Max`** | **Journal metadata** — configuration & state | Contains the `USN_JOURNAL_DATA` structure with journal ID, size limits, and current USN position. Stored as a `$LOGGED_UTILITY_STREAM` (attribute type 0xF0) on the `$UsnJrnl` MFT entry. |
+    44→
+    45→---
+    46→
+    47→## 3. $Max Stream — USN_JOURNAL_DATA Structure
+    48→
+    49→The `$Max` stream contains the journal configuration. It is read/written via `FSCTL_QUERY_USN_JOURNAL`.
+    50→
+    51→| Offset | Size | Type | Field | Description |
+    52→|--------|------|------|-------|-------------|
+    53→| 0x00 | 8 | uint64 | UsnJournalID | Unique identifier for this journal instance. Changes when journal is deleted & recreated. |
+    54→| 0x08 | 8 | int64 | FirstUsn | USN of the first valid record in the journal. |
+    55→| 0x10 | 8 | int64 | NextUsn | USN where the next record will be written (current write position). |
+    56→| 0x18 | 8 | uint64 | MaximumSize | Maximum size of the journal in bytes. |
+    57→| 0x20 | 8 | uint64 | AllocationDelta | Memory allocation delta for journal growth. |
+    58→| 0x28 | 8 | int64 | MinimumUsn | Lowest valid USN in the journal (for wrap-around detection). |
+    59→
+    60→**Total size**: 48 bytes (0x30)
+    61→
+    62→---
+    63→
+    64→## 4. $J Stream Format
+    65→
+    66→### 4.1 Journal Header (Offset 0 of $J)
+    67→
+    68→**The $J stream does NOT have a header structure at offset 0.**
+    69→
+    70→When using `FSCTL_ENUM_USN_DATA`, the kernel returns a buffer where the **first 8 bytes** are the USN (int64) of the starting position for the next query. This is **NOT part of the on-disk format** — it is a kernel-returned prefix for the API. The actual on-disk `$J` stream begins directly with USN_RECORD entries.
+    71→
+    72→On disk, the `$J` stream is a sequence of USN records appended sequentially. The **USN value** of each record equals its **virtual byte offset** in the journal stream (monotonic, never reused). Because `$J` is a sparse file, old regions are zeroed when the journal wraps, but the USN values keep increasing beyond the physical file size.
+    73→
+    74→### 4.2 Reading USN Records
+    75→
+    76→To iterate records from the raw `$J` stream:
+    77→1. Read the `RecordLength` (4 bytes at offset 0 of each record)
+    78→2. If `RecordLength == 0`, skip ahead (sparse zeroed region or padding)
+    79→3. Parse the record based on `MajorVersion` (2 bytes at offset 4)
+    80→4. Advance the read position by `RecordLength` bytes
+    81→5. Records are **8-byte aligned** (padded if necessary)
+    82→
+    83→---
+    84→
+    85→## 5. USN_RECORD_V2 Structure (NTFS, Windows 2000+)
+    86→
+    87→**Major version**: 2, **Minor version**: 0
+    88→**Fixed header size**: 60 bytes (0x3C)
+    89→**Total record size**: `pad8(0x3C + FileNameLength)`
+    90→
+    91→| Offset | Size | Type | Field | Description |
+    92→|--------|------|------|-------|-------------|
+    93→| 0x00 | 4 | uint32 | RecordLength | Total size of this record in bytes (including filename). 8-byte aligned. |
+    94→| 0x04 | 2 | uint16 | MajorVersion | 2 for V2 records |
+    95→| 0x06 | 2 | uint16 | MinorVersion | 0 |
+    96→| 0x08 | 8 | uint64 | FileReferenceNumber | 64-bit MFT file reference (see §7 below) |
+    97→| 0x10 | 8 | uint64 | ParentFileReferenceNumber | 64-bit MFT file reference of parent directory |
+    98→| 0x18 | 8 | int64 | Usn | Update Sequence Number = virtual byte offset in journal |
+    99→| 0x20 | 8 | FILETIME | TimeStamp | Time of the change (100ns ticks since 1601-01-01 UTC) |
+   100→| 0x28 | 4 | uint32 | Reason | Reason flags (see §8) |
+   101→| 0x2C | 4 | uint32 | SourceInfo | Source info flags (see §9) |
+   102→| 0x30 | 4 | uint32 | SecurityId | Security ID from $Secure |
+   103→| 0x34 | 4 | uint32 | FileAttributes | Win32 file attributes (see §10) |
+   104→| 0x38 | 2 | uint16 | FileNameLength | Length of filename in **bytes** (not characters) |
+   105→| 0x3A | 2 | uint16 | FileNameOffset | Offset of filename from start of record (always 0x3C for V2) |
+   106→| 0x3C | var | wchar[] | FileName | UTF-16LE null-terminated filename |
+   107→
+   108→**C struct (from Microsoft winioctl.h / ntifs.h)**:
+   109→```c
+   110→typedef struct {
+   111→    DWORD RecordLength;           // 0x00
+   112→    WORD  MajorVersion;           // 0x04
+   113→    WORD  MinorVersion;           // 0x06
+   114→    DWORDLONG FileReferenceNumber;// 0x08
+   115→    DWORDLONG ParentFileReferenceNumber; // 0x10
+   116→    USN   Usn;                    // 0x18
+   117→    LARGE_INTEGER TimeStamp;      // 0x20
+   118→    DWORD Reason;                 // 0x28
+   119→    DWORD SourceInfo;             // 0x2C
+   120→    DWORD SecurityId;             // 0x30
+   121→    DWORD FileAttributes;         // 0x34
+   122→    WORD  FileNameLength;         // 0x38
+   123→    WORD  FileNameOffset;         // 0x3A
+   124→    WCHAR FileName[1];            // 0x3C (variable length)
+   125→} USN_RECORD_V2, *PUSN_RECORD_V2;
+   126→```
+   127→
+   128→---
+   129→
+   130→## 6. USN_RECORD_V3 Structure (ReFS / Windows 8+ NTFS)
+   131→
+   132→**Major version**: 3, **Minor version**: 0
+   133→**Fixed header size**: 76 bytes (0x4C)
+   134→**Total record size**: `pad8(0x4C + FileNameLength)`
+   135→
+   136→| Offset | Size | Type | Field | Description |
+   137→|--------|------|------|-------|-------------|
+   138→| 0x00 | 4 | uint32 | RecordLength | Total size of this record in bytes. 8-byte aligned. |
+   139→| 0x04 | 2 | uint16 | MajorVersion | 3 for V3 records |
+   140→| 0x06 | 2 | uint16 | MinorVersion | 0 |
+   141→| 0x08 | 16 | FILE_ID_128 | FileReferenceNumber | 128-bit file identifier (see §7 below) |
+   142→| 0x18 | 16 | FILE_ID_128 | ParentFileReferenceNumber | 128-bit file identifier of parent directory |
+   143→| 0x28 | 8 | int64 | Usn | Update Sequence Number = virtual byte offset in journal |
+   144→| 0x30 | 8 | FILETIME | TimeStamp | Time of the change (100ns ticks since 1601-01-01 UTC) |
+   145→| 0x38 | 4 | uint32 | Reason | Reason flags (see §8) |
+   146→| 0x3C | 4 | uint32 | SourceInfo | Source info flags (see §9) |
+   147→| 0x40 | 4 | uint32 | SecurityId | Security ID from $Secure |
+   148→| 0x44 | 4 | uint32 | FileAttributes | Win32 file attributes (see §10) |
+   149→| 0x48 | 2 | uint16 | FileNameLength | Length of filename in **bytes** |
+   150→| 0x4A | 2 | uint16 | FileNameOffset | Offset of filename from start of record (always 0x4C for V3) |
+   151→| 0x4C | var | wchar[] | FileName | UTF-16LE null-terminated filename |
+   152→
+   153→**C struct**:
+   154→```c
+   155→typedef struct {
+   156→    DWORD       RecordLength;           // 0x00
+   157→    WORD        MajorVersion;           // 0x04
+   158→    WORD        MinorVersion;           // 0x06
+   159→    FILE_ID_128 FileReferenceNumber;    // 0x08
+   160→    FILE_ID_128 ParentFileReferenceNumber; // 0x18
+   161→    USN         Usn;                    // 0x28
+   162→    LARGE_INTEGER TimeStamp;            // 0x30
+   163→    DWORD       Reason;                 // 0x38
+   164→    DWORD       SourceInfo;             // 0x3C
+   165→    DWORD       SecurityId;             // 0x40
+   166→    DWORD       FileAttributes;         // 0x44
+   167→    WORD        FileNameLength;         // 0x48
+   168→    WORD        FileNameOffset;         // 0x4A
+   169→    WCHAR       FileName[1];            // 0x4C (variable length)
+   170→} USN_RECORD_V3, *PUSN_RECORD_V3;
+   171→```
+   172→
+   173→### FILE_ID_128 Structure (128-bit)
+   174→
+   175→```c
+   176→typedef struct {
+   177→    ULONG FileId64b[4];  // 16 bytes total
+   178→} FILE_ID_128, *PFILE_ID_128;
+   179→```
+   180→
+   181→**On NTFS**: The 128-bit ID is effectively a 64-bit MFT reference number stored in the lower 8 bytes, with the upper 8 bytes being zero (or padding).
+   182→
+   183→**On ReFS**: The upper 8 bytes are the B+-tree table OID, and the lower 8 bytes are the sequential entry index within that directory.
+   184→
+   185→---
+   186→
+   187→## 6.5 USN_RECORD_V4 Structure (Windows 10+, NTFS only)
+   188→
+   189→V4 records are **range-tracking / extent records** introduced in Windows 10. They are only emitted when range tracking is enabled (`fsutil usn enablerangetracking`) and the file size >= the RangeTrackFileSizeThreshold.
+   190→
+   191→**Key differences from V2/V3**:
+   192→- **NO filename** — filename comes from the companion V2/V3 record
+   193→- **NO timestamp** — timestamp comes from the companion V2/V3 record
+   194→- **NO SecurityId, NO FileAttributes**
+   195→- Contains an array of `USN_RECORD_EXTENT` structures describing which byte ranges were modified
+   196→
+   197→**Microsoft guarantees**: Each V4 record is immediately followed by a V2 or V3 record that provides the filename, timestamp, and other metadata for the same USN.
+   198→
+   199→**Major version**: 4, **Minor version**: 0
+   200→**Fixed header size**: 48 bytes (0x30) + (NumberOfExtents × 16)
+   201→
+   202→| Offset | Size | Type | Field | Description |
+   203→|--------|------|------|-------|-------------|
+   204→| 0x00 | 4 | uint32 | RecordLength | Total size of this record in bytes |
+   205→| 0x04 | 2 | uint16 | MajorVersion | 4 for V4 records |
+   206→| 0x06 | 2 | uint16 | MinorVersion | 0 |
+   207→| 0x08 | 8 | uint64 | FileReferenceNumber | 64-bit MFT file reference |
+   208→| 0x10 | 8 | uint64 | ParentFileReferenceNumber | 64-bit MFT file reference of parent directory |
+   209→| 0x18 | 8 | int64 | Usn | Update Sequence Number |
+   210→| 0x20 | 4 | uint32 | Reason | Reason flags (only data-related reasons) |
+   211→| 0x24 | 4 | uint32 | SourceInfo | Source info flags |
+   212→| 0x28 | 4 | uint32 | RemainingExtents | Number of extents remaining in subsequent V4 records for this change |
+   213→| 0x2C | 4 | uint32 | NumberOfExtents | Number of USN_RECORD_EXTENT structures in this record |
+   214→| 0x30 | 16×N | USN_RECORD_EXTENT[] | Extent[] | Array of extent descriptors |
+   215→
+   216→### USN_RECORD_EXTENT Structure (16 bytes)
+   217→
+   218→| Offset | Size | Type | Field | Description |
+   219→|--------|------|------|-------|-------------|
+   220→| 0x00 | 8 | uint64 | Offset | Byte offset within the file where the modified region starts |
+   221→| 0x08 | 8 | uint64 | Length | Length in bytes of the modified region |
+   222→
+   223→**C struct**:
+   224→```c
+   225→typedef struct {
+   226→    DWORDLONG Offset;    // 0x00
+   227→    DWORDLONG Length;    // 0x08
+   228→} USN_RECORD_EXTENT, *PUSN_RECORD_EXTENT;
+   229→
+   230→typedef struct {
+   231→    DWORD       RecordLength;               // 0x00
+   232→    WORD        MajorVersion;               // 0x04
+   233→    WORD        MinorVersion;               // 0x06
+   234→    DWORDLONG   FileReferenceNumber;        // 0x08
+   235→    DWORDLONG   ParentFileReferenceNumber;  // 0x10
+   236→    USN         Usn;                        // 0x18
+   237→    DWORD       Reason;                     // 0x20
+   238→    DWORD       SourceInfo;                 // 0x24
+   239→    DWORD       RemainingExtents;           // 0x28
+   240→    DWORD       NumberOfExtents;            // 0x2C
+   241→    USN_RECORD_EXTENT Extent[1];            // 0x30 (variable length)
+   242→} USN_RECORD_V4, *PUSN_RECORD_V4;
+   243→```
+   244→
+   245→---
+   246→
+   247→## 7. File Reference Number → MFT Record Mapping
+   248→
+   249→### V2 / V4 (64-bit FileReferenceNumber)
+   250→
+   251→The 64-bit file reference number is composed of two fields:
+   252→
+   253→```
+   254→ +---+---+---+---+---+---+---+---+
+   255→ |   MFT Sequence Number (16)    |  MFT Record Index (48)        |
+   256→ |  bytes 6-7 (big-endian view)  |  bytes 0-5                    |
+   257→ +---+---+---+---+---+---+---+---+
+   258→  63                              48                              0
+   259→```
+   260→
+   261→| Component | Bits | Byte range (little-endian) | Description |
+   262→|-----------|------|---------------------------|-------------|
+   263→| **MFT Record Index** | 48 | bytes 0–5 | The MFT entry number (0-based index into $MFT) |
+   264→| **Sequence Number** | 16 | bytes 6–7 | Incremented each time the MFT entry is reused |
+   265→
+   266→**Extraction**:
+   267→```python
+   268→mft_record_number = file_ref_number & 0xFFFFFFFFFFFF   # lower 48 bits
+   269→sequence_number   = (file_ref_number >> 48) & 0xFFFF    # upper 16 bits
+   270→```
+   271→
+   272→**Example**: FileReferenceNumber = `0x0005000000000005`
+   273→- MFT record index = 0x000000000005 = **5** ($Root)
+   274→- Sequence number = 0x0005 = **5**
+   275→
+   276→### V3 (128-bit FILE_ID_128)
+   277→
+   278→**On NTFS**: Effectively a 64-bit reference stored in the lower 8 bytes (same decomposition as V2 above). Upper 8 bytes are zero/padding.
+   279→
+   280→**On ReFS**:
+   281→- Upper 8 bytes: B+-tree table OID (identifies which directory's object table)
+   282→- Lower 8 bytes: Sequential entry index within that directory (monotonically increasing, never reused)
+   283→
+   284→---
+   285→
+   286→## 8. USN_REASON Flags
+   287→
+   288→These are bitmask flags — a single record can combine multiple flags (e.g., `0x80000100` = FILE_CREATE + CLOSE).
+   289→
+   290→| Bit | Hex Value | Constant Name | Description |
+   291→|-----|-----------|---------------|-------------|
+   292→| 0 | 0x00000001 | USN_REASON_DATA_OVERWRITE | Default data ($DATA) stream content overwritten |
+   293→| 1 | 0x00000002 | USN_REASON_DATA_EXTEND | Default data stream extended (appended to) |
+   294→| 2 | 0x00000004 | USN_REASON_DATA_TRUNCATION | Default data stream truncated |
+   295→| — | 0x00000008 | *(reserved)* | |
+   296→| 4 | 0x00000010 | USN_REASON_NAMED_DATA_OVERWRITE | Named data stream (ADS) overwritten |
+   297→| 5 | 0x00000020 | USN_REASON_NAMED_DATA_EXTEND | Named data stream extended |
+   298→| 6 | 0x00000040 | USN_REASON_NAMED_DATA_TRUNCATION | Named data stream truncated |
+   299→| — | 0x00000080 | *(reserved)* | |
+   300→| 8 | 0x00000100 | USN_REASON_FILE_CREATE | File or directory created |
+   301→| 9 | 0x00000200 | USN_REASON_FILE_DELETE | File or directory deleted |
+   302→| 10 | 0x00000400 | USN_REASON_EA_CHANGE | Extended attributes (EA) changed |
+   303→| 11 | 0x00000800 | USN_REASON_SECURITY_CHANGE | Security descriptor (ACL) changed |
+   304→| 12 | 0x00001000 | USN_REASON_RENAME_OLD_NAME | Old name in a rename/move operation |
+   305→| 13 | 0x00002000 | USN_REASON_RENAME_NEW_NAME | New name in a rename/move operation |
+   306→| 14 | 0x00004000 | USN_REASON_INDEXABLE_CHANGE | Content indexing attribute changed |
+   307→| 15 | 0x00008000 | USN_REASON_BASIC_INFO_CHANGE | Basic info changed (timestamps, attributes) |
+   308→| 16 | 0x00010000 | USN_REASON_HARD_LINK_CHANGE | Hard link count changed |
+   309→| 17 | 0x00020000 | USN_REASON_COMPRESSION_CHANGE | Compression state changed |
+   310→| 18 | 0x00040000 | USN_REASON_ENCRYPTION_CHANGE | EFS encryption state changed |
+   311→| 19 | 0x00080000 | USN_REASON_OBJECT_ID_CHANGE | Object ID changed |
+   312→| 20 | 0x00100000 | USN_REASON_REPARSE_POINT_CHANGE | Reparse point set or removed |
+   313→| 21 | 0x00200000 | USN_REASON_STREAM_CHANGE | Named data stream added or removed |
+   314→| 22 | 0x00400000 | USN_REASON_TRANSACTED_CHANGE | Change within a TxF transaction |
+   315→| 23 | 0x00800000 | USN_REASON_INTEGRITY_CHANGE | Data integrity attribute changed (ReFS) |
+   316→| 24 | 0x01000000 | USN_REASON_CLOSE | *(deprecated/reserved — use bit 31)* |
+   317→| — | 0x02000000–0x3FFFFFFF | *(reserved)* | |
+   318→| — | 0x40000000 | USN_REASON_ID_CHANGE | File identifier changed |
+   319→| 31 | 0x80000000 | USN_REASON_CLOSE | Handle closed; OR-ed with the final reason for this change |
+   320→
+   321→### Common Reason Combinations (Forensic Signatures)
+   322→
+   323→| Operation | Typical Reason Value | Flags |
+   324→|-----------|---------------------|-------|
+   325→| File created | 0x80000100 | FILE_CREATE + CLOSE |
+   326→| File deleted | 0x80000200 | FILE_DELETE + CLOSE |
+   327→| File overwritten | 0x80000001 | DATA_OVERWRITE + CLOSE |
+   328→| File appended | 0x80000002 | DATA_EXTEND + CLOSE |
+   329→| File overwritten + extended | 0x80000003 | DATA_OVERWRITE + DATA_EXTEND + CLOSE |
+   330→| Rename old name | 0x80001000 | RENAME_OLD_NAME + CLOSE |
+   331→| Rename new name | 0x80002000 | RENAME_NEW_NAME + CLOSE |
+   332→| Rename (both records) | 0x80003000 | RENAME_OLD_NAME + RENAME_NEW_NAME + CLOSE |
+   333→| Attribute change | 0x80008000 | BASIC_INFO_CHANGE + CLOSE |
+   334→| Security (ACL) change | 0x80000800 | SECURITY_CHANGE + CLOSE |
+   335→| Symlink created | 0x80100100 | FILE_CREATE + REPARSE_POINT_CHANGE + CLOSE |
+   336→| Junction created | 0x80100000 | REPARSE_POINT_CHANGE + CLOSE |
+   337→| File encrypted | 0x80040000 | ENCRYPTION_CHANGE + CLOSE |
+   338→
+   339→---
+   340→
+   341→## 9. USN_SOURCE_INFO Flags
+   342→
+   343→The `SourceInfo` field indicates the source/origin of the change.
+   344→
+   345→| Hex Value | Constant Name | Description |
+   346→|-----------|---------------|-------------|
+   347→| 0x00000001 | USN_SOURCE_DATA_MANAGEMENT | Change by OS data management (e.g., HSM, content indexing) |
+   348→| 0x00000002 | USN_SOURCE_AUXILIARY_DATA | Change by OS auxiliary data (e.g., defragmentation, replication) |
+   349→| 0x00000004 | USN_SOURCE_REPLICATION_MANAGEMENT | Change by replication management service |
+   350→
+   351→When `SourceInfo != 0`, the change was made by the system rather than by user action. This helps filter out noise from background OS activities.
+   352→
+   353→---
+   354→
+   355→## 10. File Attributes (USN_FILE_ATTRIBUTE / WIN32_FILE_ATTRIBUTE)
+   356→
+   357→The `FileAttributes` field uses the standard Win32 file attribute flags. These are the **current** attributes at the time the record was written (not a delta).
+   358→
+   359→| Hex Value | Constant Name | Description |
+   360→|-----------|---------------|-------------|
+   361→| 0x00000001 | FILE_ATTRIBUTE_READONLY | Read-only |
+   362→| 0x00000002 | FILE_ATTRIBUTE_HIDDEN | Hidden |
+   363→| 0x00000004 | FILE_ATTRIBUTE_SYSTEM | System file |
+   364→| 0x00000010 | FILE_ATTRIBUTE_DIRECTORY | Directory |
+   365→| 0x00000020 | FILE_ATTRIBUTE_ARCHIVE | Archive (has been modified since last backup) |
+   366→| 0x00000040 | FILE_ATTRIBUTE_DEVICE | Device |
+   367→| 0x00000080 | FILE_ATTRIBUTE_NORMAL | Normal (no other attributes set) |
+   368→| 0x00000100 | FILE_ATTRIBUTE_TEMPORARY | Temporary |
+   369→| 0x00000200 | FILE_ATTRIBUTE_SPARSE_FILE | Sparse file |
+   370→| 0x00000400 | FILE_ATTRIBUTE_REPARSE_POINT | Reparse point (symlink, junction, etc.) |
+   371→| 0x00000800 | FILE_ATTRIBUTE_COMPRESSED | Compressed |
+   372→| 0x00001000 | FILE_ATTRIBUTE_OFFLINE | Offline (HSM migrated) |
+   373→| 0x00002000 | FILE_ATTRIBUTE_NOT_CONTENT_INDEXED | Not content indexed |
+   374→| 0x00004000 | FILE_ATTRIBUTE_ENCRYPTED | Encrypted (EFS) |
+   375→| 0x00008000 | FILE_ATTRIBUTE_INTEGRITY_STREAM | Integrity stream (ReFS) |
+   376→| 0x00020000 | FILE_ATTRIBUTE_VIRTUAL | Virtual |
+   377→| 0x00040000 | FILE_ATTRIBUTE_NO_SCRUB_DATA | No scrub data |
+   378→| 0x00100000 | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | Recall on data access |
+   379→| 0x00400000 | FILE_ATTRIBUTE_RECALL_ON_OPEN | Recall on open |
+   380→| 0x02000000 | FILE_ATTRIBUTE_STRICTLY_SEQUENTIAL | Strictly sequential |
+   381→
+   382→**Key forensic indicators**:
+   383→- `0x10` (DIRECTORY): Record refers to a directory, not a file
+   384→- `0x400` (REPARSE_POINT): Symlink, junction, or mount point
+   385→- `0x4000` (ENCRYPTED): EFS-encrypted file
+   386→- `0x200` (SPARSE_FILE): Sparse file (often $J itself)
+   387→
+   388→---
+   389→
+   390→## 11. Detecting Deleted Files
+   391→
+   392→### Method 1: USN_REASON_FILE_DELETE flag
+   393→
+   394→The most reliable method. Check if the `Reason` field has bit 9 set:
+   395→
+   396→```python
+   397→is_delete = (reason & 0x00000200) != 0
+   398→```
+   399→
+   400→A file deletion produces a record with `Reason = 0x80000200` (FILE_DELETE + CLOSE).
+   401→
+   402→### Method 2: Rename to $RECYCLE.BIN
+   403→
+   404→When a file is moved to Recycle Bin (Explorer delete), the journal shows:
+   405→1. A record with `RENAME_OLD_NAME` (original name + path)
+   406→2. A record with `RENAME_NEW_NAME` (name within `$RECYCLE.BIN\$Rxxxxxxx.ext`)
+   407→
+   408→**Note**: Shift+Delete produces a `FILE_DELETE` record directly, NOT rename records.
+   409→
+   410→### Method 3: MFT Sequence Number Mismatch
+   411→
+   412→After a file is deleted and the MFT entry is reused, the **sequence number** in the MFT entry increments. If the sequence number in the USN record's FileReferenceNumber doesn't match the current MFT entry's sequence number, the file referenced by this USN record has been deleted and the MFT entry may have been reused.
+   413→
+   414→```python
+   415→# USN record's file ref
+   416→usn_mft_index = file_ref & 0xFFFFFFFFFFFF
+   417→usn_seq_num = (file_ref >> 48) & 0xFFFF
+   418→
+   419→# Current MFT entry
+   420→mft_seq_num = read_mft_sequence_number(usn_mft_index)
+   421→
+   422→if usn_seq_num != mft_seq_num:
+   423→    # File was deleted; MFT entry may be reused by a different file
+   424→    # The USN record's filename is stale/historical
+   425→    pass
+   426→```
+   427→
+   428→### Method 4: MFT In-Use Flag
+   429→
+   430→Read the MFT entry at the record's MFT index and check if the "in-use" flag is clear (bit 0 of the MFT record header flags). If the entry is not in use, the file has been deleted.
+   431→
+   432→---
+   433→
+   434→## 12. Cross-Referencing USN Records with MFT
+   435→
+   436→### Direct MFT Lookup (V2 / V4)
+   437→
+   438→```python
+   439→file_ref = record.FileReferenceNumber  # uint64
+   440→mft_entry_number = file_ref & 0xFFFFFFFFFFFF  # lower 48 bits
+   441→sequence_number = (file_ref >> 48) & 0xFFFF    # upper 16 bits
+   442→
+   443→# Read MFT entry at that offset
+   444→mft_offset = mft_entry_number * mft_record_size  # typically 1024 bytes
+   445→mft_record = read_at_offset(mft_file, mft_offset, mft_record_size)
+   446→```
+   447→
+   448→### $STANDARD_INFORMATION ↔ USN Link
+   449→
+   450→Each MFT entry's `$STANDARD_INFORMATION` attribute contains:
+   451→- **LastUsn** at offset `$SI + 0x40` (8 bytes): The USN of the most recent journal record for this file
+   452→- **UsnJournalId** at offset `$SI + 0x48` (8 bytes): Matches the journal's UsnJournalID from $Max
+   453→
+   454→This allows bidirectional lookup:
+   455→- **USN → MFT**: Use FileReferenceNumber to find the MFT entry
+   456→- **MFT → USN**: Use LastUsn from $SI to find the most recent USN record for a file
+   457→
+   458→### Important Caveats
+   459→
+   460→1. **Sequence number mismatch**: If the MFT entry's sequence number doesn't match the USN record's, the MFT entry has been reused by a different file. The USN record is historical.
+   461→2. **Journal wrap**: The USN value may refer to a record that has been overwritten in the circular journal. Check if `Usn < FirstUsn` (from $Max) — if so, the record is gone.
+   462→3. **V4 records**: Don't have filenames; must follow up with the companion V2/V3 record.
+   463→4. **Parent directory**: The ParentFileReferenceNumber can be used to reconstruct full paths by walking up the directory tree through MFT.
+   464→
+   465→---
+   466→
+   467→## 13. Example Parsing Logic (Python)
+   468→
+   469→```python
+   470→import struct
+   471→from datetime import datetime, timezone, timedelta
+   472→
+   473→# Windows FILETIME epoch: Jan 1, 1601
+   474→FILETIME_EPOCH = datetime(1601, 1, 1, tzinfo=timezone.utc)
+   475→
+   476→def filetime_to_datetime(ft):
+   477→    """Convert 100ns ticks since 1601-01-01 to Python datetime."""
+   478→    return FILETIME_EPOCH + timedelta(microseconds=ft // 10)
+   479→
+   480→def parse_file_reference_v2(file_ref):
+   481→    """Decompose a 64-bit V2 file reference number."""
+   482→    mft_index = file_ref & 0xFFFFFFFFFFFF
+   483→    seq_number = (file_ref >> 48) & 0xFFFF
+   484→    return mft_index, seq_number
+   485→
+   486→def parse_usn_record(data, offset):
+   487→    """Parse a USN record at the given offset. Returns (record_dict, bytes_consumed)."""
+   488→    if len(data) - offset < 8:
+   489→        return None, 0
+   490→
+   491→    record_length = struct.unpack_from('<I', data, offset)[0]
+   492→    if record_length == 0:
+   493→        return None, 8  # skip padding
+   494→
+   495→    major_version = struct.unpack_from('<H', data, offset + 4)[0]
+   496→    minor_version = struct.unpack_from('<H', data, offset + 6)[0]
+   497→
+   498→    record = {
+   499→        'record_length': record_length,
+   500→        'major_version': major_version,
+   501→        'minor_version': minor_version,
+   502→    }
+   503→
+   504→    if major_version == 2:
+   505→        # V2: 64-bit file references
+   506→        record['file_reference_number'] = struct.unpack_from('<Q', data, offset + 0x08)[0]
+   507→        record['parent_file_reference_number'] = struct.unpack_from('<Q', data, offset + 0x10)[0]
+   508→        record['usn'] = struct.unpack_from('<q', data, offset + 0x18)[0]
+   509→        record['timestamp'] = filetime_to_datetime(struct.unpack_from('<Q', data, offset + 0x20)[0])
+   510→        record['reason'] = struct.unpack_from('<I', data, offset + 0x28)[0]
+   511→        record['source_info'] = struct.unpack_from('<I', data, offset + 0x2C)[0]
+   512→        record['security_id'] = struct.unpack_from('<I', data, offset + 0x30)[0]
+   513→        record['file_attributes'] = struct.unpack_from('<I', data, offset + 0x34)[0]
+   514→        filename_length = struct.unpack_from('<H', data, offset + 0x38)[0]
+   515→        filename_offset = struct.unpack_from('<H', data, offset + 0x3A)[0]
+   516→
+   517→        fn_bytes = data[offset + filename_offset : offset + filename_offset + filename_length]
+   518→        record['filename'] = fn_bytes.decode('utf-16-le', errors='replace').rstrip('\x00')
+   519→
+   520→        record['mft_entry'], record['sequence_number'] = \
+   521→            parse_file_reference_v2(record['file_reference_number'])
+   522→        record['parent_mft_entry'], record['parent_sequence_number'] = \
+   523→            parse_file_reference_v2(record['parent_file_reference_number'])
+   524→
+   525→    elif major_version == 3:
+   526→        # V3: 128-bit file references
+   527→        record['file_reference_number'] = data[offset + 0x08 : offset + 0x18]
+   528→        record['parent_file_reference_number'] = data[offset + 0x18 : offset + 0x28]
+   529→        record['usn'] = struct.unpack_from('<q', data, offset + 0x28)[0]
+   530→        record['timestamp'] = filetime_to_datetime(struct.unpack_from('<Q', data, offset + 0x30)[0])
+   531→        record['reason'] = struct.unpack_from('<I', data, offset + 0x38)[0]
+   532→        record['source_info'] = struct.unpack_from('<I', data, offset + 0x3C)[0]
+   533→        record['security_id'] = struct.unpack_from('<I', data, offset + 0x40)[0]
+   534→        record['file_attributes'] = struct.unpack_from('<I', data, offset + 0x44)[0]
+   535→        filename_length = struct.unpack_from('<H', data, offset + 0x48)[0]
+   536→        filename_offset = struct.unpack_from('<H', data, offset + 0x4A)[0]
+   537→
+   538→        fn_bytes = data[offset + filename_offset : offset + filename_offset + filename_length]
+   539→        record['filename'] = fn_bytes.decode('utf-16-le', errors='replace').rstrip('\x00')
+   540→
+   541→        # On NTFS, the 128-bit ref is effectively 64-bit in lower bytes
+   542→        if record['file_reference_number'][8:] == b'\x00' * 8:
+   543→            low64 = struct.unpack_from('<Q', record['file_reference_number'], 0)[0]
+   544→            record['mft_entry'], record['sequence_number'] = \
+   545→                parse_file_reference_v2(low64)
+   546→
+   547→    elif major_version == 4:
+   548→        # V4: extent/range-tracking record
+   549→        record['file_reference_number'] = struct.unpack_from('<Q', data, offset + 0x08)[0]
+   550→        record['parent_file_reference_number'] = struct.unpack_from('<Q', data, offset + 0x10)[0]
+   551→        record['usn'] = struct.unpack_from('<q', data, offset + 0x18)[0]
+   552→        record['reason'] = struct.unpack_from('<I', data, offset + 0x20)[0]
+   553→        record['source_info'] = struct.unpack_from('<I', data, offset + 0x24)[0]
+   554→        record['remaining_extents'] = struct.unpack_from('<I', data, offset + 0x28)[0]
+   555→        record['number_of_extents'] = struct.unpack_from('<I', data, offset + 0x2C)[0]
+   556→
+   557→        extents = []
+   558→        for i in range(record['number_of_extents']):
+   559→            ext_offset = offset + 0x30 + i * 16
+   560→            ext_start = struct.unpack_from('<Q', data, ext_offset)[0]
+   561→            ext_length = struct.unpack_from('<Q', data, ext_offset + 8)[0]
+   562→            extents.append({'offset': ext_start, 'length': ext_length})
+   563→        record['extents'] = extents
+   564→
+   565→        record['mft_entry'], record['sequence_number'] = \
+   566→            parse_file_reference_v2(record['file_reference_number'])
+   567→        record['filename'] = None  # V4 has no filename; look at companion V2/V3 record
+   568→
+   569→    record['is_delete'] = (record.get('reason', 0) & 0x00000200) != 0
+   570→    record['is_create'] = (record.get('reason', 0) & 0x00000100) != 0
+   571→    record['is_close'] = (record.get('reason', 0) & 0x80000000) != 0
+   572→
+   573→    return record, record_length
+   574→
+   575→def iterate_usn_journal(j_data):
+   576→    """Iterate all USN records from the raw $J stream bytes."""
+   577→    offset = 0
+   578→    while offset < len(j_data):
+   579→        record, consumed = parse_usn_record(j_data, offset)
+   580→        if consumed == 0:
+   581→            break
+   582→        if record is not None:
+   583→            yield record
+   584→        offset += consumed
+   585→        # Align to 8-byte boundary
+   586→        offset = (offset + 7) & ~7
+   587→```
+   588→
+   589→---
+   590→
+   591→## 14. Summary of Key Differences
+   592→
+   593→| Feature | V2 | V3 | V4 |
+   594→|---------|----|----|-----|
+   595→| **File ref size** | 64-bit | 128-bit | 64-bit |
+   596→| **Has filename?** | Yes | Yes | **No** |
+   597→| **Has timestamp?** | Yes | Yes | **No** |
+   598→| **Has SecurityId?** | Yes | Yes | **No** |
+   599→| **Has FileAttributes?** | Yes | Yes | **No** |
+   600→| **Has extents?** | No | No | **Yes** |
+   601→| **Fixed header** | 0x3C (60) | 0x4C (76) | 0x30 (48) |
+   602→| **Used on** | NTFS | NTFS + ReFS | NTFS only |
+   603→| **Windows version** | 2000+ | 8+ | 10+ |
+   604→| **Trigger** | All changes | All changes | Range tracking enabled + large files |
+   605→
+   606→---
+   607→
+   608→## 15. Practical Notes for Parser Implementation
+   609→
+   610→1. **8-byte alignment**: All record lengths are padded to 8-byte boundaries. When advancing between records, use `(record_length + 7) & ~7` or simply trust `RecordLength` (which is already aligned).
+   611→
+   612→2. **Sparse regions**: The `$J` stream is sparse. When reading raw bytes, regions of all-zero bytes indicate journal wrap (old records zeroed out). Detect these by checking if `RecordLength == 0`.
+   613→
+   614→3. **Record length calculation**: `RecordLength = pad8(FixedHeaderSize + FileNameLength)`. For V2: `pad8(0x3C + FileNameLength)`. For V3: `pad8(0x4C + FileNameLength)`.
+   615→
+   616→4. **USN as offset**: The `Usn` field in each record is its virtual byte offset in the journal. This is **not** a sequential counter — it's a byte position. Two consecutive records may have USNs that differ by more than the first record's length (if intervening records were in the sparse/zeroed region).
+   617→
+   618→5. **Minimum record size**: The NTFS driver enforces a minimum record size of 80 bytes (0x50) for V2/V3 records. This accounts for the fixed header plus a minimum filename length.
+   619→
+   620→6. **Filename encoding**: Filenames are UTF-16LE, **not** null-terminated in the length-counted portion. The `FileNameLength` field gives the exact byte count. There may be null padding bytes between the filename end and the record end (to reach 8-byte alignment).
+   621→
+   622→7. **Version detection**: Always read `MajorVersion` at offset 0x04 to determine which layout to use. A well-formed parser should handle V2, V3, and V4.
+   623→
+   624→8. **V4 companion records**: When you encounter a V4 record, the **next** record in the stream should be a V2 or V3 record with the same `Usn` value, containing the filename and metadata for the same change event.
+   625→
+   626→9. **Journal wrap detection**: Compare each record's `Usn` against the `FirstUsn` and `NextUsn` from the `$Max` stream. If `Usn < FirstUsn`, the record is in the wrapped/invalid region.
+   627→
+   628→10. **$J raw access**: To read the raw `$J` stream outside of the Windows API, you need to:
+   629→    - Open the volume handle (e.g., `\\.\C:`)
+   630→    - Parse the MFT to find the `$UsnJrnl` entry
+   631→    - Read the non-resident $DATA attribute named `$J`
+   632→    - Or use `FSCTL_ENUM_USN_DATA` which returns records starting from a given USN
+   633→
+   634→---
+   635→
+   636→## References
+   637→
+   638→- [Microsoft USN_RECORD_V2 (winioctl.h)](https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ns-winioctl-usn_record_v2)
+   639→- [Microsoft USN_RECORD_V3 (ntifs.h)](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-usn_record_v3)
+   640→- [Microsoft USN_RECORD_V4 (winioctl.h)](https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ns-winioctl-usn_record_v4)
+   641→- [Microsoft Change Journal Records](https://learn.microsoft.com/en-us/windows/win32/fileio/change-journal-records)
+   642→- [libyal NTFS Specification](https://github.com/libyal/libfsntfs/blob/master/documentation/New%20Technologies%20File%20System%20(NTFS).asciidoc)
+   643→- [forefst ReFS Reference — USN Journal](https://xbpt.gitlab.io/forefst/structures/usn_journal/)
+   644→- [artefacts.help — NTFS UsnJrnl](https://artefacts.help/windows_usnjrnl.html)
+   645→- [NTFS Documentation (flatcap)](https://flatcap.github.io/linux-ntfs/ntfs/concepts/file_record.html)
+   646→

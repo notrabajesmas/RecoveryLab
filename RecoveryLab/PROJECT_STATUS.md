@@ -1,7 +1,7 @@
 # RecoveryLab — Project Status & Resume Guide
 
 > **Ultima actualización**: 2026-08-05
-> **Version actual**: v0.3.1
+> **Version actual**: v0.4
 > **Repo GitHub**: https://github.com/notrabajesmas/RecoveryLab (privado)
 > **Pregunta central**: ¿Qué puede recuperar RecoveryLab hoy que ayer no podía?
 
@@ -17,7 +17,7 @@ RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS
 | Motor B (MFT-First) | ✅ Funcional | 100% metadata (75/75 archivos) |
 | Motor C (Orchestrator) | ✅ Funcional | Delegación adaptativa |
 | NTFS MFT Parser | ✅ Funcional + SCALED | 100% SHA-256 at 10,000 files, sub-quadratic time |
-| NTFS Journal Parser | ❌ Stub | `JournalEntry` dataclass existe, sin parsing real |
+| NTFS Journal Parser | ✅ Funcional + SCALED | 100% entries at 5K files, V2/V3 parser, MFT xref, delete detection |
 | Fragmentación | ❌ No implementado | No hay recuperación de archivos fragmentados |
 | EXIF metadata | ❌ No implementado | No hay extracción de metadata JPEG |
 | GUI | ❌ No implementado | Solo CLI |
@@ -31,7 +31,7 @@ RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS
 | Sprint 1 | Carving básico | 0% → 54.7% | ✅ Completado |
 | Sprint 2 | Cerrar JPEG + benchmark real | 91.4% → 100% real | ✅ Completado |
 | **Sprint 3** | **MFT Scale Benchmark** | **100% SHA-256 at 10K files** | **✅ Completado** |
-| Sprint 3b | Journal Parser | NTFS Journal 0% → 90% | ⏳ Próximo |
+| **Sprint 3b** | **USN Journal Parser** | **100% entries at 5K files** | **✅ Completado** |
 | Sprint 4 | Fragmentación | 0% → 50% | Pendiente |
 | Sprint 5 | EXIF metadata | 0% → 100% | Pendiente |
 | Sprint 6 | GUI (CLI → RecoveryLab.exe) | Interacción visual | Pendiente |
