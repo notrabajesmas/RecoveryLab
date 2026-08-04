@@ -1,0 +1,46 @@
+# RecoveryLab .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large binary datasets (can regenerate)
+datasets/ntfs/healthy/*.img
+datasets/ntfs/damaged/*.img
+output/datasets/*.img
+output/datasets_frag/*.img
+
+# Generated output (regenerable)
+output/results/
+output/diag_0001/
+output/exp_jpeg_causality/
+output/inst_0002/
+output/val_0001/
+
+# Benchmark temp files
+results/benchmark_real_jpegs_per_file.csv
+
+# Logs
+*.log
