@@ -366,7 +366,9 @@ def parse_ntfs_image(image: bytes, cluster_size: int = 4096) -> NTFSMetadata:
     
     # Parse MFT entries
     mft_offset = mft_start_cluster * cluster_size
-    max_mft_entries = min(10000, (len(image) - mft_offset) // MFT_RECORD_SIZE)
+    # No artificial cap — parse all MFT entries that fit in the image
+    # (was min(10000, ...) which cut off at 10K records)
+    max_mft_entries = (len(image) - mft_offset) // MFT_RECORD_SIZE
     
     consecutive_errors = 0
     

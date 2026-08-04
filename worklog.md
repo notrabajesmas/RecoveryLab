@@ -1094,3 +1094,30 @@ Stage Summary:
 - 2 commits pushed: v0.3 initial + scripts/worklog
 - PROJECT_STATUS.md created as resume guide — read this first when continuing
 - Next sprint: Sprint 3 — Journal Parser (0% → 90%)
+
+---
+Task ID: 29
+Agent: Main
+Task: Sprint 3 — MFT Parser Scale Benchmark (100 → 10,000 files)
+
+Work Log:
+- User identified paradigm shift: RecoveryLab is no longer just a carver, it's a filesystem recovery engine
+- User requested scale benchmark: 100, 500, 1000, 5000, 10000 files measuring Recovery/SHA/Tiempo/RAM
+- Created scripts/benchmark_mft_scale.py with:
+  - 5 scale points (100, 500, 1000, 5000, 10000)
+  - Memory isolation for 10K subprocess
+  - Full metrics: recovery, SHA-256, filenames, timestamps, data runs, time, RAM
+- First run: 100% at 100-5000, but 99.88% at 10000 (12 files missing)
+- ROOT CAUSE: MFT parser had artificial cap max_mft_entries = min(10000, ...) → cut off at 10K records
+- FIX: Removed cap → max_mft_entries = (len(image) - mft_offset) // MFT_RECORD_SIZE
+- Re-run: 10000/10000 SHA-256 = 100% across ALL scale points
+- Performance: sub-quadratic time (34.8x for 100x files), linear RAM (27 MB at 10K), 8000 files/sec
+- Updated CHANGELOG.md with v0.3.1
+- Updated PROJECT_STATUS.md with scale benchmark results
+
+Stage Summary:
+- MFT Parser Scale Benchmark: 100% SHA-256 from 100 to 10,000 files
+- Bug fix: removed MFT entry cap (min(10000,...) → uncapped)
+- Scaling: sub-quadratic time, linear RAM, 8000 files/sec throughput
+- Parser is production-ready for scale
+- Next: Sprint 3b — Journal Parser (0% → 90%)
