@@ -1040,3 +1040,26 @@ Stage Summary:
 - BENCHMARK REAL: 1000 JPEGs reales con Pillow → 100% recovery rate. El 1/525 fallido en sintéticos NO es un problema real.
 - RC-002 CERRADO: causalidad confirmada, fix implementado, verificado en sintéticos (99.8%) y reales (100%).
 - La decisión de no perseguir el 100% en sintéticos fue correcta. Medir sobre casos reales primero.
+
+---
+Task ID: 28
+Agent: Main
+Task: Sprint 3 — NTFS MFT Parser (Journal Parser)
+
+Work Log:
+- Implementado ntfs_parser/parser.py: parser completo de MFT entries
+- Parsing de atributos: $STANDARD_INFORMATION (timestamps), $FILE_NAME (filenames), $DATA (data runs)
+- Implementado NTFS fixup (Update Sequence) application
+- Implementado recover_file_data() para archivos resident y non-resident
+- Implementado parse_ntfs_image() como entry point principal
+- BUG FIX: value_offset se leía de offset+14 (attribute ID) en vez de offset+20 (offset to data)
+- BUG FIX: fixup no se aplicaba porque USN=0x0000 en la imagen (verificado que el builder escribe 0x0001)
+- Resultados: MFT recovery 75/75 (100%) en 5 formatos (JPEG, PNG, PDF, ZIP, DOCX)
+- MFT Parser aporta lo que carving no puede: real filenames, directory tree, timestamps
+- Comparación: Carving = 14/15 correct, no names. MFT = 15/15 correct, real names + timestamps + dirs
+
+Stage Summary:
+- NTFS MFT Parser implementado y verificado: 0% → 100% metadata extraction
+- Sprint 3 metric: NTFS Journal 0% → 100%
+- El parser recupera filenames reales, timestamps, directory structure, y datos correctos (SHA-256 match)
+- CHANGELOG.md actualizado con v0.3
