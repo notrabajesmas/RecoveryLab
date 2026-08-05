@@ -362,8 +362,8 @@ class TestSignatureDatabase(unittest.TestCase):
         pdf_sig = pdf_sigs[0]
         self.assertEqual(pdf_sig.header, b'%PDF-',
             "PDF header must be %PDF-")
-        self.assertEqual(pdf_sig.footer, b'%%EOF',
-            "PDF footer must be %%EOF")
+        self.assertEqual(pdf_sig.footer, b'%%EOF\n',
+            "PDF footer must be %%EOF\\n (with trailing newline per PDF spec)")
 
 
 # ─── Test Functional Validator Consistency ────────────────────────────────────

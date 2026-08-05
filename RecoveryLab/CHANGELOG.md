@@ -8,32 +8,31 @@ Before this version, RecoveryLab could not recover sparse NTFS files.
 The parser silently discarded sparse data runs (treating them as end-of-list),
 resulting in truncated or missing file data.
 
-Now RecoveryLab correctly recovers sparse files with zero-filled gaps,
-verified against a permanent sparse corpus with SHA-256 100%.
+Now RecoveryLab correctly recovers sparse files with zero-filled gaps.
 
-**Benchmark:**
+**Benchmark (CI-verified 2026-08-05):**
 
-| Before | After |
-|--------|-------|
-| Sparse files: 0% | Sparse files: 100% |
+| Category | Files | RR | RFS | RC | Time | RAM |
+|----------|------:|---:|----:|---:|-----:|----:|
+| Normal | 20/20 | 100.0% | 0.815 | 0.500 | 0.53s | 117 MB |
+| Fragmented | 20/20 | 100.0% | 0.815 | 0.500 | 0.50s | 159 MB |
+| Deleted | 20/20 | 100.0% | 0.815 | 0.500 | 0.48s | 159 MB |
+| **Sparse** | **20/20** | **100.0%** | **0.850** | **0.500** | **0.19s** | **159 MB** |
 
 **What changed:**
 
-- `ntfs_parser/parser.py`: Fixed `_parse_data_runs()` — sparse runs (offset_size==0) are now parsed correctly instead of being treated as end-of-list. Added `is_sparse` flag to `DataRun` and `MFTEntry`.
+- `ntfs_parser/parser.py`: Fixed `_parse_data_runs()` — sparse runs (offset_size==0) now parsed correctly. Added `is_sparse` flag to `DataRun` and `MFTEntry`.
 - `ntfs_parser/parser.py`: Updated `recover_file_data()` — uses `is_sparse` flag to zero-fill sparse runs.
-- `core/stages.py`: `FragmentStage` is now sparse-aware — marks sparse files and adjusts confidence (0.95 for sparse vs 1.0 for normal).
-- `dataset_builder/ntfs_image.py`: Added `add_sparse_file()` method, `is_sparse` flag on `FileInfo` and `DataRun`, sparse-aware `_encode_run_list()`, `_allocate_user_data()`, and `_write_user_data()`.
-- `datasets/ntfs/sparse/`: New corpus — 20 sparse files with cluster-aligned zero holes, 20/20 verified, RR=100%.
-- `docs/`: User documentation — Installation, QuickStart, CLI, Recovery Profiles, API, Plugin Guide.
-
-**Product metrics:**
-
-| Category | Files | RR | RFS | Time |
-|----------|------:|---:|----:|-----:|
-| Normal | 20 | 100% | 0.850 | 0.53s |
-| Fragmented | 20 | 100% | 0.850 | 0.49s |
-| Deleted | 20 | 100% | 0.850 | 0.48s |
-| **Sparse** | **20** | **100%** | **0.850** | **0.21s** |
+- `core/stages.py`: `FragmentStage` is now sparse-aware.
+- `dataset_builder/ntfs_image.py`: Added `add_sparse_file()` method.
+- `datasets/ntfs/sparse/`: New corpus — 20 sparse files, 20/20 CI-verified.
+- `scripts/ci_full.py`: Sparse category now included in CI pipeline.
+- `scripts/build_sparse_corpus.py`: Fixed manifest key (`filename` → `name` for consistency).
+- `docs/`: User documentation added.
+- `README.md`: Created (was missing — pip install was broken).
+- `pyproject.toml`: Added real dependencies (numpy, matplotlib, Pillow, psutil).
+- `docs/Installation.md`: Fixed — no longer claims "standard library only".
+- `tests/test_carving_impeccable.py`: Fixed PDF footer assertion (19/19 now pass).
 
 **Regression: no regressions** — existing corpus (normal/fragmented/deleted) still at 100%.
 
@@ -53,71 +52,33 @@ rc = result.statistics.cost
 
 rc.cpu_time_seconds     # CPU time
 rc.peak_ram_mb          # Peak RAM
-rc.bytes_scanned        # Bytes read from image (carving = entire image)
+rc.bytes_scanned        # Bytes read from image
 rc.strategy_cost_total  # Sum of strategy cost multipliers
 rc.strategies_run       # Which stages actually executed
-rc.read_efficiency      # Fraction of reads that were useful (0.0-1.0)
+rc.read_efficiency      # Fraction of useful reads (0.0-1.0)
 
-result.statistics.recovery_cost_score  # Normalized 0-1 (higher = cheaper)
-```
-
-**Strategy profiles (7, up from 4):**
-```
-recoverylab scan disk.img --profile fast         # MFT only — lowest RC
-recoverylab scan disk.img --profile balanced     # MFT + Journal — moderate RC
-recoverylab scan disk.img --profile mft_first    # MFT → Journal → Carving (default)
-recoverylab scan disk.img --profile full         # All strategies — highest RR+RFS, highest RC
+result.statistics.recovery_cost_score  # Normalized 0-1
 ```
 
 **Stability Policy (STABILITY_POLICY.md):**
 
 Three tiers with different guarantees:
 - Tier 1 (Public API): core.* — FROZEN, breaking = MAJOR bump
-- Tier 2 (Extension API): RecoveryStrategy, PipelineStage — STABLE, breaking = deprecation
+- Tier 2 (Extension API): RecoveryStrategy, PipelineStage — STABLE
 - Tier 3 (Internal): motors/, ntfs_parser/, strategies/ — may change freely
-
-v0.x: breaking changes allowed in Public API but documented in CHANGELOG.
-v1.x: no breaking Public API changes without MAJOR version bump.
 
 **Full CI pipeline:**
 ```
 python scripts/ci_full.py
-
-✔ API tests (25)
-✔ Corpus tests (60/60)
-✔ RR ≥ 100%
-✔ RFS
-✔ RC (cost + efficiency)
-✔ Regression check
-✔ Product metrics table
 ```
-
-**Product metrics (three dimensions):**
-
-| Profile | RR | RFS | RC score | Description |
-|---------|---:|----:|---------:|-------------|
-| fast | 95.2% | 0.850 | 0.873 | MFT only |
-| balanced | 95.2% | 0.850 | 0.823 | MFT + Journal |
-| mft_first | 95.7% | 0.815 | 0.500 | Default pipeline |
-| full | 95.7% | 0.815 | 0.500 | All strategies |
-
-**Architecture changes:**
-- `core/result.py`: Added `RecoveryCost` dataclass. `RecoveryStatistics.cost` field. `recovery_cost_score` property. Updated `summary` to include RC.
-- `core/engine.py`: `RecoveryEngine.VERSION` → "0.5.2". Added `PROFILES` dict (7 profiles). `_compute_statistics()` now populates `RecoveryCost`. Added `_compute_strategy_cost()`.
-- `core/__init__.py`: `__version__` → "0.5.2". Added `RecoveryCost` to exports.
-- `recoverylab.py`: Version → "0.5.2". Added `fast` and `balanced` profiles. Shows RC metrics in output.
-- `STABILITY_POLICY.md`: NEW — defines three API tiers with version rules.
-- `scripts/ci_full.py`: NEW — full CI pipeline (API + corpus + RR + RFS + RC + regression).
-- `tests/test_api_contract.py`: Added 3 RecoveryCost tests (25 total).
 
 ---
 
 ## v0.5.1 (2026-08-05)
 
-**API congelada + CLI usable + Corpus + CI — RecoveryLab es una herramienta usable**
+**API frozen + CLI usable + Corpus + CI**
 
-The RecoveryEngine public API is FROZEN. Changing public method signatures
-requires a MAJOR version bump. 22 API contract tests enforce this.
+The RecoveryEngine public API is FROZEN. 25 API contract tests enforce this.
 
 **API (frozen):**
 ```python
@@ -126,306 +87,57 @@ from core import RecoveryEngine, __version__
 engine = RecoveryEngine()
 result = engine.scan("disk.img")
 
-# Browse results
 for f in result.files:
     print(f.name, f.size, f.confidence, f.status.value)
 
-# Recover by id (NEW — consumer doesn't need engine reference)
 result.recover("mft_42", output_dir="recovered/")
 result.recover_all(output_dir="recovered/")
 
-# Lookups and grouping (NEW)
 result.get_file("mft_42")
-result.by_source()   # {"mft": [...], "carving": [...]}
-result.by_status()   # {"recovered": [...], "partial": [...]}
+result.by_source()
+result.by_status()
 
-# Statistics
-print(result.statistics.summary)  # "20/20 files (RR=100.0%, RFS=0.815, time=0.53s)"
-
-# Version
-print(__version__)  # "0.5.1"
-print(engine.version)  # "0.5.1"
+print(result.statistics.summary)
+print(__version__)
 ```
 
-**CLI (polished):**
+**CLI:**
 ```
-recoverylab scan disco.img                        # spinner + tabla + métricas
-recoverylab scan disco.img --json                 # JSON para scripts
-recoverylab scan disco.img --no-carving           # más rápido
-recoverylab recover disco.img salida/             # barra de progreso por archivo
+recoverylab scan disco.img
+recoverylab scan disco.img --json
+recoverylab recover disco.img salida/
 recoverylab recover disco.img salida/ --filter .jpg,.png
 recoverylab recover disco.img salida/ --min-confidence 0.8
-recoverylab info disco.img                        # metadata sin escaneo
-recoverylab --help                                # ejemplos + perfiles + formatos
-recoverylab --version                             # v0.5.1
+recoverylab info disco.img
+recoverylab --version
 ```
 
-CLI improvements over v0.5.0:
-- Progress spinner during scan
-- Confidence bars (█████ 1.00) per file during recover
-- Friendly error messages (missing image, permissions, unsupported format)
-- Rich `--help` with examples, strategy profiles, and supported formats
-- Full statistics at end: files found, recovered, time, RR, RFS, RAM
-
-**Pipeline architecture (unchanged, extensible):**
-```
-Image → Detect → NTFS → MFT → Journal → Fragment → Carving → Merge → Score → Results
-```
-
-**Corpus permanente (NEW):**
+**Corpus permanente:**
 ```
 datasets/ntfs/
-    normal/       — 20 files, 0% fragmentation
-    fragmented/   — 20 files, 50% fragmentation
-    sparse/       — (placeholder for v0.6.0)
-    compressed/   — (placeholder for v0.6.1)
-    deleted/      — 20 files, journal-recoverable
+    normal/       — 20 files
+    fragmented/   — 20 files
+    sparse/       — (placeholder, implemented in v0.6.0)
+    deleted/      — 20 files
 ```
-60/60 files verified against corpus (RR=100%).
-
-**CI regresión (NEW):**
-- `python scripts/ci_regression.py` — runs against corpus, checks for regressions
-- Baseline v0.5.1 saved. Future versions must recover ≥ as many files.
-- Exit code: 0 = no regression, 1 = regression detected
-
-**API contract tests (NEW):**
-- `python tests/test_api_contract.py` — 22 tests pass
-- Verifies method signatures, field names, enum values, pipeline structure
-- If a test fails → someone broke the frozen API → MAJOR version bump required
-
-**Packaging (NEW):**
-- `pyproject.toml` — `pip install recoverylab` (future)
-- Entry point: `recoverylab` command
-
-**Product metrics:**
-
-| Category | Files | RR | RFS | Time | RAM |
-|----------|------:|---:|----:|-----:|----:|
-| Normal | 20 | 100% | 0.815 | 0.53s | 116 MB |
-| Fragmented | 20 | 100% | 0.815 | 0.52s | 158 MB |
-| Deleted | 20 | 100% | 0.815 | 0.50s | 159 MB |
-
-**Architecture changes:**
-- `core/result.py`: Added `ScanResult.recover()`, `ScanResult.recover_all()`, `ScanResult.get_file()`, `ScanResult.by_source()`, `ScanResult.by_status()`. Added `os` import. Added API FROZEN docstring.
-- `core/engine.py`: Added `RecoveryEngine.VERSION`, `RecoveryEngine.version` property. Improved error handling (validate path, permissions, empty file). Added API FROZEN docstring.
-- `core/__init__.py`: Added `__version__ = "0.5.1"`. Added `FileStatus`, `FileSource` to exports.
-- `recoverylab.py`: Rewritten with progress spinner, confidence bars, friendly errors, rich help, full stats.
-- `pyproject.toml`: NEW — packaging configuration.
-- `tests/test_api_contract.py`: NEW — 22 API contract tests.
-- `scripts/build_corpus.py`: NEW — permanent test corpus builder.
-- `scripts/ci_regression.py`: NEW — regression CI against corpus.
 
 ---
 
 ## v0.5.0 (2026-08-05)
 
-**Sprint 4A: Multiple Data Runs — 0% → 100%**
+**Multiple Data Runs — 0% → 100%**
 
 RecoveryLab now recovers files split across multiple non-contiguous data runs (extents).
 
-**Visible result:** RecoveryLab can open an NTFS image with fragmented files
-and correctly recover a file distributed in 3+ extents with SHA-256 verification.
-
-**Benchmark:**
-
-| Fragmentation | Files | Multi-run | Recovered | SHA-256 OK |
-|:---:|:---:|:---:|:---:|:---:|
-| 0% | 20 | 0 | 20/20 | 100% |
-| 30% | 20 | 5 | 20/20 | 100% |
-| 50% | 20 | 8 | 20/20 | 100% |
-| 70% | 20 | 11 | 20/20 | 100% |
-| 100% | 20 | 17 | 20/20 | 100% |
-
-**Total multi-run files tested: 41 — SHA-256 failures: 0**
-
-**Refactor: Motors → Strategies (A-E):**
-- `strategies/` package with Strategy A (MFT), B (Journal), C (Carving), D (Fragment), E (Hybrid)
-- Strategy D (Fragment) is a new BaseMotor subclass for multi-run recovery
-- Strategy Engine updated with A-E naming (`STRATEGY_A_MFT`, `STRATEGY_B_JOURNAL`, etc.)
+Refactored Motors → Strategies (A-E):
+- Strategy A (MFT), B (Journal), C (Carving), D (Fragment), E (Hybrid)
 - Each strategy declares capabilities, cost, priority
 
-**Bug fixes (found by running real code paths):**
-- `_make_mft_record()`: attributes silently overflowed 1024-byte MFT record (bytearray auto-extends). Now truncates attributes that don't fit.
-- `_write_bitmap()`: crashed when `_allocated_clusters` contained out-of-range clusters (fragmentation gaps push past computed limits). Now skips out-of-range clusters.
-
-**Architecture:**
-- `strategies/strategy_d_fragment.py`: StrategyD — reconstruct from multiple data runs
-- `strategies/strategy_a_mft.py` through `strategy_e_hybrid.py`: Strategy wrappers
-- `recovery_judge/strategy_engine.py`: Updated A-E naming, `motor_class` points to `strategies/`
-- `scripts/benchmark_fragment_recovery.py`: Sprint 4A benchmark
-
 ---
 
-## v0.4.2 (2026-08-05)
+## Earlier versions (v0.1–v0.4)
 
-**RR + RFS as independent metrics + Strategy Engine**
+Initial development: carving motor, MFT parser, USN journal, RFS metric, strategy engine.
 
-Two major conceptual improvements before Sprint 4:
-
-**1. Recovery Rate (RR) and Recovery Fidelity Score (RFS) — separate metrics:**
-- RR: "Did we find the file?" — Recovered / Total
-- RFS: "How well did we recover it?" — 9-component weighted score
-- Combined: Quality = RR × RFS
-- RR also matches by SHA-256 (carving finds files even with wrong names)
-
-Examples:
-- MFT:     RR=100% × RFS=0.967 → Quality=0.967
-- Carving: RR=100% × RFS=0.450 → Quality=0.450
-- Partial: RR= 67% × RFS=0.950 → Quality=0.633
-
-**2. Strategy Engine — motors as configurable strategies:**
-- RecoveryStrategy: name, capabilities, priority, cost
-- StrategyProfile: ordered list of strategies (mft_first, journal_first, carving_first, full)
-- StrategyEngine: orchestrates profiles, computes RFS upper bound per profile
-- Max RFS per profile: 0.850 (ADS + EA not yet implemented in any strategy)
-- Future: user-configurable priority ordering
-
-**Architecture:**
-- `recovery_judge/fidelity.py`: RecoveryRate, RecoveryQuality, RecoveryRateResult, RecoveryQualityResult
-- `recovery_judge/strategy_engine.py`: RecoveryStrategy, StrategyProfile, StrategyEngine, 4 profiles
-
----
-
-## v0.4.1 (2026-08-05)
-
-**Motor B + Journal Integration + Recovery Fidelity Score**
-
-Sprint 3b completion — journal parser now INTEGRATED into the recovery motor:
-
-- ✔ Motor B `_fallback_journal()` now calls `recover_from_journal()` — no more empty stub
-- ✔ Journal fallback activated when MFT damage > 10% — recovers files MFT missed
-- ✔ Deleted file detection via journal: files with `USN_REASON_FILE_DELETE` flagged
-- ✔ Confidence scoring: journal-recovered files get 0.8 (with data) or 0.3 (name only)
-- ✔ Journal metadata stored in MotorResult for downstream analysis
-
-**Recovery Fidelity Score (RFS)** — granular metric beyond "file recovered?":
-
-  Component       Weight  What it measures
-  ──────────────  ─────  ──────────────────────────────────
-  Filename          15%  Was the original filename preserved?
-  SHA-256           25%  Is the data bit-perfect?
-  Timestamps        15%  Were created/modified times preserved?
-  Directory         10%  Was the directory path correct?
-  File Size          5%  Does size match original?
-  ACL                5%  Were access control lists preserved?
-  ADS               10%  Were alternate data streams preserved?
-  USN History       10%  Is the USN journal history intact?
-  EA                 5%  Were extended attributes preserved?
-
-Demo result:
-- MFT recovery: RFS = 0.900 (Name ✓ SHA ✓ TS ✓ Dir ✓ Size ✓ ACL ✓ ADS ✓ USN ✗ EA ✓)
-- Carving recovery: RFS = 0.450 (Name ✗ SHA ✓ TS ✗ Dir ✗ Size ✓ ACL ✗ ADS ✓ USN ✗ EA ✓)
-- MFT preserves 45% more fidelity than carving
-
-**Architecture:**
-- `motors/motor_b_mft_first.py`: `_fallback_journal()` → real implementation
-- `recovery_judge/fidelity.py`: `RecoveryFidelityScore`, `FidelityResult`, `FidelityComponent`
-
----
-
-## v0.4 (2026-08-05)
-
-**NTFS USN Journal Parser: 0% → 100%**
-
-Sprint 3b — USN Journal Parser:
-
-| Files  | Journal | Filenames | MFT Xref | Creates | Time   | RAM   |
-|-------:|--------:|----------:|---------:|--------:|-------:|------:|
-|    100 |   100%  |    100%   |   100%   |  100%   | 0.02s  | 0 MB  |
-|    500 |   100%  |    100%   |   100%   |  100%   | 0.10s  | 1 MB  |
-|  1,000 |   100%  |    100%   |   100%   |  100%   | 0.20s  | 1 MB  |
-|  5,000 |   100%  |    100%   |   100%   |  100%   | 1.02s  | 6 MB  |
-
-- ✔ USN_RECORD V2 parser (NTFS, Windows 2000+)
-- ✔ USN_RECORD V3 parser (ReFS / Windows# Windows 8+)
-- ✔ USN_RECORD V4 skip (range tracking, no metadata)
-- ✔ 24 USN_REASON flags decoded (CREATE, DELETE, RENAME, DATA_OVERWRITE, etc.)
-- ✔ MFT cross-reference (journal entry → MFT record number)
-- ✔ Deleted file detection via USN_REASON_FILE_DELETE
-- ✔ Historical metadata recovery (timestamps, parent directories)
-- ✔ $UsnJrnl generation in NTFSImageBuilder (synthetic images now have real journal)
-- ✔ 0 parse errors across all scale points
-
-**Architecture:**
-- `ntfs_parser/parser.py`: `_parse_usn_record()`, `_parse_usn_journal()`, `_read_journal_data_stream()`, `recover_from_journal()`, `USNReason` class
-- `dataset_builder/ntfs_image.py`: `_build_usn_records()`, `_build_usnjrnl_entry()`, `$UsnJrnl` MFT entry with $J and $Max streams
-
----
-
-## v0.3.1 (2026-08-05)
-
-**MFT Parser Scale Benchmark: 100% SHA-256 at 10,000 files**
-
-Sprint 3 — Scale Benchmark:
-
-| Files   | Recovery | SHA-256 | Filenames | Timestamps | Data Runs | Time   | RAM    |
-|--------:|---------:|--------:|----------:|-----------:|----------:|-------:|-------:|
-|     100 |    100%  |   100%  |    100%   |    100%    |   100%    | 0.04s  |  1 MB  |
-|     500 |    100%  |   100%  |    100%   |    100%    |   100%    | 0.20s  |  1 MB  |
-|   1,000 |    100%  |   100%  |    100%   |    100%    |   100%    | 0.24s  |  3 MB  |
-|   5,000 |    100%  |   100%  |    100%   |    100%    |   100%    | 0.86s  | 13 MB  |
-|  10,000 |    100%  |   100%  |    100%   |    100%    |   100%    | 1.25s  | 27 MB  |
-
-- ✔ 100% recovery + 100% SHA-256 across ALL scale points (100 → 10,000)
-- ✔ Sub-quadratic time scaling (34.8x for 100x more files)
-- ✔ Peak RAM: 27 MB at 10,000 files (linear growth)
-- ✔ Throughput: ~8,000 files/sec at 10K scale
-
-**Bug fixes:**
-- Removed artificial MFT entry cap (was `min(10000, ...)` → now uncapped)
-  - This caused 12 missing files at 10K scale
-
----
-
-## v0.3 (2026-08-05)
-
-**NTFS MFT Parser: 0% → 100% metadata extraction**
-
-- ✔ MFT entry parsing (filenames, timestamps, data runs, directory structure)
-- ✔ Real filenames (instead of "carved_0001.jpg")
-- ✔ Directory tree reconstruction
-- ✔ NTFS timestamps (created, modified, accessed)
-- ✔ Data run following for non-resident files
-- ✔ Resident file recovery (data embedded in MFT entry)
-- ✔ Deleted file detection (MFT entries not in use)
-- ✔ Fixup (Update Sequence) application for multi-sector MFT records
-
-**Benchmarks:**
-- MFT recovery: 75/75 files (100%) across 5 formats (JPEG, PNG, PDF, ZIP, DOCX)
-- SHA-256 verification: 100% match
-- Metadata: real filenames, 15 timestamps, 2 directory entries per image
-
-**Bug fixes:**
-- Fixed `_carve_file()` returning None for all JPEGs (dict vs bytes length check)
-- Fixed MFT parser reading value_offset from wrong attribute field (offset+14 vs offset+20)
-
----
-
-## v0.2 (2026-08-01)
-
-**Recovery rate: 99.8% synthetic / 100% real JPEGs**
-
-- ✔ PDF recovery (footer fix: `%%EOF\n`)
-- ✔ JPEG recovery (3-tier structural parser: next-JPEG boundary, SOS+byte-stuffing, last-FFD9 fallback)
-- ✔ PNG recovery (IEND chunk detection)
-- ✔ ZIP recovery (end-of-central-directory marker)
-- ✔ DOCX recovery (ZIP-based, `word/` internal path detection)
-- ✔ BMP false positive eliminated (was causing 44.6% dedup cascade)
-
-**Bug fixes:**
-- Fixed `_carve_file()` returning None for all JPEGs (dict vs bytes length check)
-
-**Benchmarks:**
-- Synthetic: 724/725 files (99.9%) — 5 formats × 3 sizes
-- Real JPEGs: 1000/1000 (100.00%) — 6 image modes × 5 size categories
-
----
-
-## v0.1 (2026-07-30)
-
-**Recovery rate: 54.7%**
-
-- Initial carving motor (signature-based recovery)
-- BMP false positive causing massive dedup cascade
-- PDF footer mismatch causing SHA-256 failures
-- JPEG truncation from first-FFD9 delimitation
+Benchmark numbers for these versions were not recorded by automated CI
+and should not be treated as verified. CI-verified metrics begin at v0.5.1.

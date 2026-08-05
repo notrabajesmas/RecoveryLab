@@ -6,9 +6,10 @@
   "cluster_size": 4096,
   "files": [
     {
-      "filename": "sparse_000.dat",
+      "name": "sparse_000.dat",
       "size": 20480,
-      "sha256": "184bcfa9f2115432095044dff6bf44278ded02c7d5de32cf163084523c406650",
+      "sha256": "22246f8c50912231f8539c0ce0717b35e63413625b38dbb544c701ea08ba4146",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -18,9 +19,10 @@
       ]
     },
     {
-      "filename": "sparse_001.dat",
+      "name": "sparse_001.dat",
       "size": 20480,
-      "sha256": "a1122798c3a410f816366a64eb82bf22e46f5dbb8f197e16615f945301df7d8f",
+      "sha256": "e2a94259d400a53b844adec0d8705c035c4ea36cb1d31afc49f77eee5956e57b",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -30,9 +32,10 @@
       ]
     },
     {
-      "filename": "sparse_002.dat",
+      "name": "sparse_002.dat",
       "size": 20480,
-      "sha256": "fec91399c44f868d5b40959dc0cb61b32b78f4b7432e7098753a8c40190739fa",
+      "sha256": "03eaf4da8f9cd69bd9c5851f2da6444b64475aaa8b23b4d4e8b691575763605c",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -42,9 +45,10 @@
       ]
     },
     {
-      "filename": "sparse_003.dat",
+      "name": "sparse_003.dat",
       "size": 20480,
-      "sha256": "9e1f6000c1fc0ce2682e5fdcbc3691aaff52cda1599e80677b4115e8c2f43a6b",
+      "sha256": "45234a5412a737b9298727668cbfc2806df61a020f2c5418371b110725940011",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -54,9 +58,10 @@
       ]
     },
     {
-      "filename": "sparse_004.dat",
+      "name": "sparse_004.dat",
       "size": 20480,
-      "sha256": "f24391868cf40df1996609489c5734597e20fe528cf794589b9e7add02eb4820",
+      "sha256": "acef83330b4d4180b3a891937388ab8b54c2e6f79ccf4ca984171da6ed62a9ec",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -66,9 +71,10 @@
       ]
     },
     {
-      "filename": "sparse_005.dat",
+      "name": "sparse_005.dat",
       "size": 20480,
-      "sha256": "36863a70d52acc0d824e8f3ae30da7b6565f7f96f8dac9d4d2f4d42c6cce1c90",
+      "sha256": "038eba15379a1c40d55d3929936a3f68e9b1e587f4682540a5c858ff3fc7f90d",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -78,9 +84,10 @@
       ]
     },
     {
-      "filename": "sparse_006.dat",
+      "name": "sparse_006.dat",
       "size": 20480,
-      "sha256": "e6d724c8443a75ca5c5774e3b3fef1e7d71c2b8463ccd473124b91154b816f9d",
+      "sha256": "c19c227528075451beb9098b9bcf2eeb0393cee974f49b163375348907ea3950",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -90,9 +97,10 @@
       ]
     },
     {
-      "filename": "sparse_007.dat",
+      "name": "sparse_007.dat",
       "size": 20480,
-      "sha256": "7590ceadc00315d39b37747a892f13bb9e13f2aefbd116e13f83cf436202cfd2",
+      "sha256": "7982a3437866dfe9900d989a3a22b04a6554523df276e807d4b0dd297c4b8acc",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -102,9 +110,10 @@
       ]
     },
     {
-      "filename": "sparse_008.dat",
+      "name": "sparse_008.dat",
       "size": 20480,
-      "sha256": "4cf3cbf54d42f435a56db6c47d10195d00ad69f9bebb6266b1d1ae73f47790ba",
+      "sha256": "1995c2d965ad9bc8ece24449c20bebe08704ec41fca00dfe3f2b6888fbf7f760",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -114,9 +123,10 @@
       ]
     },
     {
-      "filename": "sparse_009.dat",
+      "name": "sparse_009.dat",
       "size": 20480,
-      "sha256": "60927190402f6f90fdcc90d99933dcf44113aa76b8e1dae83a626a09fdee9284",
+      "sha256": "cd6104028ae11cb8540ca099dd2b5e1ad4ed821a841fb29738477c3f7d110365",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -126,9 +136,10 @@
       ]
     },
     {
-      "filename": "sparse_010.dat",
+      "name": "sparse_010.dat",
       "size": 20480,
-      "sha256": "5771adb44af4bef7c2be9f52dd7ffd7276098f0c5b9b73e8a82941a2e61868e3",
+      "sha256": "5fd78129e88f8ec53b281f8c462815b11350c07a02554b8e713c851fb531e7ca",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -138,9 +149,10 @@
       ]
     },
     {
-      "filename": "sparse_011.dat",
+      "name": "sparse_011.dat",
       "size": 20480,
-      "sha256": "dec8f54e875b5ad3e3cf663de43d30cff341b9de76b1182322a758848108e69e",
+      "sha256": "5e4be56b6db8ef5175603f8f3eef81055e98bab345c7fe3f278bc712f6cb20bb",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -150,9 +162,10 @@
       ]
     },
     {
-      "filename": "sparse_012.dat",
+      "name": "sparse_012.dat",
       "size": 20480,
-      "sha256": "7e65ca7d85ff397838547e12b737a11d72c1860258dc137884eaa11283e70460",
+      "sha256": "fc9ecc70258e632cb014614adb1cbc22e0ed29d1a5eb2e7fa7cf1e96c19ce492",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -162,9 +175,10 @@
       ]
     },
     {
-      "filename": "sparse_013.dat",
+      "name": "sparse_013.dat",
       "size": 20480,
-      "sha256": "01bc2186d06df261d7703d8d688931bfad6e40a0ec40e2f67e59a452684cf0ea",
+      "sha256": "47e07f65ba5d26752773a7a3cc35838e1240a28c52eb007134455efcf5017a89",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -174,9 +188,10 @@
       ]
     },
     {
-      "filename": "sparse_014.dat",
+      "name": "sparse_014.dat",
       "size": 20480,
-      "sha256": "d5d466eee6b4002047ffc5f78b5c648ae68a28795108cd41ea5f9f237312a86a",
+      "sha256": "12d319e73ce40a9001aedd6c28e3ddcd99390d011ea3e8cad333ccc2d9f54971",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -186,9 +201,10 @@
       ]
     },
     {
-      "filename": "sparse_015.dat",
+      "name": "sparse_015.dat",
       "size": 20480,
-      "sha256": "a4f024c30b690c0b8309bad752d9fb347b1624e394aa41c29625e00dd712ad7f",
+      "sha256": "0e35211610475af99164e033a57cf9ae81885ca42007f44509b7759e694b748f",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -198,9 +214,10 @@
       ]
     },
     {
-      "filename": "sparse_016.dat",
+      "name": "sparse_016.dat",
       "size": 20480,
-      "sha256": "29840042777ec430360f63482a47156c283d62eebd4f2d4764eee555ecc2f89c",
+      "sha256": "7e25de471b20a3344d358b59d4f6a44289f570df18ce60d95539299a88ad5d3f",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -210,9 +227,10 @@
       ]
     },
     {
-      "filename": "sparse_017.dat",
+      "name": "sparse_017.dat",
       "size": 20480,
-      "sha256": "c40ae5a6e4a9feadbc72bfcf89c7c3efe1198a43572b66eefae4ee98d8c02be4",
+      "sha256": "fee4c3f48ea6d4c37156d07754d2b0f299ce4468ad1aefc75e4ddb5dece1fa18",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -222,9 +240,10 @@
       ]
     },
     {
-      "filename": "sparse_018.dat",
+      "name": "sparse_018.dat",
       "size": 20480,
-      "sha256": "b56fe9d4741c2856164ee77fefdd802e309e3536fe3e80bc32fdaf0073e8312f",
+      "sha256": "83f2eb554c1eae22ec428ad9fa4a62f31bcdf4096ff54e6e017811c400425762",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [
@@ -234,9 +253,10 @@
       ]
     },
     {
-      "filename": "sparse_019.dat",
+      "name": "sparse_019.dat",
       "size": 20480,
-      "sha256": "c8801ba345d2eae7b3fda8f5026090db66421db20c522e131f5c4b43d30737a2",
+      "sha256": "2eaf059ae66b75a758757b67a424911ca74c2e8580ae900f831ff315fd4f6cec",
+      "is_directory": false,
       "is_sparse": true,
       "sparse_regions": [
         [

@@ -98,9 +98,10 @@ def build_sparse_corpus(output_dir=None, num_files=20, verify=True):
         header_size = CLUSTER_SIZE * 2
         hole_size = CLUSTER_SIZE * 2
         manifest["files"].append({
-            "filename": name,
+            "name": name,
             "size": len(data),
             "sha256": sha,
+            "is_directory": False,
             "is_sparse": True,
             "sparse_regions": [[header_size, hole_size]],
         })
@@ -155,7 +156,7 @@ def build_sparse_corpus(output_dir=None, num_files=20, verify=True):
             # Find expected SHA from manifest
             expected_sha = None
             for mf in manifest["files"]:
-                if mf["filename"] == entry.filename:
+                if mf.get("name", mf.get("filename", "")) == entry.filename:
                     expected_sha = mf["sha256"]
                     break
             

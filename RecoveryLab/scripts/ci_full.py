@@ -92,7 +92,7 @@ def main():
     project_root = Path(__file__).parent.parent
     corpus_dir = project_root / "datasets" / "ntfs"
     
-    corpus_categories = ["normal", "fragmented", "deleted"]
+    corpus_categories = ["normal", "fragmented", "deleted", "sparse"]
     corpus_results = {}
     
     for category in corpus_categories:

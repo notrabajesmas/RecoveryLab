@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "recoverylab"
@@ -11,6 +11,12 @@ license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
     {name = "RecoveryLab Team"},
+]
+dependencies = [
+    "numpy>=1.24",
+    "matplotlib>=3.7",
+    "Pillow>=9.0",
+    "psutil>=5.9",
 ]
 keywords = ["recovery", "ntfs", "forensics", "file-recovery", "data-recovery"]
 classifiers = [
@@ -40,6 +46,12 @@ packages = [
     "corruptor",
     "experiment_runner",
     "visualizer",
+    "tools",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
 ]
 
 [tool.setuptools.package-data]
