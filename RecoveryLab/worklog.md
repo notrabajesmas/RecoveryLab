@@ -1243,3 +1243,26 @@ Stage Summary:
 - Strategy refactor complete: motors → strategies (A-E) with declared capabilities/cost
 - Two real bugs found and fixed by running actual code paths
 - Version bumped to v0.5.0
+
+---
+Task ID: 32
+Agent: Main
+Task: Congelar API pública + CLI funcional + Pipeline
+
+Work Log:
+- Created core/ package with RecoveryEngine (public API)
+- Created core/result.py: ScanResult, RecoveredItem, RecoveryStatistics, FileStatus, FileSource
+- Created core/pipeline.py: Pipeline, PipelineStage, PipelineContext — extensible architecture
+- Created core/stages.py: 8 concrete stages (Detect, NTFSParse, MFT, Journal, Fragment, Carving, Merge, Scoring)
+- Created recoverylab.py CLI: scan, recover, info commands
+- Tested end-to-end: scan image → list files → recover to disk
+- Fixed scoring stage: RR computed without manifest, RFS estimated by source
+- Pipeline architecture: adding FAT32/exFAT/EXT4 = inserting a new stage
+- Updated CHANGELOG.md v0.5.1, PROJECT_STATUS.md
+
+Stage Summary:
+- RecoveryEngine API frozen: scan(), recover(), recover_all(), statistics()
+- CLI works: recoverylab scan/recover/info
+- Pipeline: Image → Detect → NTFS → MFT → Journal → Fragment → Carving → Merge → Score → Results
+- Consumer never sees MFT, Journal, or data runs — only RecoveredItem
+- Version bumped to v0.5.1

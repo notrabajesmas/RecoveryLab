@@ -1,5 +1,55 @@
 # RecoveryLab — Changelog
 
+## v0.5.1 (2026-08-05)
+
+**Public API + CLI — RecoveryLab is now a usable tool**
+
+The RecoveryEngine public API is frozen. Consumers (CLI, GUI, REST, plugins)
+use ONLY `core.RecoveryEngine`. They never see MFT, Journal, or data runs.
+
+**API:**
+```python
+engine = RecoveryEngine()
+result = engine.scan("disk.img")
+for f in result.files:
+    print(f.name, f.size, f.confidence)
+engine.recover(result.files[0], output_dir="recovered/")
+engine.recover_all(result, output_dir="recovered/")
+```
+
+**CLI:**
+```
+recoverylab scan disco.img
+recoverylab recover disco.img salida/
+recoverylab recover disco.img salida/ --filter .jpg,.png
+recoverylab info disco.img
+```
+
+**Pipeline architecture:**
+```
+Image → Detect → NTFS → MFT → Journal → Fragment → Carving → Merge → Score → Results
+```
+Each stage is a `PipelineStage` — adding FAT32, exFAT, or EXT4 is
+inserting a new stage. Adding a plugin is subclassing `RecoveryStrategy`.
+
+**Release metrics table:**
+| Metric | Value |
+|--------|-------|
+| Files found | 22 |
+| RR | 100% |
+| RFS | 0.795 |
+| Time | 2.12s |
+| RAM | 148 MB |
+
+**Architecture:**
+- `core/engine.py`: RecoveryEngine — public API
+- `core/result.py`: ScanResult, RecoveredItem, RecoveryStatistics, FileStatus, FileSource
+- `core/pipeline.py`: Pipeline, PipelineStage, PipelineContext
+- `core/stages.py`: 8 concrete stages (Detect, NTFSParse, MFT, Journal, Fragment, Carving, Merge, Scoring)
+- `recoverylab.py`: CLI entry point
+
+---
+
 ## v0.5.0 (2026-08-05)
 
 **Sprint 4A: Multiple Data Runs — 0% → 100%**

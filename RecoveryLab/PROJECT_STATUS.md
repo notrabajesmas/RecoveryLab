@@ -1,7 +1,7 @@
 # RecoveryLab — Project Status & Resume Guide
 
 > **Ultima actualización**: 2026-08-05
-> **Version actual**: v0.5.0
+> **Version actual**: v0.5.1
 > **Repo GitHub**: https://github.com/notrabajesmas/RecoveryLab (privado)
 > **Pregunta central**: ¿Qué puede recuperar RecoveryLab hoy que ayer no podía?
 
@@ -22,7 +22,9 @@ RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS
 | NTFS Journal Parser | ✅ Funcional + SCALED + INTEGRATED | 100% entries at 5K files |
 | **Métrica: RR (Recovery Rate)** | ✅ Funcional | Recuperados / Total — "¿Lo encontramos?" |
 | **Métrica: RFS (Recovery Fidelity Score)** | ✅ Funcional | 9-component — "¿Qué tan bien lo recuperamos?" |
-| EXIF metadata | ❌ No implementado | No hay extracción de metadata JPEG |
+| RecoveryEngine API | ✅ Congelada | scan(), recover(), statistics() |
+| CLI | ✅ Funcional | recoverylab scan/recover/info |
+| Pipeline | ✅ Funcional | 8 stages, extensible (FAT32/exFAT/EXT4) |
 | GUI | ❌ No implementado | Solo CLI |
 
 ---
