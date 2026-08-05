@@ -27,7 +27,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-VERSION = "0.5.1"
+VERSION = "0.5.2"
 
 
 # ── Progress Spinner ──────────────────────────────────────
@@ -219,11 +219,15 @@ def cmd_recover(args):
     stats = result.statistics
     print(f"  Files found:      {stats.total_files_found}")
     print(f"  Files recovered:  {len(saved)}")
-    print(f"  Total time:       {stats.scan_time_seconds:.2f}s")
     print(f"  RR:               {stats.recovery_rate:.1%}")
     print(f"  RFS (avg):        {stats.fidelity_score:.3f}")
     print(f"  Quality:          {stats.quality:.3f}")
+    print(f"  RC score:         {stats.recovery_cost_score:.3f}")
+    print(f"  Total time:       {stats.scan_time_seconds:.2f}s")
     print(f"  Peak RAM:         {stats.peak_ram_mb:.1f} MB")
+    if stats.cost.bytes_scanned > 0:
+        print(f"  Bytes scanned:    {stats.cost.bytes_scanned:,}")
+    print(f"  Strategies run:   {', '.join(stats.cost.strategies_run)}")
     print("═" * 60)
     
     return 0
@@ -335,8 +339,10 @@ def _print_scan_result(result):
     print(f"  RR:       {stats.recovery_rate:.1%}")
     print(f"  RFS:      {stats.fidelity_score:.3f}")
     print(f"  Quality:  {stats.quality:.3f}")
+    print(f"  RC:       {stats.cost.summary}")
     print(f"  Time:     {stats.scan_time_seconds:.2f}s")
     print(f"  RAM:      {stats.peak_ram_mb:.1f} MB")
+    print(f"  RC score: {stats.recovery_cost_score:.3f}")
     print()
     
     # Source breakdown
@@ -394,10 +400,13 @@ Supported formats (carving):
   XLSX, SQLite, GIF, BMP, RAR, 7Z, PSD, DNG, HEIC, AVI
 
 Strategy profiles:
-  mft_first      MFT → Journal → Carving (default, fastest)
+  fast           MFT only (fastest, lowest RC)
+  balanced       MFT + Journal (moderate RC, no carving)
+  mft_first      MFT → Journal → Carving (default, good balance)
   journal_first  Journal → MFT → Carving (best for deleted files)
   carving_first  Carving → MFT → Journal (most thorough, slowest)
   full           MFT → Journal → Fragment → Carving (complete)
+  maximum        Same as full — all strategies (highest RR+RFS, highest RC)
 """,
     )
     parser.add_argument("--version", action="version", version=f"RecoveryLab v{VERSION}")
@@ -416,7 +425,7 @@ Strategy profiles:
     scan_parser.add_argument("--json", action="store_true",
                             help="Output as JSON (for scripts and pipelines)")
     scan_parser.add_argument("--profile", default="mft_first",
-                            choices=["mft_first", "journal_first", "carving_first", "full"],
+                            choices=["fast", "balanced", "mft_first", "journal_first", "carving_first", "full", "maximum"],
                             help="Strategy profile (default: mft_first)")
     scan_parser.add_argument("--no-carving", action="store_true",
                             help="Skip signature carving (much faster, may miss some files)")
@@ -438,7 +447,7 @@ Strategy profiles:
     rec_parser.add_argument("--min-confidence", type=float, default=0.0,
                            help="Minimum confidence threshold 0.0-1.0 (default: 0.0)")
     rec_parser.add_argument("--profile", default="mft_first",
-                           choices=["mft_first", "journal_first", "carving_first", "full"],
+                           choices=["fast", "balanced", "mft_first", "journal_first", "carving_first", "full", "maximum"],
                            help="Strategy profile (default: mft_first)")
     rec_parser.add_argument("--no-carving", action="store_true",
                             help="Skip signature carving")

@@ -160,8 +160,38 @@ def test_statistics_fields():
         'total_files_found', 'total_files_recovered',
         'recovery_rate', 'fidelity_score', 'quality',
         'peak_ram_mb',
+        'cost',  # RecoveryCost (v0.5.2)
     }
     assert required.issubset(field_names), f"Missing fields: {required - field_names}"
+
+
+def test_recovery_cost_fields():
+    """RecoveryCost must have CPU, RAM, I/O, and strategy cost fields."""
+    from core.result import RecoveryCost as RC
+    rc_fields = {f.name for f in fields(RC)}
+    required = {
+        'cpu_time_seconds', 'peak_ram_mb',
+        'sectors_read', 'sectors_wasted', 'bytes_scanned',
+        'strategy_cost_total', 'strategies_run',
+    }
+    assert required.issubset(rc_fields), f"Missing fields: {required - rc_fields}"
+
+
+def test_recovery_cost_properties():
+    """RecoveryCost must have read_efficiency and summary."""
+    from core.result import RecoveryCost as RC
+    rc = RC()
+    assert hasattr(rc, 'read_efficiency')
+    assert hasattr(rc, 'summary')
+    assert isinstance(rc.read_efficiency, float)
+    assert isinstance(rc.summary, str)
+
+
+def test_statistics_rc_score():
+    """RecoveryStatistics must have recovery_cost_score property."""
+    stats = RecoveryStatistics()
+    assert hasattr(stats, 'recovery_cost_score')
+    assert isinstance(stats.recovery_cost_score, float)
 
 
 def test_statistics_summary():

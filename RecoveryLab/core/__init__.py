@@ -22,11 +22,11 @@ Usage:
     engine.recover(result.files[0], output_dir="recovered/")
 """
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 
 from .engine import RecoveryEngine
 from .result import (
-    ScanResult, RecoveredItem, RecoveryStatistics,
+    ScanResult, RecoveredItem, RecoveryStatistics, RecoveryCost,
     FileStatus, FileSource,
 )
 from .pipeline import Pipeline, PipelineStage
@@ -34,7 +34,7 @@ from .pipeline import Pipeline, PipelineStage
 __all__ = [
     '__version__',
     'RecoveryEngine',
-    'ScanResult', 'RecoveredItem', 'RecoveryStatistics',
+    'ScanResult', 'RecoveredItem', 'RecoveryStatistics', 'RecoveryCost',
     'FileStatus', 'FileSource',
     'Pipeline', 'PipelineStage',
 ]

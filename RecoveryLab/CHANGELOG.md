@@ -1,5 +1,78 @@
 # RecoveryLab — Changelog
 
+## v0.5.2 (2026-08-05)
+
+**Recovery Cost (RC) + Stability Policy + 7 Profiles + Full CI**
+
+The third dimension of recovery quality. Every strategy now has three axes:
+RR (did we find it?), RFS (how well?), RC (how much did it cost?).
+
+**Recovery Cost (RC):**
+```python
+result = engine.scan("disk.img")
+rc = result.statistics.cost
+
+rc.cpu_time_seconds     # CPU time
+rc.peak_ram_mb          # Peak RAM
+rc.bytes_scanned        # Bytes read from image (carving = entire image)
+rc.strategy_cost_total  # Sum of strategy cost multipliers
+rc.strategies_run       # Which stages actually executed
+rc.read_efficiency      # Fraction of reads that were useful (0.0-1.0)
+
+result.statistics.recovery_cost_score  # Normalized 0-1 (higher = cheaper)
+```
+
+**Strategy profiles (7, up from 4):**
+```
+recoverylab scan disk.img --profile fast         # MFT only — lowest RC
+recoverylab scan disk.img --profile balanced     # MFT + Journal — moderate RC
+recoverylab scan disk.img --profile mft_first    # MFT → Journal → Carving (default)
+recoverylab scan disk.img --profile full         # All strategies — highest RR+RFS, highest RC
+```
+
+**Stability Policy (STABILITY_POLICY.md):**
+
+Three tiers with different guarantees:
+- Tier 1 (Public API): core.* — FROZEN, breaking = MAJOR bump
+- Tier 2 (Extension API): RecoveryStrategy, PipelineStage — STABLE, breaking = deprecation
+- Tier 3 (Internal): motors/, ntfs_parser/, strategies/ — may change freely
+
+v0.x: breaking changes allowed in Public API but documented in CHANGELOG.
+v1.x: no breaking Public API changes without MAJOR version bump.
+
+**Full CI pipeline:**
+```
+python scripts/ci_full.py
+
+✔ API tests (25)
+✔ Corpus tests (60/60)
+✔ RR ≥ 100%
+✔ RFS
+✔ RC (cost + efficiency)
+✔ Regression check
+✔ Product metrics table
+```
+
+**Product metrics (three dimensions):**
+
+| Profile | RR | RFS | RC score | Description |
+|---------|---:|----:|---------:|-------------|
+| fast | 95.2% | 0.850 | 0.873 | MFT only |
+| balanced | 95.2% | 0.850 | 0.823 | MFT + Journal |
+| mft_first | 95.7% | 0.815 | 0.500 | Default pipeline |
+| full | 95.7% | 0.815 | 0.500 | All strategies |
+
+**Architecture changes:**
+- `core/result.py`: Added `RecoveryCost` dataclass. `RecoveryStatistics.cost` field. `recovery_cost_score` property. Updated `summary` to include RC.
+- `core/engine.py`: `RecoveryEngine.VERSION` → "0.5.2". Added `PROFILES` dict (7 profiles). `_compute_statistics()` now populates `RecoveryCost`. Added `_compute_strategy_cost()`.
+- `core/__init__.py`: `__version__` → "0.5.2". Added `RecoveryCost` to exports.
+- `recoverylab.py`: Version → "0.5.2". Added `fast` and `balanced` profiles. Shows RC metrics in output.
+- `STABILITY_POLICY.md`: NEW — defines three API tiers with version rules.
+- `scripts/ci_full.py`: NEW — full CI pipeline (API + corpus + RR + RFS + RC + regression).
+- `tests/test_api_contract.py`: Added 3 RecoveryCost tests (25 total).
+
+---
+
 ## v0.5.1 (2026-08-05)
 
 **API congelada + CLI usable + Corpus + CI — RecoveryLab es una herramienta usable**

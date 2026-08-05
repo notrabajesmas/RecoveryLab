@@ -1,0 +1,33 @@
+{
+  "version": "0.5.2",
+  "timestamp": "2026-08-05T01:55:14",
+  "results": {
+    "normal": {
+      "verified": 20,
+      "total": 20,
+      "rr": 1.0,
+      "scan_time": 0.5235555171966553,
+      "peak_ram_mb": 116.02734375,
+      "recovery_rate": 1.0,
+      "fidelity_score": 0.8152173913043477
+    },
+    "fragmented": {
+      "verified": 20,
+      "total": 20,
+      "rr": 1.0,
+      "scan_time": 0.48994946479797363,
+      "peak_ram_mb": 158.39453125,
+      "recovery_rate": 1.0,
+      "fidelity_score": 0.8152173913043477
+    },
+    "deleted": {
+      "verified": 20,
+      "total": 20,
+      "rr": 1.0,
+      "scan_time": 0.4924733638763428,
+      "peak_ram_mb": 158.7109375,
+      "recovery_rate": 1.0,
+      "fidelity_score": 0.8152173913043477
+    }
+  }
+}

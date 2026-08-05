@@ -1,7 +1,7 @@
 # RecoveryLab — Project Status & Resume Guide
 
 > **Ultima actualización**: 2026-08-05
-> **Version actual**: v0.5.1
+> **Version actual**: v0.5.2
 > **Repo GitHub**: https://github.com/notrabajesmas/RecoveryLab (privado)
 > **Pregunta central**: ¿Qué puede hacer RecoveryLab hoy que no podía ayer?
 
@@ -22,12 +22,12 @@ RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS
 | NTFS Journal Parser | ✅ Funcional + SCALED + INTEGRATED | 100% entries at 5K files |
 | **Métrica: RR (Recovery Rate)** | ✅ Funcional | Recuperados / Total |
 | **Métrica: RFS (Recovery Fidelity Score)** | ✅ Funcional | 9-component weighted |
-| **RecoveryEngine API** | ✅ Congelada v0.5.1 | scan(), recover(), statistics — 22 contract tests pass |
-| **CLI** | ✅ Funcional v0.5.1 | recoverylab scan/recover/info + progreso + errores amigables |
+| **RecoveryEngine API** | ✅ Congelada v0.5.2 | scan(), recover(), statistics — 25 contract tests pass |
+| **CLI** | ✅ Funcional v0.5.2 | recoverylab scan/recover/info + 7 profiles + RC metrics |
 | **Pipeline** | ✅ Funcional | 8 stages, extensible (FAT32/exFAT/EXT4) |
 | **Corpus permanente** | ✅ Construido | 3 categorías, 60/60 verificados, RR=100% |
-| **CI regresión** | ✅ Funcional | Baseline v0.5.1 guardada, 3 categorías PASS |
-| GUI | ❌ No implementado | Solo CLI |
+| **Recovery Cost (RC)** | ✅ Implementado v0.5.2 | CPU + RAM + bytes scanned + strategy cost + efficiency |
+| **CI regresión** | ✅ Funcional v0.5.2 | Baseline guardada, full CI pipeline con RR+RFS+RC+RAM |
 
 ---
 
@@ -35,7 +35,7 @@ RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS
 
 | Versión | Lo que el usuario gana | Estado |
 |---------|----------------------|--------|
-| **v0.5.1** | **API pública congelada + CLI usable + corpus + CI** | ✅ Actual |
+| **v0.5.2** | **API pública congelada + CLI usable + corpus + CI** | ✅ Actual |
 | v0.6.0 | Soporte para sparse runs (archivos con gaps) | Pendiente |
 | v0.6.1 | Soporte para compressed runs (NTFS compression) | Pendiente |
 | v0.7.0 | Primera GUI usable | Pendiente |
@@ -43,7 +43,7 @@ RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS
 | v0.9.0 | Benchmark público vs PhotoRec/Foremost | Pendiente |
 | v1.0.0 | Release pública (API estable + docs + installer) | Pendiente |
 
-### v0.5.1 (actual)
+### v0.5.2 (actual)
 **Objetivo:** API congelada + CLI usable + corpus permanente + CI de regresión
 
 Checklist:
@@ -60,7 +60,7 @@ Checklist:
 - ✅ CLI: estadísticas completas al finalizar (RR, RFS, tiempo, RAM)
 - ✅ pyproject.toml para pip install
 - ✅ Corpus permanente (normal, fragmented, deleted) — 60/60 verificados
-- ✅ CI regresión contra corpus — baseline v0.5.1 guardada
+- ✅ CI regresión contra corpus — baseline v0.5.2 guardada
 - ✅ Pipeline architecture (8 stages, extensible)
 - ⬜ Sparse runs (v0.6.0)
 - ⬜ Compressed runs (v0.6.1)
@@ -126,15 +126,22 @@ Checklist:
 
 ---
 
-## Product Metrics — v0.5.1
+## Product Metrics — v0.5.2
 
-| Metric | Normal | Fragmented | Deleted |
-|--------|--------|------------|---------|
-| Files found | 20 | 20 | 20 |
-| RR | 100% | 100% | 100% |
-| RFS | 0.815 | 0.815 | 0.815 |
-| Scan time | 0.53s | 0.52s | 0.50s |
-| Peak RAM | 116 MB | 158 MB | 159 MB |
+| Category | Files | RR | RFS | RC score | Time | RAM |
+|----------|------:|---:|----:|---------:|-----:|----:|
+| Normal | 20 | 100% | 0.815 | 0.500 | 0.53s | 116 MB |
+| Fragmented | 20 | 100% | 0.815 | 0.500 | 0.49s | 159 MB |
+| Deleted | 20 | 100% | 0.815 | 0.500 | 0.48s | 159 MB |
+
+**Three dimensions per profile (normal corpus):**
+
+| Profile | RR | RFS | RC score | Description |
+|---------|---:|----:|---------:|-------------|
+| fast | 95.2% | 0.850 | 0.873 | MFT only — cheapest |
+| balanced | 95.2% | 0.850 | 0.823 | MFT + Journal |
+| mft_first | 95.7% | 0.815 | 0.500 | MFT + Journal + Carving |
+| full | 95.7% | 0.815 | 0.500 | All strategies — most expensive |
 
 ---
 
@@ -142,7 +149,7 @@ Checklist:
 
 ```
 RecoveryLab/
-├── core/                          # ★ PUBLIC API (FROZEN v0.5.1)
+├── core/                          # ★ PUBLIC API (FROZEN v0.5.2)
 │   ├── engine.py                  #   RecoveryEngine — single entry point
 │   ├── result.py                  #   ScanResult, RecoveredItem, RecoveryStatistics
 │   ├── pipeline.py                #   Pipeline, PipelineStage, PipelineContext
@@ -207,7 +214,7 @@ RecoveryLab/
 1. Leer este archivo (`PROJECT_STATUS.md`) para estado completo
 2. Leer `CHANGELOG.md` para historial de versiones
 3. Leer `worklog.md` para historial detallado de tareas
-4. La versión actual es **v0.5.1** — API congelada + CLI + corpus + CI
+4. La versión actual es **v0.5.2** — API congelada + CLI + corpus + CI
 5. Próximo paso: **v0.6.0** — Sparse runs
 6. Los archivos clave son `core/` (API pública), `strategies/`, `ntfs_parser/parser.py`
 7. Las métricas son **RR** + **RFS** + **Quality = RR × RFS**

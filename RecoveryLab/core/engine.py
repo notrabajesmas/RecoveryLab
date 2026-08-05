@@ -41,7 +41,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 from .result import (
-    ScanResult, RecoveredItem, RecoveryStatistics,
+    ScanResult, RecoveredItem, RecoveryStatistics, RecoveryCost,
     FileStatus, FileSource,
 )
 from .pipeline import Pipeline, PipelineContext
@@ -57,7 +57,45 @@ class RecoveryEngine:
     Internal methods (_prefixed) may change between minor versions.
     """
     
-    VERSION = "0.5.1"
+    VERSION = "0.5.2"
+    
+    PROFILES = {
+        "fast": {
+            "description": "MFT only — fastest, no carving",
+            "enable_carving": False,
+            "enable_journal": False,
+        },
+        "balanced": {
+            "description": "MFT + Journal — good coverage, moderate cost",
+            "enable_carving": False,
+            "enable_journal": True,
+        },
+        "mft_first": {
+            "description": "MFT → Journal → Carving — default",
+            "enable_carving": True,
+            "enable_journal": True,
+        },
+        "journal_first": {
+            "description": "Journal → MFT → Carving — best for deleted files",
+            "enable_carving": True,
+            "enable_journal": True,
+        },
+        "carving_first": {
+            "description": "Carving → MFT → Journal — most thorough",
+            "enable_carving": True,
+            "enable_journal": True,
+        },
+        "full": {
+            "description": "All strategies — maximum recovery regardless of cost",
+            "enable_carving": True,
+            "enable_journal": True,
+        },
+        "maximum": {
+            "description": "Same as full — all strategies",
+            "enable_carving": True,
+            "enable_journal": True,
+        },
+    }
     
     def __init__(self, profile: str = "mft_first",
                  cluster_size: int = 4096,
@@ -81,12 +119,13 @@ class RecoveryEngine:
         # Build the pipeline
         self._pipeline = Pipeline.default()
         
-        # Disable stages based on configuration
-        if not enable_carving:
-            # Remove carving from pipeline
-            self._pipeline.remove("carving")
-        if not enable_journal:
-            self._pipeline.remove("journal")
+        # Resolve profile settings
+        profile_config = self.PROFILES.get(profile, {})
+        if profile_config:
+            if not profile_config.get("enable_carving", True):
+                self._pipeline.remove("carving")
+            if not profile_config.get("enable_journal", True):
+                self._pipeline.remove("journal")
     
     @property
     def pipeline_stages(self) -> List[str]:
@@ -177,7 +216,8 @@ class RecoveryEngine:
             result.files.append(recovered)
         
         # Compute statistics
-        stats = self._compute_statistics(result, ctx, scan_time, peak_ram)
+        stats = self._compute_statistics(result, ctx, scan_time, peak_ram,
+                                         image_size=len(image))
         result.statistics = stats
         result.strategy_used = self.profile
         result.errors.extend(ctx.errors)
@@ -220,7 +260,8 @@ class RecoveryEngine:
             )
             result.files.append(recovered)
         
-        stats = self._compute_statistics(result, ctx, scan_time, peak_ram)
+        stats = self._compute_statistics(result, ctx, scan_time, peak_ram,
+                                         image_size=len(image))
         result.statistics = stats
         result.strategy_used = self.profile
         result.errors.extend(ctx.errors)
@@ -310,7 +351,8 @@ class RecoveryEngine:
         return FileStatus.RECOVERED
     
     def _compute_statistics(self, result: ScanResult, ctx: PipelineContext,
-                           scan_time: float, peak_ram: float) -> RecoveryStatistics:
+                           scan_time: float, peak_ram: float,
+                           image_size: int = 0) -> RecoveryStatistics:
         """Compute statistics from pipeline results."""
         stats = RecoveryStatistics()
         
@@ -319,6 +361,21 @@ class RecoveryEngine:
         stats.recovery_rate = ctx.recovery_rate
         stats.fidelity_score = ctx.fidelity_score
         stats.quality = ctx.recovery_rate * ctx.fidelity_score
+        
+        # Recovery Cost (RC)
+        stats.cost = RecoveryCost(
+            cpu_time_seconds=scan_time,
+            peak_ram_mb=peak_ram,
+            sectors_read=ctx.sectors_read if hasattr(ctx, 'sectors_read') else 0,
+            sectors_wasted=ctx.sectors_wasted if hasattr(ctx, 'sectors_wasted') else 0,
+            bytes_scanned=image_size if "carving" in ctx.stage_times else 0,
+            strategy_cost_total=self._compute_strategy_cost(ctx),
+            strategies_run=[name for name, t in ctx.stage_times.items() if t > 0],
+        )
+        
+        # Legacy fields (backwards-compat)
+        stats.sectors_read = stats.cost.sectors_read
+        stats.sectors_wasted = stats.cost.sectors_wasted
         
         # Count by status
         for f in result.files:
@@ -348,3 +405,22 @@ class RecoveryEngine:
             stats.time_to_first_file = ctx.stage_times.get("mft", 0.0)
         
         return stats
+    
+    def _compute_strategy_cost(self, ctx: PipelineContext) -> float:
+        """Compute total strategy cost from pipeline stages that ran."""
+        # Cost per stage (matches RecoveryStrategy.cost)
+        stage_costs = {
+            "detect": 0.1,
+            "ntfs_parse": 0.5,
+            "mft": 1.0,
+            "journal": 1.5,
+            "fragment": 2.0,
+            "carving": 10.0,
+            "merge": 0.1,
+            "scoring": 0.1,
+        }
+        total = 0.0
+        for stage_name, elapsed in ctx.stage_times.items():
+            if elapsed > 0:  # Stage actually ran
+                total += stage_costs.get(stage_name, 1.0)
+        return total

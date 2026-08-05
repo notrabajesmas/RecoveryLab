@@ -73,17 +73,73 @@ class RecoveredItem:
 
 
 @dataclass
+class RecoveryCost:
+    """Recovery Cost (RC) — how much resources were consumed.
+    
+    The third dimension of recovery quality:
+      RR  — Did we find the file? (Recovery Rate)
+      RFS — How well did we recover it? (Fidelity Score)
+      RC  — How much did it cost? (Recovery Cost)
+    
+    Lower RC is better. Strategies declare a cost multiplier,
+    but actual cost depends on image size and what was read.
+    
+    This enables strategy profiles:
+      Fast     — minimize RC (skip carving, MFT only)
+      Balanced — moderate RC (MFT + Journal, carving only if needed)
+      Maximum  — maximize RR+RFS regardless of RC (full pipeline)
+    """
+    # CPU
+    cpu_time_seconds: float = 0.0       # Total CPU time (same as scan_time for single-thread)
+    
+    # Memory
+    peak_ram_mb: float = 0.0            # Peak RAM usage in MB
+    
+    # I/O
+    sectors_read: int = 0               # Total sectors read from image
+    sectors_wasted: int = 0             # Sectors read but not used (wasted I/O)
+    bytes_scanned: int = 0              # Total bytes scanned (for carving: entire image)
+    
+    # Strategy cost
+    strategy_cost_total: float = 0.0    # Sum of cost multipliers for strategies that ran
+    strategies_run: List[str] = field(default_factory=list)  # Which strategies actually ran
+    
+    @property
+    def read_efficiency(self) -> float:
+        """Fraction of reads that were useful (0.0 - 1.0)."""
+        total = self.sectors_read
+        if total == 0:
+            return 1.0
+        useful = total - self.sectors_wasted
+        return max(0.0, useful / total)
+    
+    @property
+    def cost_per_file(self) -> float:
+        """Total strategy cost per file (0 if no files)."""
+        # This is set externally based on files found
+        return self.strategy_cost_total
+    
+    @property
+    def summary(self) -> str:
+        """One-line summary for CLI."""
+        return (f"RC: {self.cpu_time_seconds:.2f}s CPU, {self.peak_ram_mb:.0f}MB RAM, "
+                f"{self.bytes_scanned:,} bytes scanned, "
+                f"efficiency={self.read_efficiency:.0%}")
+
+
+@dataclass
 class RecoveryStatistics:
     """Statistics from a scan — the benchmark table per release.
     
-    This is what goes in the release notes:
+    Three dimensions of recovery quality:
+      RR  — Did we find the file? (Recovery Rate)
+      RFS — How well did we recover it? (Fidelity Score)
+      RC  — How much did it cost? (Recovery Cost)
     
-    RecoveryLab v0.5
-      Time: 1.2s
-      Files found: 20
-      RR: 100%
-      RFS: 0.900
-      RAM: 27 MB
+    Release notes format:
+      RecoveryLab v0.5.2
+        Files found: 20  |  Recovered: 20
+        RR: 100%  |  RFS: 0.815  |  RC: 0.53s / 116MB / 10.5MB scanned
     """
     # Timing
     scan_time_seconds: float = 0.0
@@ -101,12 +157,15 @@ class RecoveryStatistics:
     total_contiguous: int = 0
     total_fragments: int = 0
     
-    # Metrics
+    # Metrics (three dimensions)
     recovery_rate: float = 0.0          # RR: recovered / total
     fidelity_score: float = 0.0         # RFS: weighted 9-component
     quality: float = 0.0                # RR × RFS
     
-    # Resources
+    # Recovery Cost (third dimension)
+    cost: RecoveryCost = field(default_factory=RecoveryCost)
+    
+    # Legacy fields (backwards-compat, delegated to cost)
     peak_ram_mb: float = 0.0
     sectors_read: int = 0
     sectors_wasted: int = 0
@@ -115,11 +174,27 @@ class RecoveryStatistics:
     by_source: Dict[str, int] = field(default_factory=dict)
     
     @property
+    def recovery_cost_score(self) -> float:
+        """Normalized RC score (0.0 - 1.0, higher = cheaper).
+        
+        Computed from read efficiency and strategy cost.
+        A score of 1.0 means perfect efficiency (all reads useful, cheap strategies).
+        A score of 0.0 means maximum waste.
+        """
+        efficiency = self.cost.read_efficiency
+        # Normalize strategy cost: MFT-only = 1.0 (best), full pipeline = ~13.5 (worst)
+        max_reasonable_cost = 15.0
+        cost_factor = 1.0 - min(self.cost.strategy_cost_total / max_reasonable_cost, 1.0)
+        return 0.5 * efficiency + 0.5 * cost_factor
+    
+    @property
     def summary(self) -> str:
-        """One-line summary for CLI output."""
+        """One-line summary for CLI output (RR + RFS + RC)."""
+        rc = self.cost
         return (f"{self.total_files_recovered}/{self.total_files_found} files "
                 f"(RR={self.recovery_rate:.1%}, RFS={self.fidelity_score:.3f}, "
-                f"time={self.scan_time_seconds:.2f}s)")
+                f"RC={self.scan_time_seconds:.2f}s/{rc.peak_ram_mb:.0f}MB, "
+                f"eff={rc.read_efficiency:.0%})")
 
 
 @dataclass
