@@ -1216,3 +1216,22 @@ Stage Summary:
 - README communicates: each version = one benchmark change
 - UXR metric defined: target ≥ 8/10 for v1.0.0
 - Ready for GitHub Release (not PyPI yet — test with 5-10 people first)
+
+---
+Task ID: 21
+Agent: Main
+Task: Product identity + Done definition + demo polish
+
+Work Log:
+- Added "Definition of Done" (9-point checklist) to PROJECT_STATUS.md
+- v0.6.0 status: 7/9 done, 2 pending (GitHub Release + external tester)
+- Improved `recoverylab demo` output: "Recovery completed" + recovered files with + marks + output directory + "Next steps" section
+- Added CLI banner identity: "RecoveryLab vX.Y.Z / Filesystem Recovery Engine" on scan, recover, info, demo
+- Changed roadmap priority: next goal is UXR experiment (10 strangers), NOT compressed files
+- Rebuilt wheel, verified all flows work
+
+Stage Summary:
+- `recoverylab demo` now produces clean, guided output that tells a stranger what to do next
+- CLI has identity banner — feels like a finished tool, not scripts
+- v0.6.0 is 7/9 on the Done checklist — blocked on GitHub Release and external testing
+- Next: publish GitHub Release, then run UXR experiment

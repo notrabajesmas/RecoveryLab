@@ -92,6 +92,12 @@ def _format_error(error_msg: str) -> str:
     return error_msg
 
 
+def _print_banner():
+    """Print RecoveryLab identity banner."""
+    print(f"RecoveryLab v{VERSION}")
+    print("Filesystem Recovery Engine")
+
+
 def _print_errors(errors):
     """Print errors in user-friendly form."""
     for err in errors:
@@ -121,7 +127,7 @@ def cmd_scan(args):
     )
     
     # Show what we're doing
-    print(f"RecoveryLab v{VERSION}")
+    _print_banner()
     print(f"Scanning: {args.image}")
     print(f"Profile:  {args.profile}")
     print(f"Pipeline: {' → '.join(engine.pipeline_stages)}")
@@ -172,7 +178,7 @@ def cmd_recover(args):
         enable_journal=not args.no_journal,
     )
     
-    print(f"RecoveryLab v{VERSION}")
+    _print_banner()
     print(f"Scanning: {args.image}")
     
     # Scan with progress
@@ -258,7 +264,7 @@ def cmd_info(args):
     pipeline.add(NTFSParseStage())
     ctx = pipeline.run(image)
     
-    print(f"RecoveryLab v{VERSION}")
+    _print_banner()
     print(f"Image:  {args.image}")
     print(f"Size:   {len(image):,} bytes ({len(image)/(1024*1024):.1f} MB)")
     print(f"Type:   {ctx.filesystem_type}")
@@ -388,9 +394,10 @@ def cmd_demo(args):
     from dataset_builder.ntfs_image import NTFSImageBuilder
     from core import RecoveryEngine
     
-    print(f"RecoveryLab v{VERSION} — Demo")
+    print(f"RecoveryLab v{VERSION}")
+    print("Filesystem Recovery Engine")
     print()
-    print("Creating a small NTFS image with sample files...")
+    print("Creating demo NTFS image with sample files...")
     
     # Build a tiny image with recognizable files
     builder = NTFSImageBuilder(
@@ -421,33 +428,36 @@ def cmd_demo(args):
     with open(img_path, 'wb') as f:
         f.write(image)
     
-    print(f"  Image: {len(image):,} bytes with {len(sample_files)} files")
+    print(f"  {len(image):,} bytes, {len(sample_files)} files embedded")
     print()
     
     # Scan
-    print("Scanning...")
+    print("Scanning image...")
     engine = RecoveryEngine(profile="mft_first")
     result = engine.scan(img_path)
     
     user_files = [f for f in result.files if not f.name.startswith('$')]
     
-    print(f"  Found {len(user_files)} files (RR={result.statistics.recovery_rate:.1%})")
+    print(f"  Found {len(user_files)} recoverable files (RR={result.statistics.recovery_rate:.0%})")
     print()
     
     # Recover
     os.makedirs(output_dir, exist_ok=True)
-    print("Recovering...")
+    print("Recovering files...")
     
-    recovered_count = 0
+    recovered_names = []
     for f in user_files:
         result.recover(f.id, output_dir=output_dir)
-        recovered_count += 1
-        print(f"  {f.name:20s}  {f.size:>8,} bytes  confidence={f.confidence:.2f}")
+        recovered_names.append(f.name)
     
     print()
-    print(f"Recovered {recovered_count}/{len(user_files)} files to {output_dir}")
+    print("Recovery completed.")
+    print()
+    print("Recovered files:")
+    for name in recovered_names:
+        print(f"  + {name}")
     
-    # Show a recovered file
+    # Show content of one file
     for name, _ in sample_files[:1]:
         fpath = os.path.join(output_dir, name)
         if os.path.exists(fpath):
@@ -460,21 +470,24 @@ def cmd_demo(args):
                     print(f"  {line}")
     
     print()
+    print("Output directory:")
     if args.keep:
-        # Copy to current directory
         keep_dir = os.path.join(os.getcwd(), "recoverylab_demo")
         os.makedirs(keep_dir, exist_ok=True)
         shutil.copy2(img_path, os.path.join(keep_dir, "demo.img"))
         shutil.copytree(output_dir, os.path.join(keep_dir, "recovered"), dirs_exist_ok=True)
-        print(f"Files saved to {keep_dir}/")
+        print(f"  {keep_dir}/recovered/")
     else:
-        print("(Image cleaned up. Use --keep to keep the files.)")
-        shutil.rmtree(tmp_dir, ignore_errors=True)
+        print(f"  {output_dir}")
     
     print()
-    print("Now try it with your own disk image:")
-    print("  recoverylab scan your_image.img")
-    print("  recoverylab recover your_image.img output/")
+    print("Next steps:")
+    print("  recoverylab scan mydisk.img")
+    print("  recoverylab recover mydisk.img recovered/")
+    
+    # Cleanup
+    if not args.keep:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
     
     return 0
 

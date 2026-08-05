@@ -123,10 +123,31 @@ python scripts/ci_full.py
 
 ---
 
+## Definition of Done
+
+A version is **not done** until ALL of these are true.
+If even one is missing, the version stays open.
+
+| # | Criterion | v0.6.0 |
+|---|-----------|--------|
+| 1 | Target benchmark improves | ✅ Sparse 0% → 100% |
+| 2 | Full CI is green | ✅ 25/25 API, 19/19 carving, 80/80 corpus |
+| 3 | Wheel builds cleanly | ✅ recoverylab-0.6.0-py3-none-any.whl |
+| 4 | `pip install` works in a clean environment | ✅ Tested |
+| 5 | `recoverylab demo` works | ✅ 4/4 recovered |
+| 6 | README updated | ✅ |
+| 7 | CHANGELOG updated | ✅ |
+| 8 | GitHub Release published | ❌ Pending |
+| 9 | At least one person outside the project tested it | ❌ Pending |
+
+---
+
 ## Next steps
 
-1. Current: **v0.6.0** — Sparse files 100% (CI-verified)
-2. Before v0.6.1: publish GitHub Release, get 5–10 strangers to test
-3. Measure UXR: how many can `pip install → scan → recover` without help?
-4. Next version: **v0.6.1** — Compressed files: 0% → ≥95%
-5. Verify: `python tests/test_api_contract.py` and `python scripts/ci_full.py`
+1. **Publish GitHub Release v0.6.0** with wheel + sdist as assets
+2. **UXR experiment**: get 10 people who never saw RecoveryLab to try it
+   - `pip install recoverylab`
+   - `recoverylab demo`
+   - If ≥8/10 recover a file without help → UXR is good
+   - If <5/10 → fix the experience before adding any new capability
+3. Only after UXR data: decide between improving UX or opening v0.6.1 (compressed files)
