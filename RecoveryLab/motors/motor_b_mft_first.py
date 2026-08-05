@@ -11,6 +11,10 @@ Strategy:
 
 This is the motor that H1 predicts should be better.
 If it's not, H1 is refuted.
+
+Sprint 3b integration:
+  Journal fallback now uses the USN Journal Parser to recover files
+  that MFT alone cannot find (deleted files, historically renamed).
 """
 
 import hashlib
@@ -18,6 +22,17 @@ import struct
 from typing import List, Dict, Optional, Set
 
 from .base_motor import BaseMotor, MotorResult, RecoveredFile
+
+# Lazy import to avoid circular deps — only imported when journal is needed
+_ntfs_parser = None
+
+def _get_parser():
+    """Lazy-load the NTFS parser module."""
+    global _ntfs_parser
+    if _ntfs_parser is None:
+        from ntfs_parser import parser as p
+        _ntfs_parser = p
+    return _ntfs_parser
 
 
 class MotorBMFTFirst(BaseMotor):
@@ -224,10 +239,86 @@ class MotorBMFTFirst(BaseMotor):
 
     def _fallback_journal(self, image, manifest, budget, corruption_meta,
                           reads, recovered_clusters, result) -> List[RecoveredFile]:
-        """Journal fallback: try to find file references in $LogFile."""
-        # In a real implementation, parse the journal
-        # For now, return empty (journal parsing is complex)
-        return []
+        """
+        Journal fallback: use USN Journal Parser to recover files
+        that MFT alone cannot find.
+
+        Strategy:
+          1. Parse NTFS image to get full metadata (MFT + Journal)
+          2. Call recover_from_journal() to find candidates
+          3. For each candidate (file in journal but not in MFT),
+             attempt to recover data from the MFT record
+          4. Return RecoveredFile objects with source="journal"
+        """
+        parser = _get_parser()
+        recovered = []
+
+        try:
+            cluster_size = manifest.get("cluster_size", 4096)
+
+            # Parse full NTFS metadata (MFT + Journal)
+            metadata = parser.parse_ntfs_image(image, cluster_size=cluster_size)
+
+            # Get journal recovery candidates
+            candidates = parser.recover_from_journal(metadata, image, cluster_size=cluster_size)
+
+            if not candidates:
+                return []
+
+            # Track already-recovered filenames to avoid duplicates
+            already_recovered = {f.name for f in result.recovered_files}
+
+            for candidate in candidates:
+                filename = candidate.get("filename", "")
+                if not filename or filename in already_recovered:
+                    continue
+
+                mft_rec = candidate.get("mft_record", 0)
+
+                # Try to recover data from the MFT record
+                # (even if in_use=False, the data runs may still be valid)
+                file_data = None
+                if mft_rec in metadata.files_by_record:
+                    mft_entry = metadata.files_by_record[mft_rec]
+                    file_data = parser.recover_file_data(image, mft_entry, cluster_size=cluster_size)
+
+                # Build RecoveredFile
+                sha256 = hashlib.sha256(file_data).hexdigest() if file_data else ""
+                size = len(file_data) if file_data else 0
+
+                # Confidence based on what we recovered
+                confidence = 0.0
+                if file_data:
+                    confidence = 0.8  # We got the data from MFT runs
+                if candidate.get("is_delete"):
+                    confidence *= 0.7  # Deleted file — less certain
+                if not file_data and filename:
+                    confidence = 0.3  # We have the name but not the data
+
+                recovered.append(RecoveredFile(
+                    name=filename,
+                    sha256=sha256,
+                    size=size,
+                    data=file_data or b"",
+                    source="journal",
+                    confidence=confidence,
+                    read_count=0,  # Reads already counted in Phase 2
+                ))
+                already_recovered.add(filename)
+
+            # Store journal metadata in result for Recovery Fidelity Score
+            result.metadata["journal_entries_total"] = metadata.journal_entries_parsed
+            result.metadata["journal_creates"] = len(metadata.journal_creates)
+            result.metadata["journal_deletes"] = len(metadata.journal_deletes)
+            result.metadata["journal_renames"] = len(metadata.journal_renames)
+            result.metadata["journal_candidates"] = len(candidates)
+            result.metadata["journal_recovered"] = len(recovered)
+
+        except Exception as e:
+            # Journal parsing failed — don't crash the motor
+            result.metadata["journal_error"] = str(e)
+
+        return recovered
 
     def _fallback_indx(self, image, manifest, budget, corruption_meta,
                        reads, recovered_clusters, result) -> List[RecoveredFile]:

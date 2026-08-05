@@ -1,7 +1,7 @@
 # RecoveryLab — Project Status & Resume Guide
 
 > **Ultima actualización**: 2026-08-05
-> **Version actual**: v0.4
+> **Version actual**: v0.4.1
 > **Repo GitHub**: https://github.com/notrabajesmas/RecoveryLab (privado)
 > **Pregunta central**: ¿Qué puede recuperar RecoveryLab hoy que ayer no podía?
 
@@ -17,7 +17,8 @@ RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS
 | Motor B (MFT-First) | ✅ Funcional | 100% metadata (75/75 archivos) |
 | Motor C (Orchestrator) | ✅ Funcional | Delegación adaptativa |
 | NTFS MFT Parser | ✅ Funcional + SCALED | 100% SHA-256 at 10,000 files, sub-quadratic time |
-| NTFS Journal Parser | ✅ Funcional + SCALED | 100% entries at 5K files, V2/V3 parser, MFT xref, delete detection |
+| NTFS Journal Parser | ✅ Funcional + SCALED + INTEGRATED | 100% entries at 5K files, V2/V3 parser, MFT xref, delete detection, motor fallback |
+| Recovery Fidelity Score | ✅ Funcional | 9-component RFS (Name/SHA/TS/Dir/Size/ACL/ADS/USN/EA) |
 | Fragmentación | ❌ No implementado | No hay recuperación de archivos fragmentados |
 | EXIF metadata | ❌ No implementado | No hay extracción de metadata JPEG |
 | GUI | ❌ No implementado | Solo CLI |
@@ -32,6 +33,7 @@ RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS
 | Sprint 2 | Cerrar JPEG + benchmark real | 91.4% → 100% real | ✅ Completado |
 | **Sprint 3** | **MFT Scale Benchmark** | **100% SHA-256 at 10K files** | **✅ Completado** |
 | **Sprint 3b** | **USN Journal Parser** | **100% entries at 5K files** | **✅ Completado** |
+| **Sprint 3c** | **Motor + Journal Integration + RFS** | **Motor fallback + Fidelity Score** | **✅ Completado** |
 | Sprint 4 | Fragmentación | 0% → 50% | Pendiente |
 | Sprint 5 | EXIF metadata | 0% → 100% | Pendiente |
 | Sprint 6 | GUI (CLI → RecoveryLab.exe) | Interacción visual | Pendiente |
@@ -181,9 +183,9 @@ RecoveryLab/
 | Motor | Estrategia | Usa MFT | Usa Firmas | Usa Journal |
 |-------|-----------|---------|-----------|------------|
 | A (Sequential) | Leer todo → MFT | ✅ | ❌ | ❌ |
-| B (MFT-First) | MFT → datos referenciados | ✅ | ❌ | Stub |
+| B (MFT-First) | MFT → datos referenciados | ✅ | ❌ | ✅ |
 | Carving | Firmas → carving | ❌ | ✅ (19) | ❌ |
-| C (Orchestrator) | Adaptativo | ✅ | ✅ | Stub |
+| C (Orchestrator) | Adaptativo | ✅ | ✅ | ✅ |
 
 ### Formatos soportados por Carving (19):
 JPEG, PNG, PDF, ZIP, MP4, DOCX, TIFF, CR2, NEF, MOV, XLSX, SQLite, GIF, BMP, RAR, 7Z, PSD, DNG, HEIC, AVI
@@ -238,31 +240,82 @@ JPEG, PNG, PDF, ZIP, MP4, DOCX, TIFF, CR2, NEF, MOV, XLSX, SQLite, GIF, BMP, RAR
 
 ---
 
-## Journal Parser — Estado Actual (Sprint 3 target)
+## Roadmap por Versiones
 
-### Infraestructura existente (stubs):
-- `ntfs_parser/parser.py`: `JournalEntry` dataclass (usn, file_reference, parent_reference, reason, file_attributes, timestamp, filename, is_delete)
-- `ntfs_parser/parser.py`: `NTFSMetadata.journal_entries` list
-- `motors/motor_b_mft_first.py`: `_fallback_journal()` → retorna lista vacía
-- `corruptor/models.py`: `JournalCorruptionModel` → funciona (corrompe $LogFile)
-- `config.py`: "journal_corruption" corruption model
-- `strategy_profiles.py`: `uses_journal: bool = False`, journal-first profile existe
+### v0.4.1 (actual)
+**Objetivo:** NTFS recovery de archivos no fragmentados + Journal + Fidelity Score
 
-### Lo que FALTA implementar:
-1. Parsing del $UsnJrnl binary format (NTFS Change Journal)
-2. Lectura de journal entries (USN_RECORD v2.0 / v3.0 / v4.0)
-3. Extracción de: filename, parent_ref, reason flags, timestamp, file_attributes
-4. Detección de operaciones de interés: FILE_CREATE, FILE_DELETE, RENAME, DATA_OVERWRITE
-5. Integración con Motor B: `_fallback_journal()` que realmente recupere archivos
-6. Integración con Motor C: journal strategy que delegue al parser
-7. Benchmark: medir journal recovery rate (0% → 90%)
+Checklist:
+- ✅ MFT Parser
+- ✅ USN Journal Parser
+- ✅ Motor B + Journal fallback integration
+- ✅ Carving (19 formatos)
+- ✅ JPEG (100% real)
+- ✅ PDF, PNG, ZIP, DOCX
+- ✅ Recovery Fidelity Score (9-component)
 
-### Formato NTFS $UsnJrnl:
-- System file MFT entry 0x1A (26)
-- $J data stream: journal records
-- USN_RECORD v2.0: 48-byte header + filename (variable)
-- USN_RECORD v4.0: 56-byte header + filename (variable)
-- Reason flags: USN_REASON_FILE_CREATE, DATA_OVERWRITE, DATA_EXTEND, etc.
+### v0.5
+**Objetivo:** Fragmentación
+
+Checklist:
+- Multiple Data runs
+- Sparse runs
+- Compressed runs
+- Resident / Non-resident transition
+- Recovery parcial (reconstruir lo que se pueda)
+
+### v0.6
+**Objetivo:** GUI
+
+Checklist:
+- Seleccionar disco
+- Preview de archivos
+- Filtros por tipo/fecha/estado
+- Exportar resultados
+- Barra de progreso
+
+### v0.7
+**Objetivo:** Benchmark público
+
+Checklist:
+- Comparación con PhotoRec
+- Comparación con Foremost
+- Comparación con Scalpel
+- Datasets reproducibles
+- Tabla pública de resultados
+
+---
+
+## Sprint 3c — Motor + Journal Integration (Completado)
+
+**Fecha**: 2026-08-05
+**Resultado**: Motor B fallback cascade ahora usa USN Journal + Recovery Fidelity Score
+
+### Lo que se hizo:
+
+#### Motor B `_fallback_journal()` implementation:
+- Removido stub que retornaba `[]`
+- Ahora llama a `parse_ntfs_image()` + `recover_from_journal()`
+- Para cada candidato (archivo en journal pero no en MFT), intenta recuperar datos
+- Confidence scoring: 0.8 con data, 0.3 solo nombre, ×0.7 si es deleted
+- Journal metadata almacenado en `MotorResult.metadata` para análisis downstream
+
+#### Recovery Fidelity Score (RFS):
+- 9-component metric: Filename, SHA-256, Timestamps, Directory, Size, ACL, ADS, USN History, EA
+- Cada componente tiene peso (SHA-256 = 25%, Filename = 15%, Timestamps = 15%, etc.)
+- RFS total = suma ponderada de componentes que match
+- Demo: MFT recovery = 0.900, Carving recovery = 0.450 → MFT preserva 45% más fidelidad
+- Archivo: `recovery_judge/fidelity.py`
+
+---
+
+## Journal Parser — Estado Actual (✅ Completado)
+
+### Implementación completa:
+- `ntfs_parser/parser.py`: `_parse_usn_record()`, `_parse_usn_journal()`, `_read_journal_data_stream()`, `recover_from_journal()`, `USNReason` class
+- `motors/motor_b_mft_first.py`: `_fallback_journal()` → integración real
+- `recovery_judge/fidelity.py`: `RecoveryFidelityScore`, 9-component RFS
+- `dataset_builder/ntfs_image.py`: `_build_usn_records()`, `_build_usnjrnl_entry()`
 
 ---
 
@@ -311,9 +364,9 @@ v0.3 checklist:
 3. Leer `CHANGELOG.md` para historial de versiones
 4. Leer `BLOCKERS.md` para blockers activos
 5. Leer `defects/` para defects abiertos
-6. El Sprint actual es **Sprint 3: Journal Parser** → ver sección "Journal Parser — Estado Actual"
-7. El archivo clave a modificar es `ntfs_parser/parser.py`
-8. El método stub a implementar es `motor_b_mft_first.py::_fallback_journal()`
+6. El Sprint actual es **Sprint 4: Fragmentación** → ver sección "Roadmap por Versiones"
+7. Los archivos clave son `ntfs_parser/parser.py`, `motors/motor_b_mft_first.py`, `recovery_judge/fidelity.py`
+8. La métrica nueva es **Recovery Fidelity Score** en `recovery_judge/fidelity.py`
 
 ---
 

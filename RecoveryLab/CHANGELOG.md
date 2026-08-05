@@ -1,5 +1,42 @@
 # RecoveryLab — Changelog
 
+## v0.4.1 (2026-08-05)
+
+**Motor B + Journal Integration + Recovery Fidelity Score**
+
+Sprint 3b completion — journal parser now INTEGRATED into the recovery motor:
+
+- ✔ Motor B `_fallback_journal()` now calls `recover_from_journal()` — no more empty stub
+- ✔ Journal fallback activated when MFT damage > 10% — recovers files MFT missed
+- ✔ Deleted file detection via journal: files with `USN_REASON_FILE_DELETE` flagged
+- ✔ Confidence scoring: journal-recovered files get 0.8 (with data) or 0.3 (name only)
+- ✔ Journal metadata stored in MotorResult for downstream analysis
+
+**Recovery Fidelity Score (RFS)** — granular metric beyond "file recovered?":
+
+  Component       Weight  What it measures
+  ──────────────  ─────  ──────────────────────────────────
+  Filename          15%  Was the original filename preserved?
+  SHA-256           25%  Is the data bit-perfect?
+  Timestamps        15%  Were created/modified times preserved?
+  Directory         10%  Was the directory path correct?
+  File Size          5%  Does size match original?
+  ACL                5%  Were access control lists preserved?
+  ADS               10%  Were alternate data streams preserved?
+  USN History       10%  Is the USN journal history intact?
+  EA                 5%  Were extended attributes preserved?
+
+Demo result:
+- MFT recovery: RFS = 0.900 (Name ✓ SHA ✓ TS ✓ Dir ✓ Size ✓ ACL ✓ ADS ✓ USN ✗ EA ✓)
+- Carving recovery: RFS = 0.450 (Name ✗ SHA ✓ TS ✗ Dir ✗ Size ✓ ACL ✗ ADS ✓ USN ✗ EA ✓)
+- MFT preserves 45% more fidelity than carving
+
+**Architecture:**
+- `motors/motor_b_mft_first.py`: `_fallback_journal()` → real implementation
+- `recovery_judge/fidelity.py`: `RecoveryFidelityScore`, `FidelityResult`, `FidelityComponent`
+
+---
+
 ## v0.4 (2026-08-05)
 
 **NTFS USN Journal Parser: 0% → 100%**
