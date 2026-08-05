@@ -375,6 +375,110 @@ def _print_scan_result(result):
     print()
 
 
+# ── Demo Command ─────────────────────────────────────────
+
+def cmd_demo(args):
+    """Create a demo NTFS image, scan it, and recover files.
+    
+    This lets a first-time user see RecoveryLab in action
+    without needing a real disk image.
+    """
+    import tempfile
+    import shutil
+    from dataset_builder.ntfs_image import NTFSImageBuilder
+    from core import RecoveryEngine
+    
+    print(f"RecoveryLab v{VERSION} — Demo")
+    print()
+    print("Creating a small NTFS image with sample files...")
+    
+    # Build a tiny image with recognizable files
+    builder = NTFSImageBuilder(
+        volume_size=1 * 1024 * 1024,  # 1 MB
+        cluster_size=4096,
+        serial_number=42,
+    )
+    
+    sample_files = [
+        ("readme.txt",     b"RecoveryLab demo image.\nThis file was recovered successfully.\n"),
+        ("report.txt",     b"Quarterly Report Q3 2026\nRevenue: $1.2M\nGrowth: 15%\n"),
+        ("hello.txt",      b"Hello from RecoveryLab!\nIf you can read this, recovery worked.\n"),
+        ("data.json",      b'{"version": "0.6.0", "status": "ok", "files": 3}\n'),
+    ]
+    
+    for name, data in sample_files:
+        if len(data) < 4096:
+            data = data + b'\x00' * (4096 - len(data))
+        builder.add_file(name, data)
+    
+    image, layout, all_files = builder.build()
+    
+    # Write image to temp file
+    tmp_dir = tempfile.mkdtemp(prefix="recoverylab_demo_")
+    img_path = os.path.join(tmp_dir, "demo.img")
+    output_dir = os.path.join(tmp_dir, "recovered")
+    
+    with open(img_path, 'wb') as f:
+        f.write(image)
+    
+    print(f"  Image: {len(image):,} bytes with {len(sample_files)} files")
+    print()
+    
+    # Scan
+    print("Scanning...")
+    engine = RecoveryEngine(profile="mft_first")
+    result = engine.scan(img_path)
+    
+    user_files = [f for f in result.files if not f.name.startswith('$')]
+    
+    print(f"  Found {len(user_files)} files (RR={result.statistics.recovery_rate:.1%})")
+    print()
+    
+    # Recover
+    os.makedirs(output_dir, exist_ok=True)
+    print("Recovering...")
+    
+    recovered_count = 0
+    for f in user_files:
+        result.recover(f.id, output_dir=output_dir)
+        recovered_count += 1
+        print(f"  {f.name:20s}  {f.size:>8,} bytes  confidence={f.confidence:.2f}")
+    
+    print()
+    print(f"Recovered {recovered_count}/{len(user_files)} files to {output_dir}")
+    
+    # Show a recovered file
+    for name, _ in sample_files[:1]:
+        fpath = os.path.join(output_dir, name)
+        if os.path.exists(fpath):
+            with open(fpath, 'rb') as f:
+                content = f.read(200).rstrip(b'\x00').decode('utf-8', errors='replace')
+            print()
+            print(f"Content of {name}:")
+            for line in content.split('\n'):
+                if line:
+                    print(f"  {line}")
+    
+    print()
+    if args.keep:
+        # Copy to current directory
+        keep_dir = os.path.join(os.getcwd(), "recoverylab_demo")
+        os.makedirs(keep_dir, exist_ok=True)
+        shutil.copy2(img_path, os.path.join(keep_dir, "demo.img"))
+        shutil.copytree(output_dir, os.path.join(keep_dir, "recovered"), dirs_exist_ok=True)
+        print(f"Files saved to {keep_dir}/")
+    else:
+        print("(Image cleaned up. Use --keep to keep the files.)")
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+    
+    print()
+    print("Now try it with your own disk image:")
+    print("  recoverylab scan your_image.img")
+    print("  recoverylab recover your_image.img output/")
+    
+    return 0
+
+
 # ── Main ──────────────────────────────────────────────────
 
 def main():
@@ -462,6 +566,18 @@ Strategy profiles:
     )
     info_parser.add_argument("image", help="Path to disk image file")
     
+    # demo
+    demo_parser = subparsers.add_parser(
+        "demo",
+        help="Create a demo image and scan it (try RecoveryLab now!)",
+        description="Generates a small NTFS image with sample files, scans it, and recovers them. "
+                    "Perfect for first-time users who want to see RecoveryLab in action.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="This creates demo.img and a recovered/ folder in the current directory.",
+    )
+    demo_parser.add_argument("--keep", action="store_true",
+                            help="Keep the generated image after recovery (default: clean up)")
+    
     args = parser.parse_args()
     
     if args.command == "scan":
@@ -470,6 +586,8 @@ Strategy profiles:
         return cmd_recover(args) or 0
     elif args.command == "info":
         return cmd_info(args) or 0
+    elif args.command == "demo":
+        return cmd_demo(args)
     else:
         parser.print_help()
         return 0

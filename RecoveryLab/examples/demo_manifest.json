@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "category": "example",
+  "num_files": 5,
+  "description": "Small demo image for README quick start. 5 files.",
+  "files": [
+    {
+      "name": "readme.txt",
+      "size": 62,
+      "sha256": "e3b66efbc309c96f7e3f8c7b0d7817596516e2659779ced466e427dbc18063a1",
+      "is_directory": false
+    },
+    {
+      "name": "photo.jpg",
+      "size": 22,
+      "sha256": "d20f6ffd523b78a86cd2f916fa34af5d1918d75f7b142237c752ad6b254213ab",
+      "is_directory": false
+    },
+    {
+      "name": "notes.txt",
+      "size": 72,
+      "sha256": "aa8e8ab97ae7d70fe51f860bb835e49107d9324e337c94e2de32d4d17debb19e",
+      "is_directory": false
+    },
+    {
+      "name": "data.json",
+      "size": 59,
+      "sha256": "39c7896d9baf194e812aa55c0725f64f5ce88ca2b3cade7be186231c3d7ba285",
+      "is_directory": false
+    },
+    {
+      "name": "hello.txt",
+      "size": 63,
+      "sha256": "dd58a4cfdc39ec1ce6541a253ed676a0bfe416df0701689ad15304be1956b65f",
+      "is_directory": false
+    }
+  ]
+}

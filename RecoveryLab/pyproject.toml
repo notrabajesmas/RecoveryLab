@@ -35,7 +35,7 @@ classifiers = [
 recoverylab = "recoverylab:main"
 
 [tool.setuptools]
-py-modules = ["recoverylab"]
+py-modules = ["recoverylab", "config"]
 packages = [
     "core",
     "motors",
@@ -55,4 +55,4 @@ dev = [
 ]
 
 [tool.setuptools.package-data]
-recoverylab = ["datasets/**/*.img", "datasets/**/*.json"]
+"*" = ["examples/*.img", "examples/*.json"]

@@ -1192,3 +1192,27 @@ Stage Summary:
   - Sparse: 20/20, RR=100.0%, RFS=0.850, RC=0.500, 0.19s, 159MB
 - pip install recoverylab works end-to-end
 - Artifacts: recoverylab-0.6.0-py3-none-any.whl, recoverylab-0.6.0.tar.gz
+
+---
+Task ID: 20
+Agent: Main
+Task: Open source readiness — stranger flow + UXR + demo command
+
+Work Log:
+- Updated README.md: "Each version changes a benchmark" as top-level philosophy
+- Version roadmap now expressed as benchmark targets (e.g. "Sparse: 0% → 100%")
+- Added `recoverylab demo` command: generates NTFS image on-the-fly, scans, recovers, shows content
+- Demo works without any disk image — pip users can try RecoveryLab immediately
+- Added UXR (User Recovery Rate) concept to PROJECT_STATUS.md
+- UXR measures the user, not the motor: "Of N people who download, how many recover a file without reading source code?"
+- Added "Stranger test" definition: git clone → pip install → scan → recover
+- Fixed pyproject.toml: added config.py as py-module (was missing, broke pip install)
+- Created examples/demo.img (1MB, 5 files) for git clone users
+- Rebuilt and verified: pip install → recoverylab demo → 4/4 recovered ✅
+- All numbers in docs come from real CI execution
+
+Stage Summary:
+- A stranger can now: pip install recoverylab → recoverylab demo → see files recovered
+- README communicates: each version = one benchmark change
+- UXR metric defined: target ≥ 8/10 for v1.0.0
+- Ready for GitHub Release (not PyPI yet — test with 5-10 people first)

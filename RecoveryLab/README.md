@@ -2,8 +2,26 @@
 
 File recovery tool for NTFS disk images.
 
-Recovers files from NTFS images using MFT parsing, USN journal analysis,
-file carving, and multi-run fragment reconstruction — including sparse files.
+> **Each version changes a benchmark.**
+>
+> Before starting any version, we answer one question:
+> *"What benchmark number will move when we finish this version?"*
+> If we can't answer in one line, the version doesn't start.
+
+## Version roadmap
+
+| Version | Benchmark target |
+|---------|-----------------|
+| v0.5.2 | NTFS normal files: 0% → 100% |
+| **v0.6.0** | **NTFS sparse files: 0% → 100%** |
+| v0.6.1 | NTFS compressed files: 0% → ≥95% |
+| v0.7.0 | GUI: 0 → functional |
+| v0.8.0 | FAT32: 0% → 100% |
+| v0.9.0 | exFAT: 0% → 100% |
+| v1.0.0 | Public release |
+
+All benchmark numbers come from `python scripts/ci_full.py`.
+No number appears in documentation unless a reproducible execution produced it.
 
 ## Install
 
@@ -14,7 +32,7 @@ pip install recoverylab
 Or from source:
 
 ```bash
-git clone https://github.com/notrabajesmas/RecoveryLab.git
+git clone https://github.com/notrabjesmas/RecoveryLab.git
 cd RecoveryLab
 pip install .
 ```
@@ -27,6 +45,9 @@ pip install .
 ## Quick Start
 
 ```bash
+# See RecoveryLab in action immediately (no disk image needed)
+recoverylab demo
+
 # Scan an NTFS image for recoverable files
 recoverylab scan disk.img
 
@@ -61,15 +82,15 @@ print(result.statistics.summary)
 
 ## What RecoveryLab Can Recover
 
-| Capability | Status |
-|-----------|--------|
-| Normal NTFS files (MFT-based) | Working |
-| Fragmented files (multi-run) | Working |
-| Deleted files (via USN journal) | Working |
-| Sparse files (zero-hole runs) | Working |
-| File carving (19 formats) | Working |
-| Compressed NTFS files | Not yet |
-| FAT32 / exFAT | Not yet |
+| Capability | How | Confidence |
+|-----------|-----|-----------|
+| Normal NTFS files | MFT metadata | 1.0 |
+| Fragmented files | Multi-run reconstruction | 1.0 |
+| Deleted files | USN journal | 0.8 |
+| Sparse files | Sparse run zero-fill | 0.95 |
+| Carved files | Signature matching | 0.5–0.9 |
+| Compressed NTFS files | — | Not yet |
+| FAT32 / exFAT | — | Not yet |
 
 ## Recovery Profiles
 
@@ -79,6 +100,17 @@ recoverylab scan disk.img --profile balanced     # MFT + Journal
 recoverylab scan disk.img --profile mft_first    # MFT → Journal → Carving (default)
 recoverylab scan disk.img --profile full         # All strategies — most thorough
 ```
+
+## CI-verified metrics (v0.6.0)
+
+These numbers come from a real CI execution on 2026-08-05.
+
+| Category | Files | RR | RFS | Time |
+|----------|------:|---:|----:|-----:|
+| Normal | 20/20 | 100.0% | 0.815 | 0.53s |
+| Fragmented | 20/20 | 100.0% | 0.815 | 0.50s |
+| Deleted | 20/20 | 100.0% | 0.815 | 0.48s |
+| Sparse | 20/20 | 100.0% | 0.850 | 0.19s |
 
 ## Documentation
 
