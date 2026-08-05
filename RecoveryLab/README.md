@@ -31,10 +31,11 @@ but they must not be mixed.
 |---------|-----------------|--------|
 | v0.5.2 | NTFS normal files: 0% → 100% | Released |
 | **v0.6.0** | **NTFS sparse files: 0% → 100%** | **Open** |
-| v0.6.1 | NTFS compressed files: 0% → ≥95% | Blocked (UXR-001 first) |
+| v0.6.1 | NTFS compressed files: 0% → ≥95% | Release blocked (UXR-001; develop open) |
 | v0.6.2 | Alternate Data Streams | Pending |
 | v0.7.0 | FAT32: 0% → 100% | Pending |
 | v0.8.0 | exFAT: 0% → 100% | Pending |
+| v0.9.0 | ext4: 0% → 100% | Pending |
 
 ### Product roadmap (the experience)
 
@@ -47,7 +48,9 @@ but they must not be mixed.
 | CLI | Commands clear without source | Pending |
 | GUI | Visual interface for non-CLI users | Pending |
 
-**Rule**: No technical version opens without product evidence.
+**Rule**: v0.6.1 cannot be **released** until UXR-001 has data.
+However, development is allowed in the `develop` branch — if someone wants to
+contribute compressed file support, it goes there. Only releases are gated.
 
 A version is either **Open** or **Released**. No partial progress shown publicly.
 

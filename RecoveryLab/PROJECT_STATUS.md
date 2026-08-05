@@ -79,10 +79,11 @@ They are both important, but they must not be mixed.
 |---------|-----------------|----------|--------|
 | v0.5.2 | NTFS normal: 0% → 100% | 20/20 files, RR=100% | Released |
 | **v0.6.0** | **NTFS sparse: 0% → 100%** | **20/20 files, RR=100%** | **Open** |
-| v0.6.1 | NTFS compressed: 0% → ≥95% | Compressed corpus CI-verified | **Blocked** (UXR-001 first) |
+| v0.6.1 | NTFS compressed: 0% → ≥95% | Compressed corpus CI-verified | **Release blocked** (UXR-001 first; develop open) |
 | v0.6.2 | Alternate Data Streams | ADS corpus CI-verified | Pending |
 | v0.7.0 | FAT32: 0% → 100% | FAT32 corpus CI-verified | Pending |
 | v0.8.0 | exFAT: 0% → 100% | exFAT corpus CI-verified | Pending |
+| v0.9.0 | ext4: 0% → 100% | ext4 corpus CI-verified | Pending |
 
 ### Product roadmap (the experience)
 
@@ -95,8 +96,16 @@ They are both important, but they must not be mixed.
 | CLI | scan/recover/demo clear without reading source | UXR demo+scan rate ≥ 8/10 | Pending |
 | GUI | Visual interface for non-CLI users | Separate UXR test | Pending |
 
-**Rule**: No technical version opens until the current product step
-has produced evidence. v0.6.1 does not start until UXR-001 has data.
+**Rule**: v0.6.1 cannot be **released** until UXR-001 has data.
+However, development on compressed files is allowed in the `develop` branch.
+This prevents the project from stalling if the experiment takes weeks,
+while still ensuring no version ships without product evidence.
+
+```
+release/v0.6.0  → only fixes
+release/v0.6.1  → cannot open until UXR-001 has results
+develop          → compressed files work welcome here
+```
 
 ---
 
@@ -199,7 +208,7 @@ python scripts/ci_full.py
 | Strategy D (Fragment) | Working | Multi-run reconstruction |
 | Strategy E (Hybrid) | Working | Adaptive delegation |
 | **Sparse runs** | **Working (v0.6.0)** | **Parser + recovery + corpus + CI** |
-| Compressed runs | Not yet | Blocked by UXR-001 |
+| Compressed runs | Not yet | Release blocked by UXR-001; develop open |
 | GUI | Not yet | |
 | FAT32 / exFAT | Not yet | |
 
@@ -238,7 +247,8 @@ python scripts/ci_full.py
 10. **TTFS matters** — if it takes 30 minutes to recover the first file, the product is broken
 11. **Versions are Open or Released** — no partial progress shown to users
 12. **Release branches are frozen** — only bugs, docs, packaging, CI. No features.
-13. **Two roadmaps, never mixed** — technical and product are separate. No technical version opens without product evidence.
+13. **Two roadmaps, never mixed** — technical and product are separate. No technical version is released without product evidence.
+14. **Develop is always open** — contributions and experiments go to `develop`. Only release branches are gated by product evidence.
 
 ---
 

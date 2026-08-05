@@ -43,7 +43,7 @@ Now RecoveryLab correctly recovers sparse files with zero-filled gaps.
 - **TTFS metric added**: Time To First Success — from opening README to first recovered file. Measures the experience, not the motor.
 - **Two roadmaps**: Technical (motor: v0.6.1 → compressed, v0.6.2 → ADS, v0.7 → FAT32, v0.8 → exFAT) and Product (experience: UXR-001 → GitHub Release → Docs → Install → CLI → GUI). Never mixed.
 - **Evidence rule**: Before any version — "What new evidence will exist when this version finishes?" "More code" is not valid evidence.
-- **v0.6.1 explicitly blocked**: No technical version opens without product evidence from UXR-001.
+- **v0.6.1 explicitly blocked for release**: v0.6.1 cannot be released until UXR-001 has data. However, development on compressed files is allowed in `develop` — if someone wants to contribute, the branch is open. Only releases are gated, not development.
 - **Next objective changed**: UXR-001 experiment (10 external testers) instead of v0.6.1 (compressed files). The motor works. Now prove that people can use it.
 - **Release branch strategy**: `release/v0.6.0` only allows bugs/docs/packaging/CI. No new features. Prevents scope creep.
 - **UXR-001 recording sheet**: `experiments/UXR-001.md` — blank template ready for the experiment.
