@@ -1,5 +1,35 @@
 # RecoveryLab — Changelog
 
+## v0.4.2 (2026-08-05)
+
+**RR + RFS as independent metrics + Strategy Engine**
+
+Two major conceptual improvements before Sprint 4:
+
+**1. Recovery Rate (RR) and Recovery Fidelity Score (RFS) — separate metrics:**
+- RR: "Did we find the file?" — Recovered / Total
+- RFS: "How well did we recover it?" — 9-component weighted score
+- Combined: Quality = RR × RFS
+- RR also matches by SHA-256 (carving finds files even with wrong names)
+
+Examples:
+- MFT:     RR=100% × RFS=0.967 → Quality=0.967
+- Carving: RR=100% × RFS=0.450 → Quality=0.450
+- Partial: RR= 67% × RFS=0.950 → Quality=0.633
+
+**2. Strategy Engine — motors as configurable strategies:**
+- RecoveryStrategy: name, capabilities, priority, cost
+- StrategyProfile: ordered list of strategies (mft_first, journal_first, carving_first, full)
+- StrategyEngine: orchestrates profiles, computes RFS upper bound per profile
+- Max RFS per profile: 0.850 (ADS + EA not yet implemented in any strategy)
+- Future: user-configurable priority ordering
+
+**Architecture:**
+- `recovery_judge/fidelity.py`: RecoveryRate, RecoveryQuality, RecoveryRateResult, RecoveryQualityResult
+- `recovery_judge/strategy_engine.py`: RecoveryStrategy, StrategyProfile, StrategyEngine, 4 profiles
+
+---
+
 ## v0.4.1 (2026-08-05)
 
 **Motor B + Journal Integration + Recovery Fidelity Score**

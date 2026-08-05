@@ -1195,4 +1195,29 @@ Stage Summary:
 - Recovery Fidelity Score: 9-component granular metric (MFT=0.900, Carving=0.450)
 - Sprint 3c SUCCESS
 - All motor Journal columns upgraded from "Stub" to "✅"
-- Next: Sprint 4 — Fragmentación
+
+---
+Task ID: 31
+Agent: Main
+Task: Sprint 3d — RR + RFS separation + Strategy Engine + Sprint 4 breakdown
+
+Work Log:
+- Added Recovery Rate (RR) as independent metric:
+  - RecoveryRate class: computes recovered/total with SHA-256 fallback matching
+  - RecoveryResult: recovered, total, rr, partial, with_name, with_data
+  - Carving files matched by SHA-256 even when names don't match
+- Added RecoveryQuality = RR × RFS combined metric:
+  - Demo: MFT Quality=0.967, Carving Quality=0.450, Partial Quality=0.633
+- Created Strategy Engine (recovery_judge/strategy_engine.py):
+  - 5 strategies: MFT, Journal, Carving, Fragment, Hybrid
+  - 4 profiles: mft_first, journal_first, carving_first, full
+  - Max RFS = 0.850 for all profiles (ADS + EA not yet implemented)
+- Divided Sprint 4 into sub-sprints: 4A (Multiple Data Runs), 4B (Sparse), 4C (Compressed), 4D (Partial)
+- Updated CHANGELOG.md with v0.4.2
+- Updated PROJECT_STATUS.md with Sprint 3d and 4A/4B/4C/4D breakdown
+
+Stage Summary:
+- RR + RFS as independent metrics (Quality = RR × RFS)
+- Strategy Engine with 5 strategies and 4 profiles
+- Sprint 4 broken into 4A/4B/4C/4D
+- Next: Sprint 4A — Multiple Data Runs

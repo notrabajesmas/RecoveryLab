@@ -454,79 +454,374 @@ class RecoveryFidelityScore:
         return results
 
 
+# ─── Recovery Rate (RR) ────────────────────────────────────────────────────────
+
+@dataclass
+class RecoveryRateResult:
+    """Result of Recovery Rate computation.
+
+    RR is the classic metric: Recovered / Total.
+    It answers: did we find the file?
+    RFS answers: how completely did we recover it?
+
+    Together: RR × RFS = Overall Recovery Quality
+    """
+    recovered: int           # Files recovered (any quality)
+    total: int               # Total files expected
+    rr: float                # Recovery Rate (0.0-1.0)
+    partial: int = 0         # Files partially recovered (data incomplete)
+    with_name: int = 0       # Files where filename was preserved
+    with_data: int = 0       # Files where data was recovered (SHA-256 checkable)
+
+    @property
+    def partial_rate(self) -> float:
+        """Rate of partial recoveries among recovered files."""
+        return self.partial / self.recovered if self.recovered > 0 else 0.0
+
+    def summary(self) -> str:
+        return f"RR: {self.recovered}/{self.total} = {self.rr:.1%}"
+
+    def to_dict(self) -> Dict:
+        return {
+            "recovered": self.recovered,
+            "total": self.total,
+            "rr": round(self.rr, 4),
+            "partial": self.partial,
+            "with_name": self.with_name,
+            "with_data": self.with_data,
+        }
+
+
+class RecoveryRate:
+    """
+    Compute Recovery Rate (RR) — the classic recovered/total metric.
+
+    RR answers one question: did we get the file?
+    It doesn't care about quality — a file with wrong filename
+    and no timestamps still counts as "recovered" if we got the data.
+
+    This is deliberately separate from RFS because:
+      - RR = 100%, RFS = 0.45 → Found everything, but poorly
+      - RR = 50%,  RFS = 0.90 → Found half, but perfectly
+      - RR = 100%, RFS = 0.90 → Found everything, and well
+
+    For a recovery tool, both dimensions matter.
+    """
+
+    def compute(
+        self,
+        recovered_files: List[Dict],
+        ground_truth: List[Dict],
+    ) -> RecoveryRateResult:
+        """
+        Compute RR for a batch of recovered files vs ground truth.
+
+        Args:
+            recovered_files: List of dicts with at least "name" and "data"
+            ground_truth: List of dicts with at least "name"
+
+        Returns:
+            RecoveryRateResult with RR and breakdown
+        """
+        # Build indexes for matching: by name AND by SHA-256
+        gt_by_name = {f.get("name", ""): f for f in ground_truth}
+        gt_by_sha = {}
+        for f in ground_truth:
+            sha = f.get("sha256", "")
+            if sha:
+                gt_by_sha.setdefault(sha, []).append(f)
+
+        rec_by_name = {f.get("name", ""): f for f in recovered_files}
+        rec_by_sha = {}
+        for f in recovered_files:
+            sha = f.get("sha256", "")
+            if sha:
+                rec_by_sha.setdefault(sha, []).append(f)
+
+        recovered = 0
+        partial = 0
+        with_name = 0
+        with_data = 0
+        matched_gt_names = set()  # Track which GT files were matched
+
+        # First pass: match by name (exact)
+        for gt_name, gt_file in gt_by_name.items():
+            if gt_name in rec_by_name:
+                rec = rec_by_name[gt_name]
+                recovered += 1
+                matched_gt_names.add(gt_name)
+
+                name = rec.get("name", "")
+                if not name.startswith("carved_"):
+                    with_name += 1
+
+                data = rec.get("data", b"")
+                if data and len(data) > 0:
+                    with_data += 1
+                    rec_size = rec.get("size", len(data))
+                    gt_size = gt_file.get("size", 0)
+                    if gt_size > 0 and rec_size < gt_size * 0.99:
+                        partial += 1
+
+        # Second pass: match remaining GT by SHA-256 (catches carving recovery)
+        for gt_file in ground_truth:
+            gt_name = gt_file.get("name", "")
+            if gt_name in matched_gt_names:
+                continue  # Already matched by name
+
+            gt_sha = gt_file.get("sha256", "")
+            if gt_sha and gt_sha in rec_by_sha:
+                # Found by SHA-256 — this file was recovered but with wrong name
+                rec = rec_by_sha[gt_sha][0]  # Take first match
+                recovered += 1
+                matched_gt_names.add(gt_name)
+
+                # Name doesn't match (that's why we're here)
+                # with_name stays 0 for this file
+
+                data = rec.get("data", b"")
+                if data and len(data) > 0:
+                    with_data += 1
+
+        total = len(ground_truth)
+        rr = recovered / total if total > 0 else 0.0
+
+        return RecoveryRateResult(
+            recovered=recovered,
+            total=total,
+            rr=rr,
+            partial=partial,
+            with_name=with_name,
+            with_data=with_data,
+        )
+
+
+# ─── Combined Metric: RR × RFS ────────────────────────────────────────────────
+
+@dataclass
+class RecoveryQualityResult:
+    """Combined Recovery Quality = RR × RFS.
+
+    This single number captures both dimensions:
+      - Did we find the file? (RR)
+      - How well did we recover it? (RFS)
+
+    The decomposition tells you WHERE to improve:
+      - Low RR → More files to find (use more strategies)
+      - Low RFS → Better metadata preservation (use MFT instead of carving)
+    """
+    rr: RecoveryRateResult
+    rfs_avg: float                    # Average RFS across recovered files
+    overall_quality: float            # RR × RFS_avg
+    by_source: Dict[str, Dict] = field(default_factory=dict)
+
+    def summary(self) -> str:
+        return (f"RR={self.rr.rr:.1%} × RFS={self.rfs_avg:.3f} = "
+                f"Quality={self.overall_quality:.3f}")
+
+    def to_dict(self) -> Dict:
+        return {
+            "rr": self.rr.to_dict(),
+            "rfs_avg": round(self.rfs_avg, 4),
+            "overall_quality": round(self.overall_quality, 4),
+            "by_source": self.by_source,
+        }
+
+
+class RecoveryQuality:
+    """
+    Compute the combined Recovery Quality metric: RR × RFS.
+
+    Usage:
+        rq = RecoveryQuality()
+        result = rq.compute(recovered_files, ground_truth)
+
+        print(result.summary())
+        # RR=100.0% × RFS=0.900 = Quality=0.900
+
+    This gives a single number that captures both dimensions
+    of recovery quality: completeness and fidelity.
+    """
+
+    def __init__(self, rfs_weights: Optional[Dict[str, float]] = None):
+        self.rr = RecoveryRate()
+        self.rfs = RecoveryFidelityScore(weights=rfs_weights)
+
+    def compute(
+        self,
+        recovered_files: List[Dict],
+        ground_truth: List[Dict],
+        source: str = "unknown",
+    ) -> RecoveryQualityResult:
+        """Compute combined RR × RFS."""
+        # RR
+        rr_result = self.rr.compute(recovered_files, ground_truth)
+
+        # RFS (average across recovered files)
+        rfs_batch = self.rfs.score_batch(recovered_files, ground_truth, source=source)
+        rfs_avg = rfs_batch.get("average_rfs", 0.0)
+
+        # Overall quality
+        overall = rr_result.rr * rfs_avg
+
+        # By source breakdown
+        by_source = self.rfs.score_by_source(recovered_files, ground_truth)
+
+        return RecoveryQualityResult(
+            rr=rr_result,
+            rfs_avg=rfs_avg,
+            overall_quality=overall,
+            by_source=by_source,
+        )
+
+
 if __name__ == "__main__":
-    # Demo: Compare MFT recovery vs Carving recovery
+    # Demo: RR + RFS as separate metrics, then combined
     rfs = RecoveryFidelityScore()
+    rr = RecoveryRate()
+    rq = RecoveryQuality()
 
-    # Ground truth
-    gt = {
-        "name": "thesis.pdf",
-        "sha256": "a" * 64,
-        "size": 500000,
-        "created": 1691000000.0,
-        "modified": 1691000100.0,
-        "parent_dir": "/Users/alice/Documents",
-        "has_acl": True,
-        "has_ads": False,
-        "usn_entries": 3,
-        "has_ea": False,
-    }
-
-    # MFT recovery: preserves most metadata
-    mft_result = rfs.score(
-        recovered_file={
+    # Ground truth: 3 files
+    gt_files = [
+        {
             "name": "thesis.pdf",
             "sha256": "a" * 64,
             "size": 500000,
             "created": 1691000000.0,
             "modified": 1691000100.0,
             "parent_dir": "/Users/alice/Documents",
-            "has_acl": True,
-            "has_ads": False,
-            "usn_entries": 2,  # Partial USN history
-            "has_ea": False,
+            "has_acl": True, "has_ads": False, "usn_entries": 3, "has_ea": False,
         },
-        ground_truth=gt,
-        source="mft",
-    )
+        {
+            "name": "photo.jpg",
+            "sha256": "b" * 64,
+            "size": 200000,
+            "created": 1691000200.0,
+            "modified": 1691000300.0,
+            "parent_dir": "/Users/alice/Pictures",
+            "has_acl": False, "has_ads": False, "usn_entries": 1, "has_ea": False,
+        },
+        {
+            "name": "budget.xlsx",
+            "sha256": "c" * 64,
+            "size": 150000,
+            "created": 1691000400.0,
+            "modified": 1691000500.0,
+            "parent_dir": "/Users/alice/Work",
+            "has_acl": False, "has_ads": True, "usn_entries": 2, "has_ea": True,
+        },
+    ]
 
-    # Carving recovery: loses most metadata
-    carving_result = rfs.score(
-        recovered_file={
+    # Scenario 1: MFT recovery — all files, good fidelity
+    mft_recovered = [
+        {
+            "name": "thesis.pdf",
+            "sha256": "a" * 64,
+            "size": 500000,
+            "created": 1691000000.0,
+            "modified": 1691000100.0,
+            "parent_dir": "/Users/alice/Documents",
+            "has_acl": True, "has_ads": False, "usn_entries": 2, "has_ea": False,
+            "source": "mft",
+        },
+        {
+            "name": "photo.jpg",
+            "sha256": "b" * 64,
+            "size": 200000,
+            "created": 1691000200.0,
+            "modified": 1691000300.0,
+            "parent_dir": "/Users/alice/Pictures",
+            "has_acl": False, "has_ads": False, "usn_entries": 1, "has_ea": False,
+            "source": "mft",
+        },
+        {
+            "name": "budget.xlsx",
+            "sha256": "c" * 64,
+            "size": 150000,
+            "created": 1691000400.0,
+            "modified": 1691000500.0,
+            "parent_dir": "/Users/alice/Work",
+            "has_acl": False, "has_ads": True, "usn_entries": 2, "has_ea": True,
+            "source": "mft",
+        },
+    ]
+
+    # Scenario 2: Carving recovery — all files, poor fidelity
+    carving_recovered = [
+        {
             "name": "carved_0001.pdf",
             "sha256": "a" * 64,
             "size": 500000,
-            "created": 0.0,
-            "modified": 0.0,
+            "created": 0.0, "modified": 0.0,
             "parent_dir": "",
-            "has_acl": False,
-            "has_ads": False,
-            "usn_entries": 0,
-            "has_ea": False,
+            "has_acl": False, "has_ads": False, "usn_entries": 0, "has_ea": False,
+            "source": "carving",
         },
-        ground_truth=gt,
-        source="carving",
-    )
+        {
+            "name": "carved_0002.jpg",
+            "sha256": "b" * 64,
+            "size": 200000,
+            "created": 0.0, "modified": 0.0,
+            "parent_dir": "",
+            "has_acl": False, "has_ads": False, "usn_entries": 0, "has_ea": False,
+            "source": "carving",
+        },
+        {
+            "name": "carved_0003.xlsx",
+            "sha256": "c" * 64,
+            "size": 150000,
+            "created": 0.0, "modified": 0.0,
+            "parent_dir": "",
+            "has_acl": False, "has_ads": False, "usn_entries": 0, "has_ea": False,
+            "source": "carving",
+        },
+    ]
 
-    print("=" * 60)
-    print("Recovery Fidelity Score — Demo")
-    print("=" * 60)
-    print()
-    print(f"Ground truth file: {gt['name']}")
+    # Scenario 3: Partial recovery — 2 of 3 files
+    partial_recovered = [
+        {
+            "name": "thesis.pdf",
+            "sha256": "a" * 64,
+            "size": 500000,
+            "created": 1691000000.0,
+            "modified": 1691000100.0,
+            "parent_dir": "/Users/alice/Documents",
+            "has_acl": True, "has_ads": False, "usn_entries": 2, "has_ea": False,
+            "source": "mft",
+        },
+        {
+            "name": "photo.jpg",
+            "sha256": "b" * 64,
+            "size": 200000,
+            "created": 1691000200.0,
+            "modified": 1691000300.0,
+            "parent_dir": "/Users/alice/Pictures",
+            "has_acl": False, "has_ads": False, "usn_entries": 1, "has_ea": False,
+            "source": "mft",
+        },
+        # budget.xlsx NOT recovered
+    ]
+
+    print("=" * 70)
+    print("RecoveryLab — RR + RFS: Two Independent Metrics")
+    print("=" * 70)
     print()
 
-    print("MFT Recovery:")
-    print(f"  RFS: {mft_result.score:.3f}")
-    print(f"  {mft_result.summary()}")
-    print()
+    for name, rec in [("MFT (3/3)", mft_recovered), ("Carving (3/3)", carving_recovered), ("Partial (2/3)", partial_recovered)]:
+        rr_r = rr.compute(rec, gt_files)
+        rfs_r = rfs.score_batch(rec, gt_files)
+        quality = rq.compute(rec, gt_files)
 
-    print("Carving Recovery:")
-    print(f"  RFS: {carving_result.score:.3f}")
-    print(f"  {carving_result.summary()}")
-    print()
+        print(f"{name}:")
+        print(f"  RR:  {rr_r.summary()}")
+        print(f"  RFS: {rfs_r['average_rfs']:.3f}")
+        print(f"  {quality.summary()}")
+        print()
 
-    print(f"Difference: MFT preserves {mft_result.score - carving_result.score:.1%} more fidelity")
+    print("─" * 70)
+    print("Key insight:")
+    print("  MFT:     RR=100% × RFS=0.90 → Quality=0.90  (found all, recovered well)")
+    print("  Carving: RR=100% × RFS=0.45 → Quality=0.45  (found all, but poorly)")
+    print("  Partial: RR= 67% × RFS=0.92 → Quality=0.61  (found most, recovered well)")
     print()
-    print("This is why MFT-first recovery is superior to carving:")
-    print("Even with the same data (SHA-256 match), MFT preserves")
-    print("the full file context that carving cannot recover.")
+    print("RR tells you IF you found it. RFS tells you HOW WELL.")

@@ -1,7 +1,7 @@
 # RecoveryLab — Project Status & Resume Guide
 
 > **Ultima actualización**: 2026-08-05
-> **Version actual**: v0.4.1
+> **Version actual**: v0.4.2
 > **Repo GitHub**: https://github.com/notrabajesmas/RecoveryLab (privado)
 > **Pregunta central**: ¿Qué puede recuperar RecoveryLab hoy que ayer no podía?
 
@@ -34,7 +34,11 @@ RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS
 | **Sprint 3** | **MFT Scale Benchmark** | **100% SHA-256 at 10K files** | **✅ Completado** |
 | **Sprint 3b** | **USN Journal Parser** | **100% entries at 5K files** | **✅ Completado** |
 | **Sprint 3c** | **Motor + Journal Integration + RFS** | **Motor fallback + Fidelity Score** | **✅ Completado** |
-| Sprint 4 | Fragmentación | 0% → 50% | Pendiente |
+| **Sprint 3d** | **RR + RFS separation + Strategy Engine** | **Two metrics + configurable profiles** | **✅ Completado** |
+| Sprint 4A | Multiple Data Runs | 0% → 100% | **Siguiente** |
+| Sprint 4B | Sparse Runs | 0% → 100% | Pendiente |
+| Sprint 4C | Compressed Runs | 0% → 100% | Pendiente |
+| Sprint 4D | Partially lost files | Recovery + Confidence | Pendiente |
 | Sprint 5 | EXIF metadata | 0% → 100% | Pendiente |
 | Sprint 6 | GUI (CLI → RecoveryLab.exe) | Interacción visual | Pendiente |
 | Sprint 7 | Benchmark vs PhotoRec/Foremost/Scalpel | Comparación externa | Pendiente |
@@ -242,8 +246,8 @@ JPEG, PNG, PDF, ZIP, MP4, DOCX, TIFF, CR2, NEF, MOV, XLSX, SQLite, GIF, BMP, RAR
 
 ## Roadmap por Versiones
 
-### v0.4.1 (actual)
-**Objetivo:** NTFS recovery de archivos no fragmentados + Journal + Fidelity Score
+### v0.4.2 (actual)
+**Objetivo:** NTFS recovery no-fragmentado + Journal + RFS + RR + Strategy Engine
 
 Checklist:
 - ✅ MFT Parser
@@ -253,6 +257,10 @@ Checklist:
 - ✅ JPEG (100% real)
 - ✅ PDF, PNG, ZIP, DOCX
 - ✅ Recovery Fidelity Score (9-component)
+- ✅ Recovery Rate (RR) — separate from RFS
+- ✅ Combined Quality = RR × RFS
+- ✅ Strategy Engine (MFT/Journal/Carving/Fragment/Hybrid)
+- ✅ 4 profiles: mft_first, journal_first, carving_first, full
 
 ### v0.5
 **Objetivo:** Fragmentación
@@ -364,9 +372,9 @@ v0.3 checklist:
 3. Leer `CHANGELOG.md` para historial de versiones
 4. Leer `BLOCKERS.md` para blockers activos
 5. Leer `defects/` para defects abiertos
-6. El Sprint actual es **Sprint 4: Fragmentación** → ver sección "Roadmap por Versiones"
-7. Los archivos clave son `ntfs_parser/parser.py`, `motors/motor_b_mft_first.py`, `recovery_judge/fidelity.py`
-8. La métrica nueva es **Recovery Fidelity Score** en `recovery_judge/fidelity.py`
+6. El Sprint actual es **Sprint 4A: Multiple Data Runs** → ver sección "Roadmap por Versiones"
+7. Los archivos clave son `ntfs_parser/parser.py`, `motors/motor_b_mft_first.py`, `recovery_judge/fidelity.py`, `recovery_judge/strategy_engine.py`
+8. Las metricas son **RR** (Recovery Rate) + **RFS** (Recovery Fidelity Score) + **Quality = RR × RFS**
 
 ---
 
