@@ -1,0 +1,9 @@
+{
+  "corpus_version": "1.0",
+  "category": "deleted",
+  "status": "built",
+  "image": "/home/z/my-project/RecoveryLab/datasets/ntfs/deleted/corpus_deleted.img",
+  "manifest": "/home/z/my-project/RecoveryLab/datasets/ntfs/deleted/corpus_deleted_manifest.json",
+  "num_files": 20,
+  "fragmentation_rate": 0.0
+}

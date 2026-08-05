@@ -1,0 +1,9 @@
+{
+  "corpus_version": "1.0",
+  "category": "normal",
+  "status": "built",
+  "image": "/home/z/my-project/RecoveryLab/datasets/ntfs/normal/corpus_normal.img",
+  "manifest": "/home/z/my-project/RecoveryLab/datasets/ntfs/normal/corpus_normal_manifest.json",
+  "num_files": 20,
+  "fragmentation_rate": 0.0
+}

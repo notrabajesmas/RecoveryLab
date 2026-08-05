@@ -1,0 +1,6 @@
+{
+  "corpus_version": "1.0",
+  "category": "sparse",
+  "status": "placeholder",
+  "note": "Will be populated in v0.6.0 when sparse runs are supported"
+}

@@ -1,0 +1,9 @@
+{
+  "corpus_version": "1.0",
+  "category": "fragmented",
+  "status": "built",
+  "image": "/home/z/my-project/RecoveryLab/datasets/ntfs/fragmented/corpus_fragmented.img",
+  "manifest": "/home/z/my-project/RecoveryLab/datasets/ntfs/fragmented/corpus_fragmented_manifest.json",
+  "num_files": 20,
+  "fragmentation_rate": 0.5
+}

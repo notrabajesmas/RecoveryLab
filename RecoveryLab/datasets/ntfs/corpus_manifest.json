@@ -1,0 +1,12 @@
+{
+  "corpus_version": "1.0",
+  "categories": [
+    "normal",
+    "fragmented",
+    "sparse",
+    "compressed",
+    "deleted"
+  ],
+  "built": 5,
+  "total": 5
+}

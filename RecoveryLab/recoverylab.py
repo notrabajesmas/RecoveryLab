@@ -9,8 +9,11 @@ Usage:
     recoverylab scan disco.img
     recoverylab scan disco.img --json
     recoverylab recover disco.img salida/
-    recoverylab recover disco.img salida/ --filter .jpg
+    recoverylab recover disco.img salida/ --filter .jpg,.png
+    recoverylab recover disco.img salida/ --min-confidence 0.5
     recoverylab info disco.img
+    recoverylab --version
+    recoverylab --help
 """
 
 import sys
@@ -18,15 +21,98 @@ import os
 import argparse
 import json
 import time
+import threading
 from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+VERSION = "0.5.1"
+
+
+# ── Progress Spinner ──────────────────────────────────────
+
+class ProgressSpinner:
+    """Lightweight spinner for CLI progress indication."""
+    
+    SYMBOLS = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+    
+    def __init__(self, message="Working"):
+        self.message = message
+        self._stop = threading.Event()
+        self._thread = None
+    
+    def start(self):
+        self._stop.clear()
+        self._thread = threading.Thread(target=self._spin, daemon=True)
+        self._thread.start()
+        return self
+    
+    def stop(self, final_message=None):
+        self._stop.set()
+        if self._thread:
+            self._thread.join(timeout=1.0)
+        if final_message:
+            sys.stderr.write(f"\r\033[K  {final_message}\n")
+        else:
+            sys.stderr.write("\r\033[K")
+        sys.stderr.flush()
+    
+    def _spin(self):
+        i = 0
+        while not self._stop.is_set():
+            sym = self.SYMBOLS[i % len(self.SYMBOLS)]
+            sys.stderr.write(f"\r\033[K  {sym} {self.message}...")
+            sys.stderr.flush()
+            i += 1
+            self._stop.wait(0.08)
+
+
+# ── Error Formatting ──────────────────────────────────────
+
+def _format_error(error_msg: str) -> str:
+    """Convert internal error messages to user-friendly form."""
+    if "Image not found" in error_msg:
+        path = error_msg.split(": ", 1)[1] if ": " in error_msg else ""
+        return (f"Cannot find the image file: {path}\n"
+                f"  Check that the path is correct and the file exists.")
+    if "Permission denied" in error_msg:
+        path = error_msg.split(": ", 1)[1] if ": " in error_msg else ""
+        return (f"Permission denied: {path}\n"
+                f"  Make sure you have read access to the file.")
+    if "Not a file" in error_msg:
+        path = error_msg.split(": ", 1)[1] if ": " in error_msg else ""
+        return (f"Not a regular file: {path}\n"
+                f"  Provide a path to a disk image file (not a directory).")
+    if "Image is empty" in error_msg:
+        return "The image file is empty (0 bytes). It may be corrupted or truncated."
+    if "Unknown filesystem type" in error_msg:
+        return ("Unrecognized filesystem format.\n"
+                "  RecoveryLab currently supports NTFS. FAT32 and exFAT are planned.")
+    return error_msg
+
+
+def _print_errors(errors):
+    """Print errors in user-friendly form."""
+    for err in errors:
+        formatted = _format_error(err)
+        lines = formatted.split("\n")
+        print(f"  Error: {lines[0]}", file=sys.stderr)
+        for line in lines[1:]:
+            print(f"  {line}", file=sys.stderr)
+
+
+# ── Commands ──────────────────────────────────────────────
 
 def cmd_scan(args):
     """Scan a disk image and list recoverable files."""
     from core import RecoveryEngine
+    
+    # Validate image exists before creating engine
+    if not os.path.exists(args.image):
+        print(f"Error: Cannot find '{args.image}'", file=sys.stderr)
+        print(f"  Check that the path is correct and the file exists.", file=sys.stderr)
+        return 1
     
     engine = RecoveryEngine(
         profile=args.profile,
@@ -34,73 +120,70 @@ def cmd_scan(args):
         enable_journal=not args.no_journal,
     )
     
-    # Progress indicator
+    # Show what we're doing
+    print(f"RecoveryLab v{VERSION}")
     print(f"Scanning: {args.image}")
+    print(f"Profile:  {args.profile}")
     print(f"Pipeline: {' → '.join(engine.pipeline_stages)}")
     print()
     
+    # Run scan with progress spinner
+    spinner = ProgressSpinner("Scanning image").start()
     t0 = time.time()
     result = engine.scan(args.image)
+    elapsed = time.time() - t0
+    spinner.stop(f"Scan completed in {elapsed:.2f}s")
+    print()
     
+    # Handle errors
     if result.errors:
-        print("Errors:")
-        for err in result.errors:
-            print(f"  ⚠ {err}")
-        print()
+        if not result.files:
+            print("Scan failed:", file=sys.stderr)
+            _print_errors(result.errors)
+            return 1
+        else:
+            print("Warnings:")
+            for err in result.errors:
+                print(f"  ⚠ {err}")
+            print()
     
     # Output
     if args.json:
-        # JSON output (for scripts/pipelines)
-        output = {
-            "files": [
-                {
-                    "id": f.id,
-                    "name": f.name,
-                    "size": f.size,
-                    "status": f.status.value,
-                    "source": f.source.value,
-                    "confidence": f.confidence,
-                    "sha256": f.sha256,
-                    "is_fragmented": f.is_fragmented,
-                    "fragment_count": f.fragment_count,
-                }
-                for f in result.files
-            ],
-            "statistics": {
-                "total_files_found": result.statistics.total_files_found,
-                "total_files_recovered": result.statistics.total_files_recovered,
-                "recovery_rate": result.statistics.recovery_rate,
-                "fidelity_score": result.statistics.fidelity_score,
-                "quality": result.statistics.quality,
-                "scan_time_seconds": result.statistics.scan_time_seconds,
-                "peak_ram_mb": result.statistics.peak_ram_mb,
-                "by_source": result.statistics.by_source,
-            },
-            "strategy": result.strategy_used,
-        }
-        print(json.dumps(output, indent=2))
+        _print_json_result(result)
     else:
-        # Human-readable output
         _print_scan_result(result)
+    
+    return 0
 
 
 def cmd_recover(args):
     """Recover files from a disk image."""
     from core import RecoveryEngine
     
+    # Validate inputs
+    if not os.path.exists(args.image):
+        print(f"Error: Cannot find '{args.image}'", file=sys.stderr)
+        print(f"  Check that the path is correct and the file exists.", file=sys.stderr)
+        return 1
+    
     engine = RecoveryEngine(
         profile=args.profile,
         enable_carving=not args.no_carving,
         enable_journal=not args.no_journal,
     )
     
+    print(f"RecoveryLab v{VERSION}")
     print(f"Scanning: {args.image}")
-    result = engine.scan(args.image)
     
+    # Scan with progress
+    spinner = ProgressSpinner("Scanning image").start()
+    result = engine.scan(args.image)
+    spinner.stop()
+    
+    # Handle scan errors
     if result.errors and not result.files:
-        print("Scan failed:")
-        for err in result.errors:
-            print(f"  ⚠ {err}")
+        print("Scan failed:", file=sys.stderr)
+        _print_errors(result.errors)
         return 1
     
     # Apply filters
@@ -113,40 +196,57 @@ def cmd_recover(args):
     if args.min_confidence:
         files = [f for f in files if f.confidence >= args.min_confidence]
     
-    print(f"\nFound {len(result.files)} files, recovering {len(files)} to {args.output_dir}/")
+    recoverable = [f for f in files if f.is_recovered]
+    print(f"\nFound {len(result.files)} files, recovering {len(recoverable)} to {args.output_dir}/")
     print()
     
-    # Recover
+    # Recover with progress
     os.makedirs(args.output_dir, exist_ok=True)
     saved = {}
-    for i, f in enumerate(files, 1):
-        if not f.is_recovered:
-            continue
-        path = engine.recover(f, output_dir=args.output_dir)
+    for i, f in enumerate(recoverable, 1):
+        path = result.recover(f.id, output_dir=args.output_dir)
         if path:
             saved[f.name] = path
             frag = " [fragmented]" if f.is_fragmented else ""
-            print(f"  [{i}/{len(files)}] {f.name} ({f.size:,} bytes){frag}")
+            conf_bar = "█" * int(f.confidence * 5) + "░" * (5 - int(f.confidence * 5))
+            print(f"  [{i:>3d}/{len(recoverable)}] {f.name:<35s} {f.size:>10,d} bytes  {conf_bar} {f.confidence:.2f}{frag}")
     
-    print(f"\n✅ Recovered {len(saved)}/{len(files)} files to {args.output_dir}/")
-    
-    # Statistics
-    print(f"\n{result.statistics.summary}")
+    # Final statistics
+    print()
+    print("═" * 60)
+    print("  Recovery Summary")
+    print("═" * 60)
+    stats = result.statistics
+    print(f"  Files found:      {stats.total_files_found}")
+    print(f"  Files recovered:  {len(saved)}")
+    print(f"  Total time:       {stats.scan_time_seconds:.2f}s")
+    print(f"  RR:               {stats.recovery_rate:.1%}")
+    print(f"  RFS (avg):        {stats.fidelity_score:.3f}")
+    print(f"  Quality:          {stats.quality:.3f}")
+    print(f"  Peak RAM:         {stats.peak_ram_mb:.1f} MB")
+    print("═" * 60)
     
     return 0
 
 
 def cmd_info(args):
     """Show image info without full scan."""
-    from core.pipeline import Pipeline, PipelineContext
-    from core.stages import DetectStage, NTFSParseStage
+    if not os.path.exists(args.image):
+        print(f"Error: Cannot find '{args.image}'", file=sys.stderr)
+        return 1
     
     try:
         with open(args.image, 'rb') as f:
             image = f.read()
-    except FileNotFoundError:
-        print(f"Error: {args.image} not found")
+    except PermissionError:
+        print(f"Error: Permission denied: {args.image}", file=sys.stderr)
         return 1
+    except Exception as e:
+        print(f"Error reading file: {e}", file=sys.stderr)
+        return 1
+    
+    from core.pipeline import Pipeline, PipelineContext
+    from core.stages import DetectStage, NTFSParseStage
     
     # Just detect + parse
     pipeline = Pipeline()
@@ -154,9 +254,10 @@ def cmd_info(args):
     pipeline.add(NTFSParseStage())
     ctx = pipeline.run(image)
     
-    print(f"Image: {args.image}")
-    print(f"Size:  {len(image):,} bytes ({len(image)/(1024*1024):.1f} MB)")
-    print(f"Type:  {ctx.filesystem_type}")
+    print(f"RecoveryLab v{VERSION}")
+    print(f"Image:  {args.image}")
+    print(f"Size:   {len(image):,} bytes ({len(image)/(1024*1024):.1f} MB)")
+    print(f"Type:   {ctx.filesystem_type}")
     
     if ctx.ntfs_metadata:
         meta = ctx.ntfs_metadata
@@ -166,31 +267,76 @@ def cmd_info(args):
         print(f"  Journal entries:     {meta.journal_entries_parsed}")
         print(f"  Deleted files:       {meta.deleted_files_found}")
         print(f"  Parse errors:        {meta.parse_errors}")
+    elif ctx.filesystem_type == "UNKNOWN":
+        print(f"\n  Unrecognized filesystem. RecoveryLab currently supports NTFS.")
+        print(f"  FAT32 and exFAT support is planned for a future release.")
     
     return 0
+
+
+# ── Output Formatters ─────────────────────────────────────
+
+def _print_json_result(result):
+    """Print scan result as JSON (for scripts/pipelines)."""
+    output = {
+        "version": VERSION,
+        "files": [
+            {
+                "id": f.id,
+                "name": f.name,
+                "size": f.size,
+                "status": f.status.value,
+                "source": f.source.value,
+                "confidence": f.confidence,
+                "sha256": f.sha256,
+                "is_fragmented": f.is_fragmented,
+                "fragment_count": f.fragment_count,
+            }
+            for f in result.files
+        ],
+        "statistics": {
+            "total_files_found": result.statistics.total_files_found,
+            "total_files_recovered": result.statistics.total_files_recovered,
+            "total_files_partial": result.statistics.total_files_partial,
+            "total_files_damaged": result.statistics.total_files_damaged,
+            "recovery_rate": result.statistics.recovery_rate,
+            "fidelity_score": result.statistics.fidelity_score,
+            "quality": result.statistics.quality,
+            "scan_time_seconds": result.statistics.scan_time_seconds,
+            "peak_ram_mb": result.statistics.peak_ram_mb,
+            "by_source": result.statistics.by_source,
+        },
+        "strategy": result.strategy_used,
+        "image_path": result.image_path,
+    }
+    print(json.dumps(output, indent=2))
 
 
 def _print_scan_result(result):
     """Print human-readable scan result."""
     stats = result.statistics
     
-    # Summary
+    # Summary box
     print("═" * 60)
-    print("  RecoveryLab — Scan Results")
+    print(f"  RecoveryLab v{VERSION} — Scan Results")
     print("═" * 60)
     print()
     print(f"  Files found:     {stats.total_files_found}")
     print(f"  Recovered:       {stats.total_files_recovered}")
-    print(f"  Partial:         {stats.total_files_partial}")
-    print(f"  Damaged:         {stats.total_files_damaged}")
-    print(f"  Metadata only:   {stats.total_files_metadata_only}")
-    print(f"  Fragmented:      {stats.total_fragmented}")
+    if stats.total_files_partial:
+        print(f"  Partial:         {stats.total_files_partial}")
+    if stats.total_files_damaged:
+        print(f"  Damaged:         {stats.total_files_damaged}")
+    if stats.total_files_metadata_only:
+        print(f"  Metadata only:   {stats.total_files_metadata_only}")
+    if stats.total_fragmented:
+        print(f"  Fragmented:      {stats.total_fragmented}")
     print()
-    print(f"  RR:   {stats.recovery_rate:.1%}")
-    print(f"  RFS:  {stats.fidelity_score:.3f}")
-    print(f"  Quality: {stats.quality:.3f}")
-    print(f"  Time: {stats.scan_time_seconds:.2f}s")
-    print(f"  RAM:  {stats.peak_ram_mb:.1f} MB")
+    print(f"  RR:       {stats.recovery_rate:.1%}")
+    print(f"  RFS:      {stats.fidelity_score:.3f}")
+    print(f"  Quality:  {stats.quality:.3f}")
+    print(f"  Time:     {stats.scan_time_seconds:.2f}s")
+    print(f"  RAM:      {stats.peak_ram_mb:.1f} MB")
     print()
     
     # Source breakdown
@@ -215,7 +361,7 @@ def _print_scan_result(result):
                   f"{f.source.value:8s} {f.status.value:10s}{frag}")
         
         if len(result.files) > 50:
-            print(f"  ... and {len(result.files) - 50} more")
+            print(f"  ... and {len(result.files) - 50} more (use --json for full list)")
         
         print("─" * 60)
         print(f"  * = fragmented file")
@@ -223,40 +369,89 @@ def _print_scan_result(result):
     print()
 
 
+# ── Main ──────────────────────────────────────────────────
+
 def main():
     parser = argparse.ArgumentParser(
         prog="recoverylab",
-        description="RecoveryLab — File Recovery Tool",
+        description="RecoveryLab — NTFS File Recovery Tool\n\n"
+                    "Recover deleted or lost files from NTFS disk images.\n"
+                    "Supports MFT parsing, USN Journal, signature carving,\n"
+                    "and fragmented file reconstruction.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  recoverylab scan disk.img                    Scan and list recoverable files
+  recoverylab scan disk.img --json             Output as JSON (for scripts)
+  recoverylab scan disk.img --no-carving       Skip carving (faster scan)
+  recoverylab recover disk.img output/         Recover all files to output/
+  recoverylab recover disk.img output/ --filter .jpg,.png   Only JPEG and PNG
+  recoverylab recover disk.img output/ --min-confidence 0.8  Only high-confidence
+  recoverylab info disk.img                    Show image metadata
+
+Supported formats (carving):
+  JPEG, PNG, PDF, ZIP, MP4, DOCX, TIFF, CR2, NEF, MOV,
+  XLSX, SQLite, GIF, BMP, RAR, 7Z, PSD, DNG, HEIC, AVI
+
+Strategy profiles:
+  mft_first      MFT → Journal → Carving (default, fastest)
+  journal_first  Journal → MFT → Carving (best for deleted files)
+  carving_first  Carving → MFT → Journal (most thorough, slowest)
+  full           MFT → Journal → Fragment → Carving (complete)
+""",
     )
-    parser.add_argument("--version", action="version", version="RecoveryLab v0.5.0")
+    parser.add_argument("--version", action="version", version=f"RecoveryLab v{VERSION}")
     
     subparsers = parser.add_subparsers(dest="command", help="Command")
     
     # scan
-    scan_parser = subparsers.add_parser("scan", help="Scan a disk image for recoverable files")
-    scan_parser.add_argument("image", help="Path to disk image")
-    scan_parser.add_argument("--json", action="store_true", help="Output as JSON")
+    scan_parser = subparsers.add_parser(
+        "scan",
+        help="Scan a disk image for recoverable files",
+        description="Scan an NTFS disk image and list all recoverable files with metadata.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="Output includes filename, size, confidence, source, and recovery status.",
+    )
+    scan_parser.add_argument("image", help="Path to disk image file")
+    scan_parser.add_argument("--json", action="store_true",
+                            help="Output as JSON (for scripts and pipelines)")
     scan_parser.add_argument("--profile", default="mft_first",
                             choices=["mft_first", "journal_first", "carving_first", "full"],
-                            help="Strategy profile")
-    scan_parser.add_argument("--no-carving", action="store_true", help="Skip signature carving")
-    scan_parser.add_argument("--no-journal", action="store_true", help="Skip journal fallback")
+                            help="Strategy profile (default: mft_first)")
+    scan_parser.add_argument("--no-carving", action="store_true",
+                            help="Skip signature carving (much faster, may miss some files)")
+    scan_parser.add_argument("--no-journal", action="store_true",
+                            help="Skip USN Journal fallback (faster, may miss deleted files)")
     
     # recover
-    rec_parser = subparsers.add_parser("recover", help="Recover files from a disk image")
-    rec_parser.add_argument("image", help="Path to disk image")
+    rec_parser = subparsers.add_parser(
+        "recover",
+        help="Recover files from a disk image",
+        description="Scan an image and save recoverable files to an output directory.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="Recovered files are written to the output directory with original filenames.",
+    )
+    rec_parser.add_argument("image", help="Path to disk image file")
     rec_parser.add_argument("output_dir", help="Output directory for recovered files")
-    rec_parser.add_argument("--filter", help="Filter by extension (e.g., .jpg,.png)")
+    rec_parser.add_argument("--filter",
+                            help="Filter by extension, comma-separated (e.g., .jpg,.png,.pdf)")
     rec_parser.add_argument("--min-confidence", type=float, default=0.0,
-                           help="Minimum confidence threshold (0.0-1.0)")
+                           help="Minimum confidence threshold 0.0-1.0 (default: 0.0)")
     rec_parser.add_argument("--profile", default="mft_first",
-                           choices=["mft_first", "journal_first", "carving_first", "full"])
-    rec_parser.add_argument("--no-carving", action="store_true")
-    rec_parser.add_argument("--no-journal", action="store_true")
+                           choices=["mft_first", "journal_first", "carving_first", "full"],
+                           help="Strategy profile (default: mft_first)")
+    rec_parser.add_argument("--no-carving", action="store_true",
+                            help="Skip signature carving")
+    rec_parser.add_argument("--no-journal", action="store_true",
+                            help="Skip USN Journal fallback")
     
     # info
-    info_parser = subparsers.add_parser("info", help="Show image info")
-    info_parser.add_argument("image", help="Path to disk image")
+    info_parser = subparsers.add_parser(
+        "info",
+        help="Show image metadata (no scan)",
+        description="Quick image info: filesystem type, size, MFT/Journal metadata.",
+    )
+    info_parser.add_argument("image", help="Path to disk image file")
     
     args = parser.parse_args()
     

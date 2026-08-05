@@ -1,0 +1,130 @@
+{
+  "version": "1.0",
+  "files": [
+    {
+      "name": "jpg_0002.jpg",
+      "size": 758499,
+      "sha256": "5845c6ca1db8780521e7941ef58dac5d9a0df66f0c4b6a762b629f377cb3fa8f",
+      "is_directory": false
+    },
+    {
+      "name": "pdf_0001.pdf",
+      "size": 44058,
+      "sha256": "8412cf8a212d064415f0276be49648e0947b2b1916746fad078cacf787a70c11",
+      "is_directory": false
+    },
+    {
+      "name": "jpg_0001.jpg",
+      "size": 56103,
+      "sha256": "4135202c6fc0fa84137fc596cf599cd3dbfb8203a095c8e163f09155cf16f6ef",
+      "is_directory": false
+    },
+    {
+      "name": "docx_0001.docx",
+      "size": 70429,
+      "sha256": "e06128ecbadb26808372996273baabf8a5089ad48b93b257289f6ecb6d00d4b0",
+      "is_directory": false
+    },
+    {
+      "name": "jpg_0004.jpg",
+      "size": 1646587,
+      "sha256": "2eb49f36391fba149030093829fb069f99d563d344dafaa881aaa44ea0cb8aa3",
+      "is_directory": false
+    },
+    {
+      "name": "exe_0002.exe",
+      "size": 586906,
+      "sha256": "3e2c0afdd7556515a087f3b021342f18519c84e4f233ceec501ee245bb6b115a",
+      "is_directory": false
+    },
+    {
+      "name": "cr2_0001.cr2",
+      "size": 80055,
+      "sha256": "1b671e08d2a4831f8c8457d935950635b9b1c2f5988a476bf26310981a2ff19f",
+      "is_directory": false
+    },
+    {
+      "name": "jpg_0005.jpg",
+      "size": 2568061,
+      "sha256": "764171546fe219bee63870697b7737c806416a95d40037eb7af6892746c3f57c",
+      "is_directory": false
+    },
+    {
+      "name": "mp4_0002.mp4",
+      "size": 2847674,
+      "sha256": "4d379f11e46e208982220b94dd5ab2bcbe70cad50c4e1258eb22bda05e3fd400",
+      "is_directory": false
+    },
+    {
+      "name": "jpg_0003.jpg",
+      "size": 662918,
+      "sha256": "e31c489e6e24141c4f89953b40ce807f2e6c693d8c71f8a0bb6df1e26deafb7a",
+      "is_directory": false
+    },
+    {
+      "name": "cr2_0002.cr2",
+      "size": 2056963,
+      "sha256": "2445a19cfa5c626ef6c70389bdf4288ac9b1e5e9abbff764f256014535a58a2b",
+      "is_directory": false
+    },
+    {
+      "name": "xml_0001.xml",
+      "size": 1249,
+      "sha256": "eb7493a9310ee6410f50b607475388225c90a8b5ca77e292a9ff584d3799afea",
+      "is_directory": false
+    },
+    {
+      "name": "nef_0001.nef",
+      "size": 71873,
+      "sha256": "5c49b6db891d8d7914ad2ea0442a5605d0569fb9c574ae5577f76be7923969ac",
+      "is_directory": false
+    },
+    {
+      "name": "xlsx_0001.xlsx",
+      "size": 2747,
+      "sha256": "c957134798409a4f303bfd39bc1bfb88390d329e3285af5a32a81f66f08b2bf4",
+      "is_directory": false
+    },
+    {
+      "name": "exe_0001.exe",
+      "size": 1715854,
+      "sha256": "9158c54e7f03a192c1ce7eb6a4329c01da9fd660f490f1f1516914498f8c4d13",
+      "is_directory": false
+    },
+    {
+      "name": "mp4_0001.mp4",
+      "size": 7940903,
+      "sha256": "1d31fef72cdf30cebef6e239661e5f8d32ee52eac877e4405620c18b6e76319c",
+      "is_directory": false
+    },
+    {
+      "name": "dll_0001.dll",
+      "size": 1565882,
+      "sha256": "6bb675ef247345847a47c40870e0e7f1afd5efe88762e8baadf0f36de6607543",
+      "is_directory": false
+    },
+    {
+      "name": "xlsx_0003.xlsx",
+      "size": 3748,
+      "sha256": "8899df45174b17deb52e903d8ecfc4e5472c4d135f51e2f471fb7f8aff4ead74",
+      "is_directory": false
+    },
+    {
+      "name": "docx_0002.docx",
+      "size": 5186,
+      "sha256": "5cfee34b53e24826849cf69c119bcfda7dd20325a7aa693df24f1f768a5bb75b",
+      "is_directory": false
+    },
+    {
+      "name": "xlsx_0002.xlsx",
+      "size": 12098,
+      "sha256": "3012429ffe5898eccb857d2b2868bd98940633e961fb321f5d4e4f68a3819d7d",
+      "is_directory": false
+    }
+  ],
+  "total_files": 20,
+  "corpus_version": "1.0",
+  "category": "normal",
+  "description": "Contiguous files, no fragmentation \u2014 baseline",
+  "fragmentation_rate": 0.0
+}

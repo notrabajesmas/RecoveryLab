@@ -52,7 +52,12 @@ class RecoveryEngine:
     The public API of the Recovery Engine.
     
     This is what CLI, GUI, and plugins consume.
+    
+    API FROZEN v0.5.1 — public methods will NOT change signature.
+    Internal methods (_prefixed) may change between minor versions.
     """
+    
+    VERSION = "0.5.1"
     
     def __init__(self, profile: str = "mft_first",
                  cluster_size: int = 4096,
@@ -88,6 +93,11 @@ class RecoveryEngine:
         """List of pipeline stages (for debugging/introspection)."""
         return self._pipeline.stages
     
+    @property
+    def version(self) -> str:
+        """Engine version (matches core.__version__)."""
+        return self.VERSION
+    
     def scan(self, image_path: str, manifest: Dict = None) -> ScanResult:
         """
         Scan a disk image and find recoverable files.
@@ -103,15 +113,31 @@ class RecoveryEngine:
         
         Returns:
             ScanResult with files, statistics, and errors
+        
+        Raises:
+            Nothing — errors are collected in result.errors
         """
         result = ScanResult(image_path=image_path)
+        
+        # Validate image path
+        if not os.path.exists(image_path):
+            result.errors.append(f"Image not found: {image_path}")
+            return result
+        
+        if not os.path.isfile(image_path):
+            result.errors.append(f"Not a file: {image_path}")
+            return result
+        
+        if os.path.getsize(image_path) == 0:
+            result.errors.append(f"Image is empty (0 bytes): {image_path}")
+            return result
         
         # Read image
         try:
             with open(image_path, 'rb') as f:
                 image = f.read()
-        except FileNotFoundError:
-            result.errors.append(f"Image not found: {image_path}")
+        except PermissionError:
+            result.errors.append(f"Permission denied: {image_path}")
             return result
         except Exception as e:
             result.errors.append(f"Error reading image: {e}")

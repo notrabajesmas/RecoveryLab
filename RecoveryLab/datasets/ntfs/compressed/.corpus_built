@@ -1,0 +1,6 @@
+{
+  "corpus_version": "1.0",
+  "category": "compressed",
+  "status": "placeholder",
+  "note": "Will be populated in v0.6.1 when compressed runs are supported"
+}

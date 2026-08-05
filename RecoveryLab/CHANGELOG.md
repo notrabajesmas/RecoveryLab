@@ -2,51 +2,106 @@
 
 ## v0.5.1 (2026-08-05)
 
-**Public API + CLI — RecoveryLab is now a usable tool**
+**API congelada + CLI usable + Corpus + CI — RecoveryLab es una herramienta usable**
 
-The RecoveryEngine public API is frozen. Consumers (CLI, GUI, REST, plugins)
-use ONLY `core.RecoveryEngine`. They never see MFT, Journal, or data runs.
+The RecoveryEngine public API is FROZEN. Changing public method signatures
+requires a MAJOR version bump. 22 API contract tests enforce this.
 
-**API:**
+**API (frozen):**
 ```python
+from core import RecoveryEngine, __version__
+
 engine = RecoveryEngine()
 result = engine.scan("disk.img")
+
+# Browse results
 for f in result.files:
-    print(f.name, f.size, f.confidence)
-engine.recover(result.files[0], output_dir="recovered/")
-engine.recover_all(result, output_dir="recovered/")
+    print(f.name, f.size, f.confidence, f.status.value)
+
+# Recover by id (NEW — consumer doesn't need engine reference)
+result.recover("mft_42", output_dir="recovered/")
+result.recover_all(output_dir="recovered/")
+
+# Lookups and grouping (NEW)
+result.get_file("mft_42")
+result.by_source()   # {"mft": [...], "carving": [...]}
+result.by_status()   # {"recovered": [...], "partial": [...]}
+
+# Statistics
+print(result.statistics.summary)  # "20/20 files (RR=100.0%, RFS=0.815, time=0.53s)"
+
+# Version
+print(__version__)  # "0.5.1"
+print(engine.version)  # "0.5.1"
 ```
 
-**CLI:**
+**CLI (polished):**
 ```
-recoverylab scan disco.img
-recoverylab recover disco.img salida/
+recoverylab scan disco.img                        # spinner + tabla + métricas
+recoverylab scan disco.img --json                 # JSON para scripts
+recoverylab scan disco.img --no-carving           # más rápido
+recoverylab recover disco.img salida/             # barra de progreso por archivo
 recoverylab recover disco.img salida/ --filter .jpg,.png
-recoverylab info disco.img
+recoverylab recover disco.img salida/ --min-confidence 0.8
+recoverylab info disco.img                        # metadata sin escaneo
+recoverylab --help                                # ejemplos + perfiles + formatos
+recoverylab --version                             # v0.5.1
 ```
 
-**Pipeline architecture:**
+CLI improvements over v0.5.0:
+- Progress spinner during scan
+- Confidence bars (█████ 1.00) per file during recover
+- Friendly error messages (missing image, permissions, unsupported format)
+- Rich `--help` with examples, strategy profiles, and supported formats
+- Full statistics at end: files found, recovered, time, RR, RFS, RAM
+
+**Pipeline architecture (unchanged, extensible):**
 ```
 Image → Detect → NTFS → MFT → Journal → Fragment → Carving → Merge → Score → Results
 ```
-Each stage is a `PipelineStage` — adding FAT32, exFAT, or EXT4 is
-inserting a new stage. Adding a plugin is subclassing `RecoveryStrategy`.
 
-**Release metrics table:**
-| Metric | Value |
-|--------|-------|
-| Files found | 22 |
-| RR | 100% |
-| RFS | 0.795 |
-| Time | 2.12s |
-| RAM | 148 MB |
+**Corpus permanente (NEW):**
+```
+datasets/ntfs/
+    normal/       — 20 files, 0% fragmentation
+    fragmented/   — 20 files, 50% fragmentation
+    sparse/       — (placeholder for v0.6.0)
+    compressed/   — (placeholder for v0.6.1)
+    deleted/      — 20 files, journal-recoverable
+```
+60/60 files verified against corpus (RR=100%).
 
-**Architecture:**
-- `core/engine.py`: RecoveryEngine — public API
-- `core/result.py`: ScanResult, RecoveredItem, RecoveryStatistics, FileStatus, FileSource
-- `core/pipeline.py`: Pipeline, PipelineStage, PipelineContext
-- `core/stages.py`: 8 concrete stages (Detect, NTFSParse, MFT, Journal, Fragment, Carving, Merge, Scoring)
-- `recoverylab.py`: CLI entry point
+**CI regresión (NEW):**
+- `python scripts/ci_regression.py` — runs against corpus, checks for regressions
+- Baseline v0.5.1 saved. Future versions must recover ≥ as many files.
+- Exit code: 0 = no regression, 1 = regression detected
+
+**API contract tests (NEW):**
+- `python tests/test_api_contract.py` — 22 tests pass
+- Verifies method signatures, field names, enum values, pipeline structure
+- If a test fails → someone broke the frozen API → MAJOR version bump required
+
+**Packaging (NEW):**
+- `pyproject.toml` — `pip install recoverylab` (future)
+- Entry point: `recoverylab` command
+
+**Product metrics:**
+
+| Category | Files | RR | RFS | Time | RAM |
+|----------|------:|---:|----:|-----:|----:|
+| Normal | 20 | 100% | 0.815 | 0.53s | 116 MB |
+| Fragmented | 20 | 100% | 0.815 | 0.52s | 158 MB |
+| Deleted | 20 | 100% | 0.815 | 0.50s | 159 MB |
+
+**Architecture changes:**
+- `core/result.py`: Added `ScanResult.recover()`, `ScanResult.recover_all()`, `ScanResult.get_file()`, `ScanResult.by_source()`, `ScanResult.by_status()`. Added `os` import. Added API FROZEN docstring.
+- `core/engine.py`: Added `RecoveryEngine.VERSION`, `RecoveryEngine.version` property. Improved error handling (validate path, permissions, empty file). Added API FROZEN docstring.
+- `core/__init__.py`: Added `__version__ = "0.5.1"`. Added `FileStatus`, `FileSource` to exports.
+- `recoverylab.py`: Rewritten with progress spinner, confidence bars, friendly errors, rich help, full stats.
+- `pyproject.toml`: NEW — packaging configuration.
+- `tests/test_api_contract.py`: NEW — 22 API contract tests.
+- `scripts/build_corpus.py`: NEW — permanent test corpus builder.
+- `scripts/ci_regression.py`: NEW — regression CI against corpus.
 
 ---
 

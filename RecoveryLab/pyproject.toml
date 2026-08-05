@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "recoverylab"
+version = "0.5.1"
+description = "File recovery tool for NTFS disk images"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "RecoveryLab Team"},
+]
+keywords = ["recovery", "ntfs", "forensics", "file-recovery", "data-recovery"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: System Administrators",
+    "Topic :: System :: Filesystems",
+    "Topic :: Utilities",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.scripts]
+recoverylab = "recoverylab:main"
+
+[tool.setuptools]
+py-modules = ["recoverylab"]
+packages = [
+    "core",
+    "motors",
+    "strategies",
+    "ntfs_parser",
+    "recovery_judge",
+    "dataset_builder",
+    "corruptor",
+    "experiment_runner",
+    "visualizer",
+]
+
+[tool.setuptools.package-data]
+recoverylab = ["datasets/**/*.img", "datasets/**/*.json"]

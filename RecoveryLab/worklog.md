@@ -1266,3 +1266,34 @@ Stage Summary:
 - Pipeline: Image → Detect → NTFS → MFT → Journal → Fragment → Carving → Merge → Score → Results
 - Consumer never sees MFT, Journal, or data runs — only RecoveredItem
 - Version bumped to v0.5.1
+
+---
+Task ID: 32
+Agent: main
+Task: v0.5.1 — API congelada + CLI usable + Corpus + CI
+
+Work Log:
+- Added ScanResult.recover(file_id, output_dir) — consumer-facing API (no engine ref needed)
+- Added ScanResult.recover_all(output_dir, filter_fn) — with optional filter
+- Added ScanResult.get_file(file_id) — lookup by id
+- Added ScanResult.by_source() and ScanResult.by_status() — grouping views
+- Added core.__version__ = "0.5.1" and RecoveryEngine.VERSION
+- Added RecoveryEngine.version property
+- Improved RecoveryEngine.scan() error handling: validate path, is_file, size, PermissionError
+- Added API FROZEN docstrings to core/result.py and core/engine.py
+- Rewrote CLI: progress spinner, confidence bars, friendly errors, rich --help, full stats
+- Created pyproject.toml for pip install
+- Created tests/test_api_contract.py — 22 contract tests, all pass
+- Created scripts/build_corpus.py — permanent test corpus builder
+- Created scripts/ci_regression.py — regression CI against corpus
+- Built corpus: normal (20 files), fragmented (20 files), deleted (20 files) — all RR=100%
+- Ran CI regression: 3 categories PASS, baseline v0.5.1 saved
+- Updated PROJECT_STATUS.md with version-based roadmap (v0.5.1 → v1.0.0)
+- Updated CHANGELOG.md with full v0.5.1 entry
+
+Stage Summary:
+- v0.5.1 complete: API frozen, CLI polished, corpus built, CI green
+- 22 API contract tests enforce API stability
+- 60/60 corpus files verified (RR=100%)
+- Product metrics: Normal RR=100% RFS=0.815, Fragmented RR=100% RFS=0.815, Deleted RR=100% RFS=0.815
+- Roadmap: v0.6.0 (sparse) → v0.6.1 (compressed) → v0.7.0 (GUI) → v0.8.0 (plugins) → v1.0.0 (public release)
