@@ -11,6 +11,25 @@
 
 ---
 
+## The evidence rule
+
+Before starting any version, answer one question:
+
+> **¿Qué evidencia nueva existirá cuando esta versión termine?**
+
+Valid answers:
+- "20 sparse files recovered with correct SHA-256."
+- "10 users installed RecoveryLab without help."
+- "95% of compressed files recovered."
+- "TTFS average dropped from 6 minutes to 2 minutes."
+
+Invalid answer:
+- "There will be more code."
+
+If the only evidence is code, the version's purpose isn't clear enough.
+
+---
+
 ## Version states
 
 A version is either **Open** or **Released**. Nothing else.
@@ -49,17 +68,35 @@ and ensures the version ships with exactly what was planned.
 
 ---
 
-## Roadmap
+## Two roadmaps
 
-| Version | Benchmark target | Status |
-|---------|-----------------|--------|
-| v0.5.2 | NTFS normal files: 0% → 100% | Released |
-| **v0.6.0** | **NTFS sparse files: 0% → 100%** | **Open** |
-| v0.6.1 | NTFS compressed files: 0% → ≥95% | Blocked (UXR-001 first) |
-| v0.7.0 | GUI: 0 → functional | Pending |
-| v0.8.0 | FAT32: 0% → 100% | Pending |
-| v0.9.0 | exFAT: 0% → 100% | Pending |
-| v1.0.0 | Public release | Pending |
+Technical and product roadmaps are separate.
+They are both important, but they must not be mixed.
+
+### Technical roadmap (the motor)
+
+| Version | Benchmark target | Evidence | Status |
+|---------|-----------------|----------|--------|
+| v0.5.2 | NTFS normal: 0% → 100% | 20/20 files, RR=100% | Released |
+| **v0.6.0** | **NTFS sparse: 0% → 100%** | **20/20 files, RR=100%** | **Open** |
+| v0.6.1 | NTFS compressed: 0% → ≥95% | Compressed corpus CI-verified | **Blocked** (UXR-001 first) |
+| v0.6.2 | Alternate Data Streams | ADS corpus CI-verified | Pending |
+| v0.7.0 | FAT32: 0% → 100% | FAT32 corpus CI-verified | Pending |
+| v0.8.0 | exFAT: 0% → 100% | exFAT corpus CI-verified | Pending |
+
+### Product roadmap (the experience)
+
+| Step | Objective | Evidence | Status |
+|------|-----------|----------|--------|
+| **UXR-001** | **10 external testers** | **UXR score, TTFS, failure points** | **Current** |
+| GitHub Release | Publish v0.6.0 with wheel + sdist | Release page exists | Pending |
+| Documentation | README, QuickStart, CLI docs work for strangers | UXR data confirms | Pending |
+| Installation | pip install works first try | UXR install rate = 10/10 | Pending |
+| CLI | scan/recover/demo clear without reading source | UXR demo+scan rate ≥ 8/10 | Pending |
+| GUI | Visual interface for non-CLI users | Separate UXR test | Pending |
+
+**Rule**: No technical version opens until the current product step
+has produced evidence. v0.6.1 does not start until UXR-001 has data.
 
 ---
 
@@ -79,9 +116,11 @@ and ensures the version ships with exactly what was planned.
 
 ### User metrics (measure the experience)
 
+These metrics cannot be estimated. They can only be measured with real people.
+
 #### UXR — User Recovery Rate
 
-Extremely objective. Binary result. No opinions. No surveys. No "I liked it".
+Binary result. No opinions. No surveys. No "I liked it".
 
 ```
 UXR Test
@@ -92,6 +131,14 @@ UXR Test
     3. Execute: recoverylab scan image.img
     4. Execute: recoverylab recover image.img output/
   Without help.
+  
+  Record:
+    ¿Instaló?            Sí / No
+    ¿Ejecutó demo?       Sí / No
+    ¿Recuperó archivo?   Sí / No
+    TTFS                 minutos
+    ¿Dónde falló?        paso exacto
+    ¿Necesitó ayuda?     Sí / No
   
   Result: N/10
 ```
@@ -152,7 +199,7 @@ python scripts/ci_full.py
 | Strategy D (Fragment) | Working | Multi-run reconstruction |
 | Strategy E (Hybrid) | Working | Adaptive delegation |
 | **Sparse runs** | **Working (v0.6.0)** | **Parser + recovery + corpus + CI** |
-| Compressed runs | Not yet | |
+| Compressed runs | Not yet | Blocked by UXR-001 |
 | GUI | Not yet | |
 | FAT32 / exFAT | Not yet | |
 
@@ -173,6 +220,7 @@ python scripts/ci_full.py
 | Versioning | Semantic |
 | pip package | recoverylab-0.6.0-py3-none-any.whl |
 | User docs | Installation, QuickStart, CLI, API, Profiles, Plugins |
+| UXR template | experiments/UXR-001.md |
 
 ---
 
@@ -180,15 +228,17 @@ python scripts/ci_full.py
 
 1. **Each version changes a benchmark** — not a metric, not a document, not an abstraction
 2. **Before starting a version**: What benchmark will move? No answer = don't start
-3. **No percentage enters documentation until a reproducible benchmark produces it**
-4. **Measure progress = what can you recover today that you couldn't yesterday?**
-5. **API frozen** — breaking = MAJOR bump
-6. **Corpus permanent** — every release verified against corpus
-7. **CI regression** — new version ≥ previous version on RR
-8. **UXR matters** — RR=100% means nothing if strangers can't use the tool
-9. **TTFS matters** — if it takes 30 minutes to recover the first file, the product is broken
-10. **Versions are Open or Released** — no partial progress shown to users
-11. **Release branches are frozen** — only bugs, docs, packaging, CI. No features.
+3. **The evidence rule**: What new evidence will exist when this version finishes? "More code" is not valid evidence.
+4. **No percentage enters documentation until a reproducible benchmark produces it**
+5. **Measure progress = what can you recover today that you couldn't yesterday?**
+6. **API frozen** — breaking = MAJOR bump
+7. **Corpus permanent** — every release verified against corpus
+8. **CI regression** — new version ≥ previous version on RR
+9. **UXR matters** — RR=100% means nothing if strangers can't use the tool
+10. **TTFS matters** — if it takes 30 minutes to recover the first file, the product is broken
+11. **Versions are Open or Released** — no partial progress shown to users
+12. **Release branches are frozen** — only bugs, docs, packaging, CI. No features.
+13. **Two roadmaps, never mixed** — technical and product are separate. No technical version opens without product evidence.
 
 ---
 
@@ -211,9 +261,11 @@ This checklist is for internal tracking only. Externally, the version is Open.
 
 ---
 
-## UXR-001 — Next objective
+## UXR-001 — Current objective
 
 **Not v0.6.1. Not compressed files. This first.**
+
+See `experiments/UXR-001.md` for the full recording sheet.
 
 ```
 UXR-001 Experiment
@@ -221,24 +273,27 @@ UXR-001 Experiment
   Objective:
     10 testers who never saw RecoveryLab try to use it.
   
-  Tasks:
-    1. pip install recoverylab
-    2. recoverylab demo
-    3. recoverylab scan image.img
-    4. recoverylab recover image.img output/
+  Same instructions for everyone. No help.
   
-  Measure:
-    - UXR  (how many completed all tasks without help?)
-    - TTFS (time from opening README to first recovered file)
-    - Bugs found
-    - Where they got stuck
+  Record only facts:
+    ¿Instaló?            Sí / No
+    ¿Ejecutó demo?       Sí / No
+    ¿Recuperó archivo?   Sí / No
+    TTFS                 minutos
+    ¿Dónde falló?        paso exacto
+    ¿Necesitó ayuda?     Sí / No
   
-  Success criteria:
-    UXR ≥ 8/10 → Experience is good. Open v0.6.1.
-    UXR 5-7/10 → Fix the top blockers. Re-test.
-    UXR < 5/10 → Stop everything. Redesign the onboarding.
+  Decision:
+    UXR ≥ 8/10 → Close UXR-001. Open v0.6.1.
+    UXR 5-7/10 → Fix top blockers. Run UXR-002.
+    UXR < 5/10 → Stop features. Redesign onboarding.
 ```
 
-These 10 users will find more real problems than implementing
-compressed file support would. The motor works. Now we need to prove
-that a person can use it.
+If 8 people fail at `scan`, the next work isn't compressed files.
+It's the CLI.
+
+If everyone reaches demo in 2 minutes but fails at `recover`,
+the problem isn't the motor either.
+
+These 10 users will produce more real evidence than any feature.
+The motor works. Now prove that a person can use it.

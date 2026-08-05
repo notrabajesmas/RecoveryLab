@@ -8,19 +8,48 @@ File recovery tool for NTFS disk images.
 > *"What benchmark number will move when we finish this version?"*
 > If we can't answer in one line, the version doesn't start.
 
-## Version roadmap
+## The evidence rule
+
+Before starting any version:
+
+> **¿Qué evidencia nueva existirá cuando esta versión termine?**
+
+- "20 sparse files recovered with correct SHA-256." ✅
+- "10 users installed RecoveryLab without help." ✅
+- "95% of compressed files recovered." ✅
+- "TTFS average dropped from 6 to 2 minutes." ✅
+- "There will be more code." ❌
+
+## Two roadmaps
+
+Technical and product roadmaps are separate. They are both important,
+but they must not be mixed.
+
+### Technical roadmap (the motor)
 
 | Version | Benchmark target | Status |
 |---------|-----------------|--------|
 | v0.5.2 | NTFS normal files: 0% → 100% | Released |
 | **v0.6.0** | **NTFS sparse files: 0% → 100%** | **Open** |
-| v0.6.1 | NTFS compressed files: 0% → ≥95% | Blocked |
-| v1.0.0 | Public release | Pending |
+| v0.6.1 | NTFS compressed files: 0% → ≥95% | Blocked (UXR-001 first) |
+| v0.6.2 | Alternate Data Streams | Pending |
+| v0.7.0 | FAT32: 0% → 100% | Pending |
+| v0.8.0 | exFAT: 0% → 100% | Pending |
 
-A version is either **Open** or **Released**. No partial progress is shown publicly.
+### Product roadmap (the experience)
 
-All benchmark numbers come from `python scripts/ci_full.py`.
-No number appears in documentation unless a reproducible execution produced it.
+| Step | Objective | Status |
+|------|-----------|--------|
+| **UXR-001** | **10 external testers: UXR + TTFS** | **Current** |
+| GitHub Release | Publish v0.6.0 with wheel + sdist | Pending |
+| Documentation | Docs work for strangers | Pending |
+| Installation | pip install first try | Pending |
+| CLI | Commands clear without source | Pending |
+| GUI | Visual interface for non-CLI users | Pending |
+
+**Rule**: No technical version opens without product evidence.
+
+A version is either **Open** or **Released**. No partial progress shown publicly.
 
 ## Install
 
@@ -126,9 +155,13 @@ These numbers come from a real CI execution on 2026-08-05.
 Of N people who install RecoveryLab, how many recover a file
 without reading source code and without asking for help?
 
-The test is binary: **¿Pudo hacerlo?** Yes or no. No opinions. No surveys.
+Binary: **¿Pudo hacerlo?** Yes or no. No opinions. No surveys.
 
-Target for v1.0.0: **UXR ≥ 8/10**
+| Metric | Result | Target |
+|--------|--------|--------|
+| UXR | — (UXR-001 pending) | ≥ 8/10 |
+| Install success | — | 10/10 |
+| Demo success | — | 10/10 |
 
 ### TTFS — Time To First Success
 
@@ -136,6 +169,10 @@ From opening the README to recovering the first file.
 
 If TTFS drops from 7 minutes to 2 minutes, the product improved —
 even if the motor didn't change a single line.
+
+| Metric | Result | Target |
+|--------|--------|--------|
+| TTFS median | — (UXR-001 pending) | ≤ 7 min |
 
 ## Documentation
 

@@ -39,10 +39,14 @@ Now RecoveryLab correctly recovers sparse files with zero-filled gaps.
 - **CLI identity banner**: `RecoveryLab v0.6.0 / Filesystem Recovery Engine / RR 100% / Sparse 100%` — shown on scan, recover, info, and demo commands. CI-verified benchmarks in the banner.
 - **`recoverylab demo` output improved**: ✓ checkmarks per recovered file, recovery summary box (files recovered / RR / output directory), numbered Next steps section with docs link.
 - **Versions are Open or Released**: No partial progress shown publicly. "7/9 Done" is internal only. Users see either Open or Released.
-- **UXR defined objectively**: 10 participants, specific tasks, binary result (¿Pudo hacerlo?). No opinions, no surveys, no "I liked it". Target: ≥8/10 for v1.0.0.
+- **UXR defined objectively**: 10 participants, specific tasks, binary result (¿Pudo hacerlo?). No opinions, no surveys, no "I liked it". Target: ≥8/10 for v1.0.0. Recording sheet with 6 columns: installed/demo/recovered/TTFS/fail_step/needed_help.
 - **TTFS metric added**: Time To First Success — from opening README to first recovered file. Measures the experience, not the motor.
+- **Two roadmaps**: Technical (motor: v0.6.1 → compressed, v0.6.2 → ADS, v0.7 → FAT32, v0.8 → exFAT) and Product (experience: UXR-001 → GitHub Release → Docs → Install → CLI → GUI). Never mixed.
+- **Evidence rule**: Before any version — "What new evidence will exist when this version finishes?" "More code" is not valid evidence.
+- **v0.6.1 explicitly blocked**: No technical version opens without product evidence from UXR-001.
 - **Next objective changed**: UXR-001 experiment (10 external testers) instead of v0.6.1 (compressed files). The motor works. Now prove that people can use it.
 - **Release branch strategy**: `release/v0.6.0` only allows bugs/docs/packaging/CI. No new features. Prevents scope creep.
+- **UXR-001 recording sheet**: `experiments/UXR-001.md` — blank template ready for the experiment.
 
 **Regression: no regressions** — existing corpus (normal/fragmented/deleted) still at 100%.
 

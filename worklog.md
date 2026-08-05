@@ -1259,3 +1259,24 @@ Stage Summary:
 - CI: ALL CHECKS PASS (25/25 API, 80/80 corpus, regression, benchmark)
 - Wheel: recoverylab-0.6.0-py3-none-any.whl builds cleanly
 - pip install → recoverylab demo works end-to-end with new output
+
+---
+Task ID: 2
+Agent: main
+Task: Implement second round of maintainer feedback: UXR sheet, two roadmaps, evidence rule, explicit blocking
+
+Work Log:
+- Created experiments/UXR-001.md — blank recording sheet with exact 6 columns (installed/demo/recovered/TTFS/fail_step/needed_help), derived metrics table, decision rule, bugs section
+- Split roadmap into Technical (motor: compressed → ADS → FAT32 → exFAT) and Product (experience: UXR-001 → Release → Docs → Install → CLI → GUI) in PROJECT_STATUS
+- Added evidence rule to PROJECT_STATUS and README: "What new evidence will exist?" with valid/invalid examples
+- Explicitly blocked v0.6.1: "No technical version opens without product evidence from UXR-001"
+- Added v0.6.2 (ADS) to technical roadmap per user's suggestion
+- Updated README with two roadmaps, evidence rule, UXR/TTFS pending tables
+- Updated CHANGELOG with all new philosophy additions
+- Verified: CI 100% green, demo output correct, all docs consistent
+
+Stage Summary:
+- Two roadmaps are now separate and explicit in PROJECT_STATUS and README
+- UXR-001 recording sheet is ready at experiments/UXR-001.md
+- Evidence rule is the gate for any new version
+- v0.6.1 cannot start until UXR-001 produces data
