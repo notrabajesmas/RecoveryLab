@@ -1,8 +1,9 @@
 # RecoveryLab — Project Status
 
 > **Version**: v0.6.0
+> **Status**: Open
 > **Last CI run**: 2026-08-05 — ALL CHECKS PASS
-> **Repo**: https://github.com/notrabajesmas/RecoveryLab
+> **Repo**: https://github.com/notrabjesmas/RecoveryLab
 
 > **Each version changes a benchmark.**
 > Before starting any version: *"What benchmark number will move?"*
@@ -10,13 +11,51 @@
 
 ---
 
+## Version states
+
+A version is either **Open** or **Released**. Nothing else.
+
+There is no "78% done". There is no "7/9 checklist".
+Internally we track progress against a checklist, but externally
+a version is either published or it isn't.
+
+Users don't care about partial progress. They care about:
+"Can I install this version and use it?"
+
+---
+
+## Branch strategy
+
+```
+main
+ │
+ ├── release/v0.6.0
+ │
+ └── develop
+```
+
+**`release/v0.6.0`** — Only these are allowed:
+- Bug fixes
+- Documentation
+- Packaging
+- CI adjustments
+
+No new features enter a release branch. This prevents scope creep
+and ensures the version ships with exactly what was planned.
+
+**`develop`** — Active development. Features, experiments, refactoring.
+
+**`main`** — Only receives merges from release branches.
+
+---
+
 ## Roadmap
 
 | Version | Benchmark target | Status |
 |---------|-----------------|--------|
-| v0.5.2 | NTFS normal files: 0% → 100% | Done |
-| **v0.6.0** | **NTFS sparse files: 0% → 100%** | **Current** |
-| v0.6.1 | NTFS compressed files: 0% → ≥95% | Pending |
+| v0.5.2 | NTFS normal files: 0% → 100% | Released |
+| **v0.6.0** | **NTFS sparse files: 0% → 100%** | **Open** |
+| v0.6.1 | NTFS compressed files: 0% → ≥95% | Blocked (UXR-001 first) |
 | v0.7.0 | GUI: 0 → functional | Pending |
 | v0.8.0 | FAT32: 0% → 100% | Pending |
 | v0.9.0 | exFAT: 0% → 100% | Pending |
@@ -40,23 +79,50 @@
 
 ### User metrics (measure the experience)
 
-**UXR — User Recovery Rate**: Of N people who download RecoveryLab,
-how many recover a file without reading source code and without asking for help?
+#### UXR — User Recovery Rate
 
-- RR = 100% means nothing if UXR = 2/10.
-- The problem is no longer the motor. It's the experience.
+Extremely objective. Binary result. No opinions. No surveys. No "I liked it".
+
+```
+UXR Test
+  Participants: 10
+  Objective:
+    1. Install RecoveryLab
+    2. Execute: recoverylab demo
+    3. Execute: recoverylab scan image.img
+    4. Execute: recoverylab recover image.img output/
+  Without help.
+  
+  Result: N/10
+```
+
+The only question: **¿Pudo hacerlo?**
+
 - Target for v1.0.0: UXR ≥ 8/10
+- If UXR < 5/10: stop adding features. Fix the experience.
+- RR = 100% means nothing if UXR = 2/10.
 
-**Stranger test**: Can someone who never spoke to us do this in 10 minutes?
+#### TTFS — Time To First Success
+
+From the moment the user opens the README to the moment they recover their first file.
 
 ```
-git clone ...
-pip install .
-recoverylab scan examples/demo.img
-recoverylab recover examples/demo.img recovered/
+Example:
+  00:00  User opens GitHub
+  00:04  pip install recoverylab
+  00:06  recoverylab demo
+  00:07  Files recovered
+  
+  TTFS = 7 minutes
 ```
 
-If they get stuck at any step, that's a product bug.
+TTFS measures the experience, not the motor.
+If TTFS drops from 7 minutes to 2 minutes over six months,
+the product improved — even if the recovery engine didn't change a single line.
+
+This is the metric almost nobody tracks. It's the one that matters most for adoption.
+
+Current target: **TTFS ≤ 7 minutes** for a first-time user.
 
 ---
 
@@ -97,7 +163,7 @@ python scripts/ci_full.py
 | Component | Status |
 |-----------|--------|
 | RecoveryEngine API | Frozen, 25 contract tests |
-| CLI | scan/recover/info, 7 profiles |
+| CLI | scan/recover/info/demo, 7 profiles, identity banner |
 | Corpus | 4 categories, 80/80 CI-verified |
 | CI regression | Baseline saved, sparse included |
 | Example image | examples/demo.img (5 files, 1MB) |
@@ -120,13 +186,16 @@ python scripts/ci_full.py
 6. **Corpus permanent** — every release verified against corpus
 7. **CI regression** — new version ≥ previous version on RR
 8. **UXR matters** — RR=100% means nothing if strangers can't use the tool
+9. **TTFS matters** — if it takes 30 minutes to recover the first file, the product is broken
+10. **Versions are Open or Released** — no partial progress shown to users
+11. **Release branches are frozen** — only bugs, docs, packaging, CI. No features.
 
 ---
 
-## Definition of Done
+## Definition of Done (internal checklist)
 
-A version is **not done** until ALL of these are true.
-If even one is missing, the version stays open.
+A version is **not Released** until ALL of these are true.
+This checklist is for internal tracking only. Externally, the version is Open.
 
 | # | Criterion | v0.6.0 |
 |---|-----------|--------|
@@ -142,12 +211,34 @@ If even one is missing, the version stays open.
 
 ---
 
-## Next steps
+## UXR-001 — Next objective
 
-1. **Publish GitHub Release v0.6.0** with wheel + sdist as assets
-2. **UXR experiment**: get 10 people who never saw RecoveryLab to try it
-   - `pip install recoverylab`
-   - `recoverylab demo`
-   - If ≥8/10 recover a file without help → UXR is good
-   - If <5/10 → fix the experience before adding any new capability
-3. Only after UXR data: decide between improving UX or opening v0.6.1 (compressed files)
+**Not v0.6.1. Not compressed files. This first.**
+
+```
+UXR-001 Experiment
+
+  Objective:
+    10 testers who never saw RecoveryLab try to use it.
+  
+  Tasks:
+    1. pip install recoverylab
+    2. recoverylab demo
+    3. recoverylab scan image.img
+    4. recoverylab recover image.img output/
+  
+  Measure:
+    - UXR  (how many completed all tasks without help?)
+    - TTFS (time from opening README to first recovered file)
+    - Bugs found
+    - Where they got stuck
+  
+  Success criteria:
+    UXR ≥ 8/10 → Experience is good. Open v0.6.1.
+    UXR 5-7/10 → Fix the top blockers. Re-test.
+    UXR < 5/10 → Stop everything. Redesign the onboarding.
+```
+
+These 10 users will find more real problems than implementing
+compressed file support would. The motor works. Now we need to prove
+that a person can use it.

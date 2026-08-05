@@ -18,7 +18,7 @@ import hashlib
 import json
 
 # Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 from dataset_builder.ntfs_image import NTFSImageBuilder
 from dataset_builder.file_generator import FileGenerator

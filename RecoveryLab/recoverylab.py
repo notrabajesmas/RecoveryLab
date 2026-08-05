@@ -92,10 +92,14 @@ def _format_error(error_msg: str) -> str:
     return error_msg
 
 
+# CI-verified benchmarks for this release (from scripts/ci_full.py)
+_BENCHMARK_RR = "100%"
+_BENCHMARK_SPARSE = "100%"
+
+
 def _print_banner():
-    """Print RecoveryLab identity banner."""
-    print(f"RecoveryLab v{VERSION}")
-    print("Filesystem Recovery Engine")
+    """Print RecoveryLab identity banner with key metrics."""
+    print(f"RecoveryLab v{VERSION} / Filesystem Recovery Engine / RR {_BENCHMARK_RR} / Sparse {_BENCHMARK_SPARSE}")
 
 
 def _print_errors(errors):
@@ -394,8 +398,7 @@ def cmd_demo(args):
     from dataset_builder.ntfs_image import NTFSImageBuilder
     from core import RecoveryEngine
     
-    print(f"RecoveryLab v{VERSION}")
-    print("Filesystem Recovery Engine")
+    _print_banner()
     print()
     print("Creating demo NTFS image with sample files...")
     
@@ -450,12 +453,13 @@ def cmd_demo(args):
         result.recover(f.id, output_dir=output_dir)
         recovered_names.append(f.name)
     
+    # Show recovery summary with checkmarks
     print()
     print("Recovery completed.")
     print()
     print("Recovered files:")
     for name in recovered_names:
-        print(f"  + {name}")
+        print(f"  ✓ {name}")
     
     # Show content of one file
     for name, _ in sample_files[:1]:
@@ -469,21 +473,29 @@ def cmd_demo(args):
                 if line:
                     print(f"  {line}")
     
-    print()
-    print("Output directory:")
+    # Determine final output directory
     if args.keep:
         keep_dir = os.path.join(os.getcwd(), "recoverylab_demo")
         os.makedirs(keep_dir, exist_ok=True)
         shutil.copy2(img_path, os.path.join(keep_dir, "demo.img"))
         shutil.copytree(output_dir, os.path.join(keep_dir, "recovered"), dirs_exist_ok=True)
-        print(f"  {keep_dir}/recovered/")
+        final_dir = os.path.join(keep_dir, "recovered")
     else:
-        print(f"  {output_dir}")
+        final_dir = output_dir
     
     print()
+    print("─" * 50)
+    print(f"  {len(recovered_names)}/{len(sample_files)} files recovered")
+    print(f"  RR: {result.statistics.recovery_rate:.0%}")
+    print(f"  Output: {final_dir}/")
+    print("─" * 50)
+    print()
     print("Next steps:")
-    print("  recoverylab scan mydisk.img")
-    print("  recoverylab recover mydisk.img recovered/")
+    print("  1. recoverylab scan mydisk.img")
+    print("  2. recoverylab recover mydisk.img recovered/")
+    print("  3. recoverylab recover mydisk.img recovered/ --filter .jpg,.png")
+    print()
+    print("Docs: https://github.com/notrabjesmas/RecoveryLab#readme")
     
     # Cleanup
     if not args.keep:

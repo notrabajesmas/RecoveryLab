@@ -1235,3 +1235,27 @@ Stage Summary:
 - CLI has identity banner — feels like a finished tool, not scripts
 - v0.6.0 is 7/9 on the Done checklist — blocked on GitHub Release and external testing
 - Next: publish GitHub Release, then run UXR experiment
+
+---
+Task ID: 1
+Agent: main
+Task: Implement maintainer review feedback: demo output, banner, Open/Released, UXR/TTFS, branch strategy
+
+Work Log:
+- Updated `recoverylab demo` output: ✓ checkmarks per file, summary box (N/N files / RR / output dir), numbered Next steps, docs link
+- Updated CLI identity banner: `RecoveryLab v0.6.0 / Filesystem Recovery Engine / RR 100% / Sparse 100%`
+- Replaced "7/9 Done" with binary Open/Released states in all docs
+- Added release branch strategy (release/v0.6.0 only allows bugs/docs/packaging/CI)
+- Defined UXR objectively: 10 participants, specific tasks, binary ¿Pudo hacerlo?
+- Added TTFS metric: Time To First Success — from README to first recovered file
+- Changed next objective from v0.6.1 (compressed) to UXR-001 experiment (10 external testers)
+- Updated README.md with UXR, TTFS, banner, Open/Released concepts
+- Updated CHANGELOG.md with all philosophy changes
+- Fixed pre-existing bug: benchmark_fragment_recovery.py missing parent dir in sys.path
+- Verified: demo output, banner, CI 100% green, wheel builds, pip install works
+
+Stage Summary:
+- All 7 philosophy changes from the maintainer review are implemented
+- CI: ALL CHECKS PASS (25/25 API, 80/80 corpus, regression, benchmark)
+- Wheel: recoverylab-0.6.0-py3-none-any.whl builds cleanly
+- pip install → recoverylab demo works end-to-end with new output

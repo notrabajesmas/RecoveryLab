@@ -10,15 +10,14 @@ File recovery tool for NTFS disk images.
 
 ## Version roadmap
 
-| Version | Benchmark target |
-|---------|-----------------|
-| v0.5.2 | NTFS normal files: 0% → 100% |
-| **v0.6.0** | **NTFS sparse files: 0% → 100%** |
-| v0.6.1 | NTFS compressed files: 0% → ≥95% |
-| v0.7.0 | GUI: 0 → functional |
-| v0.8.0 | FAT32: 0% → 100% |
-| v0.9.0 | exFAT: 0% → 100% |
-| v1.0.0 | Public release |
+| Version | Benchmark target | Status |
+|---------|-----------------|--------|
+| v0.5.2 | NTFS normal files: 0% → 100% | Released |
+| **v0.6.0** | **NTFS sparse files: 0% → 100%** | **Open** |
+| v0.6.1 | NTFS compressed files: 0% → ≥95% | Blocked |
+| v1.0.0 | Public release | Pending |
+
+A version is either **Open** or **Released**. No partial progress is shown publicly.
 
 All benchmark numbers come from `python scripts/ci_full.py`.
 No number appears in documentation unless a reproducible execution produced it.
@@ -60,6 +59,14 @@ recoverylab recover disk.img output/ --filter .jpg,.png
 # Recover only high-confidence files
 recoverylab recover disk.img output/ --min-confidence 0.8
 ```
+
+When you run any command, you'll see the identity banner:
+
+```
+RecoveryLab v0.6.0 / Filesystem Recovery Engine / RR 100% / Sparse 100%
+```
+
+Those benchmark numbers come from CI-verified execution, not estimates.
 
 ## Python API
 
@@ -111,6 +118,24 @@ These numbers come from a real CI execution on 2026-08-05.
 | Fragmented | 20/20 | 100.0% | 0.815 | 0.50s |
 | Deleted | 20/20 | 100.0% | 0.815 | 0.48s |
 | Sparse | 20/20 | 100.0% | 0.850 | 0.19s |
+
+## User metrics
+
+### UXR — User Recovery Rate
+
+Of N people who install RecoveryLab, how many recover a file
+without reading source code and without asking for help?
+
+The test is binary: **¿Pudo hacerlo?** Yes or no. No opinions. No surveys.
+
+Target for v1.0.0: **UXR ≥ 8/10**
+
+### TTFS — Time To First Success
+
+From opening the README to recovering the first file.
+
+If TTFS drops from 7 minutes to 2 minutes, the product improved —
+even if the motor didn't change a single line.
 
 ## Documentation
 

@@ -34,6 +34,16 @@ Now RecoveryLab correctly recovers sparse files with zero-filled gaps.
 - `docs/Installation.md`: Fixed — no longer claims "standard library only".
 - `tests/test_carving_impeccable.py`: Fixed PDF footer assertion (19/19 now pass).
 
+**Philosophy changes (still v0.6.0):**
+
+- **CLI identity banner**: `RecoveryLab v0.6.0 / Filesystem Recovery Engine / RR 100% / Sparse 100%` — shown on scan, recover, info, and demo commands. CI-verified benchmarks in the banner.
+- **`recoverylab demo` output improved**: ✓ checkmarks per recovered file, recovery summary box (files recovered / RR / output directory), numbered Next steps section with docs link.
+- **Versions are Open or Released**: No partial progress shown publicly. "7/9 Done" is internal only. Users see either Open or Released.
+- **UXR defined objectively**: 10 participants, specific tasks, binary result (¿Pudo hacerlo?). No opinions, no surveys, no "I liked it". Target: ≥8/10 for v1.0.0.
+- **TTFS metric added**: Time To First Success — from opening README to first recovered file. Measures the experience, not the motor.
+- **Next objective changed**: UXR-001 experiment (10 external testers) instead of v0.6.1 (compressed files). The motor works. Now prove that people can use it.
+- **Release branch strategy**: `release/v0.6.0` only allows bugs/docs/packaging/CI. No new features. Prevents scope creep.
+
 **Regression: no regressions** — existing corpus (normal/fragmented/deleted) still at 100%.
 
 ---
