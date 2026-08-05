@@ -495,7 +495,7 @@ def cmd_demo(args):
     print("  2. recoverylab recover mydisk.img recovered/")
     print("  3. recoverylab recover mydisk.img recovered/ --filter .jpg,.png")
     print()
-    print("Docs: https://github.com/notrabjesmas/RecoveryLab#readme")
+    print("Docs: https://github.com/notrabajesmas/RecoveryLab#readme")
     
     # Cleanup
     if not args.keep:

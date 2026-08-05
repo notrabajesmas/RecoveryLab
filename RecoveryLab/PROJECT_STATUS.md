@@ -3,7 +3,7 @@
 > **Version**: v0.6.0
 > **Status**: Released
 > **Last CI run**: 2026-08-05 — ALL CHECKS PASS
-> **Repo**: https://github.com/notrabjesmas/RecoveryLab
+> **Repo**: https://github.com/notrabajesmas/RecoveryLab
 
 > **Each version changes a benchmark.**
 > Before starting any version: *"What benchmark number will move?"*
