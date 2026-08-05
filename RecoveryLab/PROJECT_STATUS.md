@@ -1,7 +1,7 @@
 # RecoveryLab — Project Status
 
 > **Version**: v0.6.0
-> **Status**: Open
+> **Status**: Released
 > **Last CI run**: 2026-08-05 — ALL CHECKS PASS
 > **Repo**: https://github.com/notrabjesmas/RecoveryLab
 
@@ -78,7 +78,7 @@ They are both important, but they must not be mixed.
 | Version | Benchmark target | Evidence | Status |
 |---------|-----------------|----------|--------|
 | v0.5.2 | NTFS normal: 0% → 100% | 20/20 files, RR=100% | Released |
-| **v0.6.0** | **NTFS sparse: 0% → 100%** | **20/20 files, RR=100%** | **Open** |
+| **v0.6.0** | **NTFS sparse: 0% → 100%** | **20/20 files, RR=100%** | **Released** |
 | v0.6.1 | NTFS compressed: 0% → ≥95% | Compressed corpus CI-verified | **Release blocked** (UXR-001 first; develop open) |
 | v0.6.2 | Alternate Data Streams | ADS corpus CI-verified | Pending |
 | v0.7.0 | FAT32: 0% → 100% | FAT32 corpus CI-verified | Pending |
@@ -90,7 +90,7 @@ They are both important, but they must not be mixed.
 | Step | Objective | Evidence | Status |
 |------|-----------|----------|--------|
 | **UXR-001** | **10 external testers** | **UXR score, TTFS, failure points** | **Current** |
-| GitHub Release | Publish v0.6.0 with wheel + sdist | Release page exists | Pending |
+| GitHub Release | Publish v0.6.0 with wheel + sdist | Release page exists | Released |
 | Documentation | README, QuickStart, CLI docs work for strangers | UXR data confirms | Pending |
 | Installation | pip install works first try | UXR install rate = 10/10 | Pending |
 | CLI | scan/recover/demo clear without reading source | UXR demo+scan rate ≥ 8/10 | Pending |
@@ -266,7 +266,7 @@ This checklist is for internal tracking only. Externally, the version is Open.
 | 5 | `recoverylab demo` works | ✅ 4/4 recovered |
 | 6 | README updated | ✅ |
 | 7 | CHANGELOG updated | ✅ |
-| 8 | GitHub Release published | ❌ Pending |
+| 8 | GitHub Release published | ✅ v0.6.0 released 2026-08-06 |
 | 9 | At least one person outside the project tested it | ❌ Pending |
 
 ---

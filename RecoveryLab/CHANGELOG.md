@@ -1,5 +1,17 @@
 # RecoveryLab — Changelog
 
+## v0.6.0 (2026-08-06) — Released
+
+**GitHub Release published.** Wheel + sdist + release notes at:
+https://github.com/notrabajesmas/RecoveryLab/releases/tag/v0.6.0
+
+**README rewritten** — User-first: brand identity, Quick Start prominent,
+evidence rule and roadmaps moved to bottom. Install and demo at the top.
+
+**v0.6.0 status changed**: Open → Released.
+
+---
+
 ## v0.6.0 (2026-08-05)
 
 **Sparse files: 0% → 100%**
