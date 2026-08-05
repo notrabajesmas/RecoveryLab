@@ -28,26 +28,26 @@ Evidence: GitHub Release page exists with attached artifacts.
    - Unblock condition: UXR-001 experiment completed with results recorded.
 
 2. **v0.6.2 — Alternate Data Streams**
-   - Blocked by: v08.6.1 not released.
+   - Blocked by: v0.6.1 not released.
    - Evidence: ADS corpus CI-verified.
 
 3. **v0.7.0 — FAT32**
    - Blocked by: v0.6.2 not released.
    - Evidence: FAT32 corpus CI-verified.
 
-## Product steps4ork (parallel, doesn't block technical)
+## Product work (parallel, doesn't block technical)
 
 1. **Improve README** based on UXR-001 failure points.
 2. **Improve installation flow** if UXR shows install failures.
-, **Improve CLI help text** if UXR shows confusion at scan/recover.
-5. **GUI** — long-term, only after CLI UXR ≥ 8/10.
+3. **Improve CLI help text** if UXR shows confusion at scan/recover.
+4. **GUI** — long-term, only after CLI UXR ≥ 8/10.
 
 ## Decision rules from UXR-001
 
 | UXR result | Action |
 |------------|--------|
 | ≥ 8/10 | Close UXR-001. Open v0.6.1 release. |
-| 5–7/103| Fix top blockers found. Run UXR-002. |
+| 5–7/10 | Fix top blockers found. Run UXR-002. |
 | < 5/10 | Stop feature work. Redesign onboarding. Run UXR-002. |
 
 ## Session start protocol

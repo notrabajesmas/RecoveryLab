@@ -63,7 +63,7 @@ pip install recoverylab
 Or from source:
 
 ```bash
-git clone https://github.com/notrabjesmas/RecoveryLab.git
+git clone https://github.com/notrabajesmas/RecoveryLab.git
 cd RecoveryLab
 pip install .
 ```
