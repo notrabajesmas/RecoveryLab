@@ -1,0 +1,249 @@
+{
+  "version": "1.0",
+  "category": "sparse",
+  "num_files": 20,
+  "image_file": "corpus_sparse.img",
+  "cluster_size": 4096,
+  "files": [
+    {
+      "filename": "sparse_000.dat",
+      "size": 20480,
+      "sha256": "184bcfa9f2115432095044dff6bf44278ded02c7d5de32cf163084523c406650",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_001.dat",
+      "size": 20480,
+      "sha256": "a1122798c3a410f816366a64eb82bf22e46f5dbb8f197e16615f945301df7d8f",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_002.dat",
+      "size": 20480,
+      "sha256": "fec91399c44f868d5b40959dc0cb61b32b78f4b7432e7098753a8c40190739fa",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_003.dat",
+      "size": 20480,
+      "sha256": "9e1f6000c1fc0ce2682e5fdcbc3691aaff52cda1599e80677b4115e8c2f43a6b",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_004.dat",
+      "size": 20480,
+      "sha256": "f24391868cf40df1996609489c5734597e20fe528cf794589b9e7add02eb4820",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_005.dat",
+      "size": 20480,
+      "sha256": "36863a70d52acc0d824e8f3ae30da7b6565f7f96f8dac9d4d2f4d42c6cce1c90",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_006.dat",
+      "size": 20480,
+      "sha256": "e6d724c8443a75ca5c5774e3b3fef1e7d71c2b8463ccd473124b91154b816f9d",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_007.dat",
+      "size": 20480,
+      "sha256": "7590ceadc00315d39b37747a892f13bb9e13f2aefbd116e13f83cf436202cfd2",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_008.dat",
+      "size": 20480,
+      "sha256": "4cf3cbf54d42f435a56db6c47d10195d00ad69f9bebb6266b1d1ae73f47790ba",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_009.dat",
+      "size": 20480,
+      "sha256": "60927190402f6f90fdcc90d99933dcf44113aa76b8e1dae83a626a09fdee9284",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_010.dat",
+      "size": 20480,
+      "sha256": "5771adb44af4bef7c2be9f52dd7ffd7276098f0c5b9b73e8a82941a2e61868e3",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_011.dat",
+      "size": 20480,
+      "sha256": "dec8f54e875b5ad3e3cf663de43d30cff341b9de76b1182322a758848108e69e",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_012.dat",
+      "size": 20480,
+      "sha256": "7e65ca7d85ff397838547e12b737a11d72c1860258dc137884eaa11283e70460",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_013.dat",
+      "size": 20480,
+      "sha256": "01bc2186d06df261d7703d8d688931bfad6e40a0ec40e2f67e59a452684cf0ea",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_014.dat",
+      "size": 20480,
+      "sha256": "d5d466eee6b4002047ffc5f78b5c648ae68a28795108cd41ea5f9f237312a86a",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_015.dat",
+      "size": 20480,
+      "sha256": "a4f024c30b690c0b8309bad752d9fb347b1624e394aa41c29625e00dd712ad7f",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_016.dat",
+      "size": 20480,
+      "sha256": "29840042777ec430360f63482a47156c283d62eebd4f2d4764eee555ecc2f89c",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_017.dat",
+      "size": 20480,
+      "sha256": "c40ae5a6e4a9feadbc72bfcf89c7c3efe1198a43572b66eefae4ee98d8c02be4",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_018.dat",
+      "size": 20480,
+      "sha256": "b56fe9d4741c2856164ee77fefdd802e309e3536fe3e80bc32fdaf0073e8312f",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    },
+    {
+      "filename": "sparse_019.dat",
+      "size": 20480,
+      "sha256": "c8801ba345d2eae7b3fda8f5026090db66421db20c522e131f5c4b43d30737a2",
+      "is_sparse": true,
+      "sparse_regions": [
+        [
+          8192,
+          8192
+        ]
+      ]
+    }
+  ]
+}

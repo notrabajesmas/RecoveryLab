@@ -63,6 +63,7 @@ class DataRun:
     """A single data run (extent) in an NTFS run list."""
     length: int        # Number of clusters
     offset: int        # Starting cluster (absolute for first run, relative after)
+    is_sparse: bool = False  # True if this is a sparse run (zero-filled, no disk allocation)
 
 
 @dataclass
@@ -80,6 +81,7 @@ class MFTEntry:
     is_resident: bool = False
     resident_data: bytes = b""
     sha256: str = ""
+    is_sparse: bool = False  # True if file has any sparse data runs
     
     # Standard information attribute
     si_created: float = 0.0
@@ -293,6 +295,13 @@ def parse_mft_record(data: bytes, record_number: int) -> Optional[MFTEntry]:
             
             attr_offset += attr_length
         
+        # Mark entry as sparse if it has sparse runs or sparse file attribute
+        # FILE_ATTRIBUTE_SPARSE_FILE = 0x0400 (in fn_flags)
+        if any(run.is_sparse for run in entry.data_runs):
+            entry.is_sparse = True
+        elif entry.fn_flags & 0x0400:
+            entry.is_sparse = True
+        
         return entry
     
     except (struct.error, IndexError, ValueError):
@@ -376,7 +385,16 @@ def _parse_data(data: bytes, offset: int, non_resident: int, entry: MFTEntry):
 
 
 def _parse_data_runs(data: bytes, offset: int) -> List[DataRun]:
-    """Parse NTFS data run list."""
+    """Parse NTFS data run list.
+    
+    Handles three types of data runs:
+      - Normal runs: offset_size > 0, point to allocated clusters on disk
+      - Sparse runs: offset_size == 0, zero-filled clusters not stored on disk
+      - End marker: header == 0
+    
+    Sparse runs are common in NTFS sparse files and NTFS-compressed files.
+    A sparse run has a length but no offset — the clusters are logical zeros.
+    """
     runs = []
     pos = offset
     current_offset = 0
@@ -384,21 +402,29 @@ def _parse_data_runs(data: bytes, offset: int) -> List[DataRun]:
     while pos < len(data):
         header = data[pos]
         if header == 0:
-            break
+            break  # End of run list
         
         length_size = header & 0x0F
         offset_size = (header >> 4) & 0x0F
         
-        if length_size == 0 or offset_size == 0:
-            break
+        if length_size == 0:
+            break  # Invalid: length must be > 0
         
         pos += 1
         
+        # Read run length
         if pos + length_size > len(data):
             break
         length = int.from_bytes(data[pos:pos + length_size], 'little')
         pos += length_size
         
+        if offset_size == 0:
+            # Sparse run: zero-filled clusters, no disk allocation
+            # These are the gaps in sparse/compressed NTFS files
+            runs.append(DataRun(length=length, offset=0, is_sparse=True))
+            continue
+        
+        # Normal run: read offset (may be signed)
         if pos + offset_size > len(data):
             break
         raw_offset = int.from_bytes(data[pos:pos + offset_size], 'little')
@@ -408,9 +434,10 @@ def _parse_data_runs(data: bytes, offset: int) -> List[DataRun]:
         
         if raw_offset != 0:
             current_offset += raw_offset
-            runs.append(DataRun(length=length, offset=current_offset))
+            runs.append(DataRun(length=length, offset=current_offset, is_sparse=False))
         else:
-            runs.append(DataRun(length=length, offset=0))
+            # offset == 0 after relative calculation: also sparse
+            runs.append(DataRun(length=length, offset=0, is_sparse=True))
     
     return runs
 
@@ -494,7 +521,16 @@ def parse_ntfs_image(image: bytes, cluster_size: int = 4096) -> NTFSMetadata:
 
 def recover_file_data(image: bytes, entry: MFTEntry, 
                        cluster_size: int = 4096) -> Optional[bytes]:
-    """Recover file data from an MFT entry."""
+    """Recover file data from an MFT entry.
+    
+    Handles:
+      - Resident files (data embedded in MFT record)
+      - Non-resident files with normal data runs
+      - Sparse runs (zero-filled, no disk allocation)
+    
+    Sparse runs are zero-filled — they represent gaps in sparse/compressed
+    NTFS files where no data is stored on disk.
+    """
     if entry.is_resident:
         return entry.resident_data
     
@@ -504,13 +540,15 @@ def recover_file_data(image: bytes, entry: MFTEntry,
     file_data = bytearray()
     
     for run in entry.data_runs:
-        if run.offset == 0:
+        if run.is_sparse or run.offset == 0:
+            # Sparse run: fill with zeros (no data on disk)
             file_data.extend(b'\x00' * (run.length * cluster_size))
             continue
         
         for cluster_num in range(run.length):
             cluster_offset = (run.offset + cluster_num) * cluster_size
             if cluster_offset + cluster_size > len(image):
+                # Out of image bounds — fill with zeros
                 file_data.extend(b'\x00' * cluster_size)
                 continue
             file_data.extend(image[cluster_offset:cluster_offset + cluster_size])

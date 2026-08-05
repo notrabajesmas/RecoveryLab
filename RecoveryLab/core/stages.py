@@ -95,6 +95,7 @@ class MFTStage(PipelineStage):
                 "confidence": 1.0,
                 "num_runs": num_runs,
                 "is_fragmented": num_runs > 1,
+                "is_sparse": entry.is_sparse if hasattr(entry, 'is_sparse') else False,
                 "data": file_data,
                 "entry": entry,
             })
@@ -155,21 +156,29 @@ class JournalStage(PipelineStage):
 
 
 class FragmentStage(PipelineStage):
-    """Reconstruct fragmented files from multiple data runs (Strategy D)."""
+    """Reconstruct fragmented and sparse files (Strategy D)."""
     
     @property
     def name(self) -> str:
         return "fragment"
     
     def execute(self, ctx: PipelineContext) -> PipelineContext:
-        # Fragment recovery is already done by MFT stage (it follows all data runs).
-        # This stage enriches the results with fragmentation metadata.
-        # Files with num_runs > 1 are already in recovered_from_mft.
+        # Fragment/sparse recovery is already done by MFT stage
+        # (it follows all data runs including sparse ones).
+        # This stage enriches the results with sparse metadata
+        # and adjusts confidence for sparse files.
         
-        # For future: this stage could handle sparse/compressed runs
-        # that MFT stage can't handle alone.
+        # Mark sparse files and adjust confidence
+        for item in ctx.recovered_from_mft:
+            entry = item.get("entry")
+            if entry and hasattr(entry, 'is_sparse') and entry.is_sparse:
+                item["is_sparse"] = True
+                # Sparse files: slight confidence reduction because
+                # we fill gaps with zeros (correct for NTFS sparse,
+                # but might not match original if file was corrupted)
+                if item.get("confidence", 0) >= 0.9:
+                    item["confidence"] = 0.95
         
-        # For now, just pass through — MFT already handles multi-run files.
         return ctx
 
 

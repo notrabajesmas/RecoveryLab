@@ -82,6 +82,7 @@ class DataRun:
     """Represents a single data run (extent) in an NTFS run list."""
     length: int        # Number of clusters
     offset: int        # Starting cluster (absolute for first run, relative after)
+    is_sparse: bool = False  # True if this is a sparse run (zero-filled, no disk allocation)
 
 @dataclass
 class FileInfo:
@@ -92,6 +93,8 @@ class FileInfo:
     parent_record: int = 5          # Root directory by default
     created: float = 0.0
     modified: float = 0.0
+    is_sparse: bool = False         # True if this is a sparse file
+    sparse_regions: List = field(default_factory=list)  # List of (start_byte, length_byte) zero regions
     # Filled by the builder
     record_number: int = -1
     cluster_runs: List[DataRun] = field(default_factory=list)
@@ -171,6 +174,41 @@ class NTFSImageBuilder:
         info = FileInfo(
             name=name, data=data,
             is_directory=False,
+            parent_record=parent_record,
+            created=created, modified=modified,
+            sha256=sha256,
+        )
+        self._files.append(info)
+        return info
+
+    def add_sparse_file(self, name: str, data: bytes,
+                        sparse_regions: List = None,
+                        parent_record: int = 5,
+                        created: float = 0.0,
+                        modified: float = 0.0) -> FileInfo:
+        """Add a sparse file to the image.
+        
+        A sparse file has regions of zeros that don't occupy space on disk.
+        These are encoded as sparse data runs (offset_size=0 in NTFS).
+        
+        Args:
+            name: Filename
+            data: Full file data (including zero regions)
+            sparse_regions: List of (start_byte, length_byte) tuples 
+                           specifying which regions are sparse (zeros)
+            parent_record: Parent directory MFT record
+            created: Creation timestamp
+            modified: Modification timestamp
+        
+        Returns:
+            FileInfo for manifest tracking
+        """
+        sha256 = hashlib.sha256(data).hexdigest()
+        info = FileInfo(
+            name=name, data=data,
+            is_directory=False,
+            is_sparse=True,
+            sparse_regions=sparse_regions or [],
             parent_record=parent_record,
             created=created, modified=modified,
             sha256=sha256,
@@ -473,7 +511,8 @@ class NTFSImageBuilder:
                               is_directory: bool = False,
                               created: float = 0.0,
                               modified: float = 0.0,
-                              file_size: int = 0) -> bytes:
+                              file_size: int = 0,
+                              is_sparse: bool = False) -> bytes:
         """Build $FILE_NAME attribute (0x30)."""
         # Encode name as UTF-16LE
         name_bytes = name.encode('utf-16-le')
@@ -517,6 +556,8 @@ class NTFSImageBuilder:
         struct.pack_into('<Q', attr, 72, file_size)        # Real size
 
         flags = 0x10000000 if is_directory else 0x00000020  # DIRECTORY or ARCHIVE
+        if is_sparse:
+            flags |= 0x0400  # FILE_ATTRIBUTE_SPARSE_FILE
         struct.pack_into('<I', attr, 80, flags)            # File attributes
 
         struct.pack_into('<I', attr, 84, 0)               # Reparse / EA
@@ -556,7 +597,8 @@ class NTFSImageBuilder:
         return bytes(attr)
 
     def _make_attr_data_nonresident(self, runs: List[DataRun],
-                                     data_size: int) -> bytes:
+                                     data_size: int,
+                                     is_sparse: bool = False) -> bytes:
         """Build a non-resident $DATA attribute (0x80) with run list."""
         # Encode data runs
         run_list = self._encode_run_list(runs)
@@ -573,7 +615,8 @@ class NTFSImageBuilder:
         attr[8] = 1                                  # Non-resident = 1
         attr[9] = 0                                  # Name length
         struct.pack_into('<H', attr, 10, 64)         # Offset to name
-        struct.pack_into('<H', attr, 12, 0)          # Flags
+        attr_flags = ATTR_SPARSE if is_sparse else 0
+        struct.pack_into('<H', attr, 12, attr_flags) # Flags (ATTR_SPARSE for sparse files)
         struct.pack_into('<H', attr, 14, 2)          # Attribute ID
 
         # Non-resident specific fields
@@ -599,11 +642,24 @@ class NTFSImageBuilder:
         NTFS run list encoding:
           - First run: absolute offset
           - Subsequent runs: offset RELATIVE to the previous run's START position
+          - Sparse runs: offset_size = 0 (no offset bytes, only length)
         """
         result = bytearray()
         prev_start = 0
 
         for i, run in enumerate(runs):
+            is_sparse = getattr(run, 'is_sparse', False)
+            
+            if is_sparse:
+                # Sparse run: header byte has offset_size = 0
+                length_bytes = self._bytes_needed(run.length)
+                header = length_bytes & 0x0F  # offset_size = 0
+                result.append(header)
+                result.extend(run.length.to_bytes(length_bytes, 'little'))
+                # Do NOT update prev_start — sparse runs don't have physical offset
+                # The next non-sparse run's offset is relative to the last non-sparse run
+                continue
+            
             if i == 0:
                 # First run: absolute offset
                 current_offset = run.offset
@@ -729,14 +785,15 @@ class NTFSImageBuilder:
         for f in self._files:
             if f.cluster_runs:
                 data_attr = self._make_attr_data_nonresident(
-                    f.cluster_runs, len(f.data))
+                    f.cluster_runs, len(f.data), is_sparse=f.is_sparse)
             else:
                 data_attr = self._make_attr_data_resident(f.data)
 
             attrs = [
                 self._make_attr_standard_information(f.created, f.modified),
                 self._make_attr_file_name(f.name, f.parent_record, False,
-                                          f.created, f.modified, len(f.data)),
+                                          f.created, f.modified, len(f.data),
+                                          is_sparse=f.is_sparse),
                 data_attr,
             ]
             rec = self._make_mft_record(f.record_number, True, False, attrs)
@@ -996,6 +1053,58 @@ class NTFSImageBuilder:
                 continue
 
             clusters_needed = (len(f.data) + self.cluster_size - 1) // self.cluster_size
+            
+            if f.is_sparse and f.sparse_regions:
+                # Sparse file: allocate only non-sparse regions
+                # Convert sparse_regions (byte offsets) to cluster-aligned runs
+                total_clusters = clusters_needed
+                sparse_cluster_ranges = []
+                for start_byte, length_bytes in f.sparse_regions:
+                    start_cluster = start_byte // self.cluster_size
+                    end_cluster = (start_byte + length_bytes + self.cluster_size - 1) // self.cluster_size
+                    sparse_cluster_ranges.append((start_cluster, end_cluster))
+                
+                # Build run list: normal runs for data, sparse runs for gaps
+                runs = []
+                current_cluster = 0
+                data_offset_cluster = 0  # Track position in the file's cluster space
+                
+                # Sort sparse regions by start
+                sparse_cluster_ranges.sort()
+                
+                for sparse_start, sparse_end in sparse_cluster_ranges:
+                    sparse_start = max(sparse_start, current_cluster)
+                    if sparse_start <= current_cluster:
+                        # Overlapping or adjacent — skip to end of sparse region
+                        current_cluster = max(current_cluster, sparse_end)
+                        continue
+                    
+                    # Normal run before this sparse region
+                    normal_length = sparse_start - current_cluster
+                    if normal_length > 0:
+                        runs.append(DataRun(length=normal_length, offset=next_cluster, is_sparse=False))
+                        for c in range(next_cluster, next_cluster + normal_length):
+                            self._allocated_clusters.add(c)
+                        next_cluster += normal_length
+                    
+                    # Sparse run
+                    sparse_length = sparse_end - sparse_start
+                    if sparse_length > 0:
+                        runs.append(DataRun(length=sparse_length, offset=0, is_sparse=True))
+                    
+                    current_cluster = sparse_end
+                
+                # Normal run after last sparse region
+                if current_cluster < total_clusters:
+                    normal_length = total_clusters - current_cluster
+                    runs.append(DataRun(length=normal_length, offset=next_cluster, is_sparse=False))
+                    for c in range(next_cluster, next_cluster + normal_length):
+                        self._allocated_clusters.add(c)
+                    next_cluster += normal_length
+                
+                f.cluster_runs = runs
+                continue  # Skip normal allocation for sparse files
+            
             contiguous_allocations.append((f, clusters_needed, next_cluster))
             next_cluster += clusters_needed
 
@@ -1023,7 +1132,16 @@ class NTFSImageBuilder:
         # Third pass: allocate with fragmentation
         # We need to allocate all files in order, but fragmented files
         # get split into multiple runs with gaps
-        next_cluster = L.data_start_cluster
+        # Note: next_cluster already accounts for sparse files allocated in first pass
+        # contiguous_allocations used a different tracking, so we need to recompute
+        # For non-sparse files that are in contiguous_allocations, reset to data_start
+        # but skip past any clusters already allocated by sparse files
+        if contiguous_allocations:
+            next_cluster = L.data_start_cluster
+            # Skip past any clusters already allocated by sparse files
+            while next_cluster in self._allocated_clusters:
+                next_cluster += 1
+        # else: next_cluster already set correctly from sparse allocation
 
         for f, clusters_needed, _ in contiguous_allocations:
             if id(f) in files_to_fragment and clusters_needed >= 2:
@@ -1075,11 +1193,18 @@ class NTFSImageBuilder:
         for f in self._files:
             if f.cluster_runs:
                 # Non-resident: write to clusters
-                # For fragmented files, data must be split across runs
+                # For fragmented/sparse files, data must be split across runs
                 data_offset = 0
                 for run in f.cluster_runs:
-                    offset = run.offset * self.cluster_size
                     run_data_size = run.length * self.cluster_size
+                    
+                    if getattr(run, 'is_sparse', False):
+                        # Sparse run: don't write to image, just advance offset
+                        # The data is zeros — no disk allocation needed
+                        data_offset += run_data_size
+                        continue
+                    
+                    offset = run.offset * self.cluster_size
                     
                     # Write data for this run
                     chunk = f.data[data_offset:data_offset + run_data_size]

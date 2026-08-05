@@ -1,231 +1,127 @@
-# RecoveryLab — Project Status & Resume Guide
+# RecoveryLab — Project Status
 
-> **Ultima actualización**: 2026-08-05
-> **Version actual**: v0.5.2
-> **Repo GitHub**: https://github.com/notrabajesmas/RecoveryLab (privado)
-> **Pregunta central**: ¿Qué puede hacer RecoveryLab hoy que no podía ayer?
+> **Versión actual**: v0.6.0
+> **Repo**: https://github.com/notrabajesmas/RecoveryLab (privado)
 
 ---
 
-## Estado Actual — Resumen Ejecutivo
+## Roadmap
 
-RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS. Implementa 5 estrategias de recuperación (A-E), un sistema de métricas duales (RR + RFS), y una API pública congelada.
+Cada versión agrega **una capacidad nueva de recuperación**, medida por un benchmark.
 
-| Componente | Estado | Cobertura |
-|-----------|--------|-----------|
-| Strategy A (MFT) | ✅ Funcional | 100% metadata (75/75 archivos) |
-| Strategy B (Journal) | ✅ Funcional | USN V2/V3, MFT xref, delete detection |
-| Strategy C (Carving, 19 formatos) | ✅ Funcional | JPEG 100% real, PNG/PDF/ZIP/DOCX 99.8% sintético |
-| Strategy D (Fragment) | ✅ Funcional | 41/41 multi-run files recovered, SHA-256 100% |
-| Strategy E (Hybrid) | ✅ Funcional | Delegación adaptativa |
-| NTFS MFT Parser | ✅ Funcional + SCALED | 100% SHA-256 at 10,000 files |
-| NTFS Journal Parser | ✅ Funcional + SCALED + INTEGRATED | 100% entries at 5K files |
-| **Métrica: RR (Recovery Rate)** | ✅ Funcional | Recuperados / Total |
-| **Métrica: RFS (Recovery Fidelity Score)** | ✅ Funcional | 9-component weighted |
-| **RecoveryEngine API** | ✅ Congelada v0.5.2 | scan(), recover(), statistics — 25 contract tests pass |
-| **CLI** | ✅ Funcional v0.5.2 | recoverylab scan/recover/info + 7 profiles + RC metrics |
-| **Pipeline** | ✅ Funcional | 8 stages, extensible (FAT32/exFAT/EXT4) |
-| **Corpus permanente** | ✅ Construido | 3 categorías, 60/60 verificados, RR=100% |
-| **Recovery Cost (RC)** | ✅ Implementado v0.5.2 | CPU + RAM + bytes scanned + strategy cost + efficiency |
-| **CI regresión** | ✅ Funcional v0.5.2 | Baseline guardada, full CI pipeline con RR+RFS+RC+RAM |
+Antes de abrir una versión, preguntar: **¿Qué benchmark va a cambiar?**
+
+Si no se puede responder en una línea, la versión todavía no debería empezar.
+
+| Versión | Benchmark objetivo | Estado |
+|---------|-------------------|--------|
+| v0.5.2 | NTFS normales 100% | ✅ |
+| **v0.6.0** | **Sparse files 100%** | ✅ Actual |
+| v0.6.1 | Compressed files ≥95% | Pendiente |
+| v0.7.0 | GUI funcional | Pendiente |
+| v0.8.0 | FAT32 100% | Pendiente |
+| v0.9.0 | exFAT 100% | Pendiente |
+| v1.0.0 | Public release | Pendiente |
 
 ---
 
-## Roadmap por Versiones — Lo que el usuario gana
+## Product Metrics — v0.6.0
 
-| Versión | Lo que el usuario gana | Estado |
-|---------|----------------------|--------|
-| **v0.5.2** | **API pública congelada + CLI usable + corpus + CI** | ✅ Actual |
-| v0.6.0 | Soporte para sparse runs (archivos con gaps) | Pendiente |
-| v0.6.1 | Soporte para compressed runs (NTFS compression) | Pendiente |
-| v0.7.0 | Primera GUI usable | Pendiente |
-| v0.8.0 | Plugins (FAT32, exFAT, EXT4 auto-detectados) | Pendiente |
-| v0.9.0 | Benchmark público vs PhotoRec/Foremost | Pendiente |
-| v1.0.0 | Release pública (API estable + docs + installer) | Pendiente |
+| Category | Files | RR | RFS | Time | RAM |
+|----------|------:|---:|----:|-----:|----:|
+| Normal | 20 | 100% | 0.850 | 0.53s | 116 MB |
+| Fragmented | 20 | 100% | 0.850 | 0.49s | 159 MB |
+| Deleted | 20 | 100% | 0.850 | 0.48s | 159 MB |
+| **Sparse** | **20** | **100%** | **0.850** | **0.21s** | — |
 
-### v0.5.2 (actual)
-**Objetivo:** API congelada + CLI usable + corpus permanente + CI de regresión
-
-Checklist:
-- ✅ RecoveryEngine API congelada (scan, recover, statistics)
-- ✅ ScanResult.recover(id) — consumer-facing API
-- ✅ ScanResult.recover_all(), get_file(), by_source(), by_status()
-- ✅ core.__version__ = "0.5.1"
-- ✅ 22 API contract tests pass
-- ✅ CLI: recoverylab scan/recover/info
-- ✅ CLI: barra de progreso (spinner)
-- ✅ CLI: barras de confianza (█████)
-- ✅ CLI: errores amigables (imagen inexistente, permisos, formato no soportado)
-- ✅ CLI: --help con ejemplos y perfiles documentados
-- ✅ CLI: estadísticas completas al finalizar (RR, RFS, tiempo, RAM)
-- ✅ pyproject.toml para pip install
-- ✅ Corpus permanente (normal, fragmented, deleted) — 60/60 verificados
-- ✅ CI regresión contra corpus — baseline v0.5.2 guardada
-- ✅ Pipeline architecture (8 stages, extensible)
-- ⬜ Sparse runs (v0.6.0)
-- ⬜ Compressed runs (v0.6.1)
-
-### v0.6.0
-**Objetivo:** Sparse runs — archivos con gaps (NTFS sparse files)
-
-Checklist:
-- Strategy D: handle sparse data runs (zero-fill gaps)
-- Confidence scoring para sparse files
-- Corpus: popular categoría sparse/
-- CI: verificar que sparse no rompe normal/fragmented
-
-### v0.6.1
-**Objetivo:** Compressed runs — NTFS compression
-
-Checklist:
-- Strategy D: decompress NTFS-compressed data runs
-- Confidence scoring para compressed files
-- Corpus: popular categoría compressed/
-- CI: verificar que compressed no rompe lo anterior
-
-### v0.7.0
-**Objetivo:** Primera GUI usable
-
-Checklist:
-- Seleccionar disco
-- Preview de archivos
-- Filtros por tipo/fecha/estado
-- Exportar resultados
-- Barra de progreso
-- Consumir SOLO la API congelada de RecoveryEngine
-
-### v0.8.0
-**Objetivo:** Plugins — otros filesystems
-
-Checklist:
-- `class FAT32Strategy(RecoveryStrategy)` auto-detectado
-- `class ExFATStrategy(RecoveryStrategy)` auto-detectado
-- `class EXT4Strategy(RecoveryStrategy)` auto-detectado
-- Pipeline: insertar stage para filesystem detectado
-- Sin tocar el código existente
-
-### v0.9.0
-**Objetivo:** Benchmark público
-
-Checklist:
-- Comparación con PhotoRec
-- Comparación con Foremost
-- Comparación con Scalpel
-- Datasets reproducibles
-- Tabla pública de resultados
-
-### v1.0.0
-**Objetivo:** Release pública
-
-Checklist:
-- API estable sin breaking changes
-- Documentación completa
-- Installer (pip, binary)
-- Corpus permanente + CI verde
-- Benchmark público
+**Antes de v0.6.0**: Sparse files 0% (parser descartaba sparse runs)
+**Después de v0.6.0**: Sparse files 100% (20/20 verificados, SHA-256 100%)
 
 ---
 
-## Product Metrics — v0.5.2
+## Capabilities
 
-| Category | Files | RR | RFS | RC score | Time | RAM |
-|----------|------:|---:|----:|---------:|-----:|----:|
-| Normal | 20 | 100% | 0.815 | 0.500 | 0.53s | 116 MB |
-| Fragmented | 20 | 100% | 0.815 | 0.500 | 0.49s | 159 MB |
-| Deleted | 20 | 100% | 0.815 | 0.500 | 0.48s | 159 MB |
-
-**Three dimensions per profile (normal corpus):**
-
-| Profile | RR | RFS | RC score | Description |
-|---------|---:|----:|---------:|-------------|
-| fast | 95.2% | 0.850 | 0.873 | MFT only — cheapest |
-| balanced | 95.2% | 0.850 | 0.823 | MFT + Journal |
-| mft_first | 95.7% | 0.815 | 0.500 | MFT + Journal + Carving |
-| full | 95.7% | 0.815 | 0.500 | All strategies — most expensive |
+| Componente | Estado | Detalle |
+|-----------|--------|---------|
+| Strategy A (MFT) | ✅ | 100% metadata, targeted reads |
+| Strategy B (Journal) | ✅ | USN V2/V3/V4, delete detection |
+| Strategy C (Carving) | ✅ | 19 formatos, JPEG 100% real |
+| Strategy D (Fragment) | ✅ | Multi-run 41/41, SHA-256 100% |
+| Strategy E (Hybrid) | ✅ | Delegación adaptativa |
+| **Sparse runs** | ✅ **v0.6.0** | **Parser + recovery + corpus + benchmark** |
+| Compressed runs | ❌ | Sin implementar |
+| GUI | ❌ | Sin implementar |
+| FAT32 / exFAT | ❌ | Sin implementar |
 
 ---
 
-## Arquitectura del Proyecto
+## Infrastructure
+
+| Componente | Estado |
+|-----------|--------|
+| RecoveryEngine API | ✅ Congelada, 25 contract tests |
+| CLI | ✅ scan/recover/info, 7 profiles |
+| Corpus permanente | ✅ 4 categorías (normal/fragmented/deleted/sparse), 80/80 |
+| CI regresión | ✅ Baseline guardada |
+| Recovery Cost (RC) | ✅ CPU + RAM + I/O + efficiency |
+| Pipeline | ✅ 8 stages, extensible |
+| Stability policy | ✅ 3 tiers (public/extension/internal) |
+| Versionado | ✅ Semántico |
+| pyproject.toml | ✅ pip install recoverylab |
+| **User docs** | ✅ **Installation, QuickStart, CLI, API, Profiles, Plugins** |
+
+---
+
+## Arquitectura
 
 ```
 RecoveryLab/
-├── core/                          # ★ PUBLIC API (FROZEN v0.5.2)
-│   ├── engine.py                  #   RecoveryEngine — single entry point
-│   ├── result.py                  #   ScanResult, RecoveredItem, RecoveryStatistics
-│   ├── pipeline.py                #   Pipeline, PipelineStage, PipelineContext
-│   └── stages.py                  #   8 concrete stages
+├── core/                    # PUBLIC API (FROZEN)
+│   ├── engine.py            #   RecoveryEngine
+│   ├── result.py            #   ScanResult, RecoveredItem, RecoveryStatistics
+│   ├── pipeline.py          #   Pipeline, PipelineStage
+│   └── stages.py            #   8 concrete stages (FragmentStage: sparse-aware)
 │
-├── strategies/                    # Strategy wrappers (thin over motors)
-│   ├── strategy_a_mft.py          # Strategy A: MFT → targeted reads
-│   ├── strategy_b_journal.py      # Strategy B: Journal → deleted/renamed files
-│   ├── strategy_c_carving.py      # Strategy C: Signature carving (19 formatos)
-│   ├── strategy_d_fragment.py     # Strategy D: Fragment → multi-run reconstruction
-│   └── strategy_e_hybrid.py       # Strategy E: Hybrid → adaptive delegation
+├── strategies/              # STABLE EXTENSION API
+├── motors/                  # Internal
+├── ntfs_parser/             # Internal (sparse runs now handled)
+├── recovery_judge/          # Internal
+├── dataset_builder/         # Internal (add_sparse_file() added)
+├── corruptor/               # Internal
 │
-├── motors/                        # Motores (internal, strategy-level)
-├── ntfs_parser/                   # NTFS parsing (MFT + Journal)
-├── recovery_judge/                # Métricas + Scoring
-├── dataset_builder/               # Generación de imágenes NTFS sintéticas
-├── corruptor/                     # Modelos de corrupción
+├── recoverylab.py           # CLI v0.6.0
+├── docs/                    # User documentation
+├── datasets/ntfs/           # Corpus
+│   ├── normal/
+│   ├── fragmented/
+│   ├── sparse/              # ✅ v0.6.0 — 20 sparse files
+│   ├── compressed/          # (v0.6.1)
+│   └── deleted/
 │
-├── recoverylab.py                 # ★ CLI entry point
-├── pyproject.toml                 # Packaging (pip install recoverylab)
-│
-├── datasets/ntfs/                 # ★ Corpus permanente de pruebas
-│   ├── normal/                    #   Contiguous files
-│   ├── fragmented/                #   Multi-run files
-│   ├── sparse/                    #   (placeholder para v0.6.0)
-│   ├── compressed/                #   (placeholder para v0.6.1)
-│   └── deleted/                   #   Journal-recoverable
-│
-├── tests/                         # API contract tests
-│   └── test_api_contract.py       #   22 tests — API frozen
-│
-├── scripts/                       # CI + corpus
-│   ├── build_corpus.py            #   Build permanent test corpus
-│   ├── ci_regression.py           #   Regression CI against corpus
-│   └── benchmark_*.py             #   Performance benchmarks
-│
-└── results/ci_baselines/          # CI baseline results per version
+├── tests/                   # API contract tests
+├── scripts/                 # CI + benchmarks
+└── results/ci_baselines/    # Regression baselines
 ```
 
 ---
 
 ## Reglas del Proyecto
 
-1. **Cada versión entrega algo que un usuario puede descargar y usar**
-2. **Medir avance = qué puede hacer hoy que no podía ayer**
-3. **Core ≠ App** — el motor es una librería, la GUI es un consumidor
-4. **Filtro**: ¿Esto acerca al usuario a recuperar sus archivos, o solo mejora el laboratorio?
-5. **API congelada** — cambiar firmas públicas requiere MAJOR bump
-6. **No perseguir 100% en sintéticos sin medir reales primero**
-7. **No afirmar que X resolverá Y antes de medir**
-8. **Cada versión tiene métricas visibles** (Product Metrics table)
-9. **Pregunta central**: "¿Qué puede recuperar RecoveryLab hoy que ayer no podía?"
-10. **Versiones semánticas** — no "Sprint X", sino "v0.X.Y"
-11. **Corpus permanente** — cada release se verifica contra el corpus
-12. **CI regresión** — "¿La versión nueva recupera al menos lo mismo que la anterior?"
-13. **Regla de Oro (falsificación)**: "Ningún resultado positivo será considerado válido hasta que haya sobrevivido a al menos un intento serio de refutación"
+1. **Cada versión agrega una capacidad nueva de recuperación** — no una métrica, no un documento, no una abstracción
+2. **Antes de abrir una versión**: ¿Qué benchmark va a cambiar? Si no hay respuesta, no empezar
+3. **Medir avance = qué puede recuperar hoy que ayer no podía**
+4. **API congelada** — breaking = MAJOR bump
+5. **Corpus permanente** — cada release se verifica contra corpus
+6. **CI regresión** — versión nueva ≥ versión anterior en RR
+7. **Regla de Oro**: ningún resultado positivo es válido hasta sobrevivir un intento de refutación
+8. **Escribir docs para usuarios, no para nosotros** — ¿alguien puede usar RecoveryLab en 10 minutos?
 
 ---
 
-## Cómo retomar el proyecto
+## Cómo retomar
 
-1. Leer este archivo (`PROJECT_STATUS.md`) para estado completo
-2. Leer `CHANGELOG.md` para historial de versiones
-3. Leer `worklog.md` para historial detallado de tareas
-4. La versión actual es **v0.5.2** — API congelada + CLI + corpus + CI
-5. Próximo paso: **v0.6.0** — Sparse runs
-6. Los archivos clave son `core/` (API pública), `strategies/`, `ntfs_parser/parser.py`
-7. Las métricas son **RR** + **RFS** + **Quality = RR × RFS**
-8. Las estrategias son A: MFT, B: Journal, C: Carving, D: Fragment, E: Hybrid
-9. **Objetivo 6 meses**: RecoveryLab descargable → apuntar a disco → recuperar archivos → interfaz sencilla
-10. Para verificar: `python tests/test_api_contract.py` y `python scripts/ci_regression.py`
-
----
-
-## GitHub
-
-- **Repo**: https://github.com/notrabajesmas/RecoveryLab
-- **Visibilidad**: Privado
-- **Token**: Configurado en remote (push access)
+1. La versión actual es **v0.6.0** — Sparse files 100%
+2. Próximo paso: **v0.6.1** — Compressed files ≥95%
+3. Archivos clave: `ntfs_parser/parser.py` (sparse run parsing), `core/stages.py` (FragmentStage), `dataset_builder/ntfs_image.py` (add_sparse_file)
+4. Verificar: `python tests/test_api_contract.py` y `python scripts/ci_regression.py`
+5. User docs: `docs/QuickStart.md`

@@ -22,7 +22,7 @@ Usage:
     engine.recover(result.files[0], output_dir="recovered/")
 """
 
-__version__ = "0.5.2"
+__version__ = "0.6.0"
 
 from .engine import RecoveryEngine
 from .result import (

@@ -1,5 +1,44 @@
 # RecoveryLab — Changelog
 
+## v0.6.0 (2026-08-05)
+
+**Sparse files: 0% → 100%**
+
+Before this version, RecoveryLab could not recover sparse NTFS files.
+The parser silently discarded sparse data runs (treating them as end-of-list),
+resulting in truncated or missing file data.
+
+Now RecoveryLab correctly recovers sparse files with zero-filled gaps,
+verified against a permanent sparse corpus with SHA-256 100%.
+
+**Benchmark:**
+
+| Before | After |
+|--------|-------|
+| Sparse files: 0% | Sparse files: 100% |
+
+**What changed:**
+
+- `ntfs_parser/parser.py`: Fixed `_parse_data_runs()` — sparse runs (offset_size==0) are now parsed correctly instead of being treated as end-of-list. Added `is_sparse` flag to `DataRun` and `MFTEntry`.
+- `ntfs_parser/parser.py`: Updated `recover_file_data()` — uses `is_sparse` flag to zero-fill sparse runs.
+- `core/stages.py`: `FragmentStage` is now sparse-aware — marks sparse files and adjusts confidence (0.95 for sparse vs 1.0 for normal).
+- `dataset_builder/ntfs_image.py`: Added `add_sparse_file()` method, `is_sparse` flag on `FileInfo` and `DataRun`, sparse-aware `_encode_run_list()`, `_allocate_user_data()`, and `_write_user_data()`.
+- `datasets/ntfs/sparse/`: New corpus — 20 sparse files with cluster-aligned zero holes, 20/20 verified, RR=100%.
+- `docs/`: User documentation — Installation, QuickStart, CLI, Recovery Profiles, API, Plugin Guide.
+
+**Product metrics:**
+
+| Category | Files | RR | RFS | Time |
+|----------|------:|---:|----:|-----:|
+| Normal | 20 | 100% | 0.850 | 0.53s |
+| Fragmented | 20 | 100% | 0.850 | 0.49s |
+| Deleted | 20 | 100% | 0.850 | 0.48s |
+| **Sparse** | **20** | **100%** | **0.850** | **0.21s** |
+
+**Regression: no regressions** — existing corpus (normal/fragmented/deleted) still at 100%.
+
+---
+
 ## v0.5.2 (2026-08-05)
 
 **Recovery Cost (RC) + Stability Policy + 7 Profiles + Full CI**

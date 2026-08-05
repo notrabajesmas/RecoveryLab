@@ -57,7 +57,7 @@ class RecoveryEngine:
     Internal methods (_prefixed) may change between minor versions.
     """
     
-    VERSION = "0.5.2"
+    VERSION = "0.6.0"
     
     PROFILES = {
         "fast": {
