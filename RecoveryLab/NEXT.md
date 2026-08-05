@@ -7,21 +7,26 @@
 
 ## Immediate (do now)
 
+0. **Clean install test** — PRE-CONDITION FOR UXR-001
+   - Install from a completely clean machine (VM, another PC, or friend's computer).
+   - Not the dev machine. Not a machine with Python already set up.
+   - Follow ONLY the README. If you need to do something the README doesn't say → fix the README first.
+   - Evidence: `pip install recoverylab` works on a clean machine.
+
 1. **Run UXR-001 experiment** — THIS IS THE #1 PRIORITY
    - Find 10 people who never saw RecoveryLab.
-   - Give them exactly these instructions (no help):
-     ```
-     pip install recoverylab
-     recoverylab demo
-     recoverylab scan example.img
-     recoverylab recover example.img salida/
-     ```
+   - Give them a MISSION, not a product to try:
+     > "Necesito que recuperes los archivos de esta imagen NTFS.
+     > No puedo responder preguntas.
+     > Todo lo necesario debería estar en el README."
+   - Do not help. Do not explain. Only observe.
+   - Record: where they hesitate, what command they look for, what they read first, how long before first action, where they abandon.
    - Record results in `experiments/UXR-001.md`.
-   - Record: TTFS, UXR, where they got stuck, what error appeared, what command they didn't understand.
    - Evidence: UXR score, TTFS distribution, failure points, bugs found.
 
 2. **Fix everything that appears from UXR-001**
-   - If 7 people ask the same question → don't answer the question, change the product.
+   - Fix ONLY problems that appear repeatedly.
+   - If 8 people ask the same question → don't answer the question, change the product.
    - This is where RecoveryLab stops being code and becomes a tool.
 
 ## Completed this session
