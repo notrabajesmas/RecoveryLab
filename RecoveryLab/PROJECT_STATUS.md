@@ -1,7 +1,7 @@
 # RecoveryLab — Project Status & Resume Guide
 
 > **Ultima actualización**: 2026-08-05
-> **Version actual**: v0.4.2
+> **Version actual**: v0.5.0
 > **Repo GitHub**: https://github.com/notrabajesmas/RecoveryLab (privado)
 > **Pregunta central**: ¿Qué puede recuperar RecoveryLab hoy que ayer no podía?
 
@@ -9,17 +9,19 @@
 
 ## Estado Actual — Resumen Ejecutivo
 
-RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS. Implementa 3 motores de recuperación y un sistema científico de validación.
+RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS. Implementa 5 estrategias de recuperación (A-E) y un sistema de métricas duales (RR + RFS).
 
 | Componente | Estado | Cobertura |
 |-----------|--------|-----------|
-| Motor Carving (19 formatos) | ✅ Funcional | JPEG 100% real, PNG/PDF/ZIP/DOCX 99.8% sintético |
-| Motor B (MFT-First) | ✅ Funcional | 100% metadata (75/75 archivos) |
-| Motor C (Orchestrator) | ✅ Funcional | Delegación adaptativa |
-| NTFS MFT Parser | ✅ Funcional + SCALED | 100% SHA-256 at 10,000 files, sub-quadratic time |
-| NTFS Journal Parser | ✅ Funcional + SCALED + INTEGRATED | 100% entries at 5K files, V2/V3 parser, MFT xref, delete detection, motor fallback |
-| Recovery Fidelity Score | ✅ Funcional | 9-component RFS (Name/SHA/TS/Dir/Size/ACL/ADS/USN/EA) |
-| Fragmentación | ❌ No implementado | No hay recuperación de archivos fragmentados |
+| Strategy A (MFT) | ✅ Funcional | 100% metadata (75/75 archivos) |
+| Strategy B (Journal) | ✅ Funcional | USN V2/V3, MFT xref, delete detection |
+| Strategy C (Carving, 19 formatos) | ✅ Funcional | JPEG 100% real, PNG/PDF/ZIP/DOCX 99.8% sintético |
+| Strategy D (Fragment) | ✅ Funcional | 41/41 multi-run files recovered, SHA-256 100% |
+| Strategy E (Hybrid) | ✅ Funcional | Delegación adaptativa |
+| NTFS MFT Parser | ✅ Funcional + SCALED | 100% SHA-256 at 10,000 files |
+| NTFS Journal Parser | ✅ Funcional + SCALED + INTEGRATED | 100% entries at 5K files |
+| **Métrica: RR (Recovery Rate)** | ✅ Funcional | Recuperados / Total — "¿Lo encontramos?" |
+| **Métrica: RFS (Recovery Fidelity Score)** | ✅ Funcional | 9-component — "¿Qué tan bien lo recuperamos?" |
 | EXIF metadata | ❌ No implementado | No hay extracción de metadata JPEG |
 | GUI | ❌ No implementado | Solo CLI |
 
@@ -35,7 +37,7 @@ RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS
 | **Sprint 3b** | **USN Journal Parser** | **100% entries at 5K files** | **✅ Completado** |
 | **Sprint 3c** | **Motor + Journal Integration + RFS** | **Motor fallback + Fidelity Score** | **✅ Completado** |
 | **Sprint 3d** | **RR + RFS separation + Strategy Engine** | **Two metrics + configurable profiles** | **✅ Completado** |
-| Sprint 4A | Multiple Data Runs | 0% → 100% | **Siguiente** |
+| Sprint 4A | Multiple Data Runs | 0% → 100% (41/41) | **✅ Completado** |
 | Sprint 4B | Sparse Runs | 0% → 100% | Pendiente |
 | Sprint 4C | Compressed Runs | 0% → 100% | Pendiente |
 | Sprint 4D | Partially lost files | Recovery + Confidence | Pendiente |
@@ -160,36 +162,58 @@ RecoveryLab es una herramienta de recuperación de archivos sobre imágenes NTFS
 
 ```
 RecoveryLab/
-├── motors/                        # Motores de recuperación (core)
+├── strategies/                    # ★ Estrategias de recuperación (core API)
+│   ├── strategy_a_mft.py          # Strategy A: MFT → targeted reads
+│   ├── strategy_b_journal.py      # Strategy B: Journal → deleted/renamed files
+│   ├── strategy_c_carving.py      # Strategy C: Signature carving (19 formatos)
+│   ├── strategy_d_fragment.py     # Strategy D: Fragment → multi-run reconstruction
+│   └── strategy_e_hybrid.py       # Strategy E: Hybrid → adaptive delegation
+│
+├── motors/                        # Motores (implementación interna)
 │   ├── base_motor.py              # Abstract BaseMotor + RecoveredFile + MotorResult
 │   ├── motor_a_sequential.py      # Motor A: Sequential scan
 │   ├── motor_b_mft_first.py      # Motor B: MFT-first + fallback cascade
-│   ├── motor_carving.py           # ★ Motor Carving: 19 formatos, 3-tier JPEG
+│   ├── motor_carving.py           # Motor Carving: 19 formatos, 3-tier JPEG
 │   └── motor_c_orchestrator.py    # Motor C: Adaptive orchestrator
 │
-├── ntfs_parser/                   # NTFS parsing
-│   └── parser.py                  # MFT parser + JournalEntry (stub)
+├── ntfs_parser/                   # NTFS parsing (MFT + Journal)
+│   └── parser.py                  # Full NTFS parser
+│
+├── recovery_judge/                # Métricas + Scoring
+│   ├── fidelity.py                # ★ RR + RFS + Quality
+│   └── strategy_engine.py         # ★ Strategy Engine + Profiles
 │
 ├── dataset_builder/               # Generación de imágenes NTFS sintéticas
 ├── corruptor/                     # Modelos de corrupción (12 escenarios)
-├── recovery_judge/                # Scoring imparcial (RVS + FQS + 6 componentes)
 ├── experiment_runner/             # Pipeline automatizado
 ├── visualizer/                    # Disk layout ASCII + PNG
 │
 ├── defects/                       # Defect tracking (RC taxonomy)
 ├── claims/                        # Scientific claims
 ├── results/                       # Benchmark results
-└── scripts/                       # Utility scripts (en /home/z/my-project/scripts/)
+└── scripts/                       # Utility scripts
 ```
 
-### Motores:
+### Estrategias:
 
-| Motor | Estrategia | Usa MFT | Usa Firmas | Usa Journal |
-|-------|-----------|---------|-----------|------------|
-| A (Sequential) | Leer todo → MFT | ✅ | ❌ | ❌ |
-| B (MFT-First) | MFT → datos referenciados | ✅ | ❌ | ✅ |
-| Carving | Firmas → carving | ❌ | ✅ (19) | ❌ |
-| C (Orchestrator) | Adaptativo | ✅ | ✅ | ✅ |
+| Strategy | Nombre | Usa MFT | Usa Firmas | Usa Journal | Usa Fragmentación | Cost |
+|----------|--------|---------|-----------|------------|------------------|------|
+| A | MFT | ✅ | ❌ | ❌ | ❌ | 1.0x |
+| B | Journal | ✅ | ❌ | ✅ | ❌ | 1.5x |
+| C | Carving | ❌ | ✅ (19) | ❌ | ❌ | 10.0x |
+| D | Fragment | ✅ | ❌ | ❌ | ✅ | 2.0x |
+| E | Hybrid | ✅ | ✅ | ✅ | ✅ | 5.0x |
+
+### Métricas Duales:
+
+| Métrica | Pregunta | Fórmula | Rango |
+|---------|----------|---------|-------|
+| **RR** (Recovery Rate) | ¿Lo encontramos? | Recuperados / Total | 0.0 - 1.0 |
+| **RFS** (Recovery Fidelity Score) | ¿Qué tan bien lo recuperamos? | 9-component weighted | 0.0 - 1.0 |
+| **Quality** | ¿Qué tan buena fue la recuperación? | RR × RFS | 0.0 - 1.0 |
+
+RFS Components:
+  SHA-256 25% | Filename 15% | Timestamps 15% | Directory 10% | ADS 10% | USN History 10% | ACL 5% | EA 5% | Size 5%
 
 ### Formatos soportados por Carving (19):
 JPEG, PNG, PDF, ZIP, MP4, DOCX, TIFF, CR2, NEF, MOV, XLSX, SQLite, GIF, BMP, RAR, 7Z, PSD, DNG, HEIC, AVI
@@ -244,7 +268,15 @@ JPEG, PNG, PDF, ZIP, MP4, DOCX, TIFF, CR2, NEF, MOV, XLSX, SQLite, GIF, BMP, RAR
 
 ---
 
-## Roadmap por Versiones
+## Roadmap por Versiones — Lo que el usuario gana
+
+| Versión | Lo que el usuario gana |
+|---------|----------------------|
+| v0.4.2 | Recupera archivos NTFS normales (contiguos) con nombres, timestamps, SHA-256 verificado |
+| v0.5 | Recupera archivos fragmentados (distribuidos en múltiples extents) |
+| v0.6 | Recupera discos dañados parcialmente (partial recovery + confidence score) |
+| v0.7 | GUI usable — seleccionar disco, escanear, preview, recuperar, exportar |
+| v1.0 | RecoveryLab utilizable por terceros (API estable + docs + installer) |
 
 ### v0.4.2 (actual)
 **Objetivo:** NTFS recovery no-fragmentado + Journal + RFS + RR + Strategy Engine
@@ -263,17 +295,18 @@ Checklist:
 - ✅ 4 profiles: mft_first, journal_first, carving_first, full
 
 ### v0.5
-**Objetivo:** Fragmentación
+**Objetivo:** Archivos fragmentados + API estable
 
 Checklist:
-- Multiple Data runs
-- Sparse runs
-- Compressed runs
-- Resident / Non-resident transition
-- Recovery parcial (reconstruir lo que se pueda)
+- ✅ Strategy D (Fragment) con motor_class implementado
+- ✅ Multiple Data runs (Sprint 4A) — 41/41 SHA-256 match
+- ⬜ Sparse runs (Sprint 4B)
+- ⬜ Compressed runs (Sprint 4C)
+- ⬜ Partially lost files (Sprint 4D)
+- ⬜ API estable del Recovery Engine (Sprint 5)
 
 ### v0.6
-**Objetivo:** GUI
+**Objetivo:** GUI usable
 
 Checklist:
 - Seleccionar disco
@@ -329,14 +362,17 @@ Checklist:
 
 ## Reglas del Proyecto
 
-1. **Cada sprint termina con mejor software, no mejor documentación**
-2. **No perseguir 100% en sintéticos sin medir reales primero**
-3. **No afirmar que X resolverá Y antes de medir**
-4. **Cada sprint tiene una métrica visible**
-5. **Pregunta central**: "¿Qué puede recuperar RecoveryLab hoy que ayer no podía?"
-6. **Naming**: versiones (v0.2, v0.3...) con checklist, no RC/RP/INST
-7. **Prioridad**: software > docs; docs solo si aparece un problema nuevo
-8. **Regla de Oro (falsificación)**: "Ningún resultado positivo será considerado válido hasta que haya sobrevivido a al menos un intento serio de refutación"
+1. **Cada sprint termina con funcionalidad visible para el usuario, no un documento nuevo**
+2. **Medir avance = qué puede hacer hoy que no podía ayer** (no "qué arquitectura agregamos")
+3. **Core ≠ App** — el motor es una librería, la GUI es un consumidor
+4. **Filtro**: ¿Esto acerca al usuario a recuperar sus archivos, o solo mejora el laboratorio?
+5. **No perseguir 100% en sintéticos sin medir reales primero**
+6. **No afirmar que X resolverá Y antes de medir**
+7. **Cada sprint tiene una métrica visible**
+8. **Pregunta central**: "¿Qué puede recuperar RecoveryLab hoy que ayer no podía?"
+9. **Naming**: versiones (v0.2, v0.3...) con checklist, no RC/RP/INST
+10. **Prioridad**: software > docs; docs solo si aparece un problema nuevo
+11. **Regla de Oro (falsificación)**: "Ningún resultado positivo será considerado válido hasta que haya sobrevivido a al menos un intento serio de refutación"
 
 ---
 
@@ -373,8 +409,10 @@ v0.3 checklist:
 4. Leer `BLOCKERS.md` para blockers activos
 5. Leer `defects/` para defects abiertos
 6. El Sprint actual es **Sprint 4A: Multiple Data Runs** → ver sección "Roadmap por Versiones"
-7. Los archivos clave son `ntfs_parser/parser.py`, `motors/motor_b_mft_first.py`, `recovery_judge/fidelity.py`, `recovery_judge/strategy_engine.py`
-8. Las metricas son **RR** (Recovery Rate) + **RFS** (Recovery Fidelity Score) + **Quality = RR × RFS**
+7. Los archivos clave son `strategies/`, `ntfs_parser/parser.py`, `recovery_judge/fidelity.py`, `recovery_judge/strategy_engine.py`
+8. Las métricas son **RR** (Recovery Rate — "¿Lo encontramos?") + **RFS** (Recovery Fidelity Score — "¿Qué tan bien lo recuperamos?") + **Quality = RR × RFS**
+9. Las estrategias son A: MFT, B: Journal, C: Carving, D: Fragment, E: Hybrid
+10. **Objetivo 6 meses**: RecoveryLab descargable → apuntar a disco → recuperar archivos → interfaz sencilla
 
 ---
 

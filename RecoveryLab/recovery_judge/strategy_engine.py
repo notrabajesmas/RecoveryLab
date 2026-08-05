@@ -70,9 +70,9 @@ class RecoveryStrategy:
 
 # ─── Strategy Definitions ────────────────────────────────────────────────────
 
-STRATEGY_MFT = RecoveryStrategy(
-    name="MFT",
-    description="Parse MFT entries for filenames, timestamps, data runs. Targeted reads.",
+STRATEGY_A_MFT = STRATEGY_MFT = RecoveryStrategy(
+    name="A: MFT",
+    description="Strategy A — Parse MFT entries for filenames, timestamps, data runs. Targeted reads.",
     capabilities={
         StrategyCapability.FILENAME,
         StrategyCapability.SHA256,
@@ -85,12 +85,12 @@ STRATEGY_MFT = RecoveryStrategy(
     },
     priority=1,
     cost=1.0,
-    motor_class="motors.motor_b_mft_first.MotorBMFTFirst",
+    motor_class="strategies.strategy_a_mft.StrategyA",
 )
 
-STRATEGY_JOURNAL = RecoveryStrategy(
-    name="Journal",
-    description="Parse $UsnJrnl for change history, deleted files, renames.",
+STRATEGY_B_JOURNAL = STRATEGY_JOURNAL = RecoveryStrategy(
+    name="B: Journal",
+    description="Strategy B — Parse $UsnJrnl for change history, deleted files, renames.",
     capabilities={
         StrategyCapability.FILENAME,
         StrategyCapability.TIMESTAMPS,
@@ -101,24 +101,24 @@ STRATEGY_JOURNAL = RecoveryStrategy(
     },
     priority=2,
     cost=1.5,   # Slightly more expensive (needs MFT + journal parse)
-    motor_class="motors.motor_b_mft_first.MotorBMFTFirst",  # Journal is a fallback of Motor B
+    motor_class="strategies.strategy_b_journal.StrategyB",
 )
 
-STRATEGY_CARVING = RecoveryStrategy(
-    name="Carving",
-    description="Signature-based scan. No metadata preservation. Reads everything.",
+STRATEGY_C_CARVING = STRATEGY_CARVING = RecoveryStrategy(
+    name="C: Carving",
+    description="Strategy C — Signature-based scan. No metadata preservation. Reads everything.",
     capabilities={
         StrategyCapability.SHA256,
         StrategyCapability.FILE_SIZE,
     },
     priority=3,
     cost=10.0,  # Very expensive — reads entire image
-    motor_class="motors.motor_carving.MotorCarving",
+    motor_class="strategies.strategy_c_carving.StrategyC",
 )
 
-STRATEGY_FRAGMENT = RecoveryStrategy(
-    name="Fragment",
-    description="Reconstruct files from multiple data runs, sparse/compressed runs.",
+STRATEGY_D_FRAGMENT = STRATEGY_FRAGMENT = RecoveryStrategy(
+    name="D: Fragment",
+    description="Strategy D — Reconstruct files from multiple data runs, sparse/compressed runs.",
     capabilities={
         StrategyCapability.FILENAME,
         StrategyCapability.SHA256,
@@ -127,12 +127,12 @@ STRATEGY_FRAGMENT = RecoveryStrategy(
     },
     priority=2,  # Same priority as journal — both complement MFT
     cost=2.0,
-    motor_class=None,  # Not implemented yet (Sprint 4)
+    motor_class="strategies.strategy_d_fragment.StrategyD",
 )
 
-STRATEGY_HYBRID = RecoveryStrategy(
-    name="Hybrid",
-    description="Orchestrated: MFT + Journal + Carving with adaptive delegation.",
+STRATEGY_E_HYBRID = STRATEGY_HYBRID = RecoveryStrategy(
+    name="E: Hybrid",
+    description="Strategy E — Orchestrated: MFT + Journal + Carving + Fragment with adaptive delegation.",
     capabilities={
         StrategyCapability.FILENAME,
         StrategyCapability.SHA256,
@@ -147,7 +147,7 @@ STRATEGY_HYBRID = RecoveryStrategy(
     },
     priority=0,  # Meta-strategy — orchestrates others
     cost=5.0,
-    motor_class="motors.motor_c_orchestrator.MotorCOrchestrator",
+    motor_class="strategies.strategy_e_hybrid.StrategyE",
 )
 
 
@@ -303,9 +303,10 @@ if __name__ == "__main__":
     print()
 
     # Show available strategies
-    for name, strat in [("MFT", STRATEGY_MFT), ("Journal", STRATEGY_JOURNAL),
-                         ("Carving", STRATEGY_CARVING), ("Fragment", STRATEGY_FRAGMENT)]:
-        print(f"Strategy: {name}")
+    for name, strat in [("A: MFT", STRATEGY_A_MFT), ("B: Journal", STRATEGY_B_JOURNAL),
+                         ("C: Carving", STRATEGY_C_CARVING), ("D: Fragment", STRATEGY_D_FRAGMENT),
+                         ("E: Hybrid", STRATEGY_E_HYBRID)]:
+        print(f"Strategy {name}")
         print(f"  Preserves: {', '.join(sorted(strat.can_preserve))}")
         print(f"  Cost: {strat.cost:.1f}x")
         print()

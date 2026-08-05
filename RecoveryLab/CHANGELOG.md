@@ -1,5 +1,44 @@
 # RecoveryLab — Changelog
 
+## v0.5.0 (2026-08-05)
+
+**Sprint 4A: Multiple Data Runs — 0% → 100%**
+
+RecoveryLab now recovers files split across multiple non-contiguous data runs (extents).
+
+**Visible result:** RecoveryLab can open an NTFS image with fragmented files
+and correctly recover a file distributed in 3+ extents with SHA-256 verification.
+
+**Benchmark:**
+
+| Fragmentation | Files | Multi-run | Recovered | SHA-256 OK |
+|:---:|:---:|:---:|:---:|:---:|
+| 0% | 20 | 0 | 20/20 | 100% |
+| 30% | 20 | 5 | 20/20 | 100% |
+| 50% | 20 | 8 | 20/20 | 100% |
+| 70% | 20 | 11 | 20/20 | 100% |
+| 100% | 20 | 17 | 20/20 | 100% |
+
+**Total multi-run files tested: 41 — SHA-256 failures: 0**
+
+**Refactor: Motors → Strategies (A-E):**
+- `strategies/` package with Strategy A (MFT), B (Journal), C (Carving), D (Fragment), E (Hybrid)
+- Strategy D (Fragment) is a new BaseMotor subclass for multi-run recovery
+- Strategy Engine updated with A-E naming (`STRATEGY_A_MFT`, `STRATEGY_B_JOURNAL`, etc.)
+- Each strategy declares capabilities, cost, priority
+
+**Bug fixes (found by running real code paths):**
+- `_make_mft_record()`: attributes silently overflowed 1024-byte MFT record (bytearray auto-extends). Now truncates attributes that don't fit.
+- `_write_bitmap()`: crashed when `_allocated_clusters` contained out-of-range clusters (fragmentation gaps push past computed limits). Now skips out-of-range clusters.
+
+**Architecture:**
+- `strategies/strategy_d_fragment.py`: StrategyD — reconstruct from multiple data runs
+- `strategies/strategy_a_mft.py` through `strategy_e_hybrid.py`: Strategy wrappers
+- `recovery_judge/strategy_engine.py`: Updated A-E naming, `motor_class` points to `strategies/`
+- `scripts/benchmark_fragment_recovery.py`: Sprint 4A benchmark
+
+---
+
 ## v0.4.2 (2026-08-05)
 
 **RR + RFS as independent metrics + Strategy Engine**

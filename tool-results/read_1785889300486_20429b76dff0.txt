@@ -1,0 +1,828 @@
+     1→#!/usr/bin/env python3
+     2→# -*- coding: utf-8 -*-
+     3→"""
+     4→RecoveryLab — Recovery Fidelity Score (RFS)
+     5→=============================================
+     6→Granular metric that measures not just "file recovered?" but
+     7→WHAT was preserved during recovery:
+     8→
+     9→  Component       Weight  What it measures
+    10→  ──────────────  ─────  ──────────────────────────────────
+    11→  Filename          15%  Was the original filename preserved?
+    12→  SHA-256           25%  Is the data bit-perfect?
+    13→  Timestamps        15%  Were created/modified times preserved?
+    14→  Directory         10%  Was the directory path correct?
+    15→  File Size          5%  Does size match original?
+    16→  ACL                5%  Were access control lists preserved?
+    17→  ADS               10%  Were alternate data streams preserved?
+    18→  USN History       10%  Is the USN journal history intact?
+    19→  EA                 5%  Were extended attributes preserved?
+    20→
+    21→This is the metric that almost all recovery software shows very little of.
+    22→A "recovered" file can lose much of its context — RFS quantifies that loss.
+    23→
+    24→Usage:
+    25→    from recovery_judge.fidelity import RecoveryFidelityScore, FidelityResult
+    26→
+    27→    rfs = RecoveryFidelityScore()
+    28→    result = rfs.score(
+    29→        recovered_file={
+    30→            "name": "photo.jpg",
+    31→            "sha256": "abc123...",
+    32→            "size": 50000,
+    33→            "created": 1691000000.0,
+    34→            "modified": 1691000100.0,
+    35→            "parent_dir": "/Users/alice/Pictures",
+    36→            "has_acl": True,
+    37→            "has_ads": False,
+    38→            "usn_entries": 2,
+    39→            "has_ea": False,
+    40→        },
+    41→        ground_truth={
+    42→            "name": "photo.jpg",
+    43→            "sha256": "abc123...",
+    44→            "size": 50000,
+    45→            "created": 1691000000.0,
+    46→            "modified": 1691000100.0,
+    47→            "parent_dir": "/Users/alice/Pictures",
+    48→            "has_acl": True,
+    49→            "has_ads": False,
+    50→            "usn_entries": 3,
+    51→            "has_ea": False,
+    52→        },
+    53→    )
+    54→    # result.score = 0.967
+    55→    # result.components = {"filename": True, "sha256": True, ...}
+    56→"""
+    57→
+    58→from dataclasses import dataclass, field
+    59→from typing import Dict, List, Optional, Any
+    60→import hashlib
+    61→
+    62→
+    63→# ─── Component Weights ────────────────────────────────────────────────────────
+    64→
+    65→DEFAULT_WEIGHTS = {
+    66→    "filename":    0.15,
+    67→    "sha256":      0.25,
+    68→    "timestamps":  0.15,
+    69→    "directory":   0.10,
+    70→    "file_size":   0.05,
+    71→    "acl":         0.05,
+    72→    "ads":         0.10,
+    73→    "usn_history": 0.10,
+    74→    "ea":          0.05,
+    75→}
+    76→
+    77→
+    78→# ─── Fidelity Result ──────────────────────────────────────────────────────────
+    79→
+    80→@dataclass
+    81→class FidelityComponent:
+    82→    """Result for a single fidelity component."""
+    83→    name: str
+    84→    present: bool       # Is this component available in the recovered file?
+    85→    match: bool         # Does it match the ground truth?
+    86→    weight: float       # Weight in overall score
+    87→    detail: str = ""    # Human-readable detail
+    88→
+    89→    @property
+    90→    def score(self) -> float:
+    91→        """Component score: weight if match, 0 if not."""
+    92→        return self.weight if (self.present and self.match) else 0.0
+    93→
+    94→
+    95→@dataclass
+    96→class FidelityResult:
+    97→    """Complete Recovery Fidelity Score result."""
+    98→    score: float                                    # 0.0-1.0 overall
+    99→    components: Dict[str, FidelityComponent] = field(default_factory=dict)
+   100→    source: str = ""                                # "mft", "journal", "carving"
+   101→    timestamp_delta: Dict[str, float] = field(default_factory=dict)  # created/modified deltas in seconds
+   102→
+   103→    def summary(self) -> str:
+   104→        """Visual summary like: Name ✓  SHA ✓  TS ✗  ACL ✓  ..."""
+   105→        parts = []
+   106→        labels = {
+   107→            "filename": "Name",
+   108→            "sha256": "SHA-256",
+   109→            "timestamps": "Timestamps",
+   110→            "directory": "Dir",
+   111→            "file_size": "Size",
+   112→            "acl": "ACL",
+   113→            "ads": "ADS",
+   114→            "usn_history": "USN",
+   115→            "ea": "EA",
+   116→        }
+   117→        for key, comp in self.components.items():
+   118→            label = labels.get(key, key)
+   119→            mark = "✓" if (comp.present and comp.match) else "✗"
+   120→            parts.append(f"{label} {mark}")
+   121→        return "  ".join(parts)
+   122→
+   123→    def to_dict(self) -> Dict:
+   124→        return {
+   125→            "score": round(self.score, 4),
+   126→            "source": self.source,
+   127→            "components": {
+   128→                k: {
+   129→                    "present": v.present,
+   130→                    "match": v.match,
+   131→                    "weight": v.weight,
+   132→                    "score": round(v.score, 4),
+   133→                    "detail": v.detail,
+   134→                }
+   135→                for k, v in self.components.items()
+   136→            },
+   137→            "timestamp_delta": self.timestamp_delta,
+   138→        }
+   139→
+   140→
+   141→# ─── Recovery Fidelity Score ─────────────────────────────────────────────────
+   142→
+   143→class RecoveryFidelityScore:
+   144→    """
+   145→    Compute the Recovery Fidelity Score for a recovered file.
+   146→
+   147→    RFS goes beyond "did we get the file?" to measure exactly what
+   148→    metadata was preserved. This is the metric that distinguishes
+   149→    between recovery tools that just get the data and tools that
+   150→    preserve the full file context.
+   151→
+   152→    Key insight: A file "recovered" by carving loses:
+   153→      - Original filename (gets "carved_0001.jpg")
+   154→      - Timestamps (gets recovery time instead)
+   155→      - Directory path (lost)
+   156→      - ACL, ADS, USN history, EA (all lost)
+   157→
+   158→    A file recovered via MFT preserves:
+   159→      - Filename ✓
+   160→      - Timestamps ✓
+   161→      - Directory ✓
+   162→      - ACL ✓ (if parsed)
+   163→      - But: USN history may be partial
+   164→
+   165→    A file recovered via Journal preserves:
+   166→      - Filename ✓
+   167→      - USN History ✓
+   168→      - But: data may be gone if clusters overwritten
+   169→    """
+   170→
+   171→    def __init__(self, weights: Optional[Dict[str, float]] = None):
+   172→        self.weights = weights or DEFAULT_WEIGHTS
+   173→
+   174→    def score(
+   175→        self,
+   176→        recovered_file: Dict[str, Any],
+   177→        ground_truth: Dict[str, Any],
+   178→        source: str = "unknown",
+   179→    ) -> FidelityResult:
+   180→        """
+   181→        Compute RFS for a single recovered file vs ground truth.
+   182→
+   183→        Args:
+   184→            recovered_file: Dict with recovered file metadata:
+   185→                - name: str
+   186→                - sha256: str
+   187→                - size: int
+   188→                - created: float (unix timestamp)
+   189→                - modified: float (unix timestamp)
+   190→                - parent_dir: str
+   191→                - has_acl: bool
+   192→                - has_ads: bool
+   193→                - usn_entries: int  (number of USN journal entries for this file)
+   194→                - has_ea: bool
+   195→            ground_truth: Same structure as recovered_file, with original values
+   196→            source: How the file was recovered ("mft", "journal", "carving")
+   197→
+   198→        Returns:
+   199→            FidelityResult with overall score and per-component breakdown
+   200→        """
+   201→        components = {}
+   202→
+   203→        # ── Filename ─────────────────────────────────────────────────────
+   204→        rec_name = recovered_file.get("name", "")
+   205→        gt_name = ground_truth.get("name", "")
+   206→        name_present = bool(rec_name)
+   207→        name_match = rec_name == gt_name if gt_name else False
+   208→        # Carved files get generic names — partial credit if name exists
+   209→        # but doesn't match
+   210→        name_detail = ""
+   211→        if not name_present:
+   212→            name_detail = "No filename recovered"
+   213→        elif not name_match and rec_name.startswith("carved_"):
+   214→            name_detail = f"Generic carved name (original: {gt_name})"
+   215→            # Partial credit: name exists but is generic
+   216→            name_match = False
+   217→        elif not name_match:
+   218→            name_detail = f"Wrong name (got: {rec_name}, expected: {gt_name})"
+   219→        else:
+   220→            name_detail = "Exact match"
+   221→
+   222→        components["filename"] = FidelityComponent(
+   223→            name="filename", present=name_present, match=name_match,
+   224→            weight=self.weights["filename"], detail=name_detail,
+   225→        )
+   226→        # If name exists but doesn't match, give partial credit
+   227→        if name_present and not name_match and not rec_name.startswith("carved_"):
+   228→            components["filename"] = FidelityComponent(
+   229→                name="filename", present=True, match=False,
+   230→                weight=self.weights["filename"], detail=name_detail,
+   231→            )
+   232→
+   233→        # ── SHA-256 ─────────────────────────────────────────────────────
+   234→        rec_sha = recovered_file.get("sha256", "")
+   235→        gt_sha = ground_truth.get("sha256", "")
+   236→        sha_present = bool(rec_sha)
+   237→        sha_match = rec_sha == gt_sha if (rec_sha and gt_sha) else False
+   238→        components["sha256"] = FidelityComponent(
+   239→            name="sha256", present=sha_present, match=sha_match,
+   240→            weight=self.weights["sha256"],
+   241→            detail="Bit-perfect" if sha_match else ("Hash mismatch" if sha_present else "No hash"),
+   242→        )
+   243→
+   244→        # ── Timestamps ──────────────────────────────────────────────────
+   245→        rec_created = recovered_file.get("created", 0.0)
+   246→        rec_modified = recovered_file.get("modified", 0.0)
+   247→        gt_created = ground_truth.get("created", 0.0)
+   248→        gt_modified = ground_truth.get("modified", 0.0)
+   249→        ts_present = rec_created > 0 or rec_modified > 0
+   250→        # Allow 2-second tolerance (NTFS timestamp granularity)
+   251→        ts_created_match = abs(rec_created - gt_created) < 2.0 if gt_created else False
+   252→        ts_modified_match = abs(rec_modified - gt_modified) < 2.0 if gt_modified else False
+   253→        ts_match = ts_created_match and ts_modified_match
+   254→        ts_detail = ""
+   255→        if not ts_present:
+   256→            ts_detail = "No timestamps recovered"
+   257→        elif ts_match:
+   258→            ts_detail = "Both timestamps match"
+   259→        else:
+   260→            parts = []
+   261→            if not ts_created_match:
+   262→                parts.append("created")
+   263→            if not ts_modified_match:
+   264→                parts.append("modified")
+   265→            ts_detail = f"{' and '.join(parts)} mismatch"
+   266→
+   267→        components["timestamps"] = FidelityComponent(
+   268→            name="timestamps", present=ts_present, match=ts_match,
+   269→            weight=self.weights["timestamps"], detail=ts_detail,
+   270→        )
+   271→
+   272→        # ── Directory ───────────────────────────────────────────────────
+   273→        rec_dir = recovered_file.get("parent_dir", "")
+   274→        gt_dir = ground_truth.get("parent_dir", "")
+   275→        dir_present = bool(rec_dir)
+   276→        dir_match = rec_dir == gt_dir if gt_dir else False
+   277→        components["directory"] = FidelityComponent(
+   278→            name="directory", present=dir_present, match=dir_match,
+   279→            weight=self.weights["directory"],
+   280→            detail="Correct path" if dir_match else ("Wrong path" if dir_present else "No path"),
+   281→        )
+   282→
+   283→        # ── File Size ───────────────────────────────────────────────────
+   284→        rec_size = recovered_file.get("size", 0)
+   285→        gt_size = ground_truth.get("size", 0)
+   286→        size_present = rec_size > 0
+   287→        size_match = rec_size == gt_size if gt_size else False
+   288→        components["file_size"] = FidelityComponent(
+   289→            name="file_size", present=size_present, match=size_match,
+   290→            weight=self.weights["file_size"],
+   291→            detail=f"{rec_size} == {gt_size}" if size_match else f"{rec_size} != {gt_size}",
+   292→        )
+   293→
+   294→        # ── ACL ─────────────────────────────────────────────────────────
+   295→        rec_acl = recovered_file.get("has_acl", False)
+   296→        gt_acl = ground_truth.get("has_acl", False)
+   297→        # If ground truth has no ACL, any result is "matching"
+   298→        acl_match = (rec_acl == gt_acl) if gt_acl else True
+   299→        acl_present = rec_acl or not gt_acl  # Present if recovered, or if not expected
+   300→        components["acl"] = FidelityComponent(
+   301→            name="acl", present=acl_present, match=acl_match,
+   302→            weight=self.weights["acl"],
+   303→            detail="ACL preserved" if acl_match else "ACL lost",
+   304→        )
+   305→
+   306→        # ── ADS (Alternate Data Streams) ────────────────────────────────
+   307→        rec_ads = recovered_file.get("has_ads", False)
+   308→        gt_ads = ground_truth.get("has_ads", False)
+   309→        ads_match = (rec_ads == gt_ads) if gt_ads else True
+   310→        ads_present = rec_ads or not gt_ads
+   311→        components["ads"] = FidelityComponent(
+   312→            name="ads", present=ads_present, match=ads_match,
+   313→            weight=self.weights["ads"],
+   314→            detail="ADS preserved" if ads_match else "ADS lost",
+   315→        )
+   316→
+   317→        # ── USN History ─────────────────────────────────────────────────
+   318→        rec_usn = recovered_file.get("usn_entries", 0)
+   319→        gt_usn = ground_truth.get("usn_entries", 0)
+   320→        # USN history is preserved if we have at least as many entries
+   321→        # as ground truth (allowing for some to have been overwritten)
+   322→        usn_present = rec_usn > 0 or gt_usn == 0
+   323→        usn_match = rec_usn >= gt_usn if gt_usn > 0 else True
+   324→        usn_detail = ""
+   325→        if gt_usn == 0:
+   326→            usn_detail = "No USN history expected"
+   327→        elif rec_usn >= gt_usn:
+   328→            usn_detail = f"Full history ({rec_usn}/{gt_usn} entries)"
+   329→        elif rec_usn > 0:
+   330→            usn_detail = f"Partial history ({rec_usn}/{gt_usn} entries)"
+   331→        else:
+   332→            usn_detail = "USN history lost"
+   333→        components["usn_history"] = FidelityComponent(
+   334→            name="usn_history", present=usn_present, match=usn_match,
+   335→            weight=self.weights["usn_history"], detail=usn_detail,
+   336→        )
+   337→
+   338→        # ── EA (Extended Attributes) ────────────────────────────────────
+   339→        rec_ea = recovered_file.get("has_ea", False)
+   340→        gt_ea = ground_truth.get("has_ea", False)
+   341→        ea_match = (rec_ea == gt_ea) if gt_ea else True
+   342→        ea_present = rec_ea or not gt_ea
+   343→        components["ea"] = FidelityComponent(
+   344→            name="ea", present=ea_present, match=ea_match,
+   345→            weight=self.weights["ea"],
+   346→            detail="EA preserved" if ea_match else "EA lost",
+   347→        )
+   348→
+   349→        # ── Compute overall score ───────────────────────────────────────
+   350→        total_score = sum(comp.score for comp in components.values())
+   351→        # Normalize: if some components are not applicable (not present
+   352→        # in ground truth and not expected), we still count them as matching
+   353→        # This is already handled above (match=True when not expected)
+   354→
+   355→        # Timestamp deltas
+   356→        ts_delta = {}
+   357→        if gt_created > 0 and rec_created > 0:
+   358→            ts_delta["created"] = round(rec_created - gt_created, 3)
+   359→        if gt_modified > 0 and rec_modified > 0:
+   360→            ts_delta["modified"] = round(rec_modified - gt_modified, 3)
+   361→
+   362→        return FidelityResult(
+   363→            score=total_score,
+   364→            components=components,
+   365→            source=source,
+   366→            timestamp_delta=ts_delta,
+   367→        )
+   368→
+   369→    def score_batch(
+   370→        self,
+   371→        recovered_files: List[Dict],
+   372→        ground_truth: List[Dict],
+   373→        source: str = "unknown",
+   374→    ) -> Dict:
+   375→        """
+   376→        Compute RFS for a batch of recovered files.
+   377→
+   378→        Returns aggregate stats + per-file results.
+   379→        """
+   380→        # Build ground truth index by name
+   381→        gt_by_name = {f.get("name", ""): f for f in ground_truth}
+   382→
+   383→        per_file = {}
+   384→        scores = []
+   385→        component_stats = {}
+   386→
+   387→        for rec in recovered_files:
+   388→            name = rec.get("name", "")
+   389→            gt = gt_by_name.get(name, {})
+   390→            if not gt:
+   391→                # File recovered but not in ground truth — possible false positive
+   392→                result = FidelityResult(
+   393→                    score=0.0,
+   394→                    source=source,
+   395→                )
+   396→            else:
+   397→                result = self.score(rec, gt, source=source)
+   398→
+   399→            per_file[name] = result
+   400→            scores.append(result.score)
+   401→
+   402→            # Aggregate component stats
+   403→            for comp_name, comp in result.components.items():
+   404→                if comp_name not in component_stats:
+   405→                    component_stats[comp_name] = {"present": 0, "match": 0, "total": 0}
+   406→                component_stats[comp_name]["total"] += 1
+   407→                if comp.present:
+   408→                    component_stats[comp_name]["present"] += 1
+   409→                if comp.match:
+   410→                    component_stats[comp_name]["match"] += 1
+   411→
+   412→        # Compute rates
+   413→        for comp_name in component_stats:
+   414→            total = component_stats[comp_name]["total"]
+   415→            component_stats[comp_name]["present_rate"] = (
+   416→                component_stats[comp_name]["present"] / total if total > 0 else 0
+   417→            )
+   418→            component_stats[comp_name]["match_rate"] = (
+   419→                component_stats[comp_name]["match"] / total if total > 0 else 0
+   420→            )
+   421→
+   422→        avg_score = sum(scores) / len(scores) if scores else 0.0
+   423→
+   424→        return {
+   425→            "average_rfs": round(avg_score, 4),
+   426→            "n_files": len(recovered_files),
+   427→            "n_matched": len([s for s in scores if s >= 0.9]),
+   428→            "component_stats": component_stats,
+   429→            "per_file": {name: r.to_dict() for name, r in per_file.items()},
+   430→        }
+   431→
+   432→    def score_by_source(
+   433→        self,
+   434→        recovered_files: List[Dict],
+   435→        ground_truth: List[Dict],
+   436→    ) -> Dict:
+   437→        """
+   438→        Compare RFS by recovery source (MFT vs Journal vs Carving).
+   439→
+   440→        This answers: does the journal recovery preserve more metadata
+   441→        than carving? Does MFT preserve more than journal?
+   442→        """
+   443→        by_source = {}
+   444→        for rec in recovered_files:
+   445→            src = rec.get("source", "unknown")
+   446→            if src not in by_source:
+   447→                by_source[src] = []
+   448→            by_source[src].append(rec)
+   449→
+   450→        results = {}
+   451→        for src, files in by_source.items():
+   452→            results[src] = self.score_batch(files, ground_truth, source=src)
+   453→
+   454→        return results
+   455→
+   456→
+   457→# ─── Recovery Rate (RR) ────────────────────────────────────────────────────────
+   458→
+   459→@dataclass
+   460→class RecoveryRateResult:
+   461→    """Result of Recovery Rate computation.
+   462→
+   463→    RR is the classic metric: Recovered / Total.
+   464→    It answers: did we find the file?
+   465→    RFS answers: how completely did we recover it?
+   466→
+   467→    Together: RR × RFS = Overall Recovery Quality
+   468→    """
+   469→    recovered: int           # Files recovered (any quality)
+   470→    total: int               # Total files expected
+   471→    rr: float                # Recovery Rate (0.0-1.0)
+   472→    partial: int = 0         # Files partially recovered (data incomplete)
+   473→    with_name: int = 0       # Files where filename was preserved
+   474→    with_data: int = 0       # Files where data was recovered (SHA-256 checkable)
+   475→
+   476→    @property
+   477→    def partial_rate(self) -> float:
+   478→        """Rate of partial recoveries among recovered files."""
+   479→        return self.partial / self.recovered if self.recovered > 0 else 0.0
+   480→
+   481→    def summary(self) -> str:
+   482→        return f"RR: {self.recovered}/{self.total} = {self.rr:.1%}"
+   483→
+   484→    def to_dict(self) -> Dict:
+   485→        return {
+   486→            "recovered": self.recovered,
+   487→            "total": self.total,
+   488→            "rr": round(self.rr, 4),
+   489→            "partial": self.partial,
+   490→            "with_name": self.with_name,
+   491→            "with_data": self.with_data,
+   492→        }
+   493→
+   494→
+   495→class RecoveryRate:
+   496→    """
+   497→    Compute Recovery Rate (RR) — the classic recovered/total metric.
+   498→
+   499→    RR answers one question: did we get the file?
+   500→    It doesn't care about quality — a file with wrong filename
+   501→    and no timestamps still counts as "recovered" if we got the data.
+   502→
+   503→    This is deliberately separate from RFS because:
+   504→      - RR = 100%, RFS = 0.45 → Found everything, but poorly
+   505→      - RR = 50%,  RFS = 0.90 → Found half, but perfectly
+   506→      - RR = 100%, RFS = 0.90 → Found everything, and well
+   507→
+   508→    For a recovery tool, both dimensions matter.
+   509→    """
+   510→
+   511→    def compute(
+   512→        self,
+   513→        recovered_files: List[Dict],
+   514→        ground_truth: List[Dict],
+   515→    ) -> RecoveryRateResult:
+   516→        """
+   517→        Compute RR for a batch of recovered files vs ground truth.
+   518→
+   519→        Args:
+   520→            recovered_files: List of dicts with at least "name" and "data"
+   521→            ground_truth: List of dicts with at least "name"
+   522→
+   523→        Returns:
+   524→            RecoveryRateResult with RR and breakdown
+   525→        """
+   526→        # Build indexes for matching: by name AND by SHA-256
+   527→        gt_by_name = {f.get("name", ""): f for f in ground_truth}
+   528→        gt_by_sha = {}
+   529→        for f in ground_truth:
+   530→            sha = f.get("sha256", "")
+   531→            if sha:
+   532→                gt_by_sha.setdefault(sha, []).append(f)
+   533→
+   534→        rec_by_name = {f.get("name", ""): f for f in recovered_files}
+   535→        rec_by_sha = {}
+   536→        for f in recovered_files:
+   537→            sha = f.get("sha256", "")
+   538→            if sha:
+   539→                rec_by_sha.setdefault(sha, []).append(f)
+   540→
+   541→        recovered = 0
+   542→        partial = 0
+   543→        with_name = 0
+   544→        with_data = 0
+   545→        matched_gt_names = set()  # Track which GT files were matched
+   546→
+   547→        # First pass: match by name (exact)
+   548→        for gt_name, gt_file in gt_by_name.items():
+   549→            if gt_name in rec_by_name:
+   550→                rec = rec_by_name[gt_name]
+   551→                recovered += 1
+   552→                matched_gt_names.add(gt_name)
+   553→
+   554→                name = rec.get("name", "")
+   555→                if not name.startswith("carved_"):
+   556→                    with_name += 1
+   557→
+   558→                data = rec.get("data", b"")
+   559→                if data and len(data) > 0:
+   560→                    with_data += 1
+   561→                    rec_size = rec.get("size", len(data))
+   562→                    gt_size = gt_file.get("size", 0)
+   563→                    if gt_size > 0 and rec_size < gt_size * 0.99:
+   564→                        partial += 1
+   565→
+   566→        # Second pass: match remaining GT by SHA-256 (catches carving recovery)
+   567→        for gt_file in ground_truth:
+   568→            gt_name = gt_file.get("name", "")
+   569→            if gt_name in matched_gt_names:
+   570→                continue  # Already matched by name
+   571→
+   572→            gt_sha = gt_file.get("sha256", "")
+   573→            if gt_sha and gt_sha in rec_by_sha:
+   574→                # Found by SHA-256 — this file was recovered but with wrong name
+   575→                rec = rec_by_sha[gt_sha][0]  # Take first match
+   576→                recovered += 1
+   577→                matched_gt_names.add(gt_name)
+   578→
+   579→                # Name doesn't match (that's why we're here)
+   580→                # with_name stays 0 for this file
+   581→
+   582→                data = rec.get("data", b"")
+   583→                if data and len(data) > 0:
+   584→                    with_data += 1
+   585→
+   586→        total = len(ground_truth)
+   587→        rr = recovered / total if total > 0 else 0.0
+   588→
+   589→        return RecoveryRateResult(
+   590→            recovered=recovered,
+   591→            total=total,
+   592→            rr=rr,
+   593→            partial=partial,
+   594→            with_name=with_name,
+   595→            with_data=with_data,
+   596→        )
+   597→
+   598→
+   599→# ─── Combined Metric: RR × RFS ────────────────────────────────────────────────
+   600→
+   601→@dataclass
+   602→class RecoveryQualityResult:
+   603→    """Combined Recovery Quality = RR × RFS.
+   604→
+   605→    This single number captures both dimensions:
+   606→      - Did we find the file? (RR)
+   607→      - How well did we recover it? (RFS)
+   608→
+   609→    The decomposition tells you WHERE to improve:
+   610→      - Low RR → More files to find (use more strategies)
+   611→      - Low RFS → Better metadata preservation (use MFT instead of carving)
+   612→    """
+   613→    rr: RecoveryRateResult
+   614→    rfs_avg: float                    # Average RFS across recovered files
+   615→    overall_quality: float            # RR × RFS_avg
+   616→    by_source: Dict[str, Dict] = field(default_factory=dict)
+   617→
+   618→    def summary(self) -> str:
+   619→        return (f"RR={self.rr.rr:.1%} × RFS={self.rfs_avg:.3f} = "
+   620→                f"Quality={self.overall_quality:.3f}")
+   621→
+   622→    def to_dict(self) -> Dict:
+   623→        return {
+   624→            "rr": self.rr.to_dict(),
+   625→            "rfs_avg": round(self.rfs_avg, 4),
+   626→            "overall_quality": round(self.overall_quality, 4),
+   627→            "by_source": self.by_source,
+   628→        }
+   629→
+   630→
+   631→class RecoveryQuality:
+   632→    """
+   633→    Compute the combined Recovery Quality metric: RR × RFS.
+   634→
+   635→    Usage:
+   636→        rq = RecoveryQuality()
+   637→        result = rq.compute(recovered_files, ground_truth)
+   638→
+   639→        print(result.summary())
+   640→        # RR=100.0% × RFS=0.900 = Quality=0.900
+   641→
+   642→    This gives a single number that captures both dimensions
+   643→    of recovery quality: completeness and fidelity.
+   644→    """
+   645→
+   646→    def __init__(self, rfs_weights: Optional[Dict[str, float]] = None):
+   647→        self.rr = RecoveryRate()
+   648→        self.rfs = RecoveryFidelityScore(weights=rfs_weights)
+   649→
+   650→    def compute(
+   651→        self,
+   652→        recovered_files: List[Dict],
+   653→        ground_truth: List[Dict],
+   654→        source: str = "unknown",
+   655→    ) -> RecoveryQualityResult:
+   656→        """Compute combined RR × RFS."""
+   657→        # RR
+   658→        rr_result = self.rr.compute(recovered_files, ground_truth)
+   659→
+   660→        # RFS (average across recovered files)
+   661→        rfs_batch = self.rfs.score_batch(recovered_files, ground_truth, source=source)
+   662→        rfs_avg = rfs_batch.get("average_rfs", 0.0)
+   663→
+   664→        # Overall quality
+   665→        overall = rr_result.rr * rfs_avg
+   666→
+   667→        # By source breakdown
+   668→        by_source = self.rfs.score_by_source(recovered_files, ground_truth)
+   669→
+   670→        return RecoveryQualityResult(
+   671→            rr=rr_result,
+   672→            rfs_avg=rfs_avg,
+   673→            overall_quality=overall,
+   674→            by_source=by_source,
+   675→        )
+   676→
+   677→
+   678→if __name__ == "__main__":
+   679→    # Demo: RR + RFS as separate metrics, then combined
+   680→    rfs = RecoveryFidelityScore()
+   681→    rr = RecoveryRate()
+   682→    rq = RecoveryQuality()
+   683→
+   684→    # Ground truth: 3 files
+   685→    gt_files = [
+   686→        {
+   687→            "name": "thesis.pdf",
+   688→            "sha256": "a" * 64,
+   689→            "size": 500000,
+   690→            "created": 1691000000.0,
+   691→            "modified": 1691000100.0,
+   692→            "parent_dir": "/Users/alice/Documents",
+   693→            "has_acl": True, "has_ads": False, "usn_entries": 3, "has_ea": False,
+   694→        },
+   695→        {
+   696→            "name": "photo.jpg",
+   697→            "sha256": "b" * 64,
+   698→            "size": 200000,
+   699→            "created": 1691000200.0,
+   700→            "modified": 1691000300.0,
+   701→            "parent_dir": "/Users/alice/Pictures",
+   702→            "has_acl": False, "has_ads": False, "usn_entries": 1, "has_ea": False,
+   703→        },
+   704→        {
+   705→            "name": "budget.xlsx",
+   706→            "sha256": "c" * 64,
+   707→            "size": 150000,
+   708→            "created": 1691000400.0,
+   709→            "modified": 1691000500.0,
+   710→            "parent_dir": "/Users/alice/Work",
+   711→            "has_acl": False, "has_ads": True, "usn_entries": 2, "has_ea": True,
+   712→        },
+   713→    ]
+   714→
+   715→    # Scenario 1: MFT recovery — all files, good fidelity
+   716→    mft_recovered = [
+   717→        {
+   718→            "name": "thesis.pdf",
+   719→            "sha256": "a" * 64,
+   720→            "size": 500000,
+   721→            "created": 1691000000.0,
+   722→            "modified": 1691000100.0,
+   723→            "parent_dir": "/Users/alice/Documents",
+   724→            "has_acl": True, "has_ads": False, "usn_entries": 2, "has_ea": False,
+   725→            "source": "mft",
+   726→        },
+   727→        {
+   728→            "name": "photo.jpg",
+   729→            "sha256": "b" * 64,
+   730→            "size": 200000,
+   731→            "created": 1691000200.0,
+   732→            "modified": 1691000300.0,
+   733→            "parent_dir": "/Users/alice/Pictures",
+   734→            "has_acl": False, "has_ads": False, "usn_entries": 1, "has_ea": False,
+   735→            "source": "mft",
+   736→        },
+   737→        {
+   738→            "name": "budget.xlsx",
+   739→            "sha256": "c" * 64,
+   740→            "size": 150000,
+   741→            "created": 1691000400.0,
+   742→            "modified": 1691000500.0,
+   743→            "parent_dir": "/Users/alice/Work",
+   744→            "has_acl": False, "has_ads": True, "usn_entries": 2, "has_ea": True,
+   745→            "source": "mft",
+   746→        },
+   747→    ]
+   748→
+   749→    # Scenario 2: Carving recovery — all files, poor fidelity
+   750→    carving_recovered = [
+   751→        {
+   752→            "name": "carved_0001.pdf",
+   753→            "sha256": "a" * 64,
+   754→            "size": 500000,
+   755→            "created": 0.0, "modified": 0.0,
+   756→            "parent_dir": "",
+   757→            "has_acl": False, "has_ads": False, "usn_entries": 0, "has_ea": False,
+   758→            "source": "carving",
+   759→        },
+   760→        {
+   761→            "name": "carved_0002.jpg",
+   762→            "sha256": "b" * 64,
+   763→            "size": 200000,
+   764→            "created": 0.0, "modified": 0.0,
+   765→            "parent_dir": "",
+   766→            "has_acl": False, "has_ads": False, "usn_entries": 0, "has_ea": False,
+   767→            "source": "carving",
+   768→        },
+   769→        {
+   770→            "name": "carved_0003.xlsx",
+   771→            "sha256": "c" * 64,
+   772→            "size": 150000,
+   773→            "created": 0.0, "modified": 0.0,
+   774→            "parent_dir": "",
+   775→            "has_acl": False, "has_ads": False, "usn_entries": 0, "has_ea": False,
+   776→            "source": "carving",
+   777→        },
+   778→    ]
+   779→
+   780→    # Scenario 3: Partial recovery — 2 of 3 files
+   781→    partial_recovered = [
+   782→        {
+   783→            "name": "thesis.pdf",
+   784→            "sha256": "a" * 64,
+   785→            "size": 500000,
+   786→            "created": 1691000000.0,
+   787→            "modified": 1691000100.0,
+   788→            "parent_dir": "/Users/alice/Documents",
+   789→            "has_acl": True, "has_ads": False, "usn_entries": 2, "has_ea": False,
+   790→            "source": "mft",
+   791→        },
+   792→        {
+   793→            "name": "photo.jpg",
+   794→            "sha256": "b" * 64,
+   795→            "size": 200000,
+   796→            "created": 1691000200.0,
+   797→            "modified": 1691000300.0,
+   798→            "parent_dir": "/Users/alice/Pictures",
+   799→            "has_acl": False, "has_ads": False, "usn_entries": 1, "has_ea": False,
+   800→            "source": "mft",
+   801→        },
+   802→        # budget.xlsx NOT recovered
+   803→    ]
+   804→
+   805→    print("=" * 70)
+   806→    print("RecoveryLab — RR + RFS: Two Independent Metrics")
+   807→    print("=" * 70)
+   808→    print()
+   809→
+   810→    for name, rec in [("MFT (3/3)", mft_recovered), ("Carving (3/3)", carving_recovered), ("Partial (2/3)", partial_recovered)]:
+   811→        rr_r = rr.compute(rec, gt_files)
+   812→        rfs_r = rfs.score_batch(rec, gt_files)
+   813→        quality = rq.compute(rec, gt_files)
+   814→
+   815→        print(f"{name}:")
+   816→        print(f"  RR:  {rr_r.summary()}")
+   817→        print(f"  RFS: {rfs_r['average_rfs']:.3f}")
+   818→        print(f"  {quality.summary()}")
+   819→        print()
+   820→
+   821→    print("─" * 70)
+   822→    print("Key insight:")
+   823→    print("  MFT:     RR=100% × RFS=0.90 → Quality=0.90  (found all, recovered well)")
+   824→    print("  Carving: RR=100% × RFS=0.45 → Quality=0.45  (found all, but poorly)")
+   825→    print("  Partial: RR= 67% × RFS=0.92 → Quality=0.61  (found most, recovered well)")
+   826→    print()
+   827→    print("RR tells you IF you found it. RFS tells you HOW WELL.")
+   828→

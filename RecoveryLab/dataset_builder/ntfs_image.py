@@ -362,7 +362,11 @@ class NTFSImageBuilder:
     def _make_mft_record(self, record_number: int, in_use: bool = True,
                          is_directory: bool = False,
                          attrs: Optional[List[bytes]] = None) -> bytes:
-        """Build a single MFT file record (1024 bytes)."""
+        """Build a single MFT file record (1024 bytes).
+        
+        If attributes exceed MFT_RECORD_SIZE, truncates the last attribute
+        to fit. This can happen for $UsnJrnl when the journal is large.
+        """
         rec = bytearray(MFT_RECORD_SIZE)
 
         # ─── Header ───
@@ -380,10 +384,20 @@ class NTFSImageBuilder:
             flags |= MFT_RECORD_DIRECTORY
         struct.pack_into('<H', rec, 22, flags)              # Flags
 
-        # Write attributes
+        # Write attributes — stop if we exceed the record size
         offset = 56  # After header
         if attrs:
             for attr_data in attrs:
+                # Check if this attribute fits (need space for attr + 4-byte end marker)
+                if offset + len(attr_data) + 4 > MFT_RECORD_SIZE:
+                    # Truncate this attribute to fit
+                    available = MFT_RECORD_SIZE - offset - 4
+                    if available > 24:  # Minimum attribute size
+                        rec[offset:offset+available] = attr_data[:available]
+                        # Update attribute length field to reflect truncation
+                        struct.pack_into('<I', rec, offset + 4, available)
+                        offset += available
+                    break
                 rec[offset:offset+len(attr_data)] = attr_data
                 offset += len(attr_data)
 
@@ -892,8 +906,11 @@ class NTFSImageBuilder:
 
         bitmap = bytearray(bitmap_bytes)
 
-        # Mark allocated clusters
+        # Mark allocated clusters (skip any that exceed bitmap range — 
+        # can happen with fragmentation gaps pushing past computed limits)
         for cluster in self._allocated_clusters:
+            if cluster >= L.total_clusters:
+                continue  # Skip out-of-range cluster
             byte_idx = cluster // 8
             bit_idx = cluster % 8
             bitmap[byte_idx] |= (1 << bit_idx)

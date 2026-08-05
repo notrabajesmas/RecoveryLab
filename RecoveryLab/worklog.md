@@ -1221,3 +1221,25 @@ Stage Summary:
 - Strategy Engine with 5 strategies and 4 profiles
 - Sprint 4 broken into 4A/4B/4C/4D
 - Next: Sprint 4A — Multiple Data Runs
+
+---
+Task ID: 31
+Agent: Main
+Task: Sprint 4A — Multiple Data Runs + Strategy Refactor
+
+Work Log:
+- Created strategies/ package with Strategy A-E wrappers over motors
+- Updated strategy_engine.py with A-E naming (STRATEGY_A_MFT, etc.)
+- Updated PROJECT_STATUS.md: dual metrics (RR + RFS), 5 strategies, version table
+- Updated CHANGELOG.md: v0.5.0
+- Fixed _make_mft_record() bug: bytearray silently extends past 1024-byte MFT record
+- Fixed _write_bitmap() bug: out-of-range clusters crash from fragmentation gaps
+- Implemented StrategyD (Fragment): reconstruct files from multiple data runs
+- Created benchmark_fragment_recovery.py: end-to-end test at 0%-100% fragmentation
+- Ran benchmark: 41/41 multi-run files recovered with SHA-256 100%
+
+Stage Summary:
+- Sprint 4A PASS: RecoveryLab recovers files split across multiple non-contiguous extents
+- Strategy refactor complete: motors → strategies (A-E) with declared capabilities/cost
+- Two real bugs found and fixed by running actual code paths
+- Version bumped to v0.5.0
