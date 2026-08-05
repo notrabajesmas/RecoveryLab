@@ -1280,3 +1280,23 @@ Stage Summary:
 - UXR-001 recording sheet is ready at experiments/UXR-001.md
 - Evidence rule is the gate for any new version
 - v0.6.1 cannot start until UXR-001 produces data
+
+---
+Task ID: 3
+Agent: main
+Task: Flexibilize v0.6.1 blocking (develop open, release gated), add ext4, verify git state
+
+Work Log:
+- Changed v0.6.1 from "Blocked" to "Release blocked (UXR-001; develop open)" in all docs
+- Added ext4 (v0.9.0) to technical roadmap per user's suggestion
+- Added Project Rule 14: "Develop is always open — contributions go to develop. Only releases are gated."
+- Clarified: release/v0.6.0 → only fixes, release/v0.6.1 → cannot open until UXR-001, develop → compressed work welcome
+- Updated README, PROJECT_STATUS, CHANGELOG
+- Verified git status: local main, no remote configured
+- Committed changes: 3549a8d
+- No GitHub push verified — changes are local only
+
+Stage Summary:
+- v0.6.1 is now "release blocked, develop open" instead of hard blocked
+- ext4 added to roadmap
+- Git state verified: changes committed locally, no remote push confirmed
