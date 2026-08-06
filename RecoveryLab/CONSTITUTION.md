@@ -7,6 +7,7 @@
 1. **Each version must move a verifiable benchmark.**
    No version starts without answering: "What benchmark number will move?"
    If you can't answer in one line, the version doesn't start.
+   A version with zero motor changes but improved UX is a valid version.
 
 2. **Every public claim must be backed by reproducible evidence.**
    "RR = 100%" means CI produced that number, not that we believe it.
@@ -47,3 +48,31 @@
     If UXR says the onboarding is broken, we fix onboarding.
     If UXR says it works, we open the next version.
     Intuition is for generating hypotheses. Evidence is for making decisions.
+
+---
+
+## Two development cycles
+
+**Engineering demonstrates. Users validate. Neither replaces the other.**
+
+### Cycle A — Engineering (Demonstrate)
+
+Objective: move a benchmark.
+Input: technical hypothesis.
+Output: reproducible evidence.
+Question: **¿Funciona?**
+
+Examples: Sparse 0% → 100%, API contract 25/25, Corpus 80/80, CI green.
+
+### Cycle B — Product (Validate)
+
+Objective: reduce friction for a real user.
+Input: user observation.
+Output: less friction (measured).
+Question: **¿La gente puede usarlo?**
+
+Examples: UXR, TTFS, abandonment points, error messages, demo clarity.
+
+A version can contain zero motor changes and still be excellent.
+v0.6.0.1 with TTFS 9min → 2min and UXR 4/10 → 9/10
+could deliver more value than a new filesystem parser.
