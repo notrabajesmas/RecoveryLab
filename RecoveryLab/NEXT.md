@@ -14,6 +14,19 @@ The greatest risk now is discussing process instead of executing.
 
 ---
 
+## Feature Freeze
+
+Until Validation Cycle 001 closes, NO new features, metrics, documents, or
+architecture changes. The only accepted changes are:
+
+- Fix a bug discovered during validation
+- Reduce friction observed by testers
+- Unblock the validation itself
+
+This prevents "while we're at it, let's also..."
+
+---
+
 ## Next session: ONE objective
 
 > **Execute Validation Cycle 001.**
@@ -24,10 +37,11 @@ Checklist:
 1. Get one tester who never saw RecoveryLab.
 2. Put them on a clean machine.
 3. Give them the mission: "Recover the files from this NTFS image. I can't answer questions. Everything you need should be in the README."
-4. Observe in silence.
-5. Register the data (TTFS, UXR, where they got stuck, what they didn't understand).
+4. Observe in silence. The moderator can only say: *"Do what you would do if I wasn't here."*
+5. Register the data on the observation sheet (see experiments/UXR-001.md).
 6. Fix ONLY problems that appear repeatedly.
-7. Repeat until 10 testers.
+7. **After tester #3**: if the same problem repeats 3 times, stop the cycle, fix the problem, restart the measurement. Don't record the same error ten times.
+8. Repeat until 10 testers.
 
 Expected findings (NOT parser problems):
 - "Where do I download the image?"
