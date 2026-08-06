@@ -86,9 +86,10 @@ The motor works. Now prove that a person can use it.
 ## Session start protocol
 
 At the start of every session, read:
-1. `README.md` — what is the project and how to use it
-2. `PROJECT_STATUS.md` — current state and roadmap
-3. `CHANGELOG.md` — what changed in each version
-4. `NEXT.md` — this file: exactly what follows and what's blocked
+1. `CONSTITUTION.md` — rules that never change
+2. `README.md` — what is the project and how to use it
+3. `PROJECT_STATUS.md` — current state and roadmap
+4. `CHANGELOG.md` — what changed in each version
+5. `NEXT.md` — this file: exactly what follows and what's blocked
 
-This ensures any AI can resume the project without conversation memory.
+If any proposal conflicts with CONSTITUTION.md, the proposal changes. Not the constitution.

@@ -1,5 +1,26 @@
 # RecoveryLab — Architecture
 
+## RecoveryLab is a library
+
+The public API is the most valuable long-term asset. Other tools, GUIs, and
+forensic pipelines will build on `RecoveryEngine`. If the API stays stable
+for years, RecoveryLab becomes the motor other people use — not just a CLI
+tool, but a foundation.
+
+```python
+from core import RecoveryEngine
+
+engine = RecoveryEngine()
+result = engine.scan("disk.img")
+
+for f in result.files:
+    print(f.name, f.confidence)
+
+result.recover_all("output/")
+```
+
+This is why the API is FROZEN. Breaking it breaks trust that takes years to rebuild.
+
 ## How the motor works
 
 ```
