@@ -8,42 +8,23 @@ Recover files. Measure recovery. Prove it.
 
 RecoveryLab recovers files from NTFS disk images — normal, fragmented, deleted, and sparse. It scans, recovers, and measures every result with CI-verified metrics.
 
-```bash
-pip install recoverylab
-```
-
-```bash
-recoverylab demo
-```
-
-That's it. You'll see RecoveryLab recover files immediately — no disk image needed.
-
 ## Quick Start
 
 ```bash
-# See RecoveryLab in action (no disk image needed)
+# 1. Install
+git clone https://github.com/notrabajesmas/RecoveryLab.git
+cd RecoveryLab
+pip install .
+
+# 2. See RecoveryLab in action (no disk image needed)
 recoverylab demo
 
-# Scan an NTFS image for recoverable files
+# 3. Recover your files
 recoverylab scan disk.img
-
-# Recover all files
 recoverylab recover disk.img output/
-
-# Recover only images
-recoverylab recover disk.img output/ --filter .jpg,.png
-
-# Recover only high-confidence files
-recoverylab recover disk.img output/ --min-confidence 0.8
 ```
 
-Every command shows the identity banner:
-
-```
-RecoveryLab v0.6.0 / Filesystem Recovery Engine / RR 100% / Sparse 100%
-```
-
-Those benchmark numbers come from CI-verified execution, not estimates.
+That's it. Step 2 shows RecoveryLab recovering files immediately — no disk image needed.
 
 ## What RecoveryLab Recovers
 
@@ -60,18 +41,14 @@ Not yet: compressed NTFS, FAT32, exFAT.
 ## Install
 
 ```bash
-pip install recoverylab
-```
-
-Or from source:
-
-```bash
 git clone https://github.com/notrabajesmas/RecoveryLab.git
 cd RecoveryLab
 pip install .
 ```
 
 Requires Python 3.10+. Dependencies (numpy, matplotlib, Pillow, psutil) install automatically.
+
+> **Coming soon**: `pip install recoverylab` from PyPI — once published, the clone step won't be needed.
 
 ## Python API
 
@@ -144,8 +121,9 @@ Tested on 80 files across 4 categories. Real CI execution, not estimates.
 |------|-----------|--------|
 | UXR-001 | 10 external testers: UXR + TTFS | Current |
 | GitHub Release | Publish v0.6.0 with wheel + sdist | Released |
+| PyPI | `pip install recoverylab` works | Pending |
+| Windows .exe | Standalone binary (no Python needed) | Future |
 | Documentation | Docs work for strangers | In progress |
-| Installation | pip install first try | In progress |
 | CLI | Commands clear without source | In progress |
 | GUI | Visual interface for non-CLI users | Future |
 

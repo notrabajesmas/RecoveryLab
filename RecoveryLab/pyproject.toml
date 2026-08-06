@@ -31,8 +31,18 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 
+[project.urls]
+Homepage = "https://github.com/notrabajesmas/RecoveryLab"
+Repository = "https://github.com/notrabajesmas/RecoveryLab"
+Issues = "https://github.com/notrabajesmas/RecoveryLab/issues"
+
 [project.scripts]
 recoverylab = "recoverylab:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
 
 [tool.setuptools]
 py-modules = ["recoverylab", "config"]
@@ -47,11 +57,6 @@ packages = [
     "experiment_runner",
     "visualizer",
     "tools",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0",
 ]
 
 [tool.setuptools.package-data]
