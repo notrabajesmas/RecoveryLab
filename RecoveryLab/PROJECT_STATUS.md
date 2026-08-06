@@ -68,33 +68,40 @@ and ensures the version ships with exactly what was planned.
 
 ---
 
-## Two roadmaps
+## Current Focus
 
-Technical and product roadmaps are separate.
-They are both important, but they must not be mixed.
+```
+✔ v0.6.0 Released
+→ UXR-001 (Validation)
+```
+
+The bottleneck is no longer technical. It's validation.
+Every new line of code should answer:
+> "Does this help a real user recover their files with less friction?"
+If the answer is no, it can wait.
 
 ### Technical roadmap (the motor)
 
 | Version | Benchmark target | Evidence | Status |
 |---------|-----------------|----------|--------|
 | v0.5.2 | NTFS normal: 0% → 100% | 20/20 files, RR=100% | Released |
-| **v0.6.0** | **NTFS sparse: 0% → 100%** | **20/20 files, RR=100%** | **Released** |
-| v0.6.1 | NTFS compressed: 0% → ≥95% | Compressed corpus CI-verified | **Release blocked** (UXR-001 first; develop open) |
-| v0.6.2 | Alternate Data Streams | ADS corpus CI-verified | Pending |
-| v0.7.0 | FAT32: 0% → 100% | FAT32 corpus CI-verified | Pending |
-| v0.8.0 | exFAT: 0% → 100% | exFAT corpus CI-verified | Pending |
-| v0.9.0 | ext4: 0% → 100% | ext4 corpus CI-verified | Pending |
+| v0.6.0 | NTFS sparse: 0% → 100% | 20/20 files, RR=100% | Released |
+| v0.6.1 | NTFS compressed: 0% → ≥95% | Compressed corpus CI-verified | **Release blocked** (UXR-001; develop open) |
+| v0.6.2 | Alternate Data Streams | ADS corpus CI-verified | Blocked |
+| v0.7.0 | FAT32: 0% → 100% | FAT32 corpus CI-verified | Blocked |
+| v0.8.0 | exFAT: 0% → 100% | exFAT corpus CI-verified | Blocked |
+| v0.9.0 | ext4: 0% → 100% | ext4 corpus CI-verified | Blocked |
 
 ### Product roadmap (the experience)
 
 | Step | Objective | Evidence | Status |
 |------|-----------|----------|--------|
-| **UXR-001** | **10 external testers** | **UXR score, TTFS, failure points** | **Current** |
-| GitHub Release | Publish v0.6.0 with wheel + sdist | Release page exists | Released |
+| GitHub Release | Publish v0.6.0 with wheel + sdist | Release page exists | ✔ Released |
+| **UXR-001** | **10 external testers** | **UXR score, TTFS, failure points** | **→ Current** |
 | Documentation | README, QuickStart, CLI docs work for strangers | UXR data confirms | Pending |
 | Installation | pip install works first try | UXR install rate = 10/10 | Pending |
 | CLI | scan/recover/demo clear without reading source | UXR demo+scan rate ≥ 8/10 | Pending |
-| GUI | Visual interface for non-CLI users | Separate UXR test | Pending |
+| GUI | Visual interface for non-CLI users | Separate UXR test | Future |
 
 **Rule**: v0.6.1 cannot be **released** until UXR-001 has data.
 However, development on compressed files is allowed in the `develop` branch.
@@ -198,13 +205,28 @@ python scripts/ci_full.py
 
 ---
 
-## Demonstrated vs Not Yet Validated
+## Evidence types
 
-### Demonstrated (backed by CI, GitHub, or reproducible evidence)
+Every claim has an automatic question:
+> "Does this require technical evidence or user evidence?"
+
+**Demostrado** — Technical evidence, reproducible by anyone with the repo.
+CI, corpus, benchmarks, clean install, contract tests.
+
+**Validado** — External evidence from real users.
+UXR results, real corpus, comparative benchmarks, third-party integrations.
+
+Never mix the two. "RR = 100%" is Demostrado. "Easy to use" is Validado.
+
+---
+
+### Demostrado (technical, reproducible)
 
 | Claim | Evidence |
 |-------|----------|
+| RecoveryLab recupera archivos sparse | CI: 20/20 sparse files, RR=100% |
 | API pública (RecoveryEngine) | 25 contract tests, FROZEN |
+| API es estable | Contract tests enforce no breaking changes |
 | CLI funcional | scan/recover/demo/info, 7 profiles, identity banner |
 | pip install funciona | Tested in clean venv (2026-08-06) |
 | Corpus sintético con regresión | 80/80 CI-verified, 4 categories |
@@ -213,18 +235,18 @@ python scripts/ci_full.py
 | Documentación básica | 7 doc files in repo |
 | Constitución del proyecto | CONSTITUTION.md with 10 rules |
 
-### Not yet validated (no evidence yet)
+### Validado (external, user-based) — none yet
 
 | Claim | What's needed |
 |-------|--------------|
-| Usuarios pueden instalarlo | UXR-001: 10 testers on clean PCs |
-| Usuarios entienden qué hace | UXR-001: TTFS measurement |
+| RecoveryLab es fácil de usar | UXR-001: 10 testers, TTFS measurement |
+| Usuarios pueden instalarlo | UXR-001: install success rate |
 | Usuarios recuperan un archivo sin ayuda | UXR-001: binary ¿Pudo hacerlo? |
 | Motor funciona con datos reales | Real corpus: pendrive, HDD, SSD images |
-| Motor compite con herramientas existentes | Comparative benchmark vs R-Studio, DMDE, PhotoRec |
-| API es estable para otros desarrolladores | Third-party code using RecoveryEngine as library |
+| Otros desarrolladores pueden integrarla | Third-party code using RecoveryEngine |
+| Compite con R-Studio | Comparative benchmark with same images |
 
-### Future direction (after UXR-001 validates)
+### Future direction (after validation)
 
 | Direction | When | Why |
 |-----------|------|-----|
