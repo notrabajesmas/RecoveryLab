@@ -5,91 +5,95 @@
 
 ## Current version: v0.6.0 — Status: Released
 
-## Immediate (do now)
+## Philosophy: FROZEN
 
-0. **Clean install test** — PRE-CONDITION FOR UXR-001
-   - Install from a completely clean machine (VM, another PC, or friend's computer).
-   - Not the dev machine. Not a machine with Python already set up.
-   - Follow ONLY the README. If you need to do something the README doesn't say → fix the README first.
-   - Evidence: `pip install recoverylab` works on a clean machine.
+The Constitution has 11 rules. The evidence framework is defined.
+Two development cycles are documented. Metrics are sufficient.
+**Do not add more rules, more metrics, or more architecture.**
+The greatest risk now is discussing process instead of executing.
 
-1. **Run UXR-001 experiment** — THIS IS THE #1 PRIORITY
-   - Find 10 people who never saw RecoveryLab.
-   - Give them a MISSION, not a product to try:
-     > "Necesito que recuperes los archivos de esta imagen NTFS.
-     > No puedo responder preguntas.
-     > Todo lo necesario debería estar en el README."
-   - Do not help. Do not explain. Only observe.
-   - Record: where they hesitate, what command they look for, what they read first, how long before first action, where they abandon.
-   - Record results in `experiments/UXR-001.md`.
-   - Evidence: UXR score, TTFS distribution, failure points, bugs found.
+---
 
-2. **Fix everything that appears from UXR-001**
-   - Fix ONLY problems that appear repeatedly.
-   - If 8 people ask the same question → don't answer the question, change the product.
-   - This is where RecoveryLab stops being code and becomes a tool.
+## Next session: ONE objective
 
-## Completed this session
+> **Execute Validation Cycle 001.**
 
-- **GitHub Release v0.6.0** — Published 2026-08-06
-  - Tag: v0.6.0
-  - Wheel: recoverylab-0.6.0-py3-none-any.whl (173K)
-  - Source: recoverylab-0.6.0.tar.gz (156K)
-  - Release notes with CI-verified metrics and Quick Start
-  - URL: https://github.com/notrabajesmas/RecoveryLab/releases/tag/v0.6.0
-  - Evidence: Release page exists with attached artifacts.
+That is all. Not architecture. Not new metrics. Not new motors.
 
-- **README rewritten** — User-first, brand identity, Quick Start prominent
-- **PROJECT_STATUS.md** — v0.6.0 marked as Released
+Checklist:
+1. Get one tester who never saw RecoveryLab.
+2. Put them on a clean machine.
+3. Give them the mission: "Recover the files from this NTFS image. I can't answer questions. Everything you need should be in the README."
+4. Observe in silence.
+5. Register the data (TTFS, UXR, where they got stuck, what they didn't understand).
+6. Fix ONLY problems that appear repeatedly.
+7. Repeat until 10 testers.
 
-## Blocked (cannot start until unblocked)
+Expected findings (NOT parser problems):
+- "Where do I download the image?"
+- "I don't understand what scan does."
+- "Where did the recovered files go?"
+- "Do I use PowerShell or CMD?"
+- "I don't see the wheel."
+- "I didn't understand the README."
 
-1. **v0.6.1 — NTFS compressed files**
-   - Blocked by: UXR-001 results not available yet.
-   - Development allowed in `develop` branch.
-   - Release NOT allowed until UXR-001 has data.
-   - Unblock condition: UXR-001 experiment completed with results recorded.
+These are exactly the problems a Validation Cycle should discover.
 
-2. **v0.6.2 — Alternate Data Streams**
-   - Blocked by: v0.6.1 not released.
-   - Evidence: ADS corpus CI-verified.
+---
 
-3. **v0.7.0 — FAT32**
-   - Blocked by: v0.6.2 not released.
-   - Evidence: FAT32 corpus CI-verified.
+## Pre-condition (do first)
 
-## NOT starting (explicitly)
+Before external testers: install from a completely clean machine yourself.
+Follow ONLY the README. If you need to do something the README doesn't say,
+that's a bug in the README. Fix it first.
 
-Per maintainer direction:
-- FAT32, exFAT, ext4 — not yet
-- GUI — not yet
-- AI / ML — not yet
-- Any new filesystem support — not yet
+---
+
+## When to open v0.6.1
+
+Not by date. Not by desire. Not because docs are done.
+Open v0.6.1 only when you can say:
+
+> Validation Cycle 001 completed.
+> 10 participants. TTFS measured.
+> Top blockers corrected. UXR documented.
+> No remaining repetitive critical problems.
+
+Then — and only then — return to the motor for compressed files.
+
+---
+
+## NOT doing (explicitly)
+
+- No new parsers
+- No new metrics
+- No new strategies
+- No new optimizations
+- No new constitutional rules
+- No FAT32, exFAT, ext4, GUI, AI, ML
 
 The motor works. Now prove that a person can use it.
 
-## Product work (parallel, doesn't block technical)
+---
 
-1. **Improve README** based on UXR-001 failure points.
-2. **Improve installation flow** if UXR shows install failures.
-3. **Improve CLI help text** if UXR shows confusion at scan/recover.
-4. **GUI** — long-term, only after CLI UXR ≥ 8/10.
+## Completed
 
-## Decision rules from UXR-001
+- v0.6.0 Released (2026-08-06)
+- GitHub Release with wheel + sdist + release notes
+- README rewritten (user-first, brand identity)
+- CONSTITUTION.md (11 rules, two cycles, uncertainty framing)
+- Evidence types defined (Demostrado vs Validado)
+- Validation Cycle 001 template ready
+- All docs synced to GitHub
 
-| UXR result | Action |
-|------------|--------|
-| ≥ 8/10 | Close UXR-001. Open v0.6.1 release. |
-| 5–7/10 | Fix top blockers found. Run UXR-002. |
-| < 5/10 | Stop feature work. Redesign onboarding. Run UXR-002. |
+---
 
 ## Session start protocol
 
-At the start of every session, read:
 1. `CONSTITUTION.md` — rules that never change
 2. `README.md` — what is the project and how to use it
 3. `PROJECT_STATUS.md` — current state and roadmap
 4. `CHANGELOG.md` — what changed in each version
 5. `NEXT.md` — this file: exactly what follows and what's blocked
 
-If any proposal conflicts with CONSTITUTION.md, the proposal changes. Not the constitution.
+If any proposal conflicts with CONSTITUTION.md, the proposal changes.
