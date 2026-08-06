@@ -202,3 +202,27 @@ stats.summary               # Human-readable string
 | RC (Recovery Cost) | How much did it cost? | 0.0–1.0 |
 | UXR (User Recovery Rate) | Could a person use it? | N/10 |
 | TTFS (Time To First Success) | How fast can a person succeed? | minutes |
+
+## Future: Plugin architecture (v1.x)
+
+Not now. After UXR-001 validates the product.
+
+```python
+from recoverylab import RecoveryEngine
+
+engine = RecoveryEngine()
+
+# Register custom strategies
+engine.register_strategy(MyExperimentalStrategy())
+
+# Register custom filesystem parsers
+engine.register_filesystem(MyEXT4Parser())
+
+# Register custom scorers
+engine.register_scorer(MyCustomRFS())
+```
+
+This turns RecoveryLab from a tool into a platform.
+The Tier 2 (Extension) API exists precisely for this.
+It's why `RecoveryStrategy` and `PipelineStage` are STABLE —
+other code can extend them without touching the core.

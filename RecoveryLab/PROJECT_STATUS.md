@@ -198,6 +198,43 @@ python scripts/ci_full.py
 
 ---
 
+## Demonstrated vs Not Yet Validated
+
+### Demonstrated (backed by CI, GitHub, or reproducible evidence)
+
+| Claim | Evidence |
+|-------|----------|
+| API pública (RecoveryEngine) | 25 contract tests, FROZEN |
+| CLI funcional | scan/recover/demo/info, 7 profiles, identity banner |
+| pip install funciona | Tested in clean venv (2026-08-06) |
+| Corpus sintético con regresión | 80/80 CI-verified, 4 categories |
+| RR/RFS/RC implementados | CI produces these numbers every run |
+| Release v0.6.0 en GitHub | Tag + wheel (172K) + sdist (156K) |
+| Documentación básica | 7 doc files in repo |
+| Constitución del proyecto | CONSTITUTION.md with 10 rules |
+
+### Not yet validated (no evidence yet)
+
+| Claim | What's needed |
+|-------|--------------|
+| Usuarios pueden instalarlo | UXR-001: 10 testers on clean PCs |
+| Usuarios entienden qué hace | UXR-001: TTFS measurement |
+| Usuarios recuperan un archivo sin ayuda | UXR-001: binary ¿Pudo hacerlo? |
+| Motor funciona con datos reales | Real corpus: pendrive, HDD, SSD images |
+| Motor compite con herramientas existentes | Comparative benchmark vs R-Studio, DMDE, PhotoRec |
+| API es estable para otros desarrolladores | Third-party code using RecoveryEngine as library |
+
+### Future direction (after UXR-001 validates)
+
+| Direction | When | Why |
+|-----------|------|-----|
+| Plugin architecture | v1.x | `engine.register_strategy()`, `engine.register_filesystem()` — turns RecoveryLab into a platform |
+| Comparative benchmark | After UXR-001 | Not for marketing, for learning: where do we win, where do we lose |
+| Real corpus | After UXR-001 | `corpus/real/pendrive_01/`, `hdd_02/`, `ssd_03/` — things synthetic data never generates |
+| GUI | After CLI UXR ≥ 8/10 | Motor is independent of GUI (Constitution rule 4) |
+
+---
+
 ## Capabilities
 
 | Capability | Status | Detail |
