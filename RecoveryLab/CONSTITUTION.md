@@ -49,6 +49,33 @@
     If UXR says it works, we open the next version.
     Intuition is for generating hypotheses. Evidence is for making decisions.
 
+11. **Every change must reduce uncertainty.**
+    If a change does not produce new evidence, improve user success,
+    or fix a verified defect, it can wait.
+    Every commit does at least one of:
+    - Reduces technical uncertainty (CI, benchmark, corpus, tests)
+    - Reduces product uncertainty (improves UXR, TTFS, eliminates friction)
+    - Reduces known defects (fixes a reproducible bug)
+    If a change fits none of these, it is not a priority.
+
+---
+
+## Version framing
+
+Before any version, ask not just "What benchmark changes?"
+but **"What uncertainty disappears when this version finishes?"**
+
+| Version | Uncertainty that disappears |
+|---------|---------------------------|
+| v0.6.0 | "Can we recover sparse files?" → Yes. CI proves it. |
+| Validation Cycle 001 | "Can a new user use RecoveryLab without help?" → Data answers it. |
+| v0.6.1 | "Can we recover compressed NTFS files?" → Corpus proves it. |
+
+Both cycles seek the same thing: eliminate uncertainty.
+Engineering eliminates it with technical evidence.
+Product eliminates it with user evidence.
+Neither replaces the other.
+
 ---
 
 ## Two development cycles
