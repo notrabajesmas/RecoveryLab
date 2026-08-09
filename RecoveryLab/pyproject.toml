@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "recoverylab"
-version = "0.6.0"
+version = "0.6.1"
 description = "File recovery tool for NTFS disk images"
 readme = "README.md"
 license = {text = "MIT"}

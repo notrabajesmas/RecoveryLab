@@ -34,11 +34,23 @@ Design principles:
 """
 
 import os
+import sys
 import time
 import hashlib
-import resource
 from pathlib import Path
 from typing import Optional, List, Dict, Any
+
+# resource is Unix-only; fall back to psutil on Windows
+if sys.platform == "win32":
+    import psutil
+    def _peak_ram_mb():
+        """Get peak RSS in MB on Windows via psutil."""
+        return psutil.Process().memory_info().rss / (1024 * 1024)
+else:
+    import resource
+    def _peak_ram_mb():
+        """Get peak RSS in MB on Unix via resource.getrusage."""
+        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
 
 from .result import (
     ScanResult, RecoveredItem, RecoveryStatistics, RecoveryCost,
@@ -57,7 +69,7 @@ class RecoveryEngine:
     Internal methods (_prefixed) may change between minor versions.
     """
     
-    VERSION = "0.6.0"
+    VERSION = "0.6.1"
     
     PROFILES = {
         "fast": {
@@ -183,7 +195,7 @@ class RecoveryEngine:
             return result
         
         # Measure RAM before
-        ram_before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024  # MB
+        ram_before = _peak_ram_mb()
         
         # Run pipeline
         t0 = time.time()
@@ -192,7 +204,7 @@ class RecoveryEngine:
         scan_time = time.time() - t0
         
         # Measure RAM after
-        ram_after = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024  # MB
+        ram_after = _peak_ram_mb()
         peak_ram = max(ram_before, ram_after)
         
         # Convert pipeline results to public types
@@ -233,12 +245,12 @@ class RecoveryEngine:
         """
         result = ScanResult()
         
-        ram_before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+        ram_before = _peak_ram_mb()
         t0 = time.time()
         ctx = self._pipeline.run(image, manifest=manifest,
                                 strategy_profile=self.profile)
         scan_time = time.time() - t0
-        ram_after = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+        ram_after = _peak_ram_mb()
         peak_ram = max(ram_before, ram_after)
         
         for item in ctx.all_recovered:
