@@ -3,7 +3,7 @@
 > Read this file at the start of every session.
 > It tells you exactly what to do and what's blocked.
 
-## Current version: v0.6.0 — Status: Released
+## Current version: v0.6.1 — Status: Released
 
 ## Philosophy: FROZEN
 
@@ -74,6 +74,17 @@ Open v0.6.1 only when you can say:
 > No remaining repetitive critical problems.
 
 Then — and only then — return to the motor for compressed files.
+
+---
+
+## Product observations (from validation)
+
+- **Imaging dependency**: To recover from a physical disk, users need FTK Imager
+  or similar tool first. RecoveryLab can only work with .img files.
+  This is a major friction point. Future: `recoverylab image E: disco.img`
+- **Full image too large**: A 500GB disk needs 500GB of free space for a full
+  image. Partial imaging (first 2GB) is a practical workaround but not documented.
+- **Windows works**: v0.6.1 confirmed working on Windows 10 + Python 3.13
 
 ---
 
