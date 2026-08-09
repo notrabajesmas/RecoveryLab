@@ -1,6 +1,34 @@
 # RecoveryLab — Work Log
 
 ---
+Task ID: V001-real-disk
+Agent: Main
+Task: Validation Cycle 001 — Author self-test + real disk diagnostic
+
+Work Log:
+- Published RecoveryLab v0.6.1 to PyPI (Windows fix: resource → psutil fallback)
+- Author self-test on Windows 10 + Python 3.13: pip install ✅, recoverylab demo ✅ (4/4)
+- Identified real damaged disk: TOSHIBA MK5065GSX 500GB USB (PHYSICALDRIVE2)
+- Disk diagnostics via DiskPart:
+  - Disk 2: Online, GPT, 2 partitions
+  - Partition 1: 15 MB MSR, offset 17 KB
+  - Partition 2: 465 GB Basic Data, offset 16 MB (16,777,216 bytes)
+  - Windows sees filesystem as RAW
+- Space check: C: 55.7 GB free, D: 41.8 GB free, E: inaccessible
+  - Total: ~97.5 GB — NOT enough for 465 GB full image
+- Created diag_boot.py: reads only 512 bytes from partition offset (boot sector)
+- Key learning: "Online" ≠ "Healthy" — always work on images, never originals
+- Key product gap: Imaging engine is #1 real-world blocker
+
+Stage Summary:
+- v0.6.1 released and verified on Windows
+- Real disk case documented in UXR-001.md
+- Boot sector diagnostic script ready (diag_boot.py)
+- Next: run diag_boot.py on author's Windows machine, then decide imaging strategy
+- Product observations updated in NEXT.md
+- CHANGELOG, PROJECT_STATUS, UXR-001 all updated
+
+---
 Task ID: 18
 Agent: Main
 Task: INST-0002 — Pipeline Loss Localization (r12 auditoría)

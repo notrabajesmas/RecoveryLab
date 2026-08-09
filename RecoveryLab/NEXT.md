@@ -85,6 +85,22 @@ Then — and only then — return to the motor for compressed files.
 - **Full image too large**: A 500GB disk needs 500GB of free space for a full
   image. Partial imaging (first 2GB) is a practical workaround but not documented.
 - **Windows works**: v0.6.1 confirmed working on Windows 10 + Python 3.13
+- **Space constraint is real**: Author's machine has only 97.5 GB free combined
+  across two 1TB drives. Cannot image a 465 GB disk. This is not unusual —
+  users with damaged disks often lack space for a full image.
+  Future: compressed/sparse imaging, or streaming read-direct mode.
+- **Real disk case identified**: TOSHIBA MK5065GSX 500GB (PHYSICALDRIVE2),
+  GPT, 2 partitions (15 MB MSR + 465 GB data), Windows sees RAW.
+  Partition 2 offset: 16 MB (16,777,216 bytes).
+  Boot sector read pending — `diag_boot.py` prepared.
+- **"Online" ≠ "Healthy"**: A disk appearing Online in DiskPart with GPT and
+  partitions does NOT prove absence of physical damage. Sectors can be
+  unreadable even if the disk responds at hardware level.
+  Always work on images, never on originals.
+- **Imaging engine is highest-priority future feature**: The current dependency
+  on FTK Imager is the #1 real-world blocker. Users don't have it, don't know
+  what it is, and don't have space for full images.
+  `recoverylab image E: output.img` would eliminate this entirely.
 
 ---
 

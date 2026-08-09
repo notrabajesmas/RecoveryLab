@@ -1,5 +1,52 @@
 # RecoveryLab — Changelog
 
+## v0.6.1 (2026-08-10) — Released
+
+**Windows compatibility fix + PyPI publication.**
+
+Before this version, RecoveryLab crashed on Windows with
+`ModuleNotFoundError: No module named 'resource'` because `resource`
+is a Unix-only module. The package was also not available on PyPI,
+making `pip install recoverylab` fail.
+
+**What changed:**
+
+- `core/engine.py`: Replaced Unix-only `import resource` with platform-aware code.
+  On Windows, uses `psutil.Process().memory_info().rss` instead.
+  On Unix, retains `resource.getrusage(resource.RUSAGE_SELF).ru_maxrss`.
+- `pyproject.toml`: Bumped version 0.6.0 → 0.6.1. Added `[project.urls]` for PyPI metadata.
+- `recoverylab.py`: Version string updated to 0.6.1.
+- **Published to PyPI**: `pip install recoverylab` now works.
+  Note: `pip install --upgrade recoverylab` may not find 0.6.1 immediately
+  due to PyPI cache. Use `pip install recoverylab==0.6.1` for explicit version.
+
+**Verified on Windows 10 + Python 3.13:**
+
+```
+> pip install recoverylab==0.6.1
+> recoverylab demo
+✓ 4/4 files recovered
+```
+
+**Validation Cycle 001 — author self-test (not counted as external):**
+
+| Step | Result |
+|------|--------|
+| pip install on Windows | ✅ |
+| recoverylab demo | ✅ 4/4 recovered |
+| TTFS (author) | ~5 min |
+
+**Real disk diagnostic (TOSHIBA MK5065GSX 500GB):**
+
+- Disk identified: `\\.\PHYSICALDRIVE2`, GPT, 2 partitions
+- Partition 2: 465 GB, offset 16 MB, type Basic Data (NTFS)
+- Windows sees partition as RAW — filesystem structures damaged
+- Boot sector read pending (diag_boot.py prepared)
+- Space constraint: 97.5 GB free combined, not enough for full 465 GB image
+- Decision: need external storage or strategic partial imaging
+
+---
+
 ## v0.6.0 (2026-08-06) — Released
 
 **GitHub Release published.** Wheel + sdist + release notes at:

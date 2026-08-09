@@ -1,6 +1,6 @@
 # RecoveryLab — Project Status
 
-> **Version**: v0.6.0
+> **Version**: v0.6.1
 > **Status**: Released
 > **Last CI run**: 2026-08-05 — ALL CHECKS PASS
 > **Repo**: https://github.com/notrabajesmas/RecoveryLab
@@ -86,6 +86,7 @@ If the answer is no, it can wait.
 |---------|-----------------|----------|--------|
 | v0.5.2 | NTFS normal: 0% → 100% | 20/20 files, RR=100% | Released |
 | v0.6.0 | NTFS sparse: 0% → 100% | 20/20 files, RR=100% | Released |
+| v0.6.1 | Windows fix + PyPI publish | Author self-test on Windows 10: 4/4 | **Released** |
 | v0.6.1 | NTFS compressed: 0% → ≥95% | Compressed corpus CI-verified | **Release blocked** (UXR-001; develop open) |
 | v0.6.2 | Alternate Data Streams | ADS corpus CI-verified | Blocked |
 | v0.7.0 | FAT32: 0% → 100% | FAT32 corpus CI-verified | Blocked |
@@ -286,7 +287,7 @@ Never mix the two. "RR = 100%" is Demostrado. "Easy to use" is Validado.
 | Pipeline | 8 stages, extensible |
 | Stability policy | 3 tiers (public/extension/internal) |
 | Versioning | Semantic |
-| pip package | recoverylab-0.6.0-py3-none-any.whl |
+| pip package | recoverylab-0.6.1-py3-none-any.whl (PyPI) |
 | User docs | Installation, QuickStart, CLI, API, Profiles, Plugins |
 | UXR template | experiments/UXR-001.md |
 
